@@ -1,0 +1,476 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Services\SupabaseService;
+use Illuminate\Http\Request;
+
+class DashboardController extends Controller
+{
+    private string $currentFinancialYear = 'FY2026';
+
+    public function index(SupabaseService $supabase)
+    {
+        if (!session()->has('employee_uuid') || !session()->has('company_code')) {
+            return redirect()->route('login')->with('error', 'Sila login terlebih dahulu.');
+        }
+
+        $user = $this->getCurrentUser($supabase);
+
+        $company = $supabase->get('companies', [
+            'code' => 'eq.' . session('company_code'),
+            'select' => '*'
+        ])[0] ?? null;
+
+        if ($company) {
+            session([
+                'company_logo' => $company['logo_path'] ?: 'images/default-logo.jpg',
+                'company_display_name' => $company['display_name'] ?: $company['name'],
+            ]);
+        }
+
+        if (!$user) {
+            session()->flush();
+            return redirect()->route('login')->with('error', 'Session tidak sah. Sila login semula.');
+        }
+
+        $companyCode = session('company_code');
+
+        $department = $this->getUserDepartment($supabase, $user);
+        $canSwitchDepartment = $this->canSwitchDepartment($user);
+
+        $departments = $canSwitchDepartment
+            ? $this->getAllDepartments($supabase, $companyCode)
+            : [];
+
+        $selectedDepartmentCode = $this->getSelectedDepartmentCode($user, $canSwitchDepartment);
+
+        $visibleEmployeeIds = $this->getVisibleEmployeeIds(
+            $supabase,
+            $user,
+            $selectedDepartmentCode,
+            $companyCode
+        );
+
+        $kpis = $this->getKpis($supabase, $visibleEmployeeIds, $companyCode);
+
+        $kpis = $this->attachQuartersToKpis($supabase, $kpis);
+        $kpis = $this->attachEmployeeDataToKpis($supabase, $kpis, $user, $companyCode);
+        $kpis = $this->attachHistoryToKpis($supabase, $kpis);
+
+        $showOwnerColumn = $this->shouldShowOwnerColumn($kpis);
+
+        $subCategoryByCompany = collect($kpis)
+            ->groupBy(fn ($kpi) => $kpi['sub_category'] ?: 'Uncategorized')
+            ->map(fn ($items) => $items->count())
+            ->sortDesc();
+
+        $subCategoryByDepartment = collect($kpis)
+            ->groupBy(fn ($kpi) => $kpi['department_code'] ?? 'Unknown Department')
+            ->map(function ($departmentItems) {
+                return $departmentItems
+                    ->groupBy(fn ($kpi) => $kpi['sub_category'] ?: 'Uncategorized')
+                    ->map(fn ($items) => $items->count())
+                    ->sortDesc();
+            });
+
+        $subCategoryByUser = collect($kpis)
+            ->groupBy(fn ($kpi) => $kpi['owner_display_name'] ?? 'Unknown User')
+            ->map(function ($userItems) {
+                return $userItems
+                    ->groupBy(fn ($kpi) => $kpi['sub_category'] ?: 'Uncategorized')
+                    ->map(fn ($items) => $items->count())
+                    ->sortDesc();
+            });
+
+        $kpiCountByUser = collect($kpis)
+            ->groupBy(fn ($kpi) => $kpi['owner_display_name'] ?? 'Unknown User')
+            ->map(function ($items) {
+                return [
+                    'total' => $items->count(),
+                    'department' => $items->first()['owner_department_code']
+                        ?? $items->first()['department_code']
+                        ?? '-',
+                    'completed' => $items->where('status', 'completed')->count(),
+                    'at_risk' => $items->whereIn('status', ['at_risk', 'in_trouble'])->count(),
+                ];
+            })
+            ->sortByDesc('total');
+
+        $kpiCountByDepartment = collect($kpis)
+            ->groupBy(fn ($kpi) => $kpi['department_code'] ?? 'Unknown Department')
+            ->map(function ($items) {
+                return [
+                    'total' => $items->count(),
+                    'staff_count' => $items->pluck('owner_display_name')->unique()->count(),
+                    'completed' => $items->where('status', 'completed')->count(),
+                    'at_risk' => $items->whereIn('status', ['at_risk', 'in_trouble'])->count(),
+                ];
+            })
+            ->sortByDesc('total');
+
+        $summary = $this->calculateSummary($kpis);
+        $weightageSummary = $this->calculateWeightageSummary($kpis);
+
+        return view('dashboard', [
+            'user' => $user,
+            'department' => $department,
+            'departments' => $departments,
+            'canSwitchDepartment' => $canSwitchDepartment,
+            'selectedDepartmentCode' => $selectedDepartmentCode,
+            'currentFinancialYear' => $this->currentFinancialYear,
+            'showOwnerColumn' => $showOwnerColumn,
+            'kpis' => $kpis,
+
+            'overallScore' => $summary['overallScore'],
+            'totalKpis' => $summary['totalKpis'],
+            'completed' => $summary['completed'],
+            'monitoring' => $summary['onTrack'],
+            'risk' => $summary['atRisk'],
+            'critical' => $summary['inTrouble'],
+
+            'onTrack' => $summary['onTrack'],
+            'atRisk' => $summary['atRisk'],
+            'offTrack' => $summary['inTrouble'],
+            'overdue' => $summary['inTrouble'],
+
+            'totalWeightage' => $weightageSummary['totalWeightage'],
+            'isWeightageExceeded' => $weightageSummary['isWeightageExceeded'],
+            'isWeightageComplete' => $weightageSummary['isWeightageComplete'],
+
+            'companyCode' => $companyCode,
+            'companyName' => session('company_name'),
+
+            'subCategoryByCompany' => $subCategoryByCompany,
+            'subCategoryByDepartment' => $subCategoryByDepartment,
+            'subCategoryByUser' => $subCategoryByUser,
+
+            'kpiCountByUser' => $kpiCountByUser,
+            'kpiCountByDepartment' => $kpiCountByDepartment,
+        ]);
+    }
+
+    public function switchDepartment(Request $request, SupabaseService $supabase)
+    {
+        if (!session()->has('employee_uuid') || !session()->has('company_code')) {
+            return redirect()->route('login')->with('error', 'Sila login terlebih dahulu.');
+        }
+
+        $user = $this->getCurrentUser($supabase);
+
+        if (!$user || !$this->canSwitchDepartment($user)) {
+            abort(403, 'Anda tiada akses untuk tukar department.');
+        }
+
+        $request->validate([
+            'department_code' => 'required|string',
+        ]);
+
+        session([
+            'selected_department_code' => $request->department_code,
+        ]);
+
+        return back();
+    }
+
+    private function getCurrentUser(SupabaseService $supabase): ?array
+    {
+        $employees = $supabase->get('employees', [
+            'id' => 'eq.' . session('employee_uuid'),
+            'is_active' => 'eq.true',
+            'select' => '*',
+        ]);
+
+        return $employees[0] ?? null;
+    }
+
+    private function getUserDepartment(SupabaseService $supabase, array $user): ?array
+    {
+        $departments = $supabase->get('departments', [
+            'code' => 'eq.' . $user['department_code'],
+            'select' => '*',
+        ]);
+
+        return $departments[0] ?? null;
+    }
+
+    private function canSwitchDepartment(array $user): bool
+    {
+        return in_array($user['role'] ?? '', ['Admin', 'SLT', 'VP']);
+    }
+
+    private function getAllDepartments(SupabaseService $supabase, string $companyCode): array
+    {
+        return $supabase->get('departments', [
+            'company_code' => 'eq.' . $companyCode,
+            'select' => '*',
+            'order' => 'name.asc',
+        ]);
+    }
+
+    private function getSelectedDepartmentCode(array $user, bool $canSwitchDepartment): string
+    {
+        if ($canSwitchDepartment) {
+            return session('selected_department_code') ?? 'ALL';
+        }
+
+        session()->forget('selected_department_code');
+
+        return $user['department_code'];
+    }
+
+    private function getVisibleEmployeeIds(
+        SupabaseService $supabase,
+        array $user,
+        string $selectedDepartmentCode,
+        string $companyCode
+    ): array {
+        $role = $user['role'] ?? '';
+
+        if (in_array($role, ['Admin', 'SLT', 'VP'])) {
+            $filters = [
+                'company_code' => 'eq.' . $companyCode,
+                'is_active' => 'eq.true',
+                'select' => 'id',
+            ];
+
+            if ($selectedDepartmentCode !== 'ALL') {
+                $filters['department_code'] = 'eq.' . $selectedDepartmentCode;
+            }
+
+            $employees = $supabase->get('employees', $filters);
+
+            return collect($employees)->pluck('id')->toArray();
+        }
+
+        if (in_array($role, ['Manager', 'Executive'])) {
+            $employees = $supabase->get('employees', [
+                'company_code' => 'eq.' . $companyCode,
+                'department_code' => 'eq.' . $user['department_code'],
+                'is_active' => 'eq.true',
+                'select' => 'id',
+            ]);
+
+            return collect($employees)->pluck('id')->toArray();
+        }
+
+        return [$user['id']];
+    }
+
+    private function getKpis(
+        SupabaseService $supabase,
+        array $visibleEmployeeIds,
+        string $companyCode
+    ): array {
+        if (empty($visibleEmployeeIds)) {
+            return [];
+        }
+
+        return $supabase->get('kpis', [
+            'company_code' => 'eq.' . $companyCode,
+            'employee_id' => 'in.(' . implode(',', $visibleEmployeeIds) . ')',
+            'financial_year' => 'eq.' . $this->currentFinancialYear,
+            'select' => '*',
+            'order' => 'created_at.desc',
+        ]);
+    }
+
+    private function attachQuartersToKpis(SupabaseService $supabase, array $kpis): array
+    {
+        if (empty($kpis)) {
+            return [];
+        }
+
+        $kpiIds = collect($kpis)->pluck('id')->filter()->values()->toArray();
+
+        if (empty($kpiIds)) {
+            return $kpis;
+        }
+
+        $quarters = $supabase->get('kpi_quarters', [
+            'kpi_id' => 'in.(' . implode(',', $kpiIds) . ')',
+            'select' => '*',
+            'order' => 'quarter.asc',
+        ]);
+
+        $quarterMap = collect($quarters)->groupBy('kpi_id');
+
+        return collect($kpis)->map(function ($kpi) use ($quarterMap) {
+            $kpiQuarters = $quarterMap
+                ->get($kpi['id'], collect())
+                ->sortBy('quarter')
+                ->values();
+
+            $kpi['quarters'] = $kpiQuarters->toArray();
+
+            $kpi['quarter_total_target'] = $kpiQuarters->sum(function ($quarter) {
+                return (float) ($quarter['quarter_target'] ?? 0);
+            });
+
+            $kpi['quarter_total_actual'] = $kpiQuarters->sum(function ($quarter) {
+                return (float) ($quarter['quarter_actual'] ?? 0);
+            });
+
+            return $kpi;
+        })->values()->toArray();
+    }
+
+    private function attachEmployeeDataToKpis(
+        SupabaseService $supabase,
+        array $kpis,
+        array $user,
+        string $companyCode
+    ): array {
+        if (empty($kpis)) {
+            return [];
+        }
+
+        $employees = $supabase->get('employees', [
+            'company_code' => 'eq.' . $companyCode,
+            'is_active' => 'eq.true',
+            'select' => 'id,employee_id,short_name,full_name,email,role,department_code',
+        ]);
+
+        $employeeMap = collect($employees)->keyBy('id');
+
+        return collect($kpis)->map(function ($kpi) use ($employeeMap, $user) {
+            $owner = $employeeMap->get($kpi['employee_id']);
+
+            $base = (float) ($kpi['base_target'] ?? 0);
+            $stretch = (float) ($kpi['stretch_target'] ?? 0);
+
+            $actual = isset($kpi['quarter_total_actual'])
+                ? (float) $kpi['quarter_total_actual']
+                : (float) ($kpi['actual_value'] ?? 0);
+
+            $targetForAchievement = isset($kpi['quarter_total_target']) && (float) $kpi['quarter_total_target'] > 0
+                ? (float) $kpi['quarter_total_target']
+                : $base;
+
+            if ($targetForAchievement <= 0) {
+                $achievement = 0;
+            } else {
+                $achievement = round(($actual / $targetForAchievement) * 100, 2);
+            }
+
+            $achievement = min(max($achievement, 0), 200);
+
+            $isSelf = ($kpi['employee_id'] ?? null) === ($user['id'] ?? null);
+
+            $ownerName = $owner['short_name']
+                ?? $owner['full_name']
+                ?? 'Unknown';
+
+            $kpi['is_self'] = $isSelf;
+            $kpi['owner_name'] = $isSelf ? null : $ownerName;
+            $kpi['owner_role'] = $isSelf ? null : ($owner['role'] ?? '-');
+
+            $kpi['owner_display_name'] = $ownerName;
+            $kpi['owner_department_code'] = $owner['department_code'] ?? $kpi['department_code'] ?? null;
+
+            $kpi['base_target'] = $base;
+            $kpi['stretch_target'] = $stretch;
+            $kpi['actual_value'] = $actual;
+            $kpi['achievement_percentage'] = $achievement;
+
+            $kpi['status'] = $this->normalizeStatus($kpi['status'] ?? null);
+            $kpi['unit'] = $kpi['unit'] ?? 'number';
+            $kpi['remark'] = $kpi['remark'] ?? '-';
+
+            return $kpi;
+        })->values()->toArray();
+    }
+
+    private function attachHistoryToKpis(SupabaseService $supabase, array $kpis): array
+    {
+        if (empty($kpis)) {
+            return [];
+        }
+
+        $kpiIds = collect($kpis)->pluck('id')->toArray();
+
+        $histories = $supabase->get('kpi_histories', [
+            'kpi_id' => 'in.(' . implode(',', $kpiIds) . ')',
+            'select' => '*',
+            'order' => 'created_at.desc',
+        ]);
+
+        $historyMap = collect($histories)->groupBy('kpi_id');
+
+        return collect($kpis)->map(function ($kpi) use ($historyMap) {
+            $histories = $historyMap->get($kpi['id'], collect())->values()->toArray();
+
+            $kpi['histories'] = $histories;
+
+            $latestHistory = $histories[0] ?? null;
+
+            $kpi['last_edited_at'] = $latestHistory['created_at'] ?? $kpi['updated_at'] ?? null;
+            $kpi['last_edited_by'] = $latestHistory['edited_by_name'] ?? null;
+
+            return $kpi;
+        })->values()->toArray();
+    }
+
+    private function normalizeStatus(?string $status): string
+    {
+        return match ($status) {
+            'not_started' => 'not_started',
+            'on_track', 'monitoring' => 'on_track',
+            'at_risk', 'risk' => 'at_risk',
+            'in_trouble', 'critical', 'off_track', 'overdue' => 'in_trouble',
+            'completed' => 'completed',
+            default => 'not_started',
+        };
+    }
+
+    private function shouldShowOwnerColumn(array $kpis): bool
+    {
+        return collect($kpis)->where('is_self', false)->count() > 0;
+    }
+
+    private function calculateWeightageSummary(array $kpis): array
+    {
+        $totalWeightage = collect($kpis)->sum(function ($kpi) {
+            return (float) ($kpi['weightage'] ?? 0);
+        });
+
+        return [
+            'totalWeightage' => round($totalWeightage, 2),
+            'isWeightageExceeded' => $totalWeightage > 100,
+            'isWeightageComplete' => round($totalWeightage, 2) == 100,
+        ];
+    }
+
+    private function calculateSummary(array $kpis): array
+    {
+        $collection = collect($kpis);
+
+        $totalWeighted = 0;
+        $totalWeight = 0;
+
+        foreach ($collection as $kpi) {
+            $weight = (float) ($kpi['weightage'] ?? 0);
+            $achievement = (float) ($kpi['achievement_percentage'] ?? 0);
+
+            if ($weight <= 0) {
+                continue;
+            }
+
+            $totalWeighted += $achievement * $weight;
+            $totalWeight += $weight;
+        }
+
+        $overallScore = $totalWeight > 0
+            ? round($totalWeighted / $totalWeight, 2)
+            : 0;
+
+        return [
+            'overallScore' => $overallScore,
+            'totalKpis' => $collection->count(),
+            'completed' => $collection->where('status', 'completed')->count(),
+            'onTrack' => $collection->where('status', 'on_track')->count(),
+            'atRisk' => $collection->where('status', 'at_risk')->count(),
+            'inTrouble' => $collection->where('status', 'in_trouble')->count(),
+        ];
+    }
+}

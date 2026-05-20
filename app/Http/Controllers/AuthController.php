@@ -1,0 +1,255 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use App\Services\SupabaseService;
+
+class AuthController extends Controller
+{
+    public function showLogin()
+    {
+        return view('auth.login');
+    }
+
+    public function submitLogin(Request $request, SupabaseService $supabase)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        $users = $supabase->get('users', [
+            'email' => 'eq.' . $request->email,
+            'is_active' => 'eq.true',
+            'select' => '*',
+        ]);
+
+        if (empty($users)) {
+            return back()
+                ->withInput()
+                ->with('error', 'Email tidak dijumpai atau akaun tidak aktif.');
+        }
+
+        $user = $users[0];
+
+        $inputPassword = $request->password;
+        $defaultPassword = 'Richworks';
+
+        $usingDefaultPassword = false;
+
+        if (empty($user['password_hash'])) {
+            if ($inputPassword !== $defaultPassword) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Password tidak betul.');
+            }
+
+            $usingDefaultPassword = true;
+        } else {
+            if (!Hash::check($inputPassword, $user['password_hash'])) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Password tidak betul.');
+            }
+        }
+
+        session([
+            'user_uuid' => $user['id'],
+            'user_name' => $user['name'] ?? 'User',
+            'user_email' => $user['email'],
+            'using_default_password' => $usingDefaultPassword,
+        ]);
+
+        $dashboards = $this->getUserDashboards($supabase, $user['id']);
+
+        if (empty($dashboards)) {
+            session()->flush();
+
+            return back()
+                ->withInput()
+                ->with('error', 'Akaun ini belum diberi akses kepada mana-mana dashboard.');
+        }
+
+        $this->updateLastLogin($supabase, $user['id']);
+
+        if (count($dashboards) === 1) {
+            $this->setDashboardSession($dashboards[0]);
+
+            return redirect()->route('dashboard');
+        }
+
+        session([
+            'available_dashboards' => $dashboards,
+        ]);
+
+        return redirect()->route('dashboard.choose');
+    }
+
+    public function showChooseDashboard()
+    {
+        if (!session()->has('user_uuid')) {
+            return redirect()
+                ->route('login')
+                ->with('error', 'Sila login terlebih dahulu.');
+        }
+
+        $dashboards = session('available_dashboards', []);
+
+        if (empty($dashboards)) {
+            return redirect()
+                ->route('login')
+                ->with('error', 'Tiada dashboard tersedia untuk akaun ini.');
+        }
+
+        return view('auth.choose-dashboard', compact('dashboards'));
+    }
+
+    public function selectDashboard(Request $request)
+    {
+        $request->validate([
+            'employee_uuid' => 'required|string',
+            'company_code' => 'required|string',
+        ]);
+
+        $dashboards = session('available_dashboards', []);
+
+        if (empty($dashboards)) {
+            return redirect()
+                ->route('login')
+                ->with('error', 'Session dashboard tidak dijumpai. Sila login semula.');
+        }
+
+        $selectedDashboard = collect($dashboards)->first(function ($dashboard) use ($request) {
+            return $dashboard['employee_uuid'] === $request->employee_uuid
+                && $dashboard['company_code'] === $request->company_code;
+        });
+
+        if (!$selectedDashboard) {
+            return redirect()
+                ->route('dashboard.choose')
+                ->with('error', 'Dashboard yang dipilih tidak sah.');
+        }
+
+        $this->setDashboardSession($selectedDashboard);
+
+        return redirect()->route('dashboard');
+    }
+
+    public function logout()
+    {
+        session()->flush();
+
+        return redirect()
+            ->route('login')
+            ->with('success', 'Anda telah logout.');
+    }
+
+    private function getUserDashboards(SupabaseService $supabase, string $userId): array
+    {
+        $roles = $supabase->get('user_company_roles', [
+            'user_id' => 'eq.' . $userId,
+            'is_active' => 'eq.true',
+            'select' => '*',
+        ]);
+
+        if (empty($roles)) {
+            return [];
+        }
+
+        $dashboards = [];
+
+        foreach ($roles as $roleAccess) {
+            $employees = $supabase->get('employees', [
+                'id' => 'eq.' . $roleAccess['employee_id'],
+                'is_active' => 'eq.true',
+                'select' => '*',
+            ]);
+
+            if (empty($employees)) {
+                continue;
+            }
+
+            $employee = $employees[0];
+
+            $companies = $supabase->get('companies', [
+                'code' => 'eq.' . $roleAccess['company_code'],
+                'select' => '*',
+            ]);
+
+            $company = $companies[0] ?? null;
+
+            $dashboards[] = [
+                'user_uuid' => $userId,
+
+                'employee_uuid' => $employee['id'],
+                'employee_id' => $employee['employee_id'],
+                'short_name' => $employee['short_name'] ?? null,
+                'full_name' => $employee['full_name'] ?? null,
+
+                'role' => $employee['role'],
+                'position' => $employee['position'] ?? null,
+                'department_code' => $employee['department_code'],
+
+                'company_code' => $roleAccess['company_code'],
+                'company_name' => $company['name'] ?? $roleAccess['company_code'],
+
+                'company_display_name' => $company['display_name'] ?? ($company['name'] ?? $roleAccess['company_code']),
+                'company_logo' => $company['logo_path'] ?? '/images/default-logo.png',
+
+                'manager_code' => $employee['manager_code'] ?? null,
+                'vp_code' => $employee['vp_code'] ?? null,
+                'reports_to' => $employee['reports_to'] ?? null,
+
+                'is_default' => $roleAccess['is_default'] ?? false,
+            ];
+        }
+
+        return $dashboards;
+    }
+
+    private function setDashboardSession(array $dashboard): void
+    {
+        session([
+            'employee_uuid' => $dashboard['employee_uuid'],
+            'employee_id' => $dashboard['employee_id'],
+
+            'employee_name' => $dashboard['short_name']
+                ?? $dashboard['full_name']
+                ?? 'User',
+
+            'short_name' => $dashboard['short_name'] ?? null,
+            'full_name' => $dashboard['full_name'] ?? null,
+
+            'employee_role' => $dashboard['role'],
+            'role' => $dashboard['role'],
+
+            'position' => $dashboard['position'] ?? null,
+            'department_code' => $dashboard['department_code'],
+
+            'company_code' => $dashboard['company_code'],
+            'company_name' => $dashboard['company_name'],
+
+            'company_display_name' => $dashboard['company_display_name'],
+            'company_logo' => $dashboard['company_logo'],
+
+            'manager_code' => $dashboard['manager_code'] ?? null,
+            'vp_code' => $dashboard['vp_code'] ?? null,
+            'reports_to' => $dashboard['reports_to'] ?? null,
+        ]);
+    }
+
+    private function updateLastLogin(SupabaseService $supabase, string $userId): void
+    {
+        try {
+            $supabase->update('users', [
+                'id' => 'eq.' . $userId,
+            ], [
+                'last_login_at' => now()->timezone('Asia/Kuala_Lumpur')->toDateTimeString(),
+            ]);
+        } catch (\Throwable $e) {
+            // Login jangan gagal hanya sebab last_login_at gagal update.
+        }
+    }
+}
