@@ -54,12 +54,7 @@ Route::post('/logout', [AuthController::class, 'logout'])
 
 Route::middleware(['kpi.auth'])->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | Dashboard
-    |--------------------------------------------------------------------------
-    */
-
+    // DASHBOARD
     Route::get('/choose-dashboard', [AuthController::class, 'showChooseDashboard'])
         ->name('dashboard.choose');
 
@@ -72,44 +67,29 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::post('/switch-department', [DashboardController::class, 'switchDepartment'])
         ->name('switch.department');
 
+    // KPI
+    Route::get('/kpi', [KpiController::class, 'index'])->name('kpi.index');
+    Route::get('/kpi/create', [KpiController::class, 'create'])->name('kpi.create');
+    Route::post('/kpi', [KpiController::class, 'store'])->name('kpi.store');
+    Route::get('/kpi/{id}/edit', [KpiController::class, 'edit'])->name('kpi.edit');
+    Route::put('/kpi/{id}', [KpiController::class, 'update'])->name('kpi.update');
+    Route::put('/kpi/{id}/inline-update', [KpiController::class, 'inlineUpdate'])->name('kpi.update.inline');
+    Route::delete('/kpi/{id}', [KpiController::class, 'destroy'])->name('kpi.destroy');
 
-    /*
-    |--------------------------------------------------------------------------
-    | KPI
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get('/kpi', [KpiController::class, 'index'])
-        ->name('kpi.index');
-
-    Route::get('/kpi/create', [KpiController::class, 'create'])
-        ->name('kpi.create');
-
-    Route::post('/kpi', [KpiController::class, 'store'])
-        ->name('kpi.store');
-
-    Route::get('/kpi/{id}/edit', [KpiController::class, 'edit'])
-        ->name('kpi.edit');
-
-    Route::put('/kpi/{id}', [KpiController::class, 'update'])
-        ->name('kpi.update');
-
-    Route::put('/kpi/{id}/inline-update', [KpiController::class, 'inlineUpdate'])
-        ->name('kpi.update.inline');
-
-    Route::delete('/kpi/{id}', [KpiController::class, 'destroy'])
-        ->name('kpi.destroy');
-
+    // KPI QUARTER
     Route::post('/kpi/{kpiId}/quarters', [KpiController::class, 'storeQuarter'])
         ->name('kpi.quarters.store');
 
+    Route::get('/kpi-quarter/{id}/edit', [KpiController::class, 'editQuarter'])
+        ->name('kpi.quarter.edit');
 
-    /*
-    |--------------------------------------------------------------------------
-    | KPI Target Change Request
-    |--------------------------------------------------------------------------
-    */
+    Route::post('/kpi-quarter/{id}/update', [KpiController::class, 'updateQuarter'])
+        ->name('kpi.quarter.update');
 
+    Route::post('/kpi-quarter/save', [KpiController::class, 'saveQuarter'])
+        ->name('kpi.quarter.save');
+
+    // KPI TARGET REQUEST
     Route::post('/kpi/{id}/target-change-request', [KpiController::class, 'requestTargetChange'])
         ->name('kpi.target.request');
 
@@ -118,8 +98,4 @@ Route::middleware(['kpi.auth'])->group(function () {
 
     Route::post('/kpi-target-request/{id}/reject', [KpiController::class, 'rejectTargetChange'])
         ->name('kpi.target.reject');
-
-    Route::get('/kpi-quarter/{id}/edit', [KpiController::class, 'editQuarter'])->name('kpi.quarter.edit');
-    Route::post('/kpi-quarter/{id}/update', [KpiController::class, 'updateQuarter'])->name('kpi.quarter.update');
-    Route::post('/kpi-quarter/save', [KpiController::class, 'saveQuarter'])->name('kpi.quarter.save');
 });

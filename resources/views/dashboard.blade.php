@@ -3,11 +3,214 @@
 <head>
     <title>RCG KPI Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .brand-panel {
+            background:
+                radial-gradient(circle at top left, rgba(59,130,246,.16), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(20,184,166,.13), transparent 34%),
+                linear-gradient(135deg, #06142f 0%, #0b1f45 52%, #020617 100%);
+        }
+
+             .soft-card { box-shadow: 0 18px 45px rgba(15, 23, 42, .08); }
+        .thin-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+        .thin-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+        .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    </style>
 </head>
 
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-[#f4f7fb] min-h-screen text-slate-900">
 
     @include('partials.sidebar')
+
+    @php
+        $role = strtoupper(trim($user['role'] ?? ''));
+        $currentUserId = (string) ($user['id'] ?? $user['employee_id'] ?? '');
+        $currentUserName = $user['short_name'] ?? $user['full_name'] ?? $user['name'] ?? 'User';
+        $currentDepartment = $user['department_code'] ?? '-';
+        $currentFinancialYear = $currentFinancialYear ?? ('FY' . now()->year);
+
+        $companyRoles = ['SLT', 'CCO', 'CCMO', 'ADMIN'];
+        $vpRoles = ['VP'];
+        $deptRoles = ['MANAGER', 'EXECUTIVE'];
+
+        $canViewCompanyDashboard = in_array($role, $companyRoles);
+        $canViewAllDepartmentPerformance = in_array($role, array_merge($companyRoles, $vpRoles));
+        $canViewStaffAction = in_array($role, $companyRoles);
+        $isDepartmentUser = in_array($role, $deptRoles);
+
+        $kpiCollection = collect($kpis ?? []);
+
+        $scoreStyle = function ($score) {
+            $score = (float) $score;
+            if ($score <= 25) {
+                return [
+                    'bar' => 'bg-red-600',
+                    'text' => 'text-red-700',
+                    'badge' => 'bg-red-50 text-red-700 border-red-100',
+                    'label' => 'Critical',
+                ];
+            }
+            if ($score <= 50) {
+                return [
+                    'bar' => 'bg-gradient-to-r from-red-600 to-orange-500',
+                    'text' => 'text-orange-700',
+                    'badge' => 'bg-orange-50 text-orange-700 border-orange-100',
+                    'label' => 'Risk',
+                ];
+            }
+            if ($score <= 75) {
+                return [
+                    'bar' => 'bg-gradient-to-r from-orange-500 to-yellow-400',
+                    'text' => 'text-amber-700',
+                    'badge' => 'bg-amber-50 text-amber-700 border-amber-100',
+                    'label' => 'Watch',
+                ];
+            }
+            if ($score <= 100) {
+                return [
+                    'bar' => 'bg-gradient-to-r from-yellow-400 to-emerald-600',
+                    'text' => 'text-emerald-700',
+                    'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                    'label' => 'Good',
+                ];
+            }
+            return [
+                'bar' => 'bg-emerald-700',
+                'text' => 'text-emerald-800',
+                'badge' => 'bg-emerald-50 text-emerald-800 border-emerald-100',
+                'label' => 'Exceeded',
+            ];
+        };
+
+        $calculateKpiScore = function ($kpi) {
+            $quarters = collect($kpi['quarters'] ?? []);
+            $quarterBaseTotal = 0;
+            $quarterActualTotal = 0;
+
+            foreach (['Q1', 'Q2', 'Q3', 'Q4'] as $quarterName) {
+                $quarter = $quarters->firstWhere('quarter', $quarterName) ?? [];
+                $quarterBaseTotal += max(0, (float) ($quarter['quarter_target'] ?? 0));
+                $quarterActualTotal += max(0, (float) ($quarter['quarter_actual'] ?? 0));
+            }
+
+            if ($quarterBaseTotal > 0) {
+                return round(($quarterActualTotal / $quarterBaseTotal) * 100, 2);
+            }
+
+            $base = max(0, (float) ($kpi['base_target'] ?? 0));
+            $actual = max(0, (float) ($kpi['actual_value'] ?? 0));
+
+            return $base > 0 ? round(($actual / $base) * 100, 2) : 0;
+        };
+
+        $calculateWeightedScore = function ($kpi) use ($calculateKpiScore) {
+            $score = (float) $calculateKpiScore($kpi);
+            $weightage = max(0, (float) ($kpi['weightage'] ?? 0));
+            return round(($score * $weightage) / 100, 2);
+        };
+
+        $riskStatuses = ['at_risk', 'risk', 'in_trouble', 'critical'];
+
+        $kpiRows = $kpiCollection->map(function ($kpi) use ($calculateKpiScore, $calculateWeightedScore, $riskStatuses) {
+            $score = $calculateKpiScore($kpi);
+            $weightage = max(0, (float) ($kpi['weightage'] ?? 0));
+            $weightedScore = $calculateWeightedScore($kpi);
+            $status = strtolower($kpi['status'] ?? 'not_started');
+
+            return array_merge($kpi, [
+                '_score' => $score,
+                '_weightage' => $weightage,
+                '_weighted_score' => $weightedScore,
+                '_is_risk' => in_array($status, $riskStatuses),
+                '_employee_key' => (string) ($kpi['employee_id'] ?? 'unassigned'),
+                '_employee_name' => $kpi['employee_name'] ?? $kpi['owner_name'] ?? 'Unassigned',
+                '_department_code' => $kpi['department_code'] ?? '-',
+            ]);
+        });
+
+        $individualKpis = $kpiRows->filter(function ($kpi) use ($currentUserId, $currentUserName) {
+            $employeeId = (string) ($kpi['employee_id'] ?? '');
+            $employeeName = strtolower(trim($kpi['_employee_name'] ?? ''));
+            $userName = strtolower(trim($currentUserName));
+
+            return ($currentUserId && $employeeId === $currentUserId)
+                || ($userName && $employeeName === $userName);
+        });
+
+        $individualPerformance = round($individualKpis->sum('_weighted_score'), 2);
+        $individualWeightage = round($individualKpis->sum('_weightage'), 2);
+        $individualKpiCount = $individualKpis->count();
+        $individualRiskCount = $individualKpis->where('_is_risk', true)->count();
+
+        $staffPerformanceRows = $kpiRows
+            ->groupBy('_employee_key')
+            ->map(function ($items, $employeeKey) {
+                return [
+                    'employee_id' => $employeeKey,
+                    'name' => $items->first()['_employee_name'] ?? 'Unassigned',
+                    'department_code' => $items->first()['_department_code'] ?? '-',
+                    'kpi_count' => $items->count(),
+                    'weightage_total' => round($items->sum('_weightage'), 2),
+                    'performance' => round($items->sum('_weighted_score'), 2),
+                    'risk_count' => $items->where('_is_risk', true)->count(),
+                ];
+            })
+            ->values();
+
+        $companyPerformance = $staffPerformanceRows->count() > 0
+            ? round($staffPerformanceRows->avg('performance'), 2)
+            : 0;
+
+        $departmentPerformanceRows = $staffPerformanceRows
+            ->groupBy('department_code')
+            ->map(function ($items, $departmentCode) {
+                return [
+                    'department_code' => $departmentCode ?: '-',
+                    'staff_count' => $items->count(),
+                    'kpi_count' => $items->sum('kpi_count'),
+                    'performance' => round($items->avg('performance'), 2),
+                    'risk_count' => $items->sum('risk_count'),
+                    'weightage_average' => round($items->avg('weightage_total'), 2),
+                ];
+            })
+            ->values()
+            ->sortByDesc('performance');
+
+        $currentDepartmentPerformance = $departmentPerformanceRows->firstWhere('department_code', $currentDepartment) ?? [
+            'department_code' => $currentDepartment,
+            'staff_count' => 0,
+            'kpi_count' => 0,
+            'performance' => 0,
+            'risk_count' => 0,
+            'weightage_average' => 0,
+        ];
+
+        $totalKpis = $kpiRows->count();
+        $riskCriticalTotal = $kpiRows->where('_is_risk', true)->count();
+        $monitoringTotal = $kpiRows->whereIn('status', ['on_track', 'monitoring', 'completed'])->count();
+
+        $topStaffRisk = $staffPerformanceRows
+            ->filter(fn($staff) => ($staff['risk_count'] ?? 0) > 0)
+            ->sortByDesc('risk_count')
+            ->take(5);
+
+        $dashboardTitle = $canViewCompanyDashboard
+            ? 'Company KPI Score'
+            : ($canViewAllDepartmentPerformance ? 'Department Performance View' : 'Department Performance');
+
+        $dashboardScore = $canViewCompanyDashboard
+            ? $companyPerformance
+            : ($currentDepartmentPerformance['performance'] ?? 0);
+
+        $dashboardNote = $canViewCompanyDashboard
+            ? 'Company performance is based on average staff weighted KPI score.'
+            : 'Department performance is based on visible weighted KPI score.';
+
+        $mainScoreStyle = $scoreStyle($dashboardScore);
+        $individualScoreStyle = $scoreStyle($individualPerformance);
+        $deptScoreStyle = $scoreStyle($currentDepartmentPerformance['performance'] ?? 0);
+    @endphp
 
     <main
         id="mainContent"
@@ -15,7 +218,7 @@
     >
 
         <!-- TOP BAR -->
-        <div class="sticky top-0 z-30 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+        <div class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200 px-6 py-4 flex items-center justify-between">
             <div>
                 <h2 class="text-lg font-bold text-slate-800">
                     Good morning, {{ $user['short_name'] ?? 'User' }} 👋
@@ -69,34 +272,88 @@
             @endif
 
             <!-- SUMMARY CARDS -->
+            @php
+                $riskCriticalTotal = ($risk ?? $atRisk ?? 0) + ($critical ?? $offTrack ?? $overdue ?? 0);
+                $overallScoreValue = min(max((float) ($overallScore ?? 0), 0), 100);
+
+                $overallScoreBar = $overallScoreValue <= 25
+                    ? 'bg-red-600'
+                    : ($overallScoreValue <= 50
+                        ? 'bg-gradient-to-r from-red-600 to-orange-500'
+                        : ($overallScoreValue <= 75
+                            ? 'bg-gradient-to-r from-orange-500 to-yellow-400'
+                            : 'bg-gradient-to-r from-yellow-400 to-emerald-600'));
+
+                $summaryCards = [
+                    [
+                        'label' => 'Overall KPI Score',
+                        'value' => number_format($overallScore ?? 0, 2) . '%',
+                        'note' => 'Company KPI progress based on visible KPI.',
+                        'accent' => 'from-[#06142f] to-[#0b1f45]',
+                        'text' => 'text-[#06142f]',
+                        'bar' => $overallScoreBar,
+                        'width' => $overallScoreValue,
+                    ],
+                    [
+                        'label' => 'Total KPI',
+                        'value' => $totalKpis ?? 0,
+                        'note' => 'Total KPI currently visible in this view.',
+                        'accent' => 'from-indigo-600 to-blue-500',
+                        'text' => 'text-indigo-700',
+                        'bar' => 'bg-gradient-to-r from-indigo-600 to-blue-500',
+                        'width' => min(($totalKpis ?? 0) * 10, 100),
+                    ],
+                    [
+                        'label' => 'Monitoring',
+                        'value' => $monitoring ?? $onTrack ?? 0,
+                        'note' => 'KPI moving normally and still being tracked.',
+                        'accent' => 'from-blue-600 to-cyan-500',
+                        'text' => 'text-blue-700',
+                        'bar' => 'bg-gradient-to-r from-blue-600 to-cyan-500',
+                        'width' => min(($monitoring ?? $onTrack ?? 0) * 10, 100),
+                    ],
+                    [
+                        'label' => 'Risk / Critical',
+                        'value' => $riskCriticalTotal,
+                        'note' => 'Needs action now, not decorative concern.',
+                        'accent' => 'from-red-600 to-orange-500',
+                        'text' => 'text-red-700',
+                        'bar' => 'bg-gradient-to-r from-red-600 to-orange-500',
+                        'width' => min($riskCriticalTotal * 10, 100),
+                    ],
+                ];
+            @endphp
+
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
-                <div class="bg-white p-6 rounded-2xl shadow">
-                    <p class="text-gray-500 text-sm">Overall KPI Score</p>
-                    <h3 class="text-3xl font-bold mt-2">
-                        {{ number_format($overallScore ?? 0, 2) }}%
-                    </h3>
-                </div>
+                @foreach($summaryCards as $card)
+                    <div class="relative overflow-hidden bg-white rounded-3xl border border-slate-200 soft-card p-5">
+                        <div class="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r {{ $card['accent'] }}"></div>
 
-                <div class="bg-white p-6 rounded-2xl shadow">
-                    <p class="text-gray-500 text-sm">Total KPI</p>
-                    <h3 class="text-3xl font-bold mt-2">
-                        {{ $totalKpis ?? 0 }}
-                    </h3>
-                </div>
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="min-w-0">
+                                <p class="text-slate-500 text-xs font-black uppercase tracking-wide">
+                                    {{ $card['label'] }}
+                                </p>
 
-                <div class="bg-white p-6 rounded-2xl shadow">
-                    <p class="text-gray-500 text-sm">Monitoring</p>
-                    <h3 class="text-3xl font-bold text-blue-600 mt-2">
-                        {{ $monitoring ?? $onTrack ?? 0 }}
-                    </h3>
-                </div>
+                                <p class="mt-3 text-3xl font-black {{ $card['text'] }} tracking-tight truncate">
+                                    {{ $card['value'] }}
+                                </p>
+                            </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow">
-                    <p class="text-gray-500 text-sm">Risk / Critical</p>
-                    <h3 class="text-3xl font-bold text-red-600 mt-2">
-                        {{ ($risk ?? $atRisk ?? 0) + ($critical ?? $offTrack ?? $overdue ?? 0) }}
-                    </h3>
-                </div>
+                            <div class="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br {{ $card['accent'] }} text-white flex items-center justify-center text-[10px] font-black shadow-lg shadow-slate-300/70">
+                                KPI
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-slate-500 mt-4 min-h-[32px]">
+                            {{ $card['note'] }}
+                        </p>
+
+                        <div class="mt-4 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-2.5 rounded-full {{ $card['bar'] }}" style="width: {{ $card['width'] }}%"></div>
+                        </div>
+                    </div>
+                @endforeach
             </div>
 
             <!-- EXECUTIVE KPI COMMAND CENTER -->
@@ -130,21 +387,21 @@
                     : ($staffNoKpi > 0 ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100');
             @endphp
 
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm mb-8 overflow-hidden">
+            <div class="bg-white rounded-3xl border border-slate-200 soft-card mb-8 overflow-hidden">
 
                 <!-- TOP STRIP -->
-                <div class="px-5 py-3 border-b border-slate-200 flex items-center justify-between gap-4">
+                <div class="brand-panel px-5 py-4 flex items-center justify-between gap-4 text-white">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-slate-950 text-white flex items-center justify-center text-sm font-black">
+                        <div class="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 text-white flex items-center justify-center text-sm font-black">
                             KPI
                         </div>
 
                         <div>
-                            <h3 class="text-sm font-black text-slate-900">
+                            <h3 class="text-sm font-black text-white">
                                 Executive KPI Command Center
                             </h3>
-                            <p class="text-[11px] text-slate-500">
-                                Action view for boss.
+                            <p class="text-[11px] text-slate-300">
+                                Clear action flow: review risk, assign missing KPI, monitor progress.
                             </p>
                         </div>
                     </div>
@@ -154,14 +411,82 @@
                             {{ $mainAction }}
                         </span>
 
-                        <a href="/kpi" class="text-[11px] font-bold bg-slate-900 text-white px-3 py-1.5 rounded-xl hover:bg-slate-800">
+                        <a href="/kpi" class="text-[11px] font-bold bg-white text-[#06142f] px-3 py-1.5 rounded-xl hover:bg-slate-100">
                             Manage KPI
                         </a>
                     </div>
                 </div>
 
-                <!-- ACTION SUMMARY -->
-                <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 border-b border-slate-200">
+                <!-- ACTION FLOW -->
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 p-4 border-b border-slate-200 bg-slate-50/70">
+
+                    <div class="group relative overflow-hidden rounded-2xl bg-red-50/50 border border-red-100 p-4 shadow-sm hover:shadow-md transition">
+                        <div class="absolute left-0 top-0 h-full w-1.5 bg-red-500"></div>
+
+                        <div class="flex items-start justify-between gap-3 pl-3">
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-wide text-red-500">Action 1</p>
+                                <h4 class="text-sm font-black text-slate-900 mt-1">Review Risk Owner</h4>
+                                <p class="text-xs text-slate-500 mt-1">Check staff with KPI at risk or critical.</p>
+                            </div>
+
+                            <div class="w-11 h-11 rounded-2xl bg-white border border-red-100 text-red-700 flex items-center justify-center text-lg font-black shadow-sm">
+                                {{ $staffWithRisk }}
+                            </div>
+                        </div>
+
+                        <a href="#staff-action" class="mt-4 ml-3 inline-flex items-center justify-center gap-2 rounded-xl bg-white border border-red-200 text-red-700 text-xs font-black px-4 py-2 hover:bg-red-100 transition">
+                            Review Staff Risk
+                            <span class="text-red-500">→</span>
+                        </a>
+                    </div>
+
+                    <div class="group relative overflow-hidden rounded-2xl bg-amber-50/50 border border-amber-100 p-4 shadow-sm hover:shadow-md transition">
+                        <div class="absolute left-0 top-0 h-full w-1.5 bg-amber-500"></div>
+
+                        <div class="flex items-start justify-between gap-3 pl-3">
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-wide text-amber-500">Action 2</p>
+                                <h4 class="text-sm font-black text-slate-900 mt-1">Assign Missing KPI</h4>
+                                <p class="text-xs text-slate-500 mt-1">Find staff with no KPI and create proper ownership.</p>
+                            </div>
+
+                            <div class="w-11 h-11 rounded-2xl bg-white border border-amber-100 text-amber-700 flex items-center justify-center text-lg font-black shadow-sm">
+                                {{ $staffNoKpi }}
+                            </div>
+                        </div>
+
+                        <a href="/kpi" class="mt-4 ml-3 inline-flex items-center justify-center gap-2 rounded-xl bg-white border border-amber-200 text-amber-700 text-xs font-black px-4 py-2 hover:bg-amber-100 transition">
+                            Manage KPI Owner
+                            <span class="text-amber-500">→</span>
+                        </a>
+                    </div>
+
+                    <div class="group relative overflow-hidden rounded-2xl bg-emerald-50/50 border border-emerald-100 p-4 shadow-sm hover:shadow-md transition">
+                        <div class="absolute left-0 top-0 h-full w-1.5 bg-emerald-500"></div>
+
+                        <div class="flex items-start justify-between gap-3 pl-3">
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-wide text-emerald-500">Action 3</p>
+                                <h4 class="text-sm font-black text-slate-900 mt-1">Monitor Progress</h4>
+                                <p class="text-xs text-slate-500 mt-1">Review quarter progress, timeline and update gaps.</p>
+                            </div>
+
+                            <div class="w-11 h-11 rounded-2xl bg-white border border-emerald-100 text-emerald-700 flex items-center justify-center text-lg font-black shadow-sm">
+                                {{ $monitoring ?? $onTrack ?? 0 }}
+                            </div>
+                        </div>
+
+                        <a href="#kpi-quarter-plan" class="mt-4 ml-3 inline-flex items-center justify-center gap-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-xs font-black px-4 py-2 hover:bg-emerald-100 transition">
+                            Monitor Quarter Plan
+                            <span class="text-emerald-500">→</span>
+                        </a>
+                    </div>
+
+                </div>
+
+                <!-- ACTION SNAPSHOT -->
+                <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 border-b border-slate-200 bg-white">
 
                     <div class="p-4 border-r border-slate-100">
                         <p class="text-[10px] text-slate-400 uppercase">Review Staff</p>
@@ -210,20 +535,19 @@
                     </div>
 
                     <div class="p-4">
-                        <p class="text-[10px] text-slate-400 uppercase">View</p>
+                        <p class="text-[10px] text-slate-400 uppercase">Flow</p>
                         <p class="text-sm font-black text-slate-900 mt-2">
-                            Compact
+                            3 Steps
                         </p>
-                        <p class="text-[10px] text-slate-500">mode</p>
+                        <p class="text-[10px] text-slate-500">action</p>
                     </div>
-
                 </div>
 
                 <!-- DETAIL GRID -->
                 <div class="grid grid-cols-12">
 
                     <!-- STAFF ACTION -->
-                    <div class="col-span-12 xl:col-span-5 p-4 border-r border-slate-100">
+                    <div id="staff-action" class="col-span-12 xl:col-span-5 p-4 border-r border-slate-100">
                         <div class="flex items-center justify-between mb-3">
                             <h4 class="text-xs font-black text-slate-900 uppercase tracking-wide">
                                 Staff Action
@@ -387,7 +711,7 @@
             </div>
 
             <!-- KPI LIST -->
-            <div class="bg-white rounded-2xl shadow p-6">
+            <div id="kpi-quarter-plan" class="bg-white rounded-3xl border border-slate-200 soft-card p-6">
                 <div class="flex items-center justify-between mb-5">
                     <div>
                         <h3 class="text-xl font-bold">KPI & Quarter Plan</h3>
@@ -398,47 +722,25 @@
                         </p>
                     </div>
 
-                    <a href="/kpi" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-blue-700">
+                    <a href="/kpi" class="bg-[#06142f] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#0b1f45] shadow-lg shadow-slate-300/60">
                         Manage KPI
                     </a>
                 </div>
 
-                <!-- WEIGHTAGE ALERT -->
-                <div class="mb-5">
-                    <div class="
-                        px-4 py-3 rounded-lg text-sm border
-                        {{ ($isWeightageExceeded ?? false)
-                            ? 'bg-red-100 border-red-400 text-red-700'
-                            : (($isWeightageComplete ?? false)
-                                ? 'bg-green-100 border-green-400 text-green-700'
-                                : 'bg-amber-100 border-amber-400 text-amber-700')
-                        }}
-                    ">
-                        <strong>Total Weightage:</strong> {{ number_format($totalWeightage ?? 0, 2) }}%
+                <div class="w-full overflow-x-auto rounded-2xl border border-slate-200">
 
-                        @if($isWeightageExceeded ?? false)
-                            <span class="ml-2 font-semibold">Total weightage cannot exceed 100%.</span>
-                        @elseif($isWeightageComplete ?? false)
-                            <span class="ml-2 font-semibold">Weightage is complete.</span>
-                        @else
-                            <span class="ml-2 font-semibold">Weightage is still below 100%.</span>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="w-full overflow-x-auto">
-                    <table class="w-full table-fixed text-left border-collapse text-[12px]">
+                    <table class="w-full min-w-[1450px] text-left border-collapse text-[12px]">
                         <thead>
-                            <tr class="border-b bg-slate-50 text-slate-600">
+                            <tr class="border-b bg-[#06142f] text-white">
                                 <th class="p-3 w-[8%]">Category</th>
-                                <th class="p-3 w-[9%]">Sub</th>
-                                <th class="p-3 w-[42%]">KPI & Quarter Plan</th>
-                                <th class="p-3 w-[7%]">Target</th>
-                                <th class="p-3 w-[7%]">Actual</th>
-                                <th class="p-3 w-[8%]">Current</th>
-                                <th class="p-3 w-[10%]">Progress</th>
-                                <th class="p-3 w-[8%]">Status</th>
-                                <th class="p-3 w-[4%] text-right">Action</th>
+                                <th class="p-3 w-[8%]">Sub</th>
+                                <th class="p-3 w-[36%]">KPI & Quarter Plan</th>
+                                <th class="p-3 w-[8%]">Unit</th>
+                                <th class="p-3 w-[10%]">Target</th>
+                                <th class="p-3 w-[10%]">Actual</th>
+                                <th class="p-3 w-[11%]">Progress</th>
+                                <th class="p-3 w-[7%]">Status</th>
+                                <th class="p-3 w-[2%] text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -483,8 +785,11 @@
                                     $statusLabel = match($status) {
                                         'not_started' => 'Not Started',
                                         'on_track' => 'On Track',
+                                        'monitoring' => 'Monitoring',
                                         'at_risk' => 'At Risk',
+                                        'risk' => 'Risk',
                                         'in_trouble' => 'In Trouble',
+                                        'critical' => 'Critical',
                                         'completed' => 'Completed',
                                         default => 'Not Started',
                                     };
@@ -492,20 +797,35 @@
                                     $statusClass = match($status) {
                                         'not_started' => 'bg-slate-100 text-slate-700',
                                         'on_track' => 'bg-blue-100 text-blue-700',
+                                        'monitoring' => 'bg-blue-100 text-blue-700',
                                         'at_risk' => 'bg-amber-100 text-amber-700',
+                                        'risk' => 'bg-amber-100 text-amber-700',
                                         'in_trouble' => 'bg-red-100 text-red-700',
+                                        'critical' => 'bg-red-100 text-red-700',
                                         'completed' => 'bg-emerald-100 text-emerald-700',
                                         default => 'bg-slate-100 text-slate-700',
                                     };
 
                                     if ($overallProgress <= 25) {
                                         $overallBar = 'bg-red-600';
+                                        $overallProgressText = 'Critical';
+                                        $overallProgressTextClass = 'text-red-700';
                                     } elseif ($overallProgress <= 50) {
-                                        $overallBar = 'bg-orange-500';
+                                        $overallBar = 'bg-gradient-to-r from-red-600 to-orange-500';
+                                        $overallProgressText = 'Risk';
+                                        $overallProgressTextClass = 'text-orange-700';
                                     } elseif ($overallProgress <= 75) {
-                                        $overallBar = 'bg-yellow-400';
+                                        $overallBar = 'bg-gradient-to-r from-orange-500 to-yellow-400';
+                                        $overallProgressText = 'Watch';
+                                        $overallProgressTextClass = 'text-amber-700';
+                                    } elseif ($overallProgress <= 100) {
+                                        $overallBar = 'bg-gradient-to-r from-yellow-400 to-emerald-600';
+                                        $overallProgressText = 'Healthy';
+                                        $overallProgressTextClass = 'text-emerald-700';
                                     } else {
-                                        $overallBar = 'bg-emerald-600';
+                                        $overallBar = 'bg-emerald-700';
+                                        $overallProgressText = 'Exceeded';
+                                        $overallProgressTextClass = 'text-emerald-800';
                                     }
                                 @endphp
 
@@ -560,28 +880,37 @@
                                         </div>
                                     </td>
 
-                                    <td class="p-3 align-top text-sm font-black text-slate-900">
-                                        {{ number_format($totalTarget, 2) }}
-                                    </td>
-
-                                    <td class="p-3 align-top text-sm font-black text-slate-900">
-                                        {{ number_format($totalActual, 2) }}
-                                    </td>
-
                                     <td class="p-3 align-top">
-                                        <span class="inline-flex px-2 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-black">
-                                            Overall
+                                        <span class="inline-flex px-2 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-black uppercase">
+                                            {{ $kpi['unit'] ?? '-' }}
                                         </span>
                                     </td>
 
                                     <td class="p-3 align-top">
-                                        <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
-                                            <div class="h-2 rounded-full {{ $overallBar }}" style="width: {{ min($overallProgress, 100) }}%"></div>
+                                        <div class="max-w-[130px] truncate text-sm font-black text-slate-900" title="{{ number_format($totalTarget, 2) }}">
+                                            {{ number_format($totalTarget, 2) }}
+                                        </div>
+                                    </td>
+
+                                    <td class="p-3 align-top">
+                                        <div class="max-w-[130px] truncate text-sm font-black text-slate-900" title="{{ number_format($totalActual, 2) }}">
+                                            {{ number_format($totalActual, 2) }}
+                                        </div>
+                                    </td>
+
+                                    <td class="p-3 align-top">
+                                        <div class="h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                                            <div class="h-2.5 rounded-full {{ $overallBar }}" style="width: {{ min($overallProgress, 100) }}%"></div>
                                         </div>
 
-                                        <p class="text-[10px] mt-1 text-slate-500">
-                                            {{ number_format($overallProgress, 1) }}%
-                                        </p>
+                                        <div class="mt-1 flex items-center justify-between gap-2">
+                                            <p class="text-[10px] text-slate-500">
+                                                {{ number_format($overallProgress, 1) }}%
+                                            </p>
+                                            <p class="text-[10px] font-black {{ $overallProgressTextClass }}">
+                                                {{ $overallProgressText }}
+                                            </p>
+                                        </div>
                                     </td>
 
                                     <td class="p-3 align-top">
@@ -684,12 +1013,24 @@
 
                                         if ($qProgress <= 25) {
                                             $qBar = 'bg-red-600';
+                                            $qProgressText = 'Critical';
+                                            $qProgressTextClass = 'text-red-700';
                                         } elseif ($qProgress <= 50) {
-                                            $qBar = 'bg-orange-500';
+                                            $qBar = 'bg-gradient-to-r from-red-600 to-orange-500';
+                                            $qProgressText = 'Risk';
+                                            $qProgressTextClass = 'text-orange-700';
                                         } elseif ($qProgress <= 75) {
-                                            $qBar = 'bg-yellow-400';
+                                            $qBar = 'bg-gradient-to-r from-orange-500 to-yellow-400';
+                                            $qProgressText = 'Watch';
+                                            $qProgressTextClass = 'text-amber-700';
+                                        } elseif ($qProgress <= 100) {
+                                            $qBar = 'bg-gradient-to-r from-yellow-400 to-emerald-600';
+                                            $qProgressText = 'Healthy';
+                                            $qProgressTextClass = 'text-emerald-700';
                                         } else {
-                                            $qBar = 'bg-emerald-600';
+                                            $qBar = 'bg-emerald-700';
+                                            $qProgressText = 'Exceeded';
+                                            $qProgressTextClass = 'text-emerald-800';
                                         }
                                     @endphp
 
@@ -767,28 +1108,37 @@
                                             </div>
                                         </td>
 
-                                        <td class="p-3 text-xs font-bold text-slate-700">
-                                            {{ number_format($qTarget, 2) }}
-                                        </td>
-
-                                        <td class="p-3 text-xs font-bold text-slate-700">
-                                            {{ number_format($qActual, 2) }}
-                                        </td>
-
                                         <td class="p-3">
-                                            <span class="inline-flex px-2 py-1 rounded-lg bg-white border border-slate-200 text-[10px] font-black text-slate-700">
-                                                {{ $qLabel }}
+                                            <span class="inline-flex px-2 py-1 rounded-lg bg-white border border-slate-200 text-[10px] font-black text-slate-700 uppercase">
+                                                {{ $kpi['unit'] ?? '-' }}
                                             </span>
                                         </td>
 
                                         <td class="p-3">
-                                            <div class="h-2 bg-white rounded-full overflow-hidden">
-                                                <div class="h-2 rounded-full {{ $qBar }}" style="width: {{ min($qProgress, 100) }}%"></div>
+                                            <div class="max-w-[130px] truncate text-xs font-bold text-slate-700" title="{{ number_format($qTarget, 2) }}">
+                                                {{ number_format($qTarget, 2) }}
+                                            </div>
+                                        </td>
+
+                                        <td class="p-3">
+                                            <div class="max-w-[130px] truncate text-xs font-bold text-slate-700" title="{{ number_format($qActual, 2) }}">
+                                                {{ number_format($qActual, 2) }}
+                                            </div>
+                                        </td>
+
+                                        <td class="p-3">
+                                            <div class="h-2.5 bg-white rounded-full overflow-hidden">
+                                                <div class="h-2.5 rounded-full {{ $qBar }}" style="width: {{ min($qProgress, 100) }}%"></div>
                                             </div>
 
-                                            <p class="text-[10px] mt-1 text-slate-500">
-                                                {{ number_format($qProgress, 1) }}%
-                                            </p>
+                                            <div class="mt-1 flex items-center justify-between gap-2">
+                                                <p class="text-[10px] text-slate-500">
+                                                    {{ number_format($qProgress, 1) }}%
+                                                </p>
+                                                <p class="text-[10px] font-black {{ $qProgressTextClass }}">
+                                                    {{ $qProgressText }}
+                                                </p>
+                                            </div>
                                         </td>
 
                                         <td class="p-3">
@@ -825,7 +1175,7 @@
                                             class="w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden"
                                             onclick="event.stopPropagation()"
                                         >
-                                            <div class="px-4 py-3 bg-slate-950 text-white flex items-start justify-between">
+                                            <div class="px-4 py-3 brand-panel text-white flex items-start justify-between">
                                                 <div>
                                                     <p class="text-[10px] uppercase tracking-wide text-slate-400">
                                                         Edit {{ $qLabel }} Quarter Plan
@@ -986,8 +1336,11 @@
                             $modalStatusLabel = match($modalStatus) {
                                 'not_started' => 'Not Started',
                                 'on_track' => 'On Track',
+                                'monitoring' => 'Monitoring',
                                 'at_risk' => 'At Risk',
+                                'risk' => 'Risk',
                                 'in_trouble' => 'In Trouble',
+                                'critical' => 'Critical',
                                 'completed' => 'Completed',
                                 default => 'Not Started',
                             };
@@ -995,8 +1348,11 @@
                             $modalStatusClass = match($modalStatus) {
                                 'not_started' => 'bg-slate-100 text-slate-700',
                                 'on_track' => 'bg-blue-100 text-blue-700',
+                                'monitoring' => 'bg-blue-100 text-blue-700',
                                 'at_risk' => 'bg-amber-100 text-amber-700',
+                                'risk' => 'bg-amber-100 text-amber-700',
                                 'in_trouble' => 'bg-red-100 text-red-700',
+                                'critical' => 'bg-red-100 text-red-700',
                                 'completed' => 'bg-emerald-100 text-emerald-700',
                                 default => 'bg-slate-100 text-slate-700',
                             };
@@ -1061,7 +1417,7 @@
                                 onclick="event.stopPropagation()"
                             >
                                 <!-- HEADER -->
-                                <div class="px-4 py-3 bg-slate-950 text-white flex items-start justify-between gap-3">
+                                <div class="px-4 py-3 brand-panel text-white flex items-start justify-between gap-3">
                                     <div class="min-w-0">
                                         <p class="text-[10px] uppercase tracking-wide text-slate-400">
                                             KPI Detail
@@ -1084,7 +1440,7 @@
                                 <div class="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
 
                                     <!-- QUICK SNAPSHOT -->
-                                    <div class="grid grid-cols-4 gap-2">
+                                    <div class="grid grid-cols-3 gap-2">
                                         <div class="rounded-xl bg-slate-50 border border-slate-200 p-2">
                                             <p class="text-[9px] text-slate-400 uppercase">Base</p>
                                             <p class="text-xs font-black text-slate-900 truncate">
@@ -1103,13 +1459,6 @@
                                             <p class="text-[9px] text-blue-400 uppercase">Actual</p>
                                             <p class="text-xs font-black text-blue-800 truncate">
                                                 {{ number_format((float) ($kpi['actual_value'] ?? 0), 2) }}
-                                            </p>
-                                        </div>
-
-                                        <div class="rounded-xl bg-slate-50 border border-slate-200 p-2">
-                                            <p class="text-[9px] text-slate-400 uppercase">Weight</p>
-                                            <p class="text-xs font-black text-slate-900">
-                                                {{ number_format($kpi['weightage'] ?? 0, 2) }}%
                                             </p>
                                         </div>
                                     </div>
@@ -1172,10 +1521,22 @@
 
                                     <!-- META -->
                                     <div class="grid grid-cols-2 gap-2 text-xs">
-                                        <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
-                                            <p class="text-[10px] text-slate-400 uppercase">Unit</p>
+                                        <div class="rounded-xl bg-white border border-slate-100 p-3">
+                                            <p class="text-[10px] text-slate-400 uppercase tracking-wide">Unit</p>
+
+                                            @php
+                                                $unit = strtolower(trim($kpi['unit'] ?? ''));
+
+                                                $unitDisplay = match($unit) {
+                                                    'currency' => 'RM',
+                                                    'percentage' => '%',
+                                                    'number' => '—',
+                                                    default => '—',
+                                                };
+                                            @endphp
+
                                             <p class="font-bold text-slate-800 mt-1">
-                                                {{ strtoupper($kpi['unit'] ?? '-') }}
+                                                {{ $unitDisplay }}
                                             </p>
                                         </div>
 

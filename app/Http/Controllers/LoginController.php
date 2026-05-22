@@ -28,25 +28,101 @@ class LoginController extends Controller
         $employees = $supabase->get('employees', [
             'email' => 'eq.' . $request->email,
             'is_active' => 'eq.true',
-            'select' => '*'
+            'select' => '*',
+            'order' => 'company_code.asc',
+        ]);
+
+        if (empty($employees)) {
+            return back()->with('error', 'Email tidak dijumpai atau akaun tidak aktif.');
+        }
+
+        if (count($employees) > 1) {
+            session([
+                'available_dashboards' => $employees,
+            ]);
+
+            return redirect()->route('dashboard.choose');
+        }
+
+        $employee = $employees[0];
+
+        $this->setEmployeeSession($employee);
+
+        return redirect()->route('dashboard');
+    }
+
+    public function chooseDashboard(SupabaseService $supabase)
+    {
+        $dashboards = session('available_dashboards');
+
+        if (!$dashboards) {
+            return redirect()
+                ->route('login')
+                ->with('error', 'Sila login semula.');
+        }
+
+        foreach ($dashboards as &$dashboard) {
+            $company = $supabase->get('companies', [
+                'code' => 'eq.' . $dashboard['company_code'],
+                'select' => 'name,display_name',
+                'limit' => 1,
+            ]);
+
+            $dashboard['company_name'] =
+                $company[0]['display_name']
+                ?? $company[0]['name']
+                ?? $dashboard['company_code'];
+
+            $dashboard['employee_uuid'] = $dashboard['id'];
+        }
+
+        return view('choose-dashboard', [
+            'dashboards' => $dashboards,
+        ]);
+    }
+
+    public function selectDashboard(Request $request, SupabaseService $supabase)
+    {
+        $request->validate([
+            'employee_uuid' => 'required|string',
+            'company_code' => 'required|string',
+        ]);
+
+        $employees = $supabase->get('employees', [
+            'id' => 'eq.' . $request->employee_uuid,
+            'company_code' => 'eq.' . $request->company_code,
+            'is_active' => 'eq.true',
+            'select' => '*',
+            'limit' => 1,
         ]);
 
         $employee = $employees[0] ?? null;
 
         if (!$employee) {
-            return back()->with('error', 'Email tidak dijumpai atau akaun tidak aktif.');
+            return back()->with('error', 'Dashboard access tidak sah.');
         }
 
+        session()->forget('available_dashboards');
+
+        $this->setEmployeeSession($employee);
+
+        return redirect()->route('dashboard');
+    }
+
+    private function setEmployeeSession(array $employee): void
+    {
         session([
             'employee_uuid' => $employee['id'],
             'employee_id' => $employee['employee_id'],
             'employee_name' => $employee['short_name'] ?? $employee['full_name'] ?? 'User',
+            'short_name' => $employee['short_name'] ?? null,
+            'full_name' => $employee['full_name'] ?? null,
             'employee_role' => $employee['role'],
+            'role' => $employee['role'],
+            'position' => $employee['position'] ?? null,
             'department_code' => $employee['department_code'],
             'company_code' => $employee['company_code'] ?? 'RCG',
         ]);
-
-        return redirect()->route('dashboard');
     }
 
     public function logout()

@@ -59,25 +59,22 @@ class SupabaseService
         ], $data);
     }
 
+    public function post(string $table, array $data)
+    {
+        return $this->insert($table, $data);
+    }
+
     public function delete(string $table, array $query = [])
     {
-        $url = "{$this->url}/rest/v1/{$table}";
+        $url = $this->url . '/rest/v1/' . $table;
 
         if (!empty($query)) {
             $url .= '?' . http_build_query($query);
         }
 
-        $response = Http::withHeaders([
-            'apikey' => $this->key,
-            'Authorization' => 'Bearer ' . $this->key,
-            'Content-Type' => 'application/json',
-            'Prefer' => 'return=representation',
-        ])->delete($url);
-
-        if ($response->failed()) {
-            throw new \Exception($response->body());
-        }
-
-        return $response->json();
+        return $this->request()
+            ->delete($url)
+            ->throw()
+            ->json();
     }
 }

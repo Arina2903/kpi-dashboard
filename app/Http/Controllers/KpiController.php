@@ -28,7 +28,7 @@ class KpiController extends Controller
         $employees = $supabase->get('employees', [
             'id' => 'eq.' . $employeeUuid,
             'is_active' => 'eq.true',
-            'select' => '*'
+            'select' => '*',
         ]);
 
         if (empty($employees)) {
@@ -43,7 +43,7 @@ class KpiController extends Controller
     {
         $permissions = $supabase->get('kpi_permissions', [
             'role' => 'eq.' . $role,
-            'select' => '*'
+            'select' => '*',
         ]);
 
         if (empty($permissions)) {
@@ -51,44 +51,6 @@ class KpiController extends Controller
         }
 
         return $permissions[0];
-    }
-
-    private function accessibleEmployeeIds(SupabaseService $supabase, array $user): array
-    {
-        $role = $user['role'] ?? '';
-        $companyCode = $user['company_code'] ?? null;
-        $departmentCode = $user['department_code'] ?? null;
-
-        if (in_array($role, ['Admin', 'SLT', 'CCO', 'CCMO', 'VP'])) {
-            $filters = [
-                'is_active' => 'eq.true',
-                'select' => 'id'
-            ];
-
-            if ($companyCode) {
-                $filters['company_code'] = 'eq.' . $companyCode;
-            }
-
-            $employees = $supabase->get('employees', $filters);
-            return collect($employees)->pluck('id')->toArray();
-        }
-
-        if (in_array($role, ['Manager', 'Executive'])) {
-            $filters = [
-                'department_code' => 'eq.' . $departmentCode,
-                'is_active' => 'eq.true',
-                'select' => 'id'
-            ];
-
-            if ($companyCode) {
-                $filters['company_code'] = 'eq.' . $companyCode;
-            }
-
-            $employees = $supabase->get('employees', $filters);
-            return collect($employees)->pluck('id')->toArray();
-        }
-
-        return [$user['id']];
     }
 
     private function sidebarData(SupabaseService $supabase, array $user): array
@@ -102,10 +64,12 @@ class KpiController extends Controller
             $departmentFilters['company_code'] = 'eq.' . $user['company_code'];
         }
 
-        $departments = $supabase->get('departments', $departmentFilters);
+        $departments = $supabase->get('departments', $departmentFilters) ?? [];
 
-        $canSwitchDepartment = in_array($user['role'] ?? '', [
-            'Admin', 'SLT', 'CCO', 'CCMO', 'VP',
+        $role = strtoupper(trim($user['role'] ?? ''));
+
+        $canSwitchDepartment = in_array($role, [
+            'ADMIN', 'SLT', 'CCO', 'CCMO', 'VP',
         ]);
 
         $selectedDepartmentCode = session('selected_department_code')
@@ -124,7 +88,7 @@ class KpiController extends Controller
         }
 
         return [
-            'departments' => $departments ?? [],
+            'departments' => $departments,
             'department' => $department,
             'canSwitchDepartment' => $canSwitchDepartment,
             'selectedDepartmentCode' => $selectedDepartmentCode,
@@ -137,44 +101,99 @@ class KpiController extends Controller
         $permission = $this->permissionForRoleFromDb($supabase, $user['role']);
         $fy = $this->currentFY();
 
-        $employeeIds = $this->accessibleEmployeeIds($supabase, $user);
+        $role = strtoupper(trim($user['role'] ?? ''));
 
         $employees = [];
         $kpis = [];
 
-        if (!empty($employeeIds)) {
-            $employees = $supabase->get('employees', [
-                'id' => 'in.(' . implode(',', $employeeIds) . ')',
-                'select' => 'id,employee_id,short_name,role,department_code'
-            ]);
+        if (in_array($role, ['ADMIN', 'SLT', 'CCO', 'CCMO', 'VP'])) {
+            $selectedDepartmentCode = session('selected_department_code')
+                ?? $user['department_code'];
 
             $kpis = $supabase->get('kpis', [
-                'employee_id' => 'in.(' . implode(',', $employeeIds) . ')',
+                'company_code' => 'eq.' . $user['company_code'],
+                'department_code' => 'eq.' . $selectedDepartmentCode,
                 'financial_year' => 'eq.' . $fy,
                 'select' => '*',
-                'order' => 'created_at.desc'
-            ]);
+                'order' => 'created_at.desc',
+            ]) ?? [];
+
+            $employees = $supabase->get('employees', [
+                'company_code' => 'eq.' . $user['company_code'],
+                'department_code' => 'eq.' . $selectedDepartmentCode,
+                'is_active' => 'eq.true',
+                'select' => 'id,employee_id,short_name,role,department_code',
+            ]) ?? [];
+        } elseif ($role === 'MANAGER') {
+            $kpis = $supabase->get('kpis', [
+                'company_code' => 'eq.' . $user['company_code'],
+                'department_code' => 'eq.' . $user['department_code'],
+                'financial_year' => 'eq.' . $fy,
+                'select' => '*',
+                'order' => 'created_at.desc',
+            ]) ?? [];
+
+            $employees = $supabase->get('employees', [
+                'company_code' => 'eq.' . $user['company_code'],
+                'department_code' => 'eq.' . $user['department_code'],
+                'is_active' => 'eq.true',
+                'select' => 'id,employee_id,short_name,role,department_code',
+            ]) ?? [];
+        } else {
+            $kpis = $supabase->get('kpis', [
+                'employee_id' => 'eq.' . $user['id'],
+                'financial_year' => 'eq.' . $fy,
+                'select' => '*',
+                'order' => 'created_at.desc',
+            ]) ?? [];
+
+            $employees = $supabase->get('employees', [
+                'id' => 'eq.' . $user['id'],
+                'select' => 'id,employee_id,short_name,role,department_code',
+            ]) ?? [];
         }
 
         $employeeMap = collect($employees)->keyBy('id');
 
-        $kpis = collect($kpis)->map(function ($kpi) use ($employeeMap, $supabase) {
+        $creatorIds = collect($kpis)
+            ->pluck('created_by')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $creators = [];
+
+        if (!empty($creatorIds)) {
+            $creators = $supabase->get('employees', [
+                'id' => 'in.(' . implode(',', $creatorIds) . ')',
+                'select' => 'id,employee_id,short_name,role,department_code',
+            ]) ?? [];
+        }
+
+        $creatorMap = collect($creators)->keyBy('id');
+
+        $kpis = collect($kpis)->map(function ($kpi) use ($employeeMap, $creatorMap, $supabase) {
             $employee = $employeeMap->get($kpi['employee_id']);
+            $creator = $creatorMap->get($kpi['created_by'] ?? null);
 
             $kpi['employee_name'] = $employee['short_name'] ?? 'Unassigned';
             $kpi['employee_role'] = $employee['role'] ?? '-';
             $kpi['employee_code'] = $employee['employee_id'] ?? '-';
             $kpi['department_code'] = $kpi['department_code'] ?? ($employee['department_code'] ?? '-');
 
+            $kpi['created_by_name'] = $creator['short_name'] ?? '-';
+            $kpi['created_by_role'] = $creator['role'] ?? '-';
+
             $quarters = $supabase->get('kpi_quarters', [
                 'kpi_id' => 'eq.' . $kpi['id'],
                 'select' => '*',
                 'order' => 'quarter.asc',
-            ]);
+            ]) ?? [];
 
-            $kpi['quarters'] = $quarters ?? [];
-            $kpi['quarter_total_target'] = collect($quarters ?? [])->sum(fn ($q) => (float) ($q['quarter_target'] ?? 0));
-            $kpi['quarter_total_actual'] = collect($quarters ?? [])->sum(fn ($q) => (float) ($q['quarter_actual'] ?? 0));
+            $kpi['quarters'] = $quarters;
+            $kpi['quarter_total_target'] = collect($quarters)->sum(fn ($q) => (float) ($q['quarter_target'] ?? 0));
+            $kpi['quarter_total_actual'] = collect($quarters)->sum(fn ($q) => (float) ($q['quarter_actual'] ?? 0));
 
             $kpi['quarter_overall_progress'] = $kpi['quarter_total_target'] > 0
                 ? round(($kpi['quarter_total_actual'] / $kpi['quarter_total_target']) * 100, 2)
@@ -182,7 +201,7 @@ class KpiController extends Controller
 
             $today = now('Asia/Kuala_Lumpur')->toDateString();
 
-            $currentQuarter = collect($quarters ?? [])->first(function ($q) use ($today) {
+            $currentQuarter = collect($quarters)->first(function ($q) use ($today) {
                 return !empty($q['start_date'])
                     && !empty($q['end_date'])
                     && $q['start_date'] <= $today
@@ -215,49 +234,25 @@ class KpiController extends Controller
             ])
             ->sortByDesc('total');
 
-        $seniorKpis = $supabase->get('kpis', [
-            'department_code' => 'eq.' . ($user['department_code'] ?? ''),
-            'financial_year' => 'eq.' . $fy,
-            'select' => '*',
-            'order' => 'created_at.desc'
-        ]);
-
         return view('kpi.index', array_merge([
             'user' => $user,
             'permission' => $permission,
             'employees' => $employees,
             'kpis' => $kpis,
-            'seniorKpis' => $seniorKpis ?? [],
             'fy' => $fy,
             'kpiCountByUser' => $kpiCountByUser,
             'kpiCountByDepartment' => $kpiCountByDepartment,
         ], $this->sidebarData($supabase, $user)));
     }
 
-    public function create(SupabaseService $supabase)
+    public function create(Request $request, SupabaseService $supabase)
     {
         $user = $this->currentUser($supabase);
-        $permission = $this->permissionForRoleFromDb($supabase, $user['role']);
-        $fy = $this->currentFY();
-
-        if (!$permission['can_create']) {
-            abort(403, 'You cannot create KPI.');
-        }
-
-        $existingKpis = $supabase->get('kpis', [
-            'employee_id' => 'eq.' . $user['id'],
-            'financial_year' => 'eq.' . $fy,
-            'select' => 'weightage'
-        ]);
-
-        $usedWeightage = collect($existingKpis)->sum(fn ($kpi) => (float) ($kpi['weightage'] ?? 0));
-        $remainingWeightage = max(0, 100 - $usedWeightage);
+        $fy = $request->get('financial_year', $this->currentFY());
 
         return view('kpi.create', array_merge([
-            'fy' => $fy,
             'user' => $user,
-            'usedWeightage' => round($usedWeightage, 2),
-            'remainingWeightage' => round($remainingWeightage, 2),
+            'fy' => $fy,
         ], $this->sidebarData($supabase, $user)));
     }
 
@@ -280,7 +275,6 @@ class KpiController extends Controller
             'base_target' => 'required|numeric|min:0',
             'stretch_target' => 'required|numeric|min:0',
             'actual_value' => 'required|numeric|min:0',
-            'weightage' => 'required|numeric|min:0|max:100',
             'status' => 'required|string|in:not_started,on_track,at_risk,in_trouble,completed',
             'remark' => 'nullable|string',
 
@@ -302,26 +296,15 @@ class KpiController extends Controller
                 ->withInput();
         }
 
-        $this->validateQuarterDates($validated['quarters'] ?? []);
+        $quarterDateError = $this->validateQuarterDates($validated['quarters'] ?? []);
 
-        $fy = $validated['financial_year'] ?? $this->currentFY();
-
-        $existingKpis = $supabase->get('kpis', [
-            'employee_id' => 'eq.' . $user['id'],
-            'financial_year' => 'eq.' . $fy,
-            'select' => 'weightage'
-        ]);
-
-        $usedWeightage = collect($existingKpis)->sum(fn ($kpi) => (float) ($kpi['weightage'] ?? 0));
-        $newWeightage = (float) $validated['weightage'];
-
-        if (($usedWeightage + $newWeightage) > 100) {
+        if ($quarterDateError) {
             return back()
-                ->withErrors([
-                    'weightage' => 'Weightage exceeded. Remaining weightage is only ' . number_format(100 - $usedWeightage, 2) . '%.'
-                ])
+                ->withErrors($quarterDateError)
                 ->withInput();
         }
+
+        $fy = $validated['financial_year'] ?? $this->currentFY();
 
         $achievement = $this->calculateAchievement(
             $validated['base_target'],
@@ -329,33 +312,37 @@ class KpiController extends Controller
             $validated['actual_value']
         );
 
-        $createdKpi = $supabase->insert('kpis', [
+        $payload = [
             'employee_id' => $user['id'],
+            'department_code' => $user['department_code'],
+            'company_code' => $user['company_code'],
+            'created_by' => $user['id'],
+
             'financial_year' => $fy,
             'category' => $validated['category'],
             'sub_category' => $validated['sub_category'],
             'kpi_title' => $validated['kpi_title'],
             'kpi_description' => $validated['kpi_description'] ?? null,
-            'weightage' => $validated['weightage'],
+            'unit' => $validated['unit'],
             'base_target' => $validated['base_target'],
             'stretch_target' => $validated['stretch_target'],
             'actual_value' => $validated['actual_value'],
             'achievement_percentage' => $achievement,
-            'unit' => $validated['unit'],
             'status' => $this->normalizeStatus($validated['status']),
             'remark' => $validated['remark'] ?? null,
-            'created_by' => $user['id'],
-            'department_code' => $user['department_code'],
-            'company_code' => $user['company_code'] ?? null,
+
             'created_at' => $this->nowMy(),
             'updated_at' => $this->nowMy(),
-        ]);
+        ];
+
+        $createdKpi = $supabase->insert('kpis', $payload);
 
         $kpiId = $createdKpi[0]['id'] ?? null;
 
         if (!$kpiId) {
             $latestKpi = $supabase->get('kpis', [
                 'employee_id' => 'eq.' . $user['id'],
+                'department_code' => 'eq.' . $user['department_code'],
                 'financial_year' => 'eq.' . $fy,
                 'kpi_title' => 'eq.' . $validated['kpi_title'],
                 'select' => '*',
@@ -389,9 +376,8 @@ class KpiController extends Controller
         }
 
         $oldKpi = $this->findKpiOrFail($supabase, $id);
-        $allowedEmployees = $this->accessibleEmployeeIds($supabase, $user);
 
-        if (!in_array($oldKpi['employee_id'], $allowedEmployees)) {
+        if (!$this->canEditKpi($user, $oldKpi)) {
             abort(403, 'You cannot update this KPI.');
         }
 
@@ -400,10 +386,9 @@ class KpiController extends Controller
             'sub_category' => 'required|string',
             'kpi_title' => 'required|string|max:255',
             'kpi_description' => 'nullable|string',
-            'weightage' => 'required|numeric|min:0|max:100',
             'unit' => 'required|string|in:number,currency,percentage',
-            'base_target' => 'nullable|numeric|min:0',
-            'stretch_target' => 'nullable|numeric|min:0',
+            'base_target' => 'required|numeric|min:0',
+            'stretch_target' => 'required|numeric|min:0',
             'actual_value' => 'required|numeric|min:0',
             'status' => 'required|string|in:not_started,on_track,at_risk,in_trouble,completed',
             'remark' => 'nullable|string',
@@ -420,24 +405,24 @@ class KpiController extends Controller
             'quarters.*.status' => 'nullable|string|in:not_started,on_track,at_risk,in_trouble,completed',
         ]);
 
-        $this->validateQuarterDates($validated['quarters'] ?? []);
-        $this->validateWeightageForUpdate($supabase, $oldKpi, (float) $validated['weightage']);
-
-        $baseTarget = $validated['base_target'] ?? ($oldKpi['base_target'] ?? 0);
-        $stretchTarget = $validated['stretch_target'] ?? ($oldKpi['stretch_target'] ?? 0);
-
-        if ((float) $stretchTarget < (float) $baseTarget) {
+        if ((float) $validated['stretch_target'] < (float) $validated['base_target']) {
             return back()
                 ->withErrors(['stretch_target' => 'Stretch must be greater than or equal to Base.'])
                 ->withInput();
         }
 
-        $actualValue = $validated['actual_value'];
+        $quarterDateError = $this->validateQuarterDates($validated['quarters'] ?? []);
+
+        if ($quarterDateError) {
+            return back()
+                ->withErrors($quarterDateError)
+                ->withInput();
+        }
 
         $achievement = $this->calculateAchievement(
-            $baseTarget,
-            $stretchTarget,
-            $actualValue
+            $validated['base_target'],
+            $validated['stretch_target'],
+            $validated['actual_value']
         );
 
         $updateData = [
@@ -445,11 +430,10 @@ class KpiController extends Controller
             'sub_category' => $validated['sub_category'],
             'kpi_title' => $validated['kpi_title'],
             'kpi_description' => $validated['kpi_description'] ?? null,
-            'weightage' => $validated['weightage'],
-            'base_target' => $baseTarget,
-            'stretch_target' => $stretchTarget,
+            'base_target' => $validated['base_target'],
+            'stretch_target' => $validated['stretch_target'],
             'unit' => $validated['unit'],
-            'actual_value' => $actualValue,
+            'actual_value' => $validated['actual_value'],
             'achievement_percentage' => $achievement,
             'status' => $this->normalizeStatus($validated['status']),
             'remark' => $validated['remark'] ?? null,
@@ -457,7 +441,7 @@ class KpiController extends Controller
         ];
 
         $supabase->update('kpis', [
-            'id' => 'eq.' . $id
+            'id' => 'eq.' . $id,
         ], $updateData);
 
         $this->upsertQuarters($supabase, $id, $validated['quarters'] ?? []);
@@ -470,34 +454,11 @@ class KpiController extends Controller
 
     public function destroy(string $id, SupabaseService $supabase)
     {
-        if (!session()->has('employee_uuid') || !session()->has('company_code')) {
-            return redirect()
-                ->route('login')
-                ->with('error', 'Sila login terlebih dahulu.');
-        }
-
-        $employeeUuid = session('employee_uuid');
-        $companyCode = session('company_code');
-
-        $employees = $supabase->get('employees', [
-            'id' => 'eq.' . $employeeUuid,
-            'is_active' => 'eq.true',
-            'select' => '*',
-        ]);
-
-        if (empty($employees)) {
-            session()->flush();
-
-            return redirect()
-                ->route('login')
-                ->with('error', 'Session tidak sah. Sila login semula.');
-        }
-
-        $user = $employees[0];
+        $user = $this->currentUser($supabase);
 
         $kpis = $supabase->get('kpis', [
             'id' => 'eq.' . $id,
-            'company_code' => 'eq.' . $companyCode,
+            'company_code' => 'eq.' . $user['company_code'],
             'select' => '*',
         ]);
 
@@ -508,9 +469,9 @@ class KpiController extends Controller
         $kpi = $kpis[0];
 
         $canDelete =
-            in_array($user['role'], ['Admin', 'SLT', 'CCO', 'CCMO', 'VP']) ||
-            (($kpi['employee_id'] ?? null) === ($user['id'] ?? null)) ||
-            (($kpi['created_by'] ?? null) === ($user['id'] ?? null));
+            in_array(strtoupper($user['role']), ['ADMIN', 'SLT', 'CCO', 'CCMO', 'VP'])
+            || (($kpi['employee_id'] ?? null) === ($user['id'] ?? null))
+            || (($kpi['created_by'] ?? null) === ($user['id'] ?? null));
 
         if (!$canDelete) {
             return back()->with('error', 'Anda tiada akses untuk padam KPI ini.');
@@ -530,43 +491,12 @@ class KpiController extends Controller
 
         $supabase->delete('kpis', [
             'id' => 'eq.' . $id,
-            'company_code' => 'eq.' . $companyCode,
+            'company_code' => 'eq.' . $user['company_code'],
         ]);
 
         return redirect()
             ->route('kpi.index')
             ->with('success', 'KPI berjaya dipadam.');
-    }
-
-    public function edit($id, SupabaseService $supabase)
-    {
-        $user = $this->currentUser($supabase);
-        $permission = $this->permissionForRoleFromDb($supabase, $user['role']);
-
-        if (!$permission['can_update']) {
-            abort(403, 'You cannot update KPI.');
-        }
-
-        $kpi = $this->findKpiOrFail($supabase, $id);
-        $allowedEmployees = $this->accessibleEmployeeIds($supabase, $user);
-
-        if (!in_array($kpi['employee_id'], $allowedEmployees)) {
-            abort(403, 'You cannot edit this KPI.');
-        }
-
-        $quarters = $supabase->get('kpi_quarters', [
-            'kpi_id' => 'eq.' . $id,
-            'select' => '*',
-            'order' => 'quarter.asc',
-        ]);
-
-        $kpi['quarters'] = $quarters ?? [];
-
-        return view('kpi.edit', array_merge([
-            'user' => $user,
-            'kpi' => $kpi,
-            'fy' => $this->currentFY(),
-        ], $this->sidebarData($supabase, $user)));
     }
 
     public function switchDepartment(Request $request)
@@ -582,38 +512,29 @@ class KpiController extends Controller
         return back();
     }
 
-    public function storeQuarter(Request $request, SupabaseService $supabase, string $kpiId)
+    private function canEditKpi(array $user, array $kpi): bool
     {
-        $request->validate([
-            'quarter' => 'required|in:Q1,Q2,Q3,Q4',
-            'quarter_title' => 'nullable|string|max:255',
-            'quarter_description' => 'nullable|string',
-            'quarter_target' => 'nullable|numeric|min:0',
-            'quarter_actual' => 'nullable|numeric|min:0',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
-            'status' => 'nullable|in:not_started,on_track,at_risk,in_trouble,completed',
-            'remark' => 'nullable|string',
-        ]);
+        $role = strtoupper(trim($user['role'] ?? ''));
 
-        if (!empty($request->start_date) && !empty($request->end_date) && $request->end_date < $request->start_date) {
-            return back()->withErrors(['end_date' => 'End date must be after or equal to start date.']);
+        if (in_array($role, ['ADMIN', 'SLT', 'CCO', 'CCMO'])) {
+            return ($user['company_code'] ?? null) === ($kpi['company_code'] ?? null);
         }
 
-        $this->upsertQuarters($supabase, $kpiId, [
-            $request->quarter => [
-                'quarter_title' => $request->quarter_title,
-                'quarter_description' => $request->quarter_description,
-                'quarter_target' => $request->quarter_target,
-                'quarter_actual' => $request->quarter_actual,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'status' => $request->status ?? 'not_started',
-                'remark' => $request->remark,
-            ]
-        ]);
+        if ($role === 'VP') {
+            return ($user['company_code'] ?? null) === ($kpi['company_code'] ?? null)
+                && ($user['department_code'] ?? null) === ($kpi['department_code'] ?? null);
+        }
 
-        return back()->with('success', 'Quarter target updated successfully.');
+        if ($role === 'MANAGER') {
+            return ($user['company_code'] ?? null) === ($kpi['company_code'] ?? null)
+                && ($user['department_code'] ?? null) === ($kpi['department_code'] ?? null);
+        }
+
+        if ($role === 'EXECUTIVE') {
+            return ($kpi['employee_id'] ?? null) === ($user['id'] ?? null);
+        }
+
+        return false;
     }
 
     private function upsertQuarters(SupabaseService $supabase, string $kpiId, array $quarters): void
@@ -670,24 +591,33 @@ class KpiController extends Controller
         }
     }
 
-    private function validateQuarterDates(array $quarters): void
+    private function validateQuarterDates(array $quarters): ?array
     {
         foreach (['Q1', 'Q2', 'Q3', 'Q4'] as $quarterLabel) {
             $quarter = $quarters[$quarterLabel] ?? [];
 
-            if (!empty($quarter['start_date']) && !empty($quarter['end_date'])) {
-                if ($quarter['end_date'] < $quarter['start_date']) {
-                    abort(422, "{$quarterLabel}: End date must be after or equal to start date.");
-                }
+            $startDate = $quarter['start_date'] ?? null;
+            $endDate = $quarter['end_date'] ?? null;
+
+            if (empty($startDate) || empty($endDate)) {
+                continue;
+            }
+
+            if ($endDate < $startDate) {
+                return [
+                    "quarters.$quarterLabel.end_date" => "{$quarterLabel}: End date mesti selepas atau sama dengan start date.",
+                ];
             }
         }
+
+        return null;
     }
 
     private function findKpiOrFail(SupabaseService $supabase, string $id): array
     {
         $kpi = $supabase->get('kpis', [
             'id' => 'eq.' . $id,
-            'select' => '*'
+            'select' => '*',
         ])[0] ?? null;
 
         if (!$kpi) {
@@ -695,106 +625,6 @@ class KpiController extends Controller
         }
 
         return $kpi;
-    }
-
-    public function editQuarter($id, SupabaseService $supabase)
-    {
-        $quarters = $supabase->get('kpi_quarters', [
-            'id' => 'eq.' . $id,
-            'select' => '*',
-        ]);
-
-        $quarter = $quarters[0] ?? null;
-
-        if (!$quarter) {
-            return back()->withErrors(['Quarter plan tidak dijumpai.']);
-        }
-
-        return view('kpi.edit-quarter', compact('quarter'));
-    }
-
-    public function updateQuarter(Request $request, $id, SupabaseService $supabase)
-    {
-        $request->validate([
-            'quarter_title' => 'nullable|string|max:255',
-            'quarter_description' => 'nullable|string',
-            'quarter_target' => 'nullable|numeric|min:0',
-            'quarter_actual' => 'nullable|numeric|min:0',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
-            'status' => 'nullable|string|in:not_started,on_track,at_risk,in_trouble,completed',
-            'remark' => 'nullable|string',
-        ]);
-
-        if (!empty($request->start_date) && !empty($request->end_date) && $request->end_date < $request->start_date) {
-            return back()->withErrors(['end_date' => 'End date must be after or equal to start date.']);
-        }
-
-        $supabase->update('kpi_quarters', [
-            'id' => 'eq.' . $id,
-        ], [
-            'quarter_title' => $request->quarter_title,
-            'quarter_description' => $request->quarter_description,
-            'quarter_target' => $request->quarter_target ?? 0,
-            'quarter_actual' => $request->quarter_actual ?? 0,
-            'start_date' => $request->start_date ?: null,
-            'end_date' => $request->end_date ?: null,
-            'status' => $this->normalizeStatus($request->status ?? 'not_started'),
-            'remark' => $request->remark,
-            'updated_at' => $this->nowMy(),
-        ]);
-
-        return redirect()
-            ->route('kpi.index')
-            ->with('success', 'Quarter plan berjaya dikemaskini.');
-    }
-
-    public function saveQuarter(Request $request, SupabaseService $supabase)
-    {
-        $request->validate([
-            'kpi_id' => 'required|string',
-            'quarter' => 'required|string|in:Q1,Q2,Q3,Q4',
-            'quarter_id' => 'nullable|string',
-            'quarter_title' => 'nullable|string|max:255',
-            'quarter_description' => 'nullable|string',
-            'quarter_target' => 'nullable|numeric|min:0',
-            'quarter_actual' => 'nullable|numeric|min:0',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
-            'status' => 'nullable|string|in:not_started,on_track,at_risk,in_trouble,completed',
-            'remark' => 'nullable|string',
-        ]);
-
-        if (!empty($request->start_date) && !empty($request->end_date) && $request->end_date < $request->start_date) {
-            return back()->withErrors(['end_date' => 'End date must be after or equal to start date.']);
-        }
-
-        $payload = [
-            'kpi_id' => $request->kpi_id,
-            'quarter' => $request->quarter,
-            'quarter_title' => $request->quarter_title,
-            'quarter_description' => $request->quarter_description,
-            'quarter_target' => $request->quarter_target ?? 0,
-            'quarter_actual' => $request->quarter_actual ?? 0,
-            'start_date' => $request->start_date ?: null,
-            'end_date' => $request->end_date ?: null,
-            'status' => $this->normalizeStatus($request->status ?? 'not_started'),
-            'remark' => $request->remark,
-            'updated_at' => $this->nowMy(),
-        ];
-
-        if ($request->quarter_id) {
-            $supabase->update('kpi_quarters', [
-                'id' => 'eq.' . $request->quarter_id,
-            ], $payload);
-        } else {
-            $payload['created_at'] = $this->nowMy();
-            $supabase->insert('kpi_quarters', $payload);
-        }
-
-        return redirect()
-            ->route('kpi.index')
-            ->with('success', 'Quarter plan berjaya dikemaskini.');
     }
 
     private function calculateAchievement($baseTarget, $stretchTarget, $actualValue): float
@@ -816,23 +646,6 @@ class KpiController extends Controller
         }
 
         return 100;
-    }
-
-    private function validateWeightageForUpdate(SupabaseService $supabase, array $oldKpi, float $newWeightage): void
-    {
-        $existingKpis = $supabase->get('kpis', [
-            'employee_id' => 'eq.' . $oldKpi['employee_id'],
-            'financial_year' => 'eq.' . $oldKpi['financial_year'],
-            'select' => 'id,weightage'
-        ]);
-
-        $usedOtherWeightage = collect($existingKpis)
-            ->filter(fn ($kpi) => $kpi['id'] !== $oldKpi['id'])
-            ->sum(fn ($kpi) => (float) ($kpi['weightage'] ?? 0));
-
-        if (($usedOtherWeightage + $newWeightage) > 100) {
-            abort(422, 'Weightage exceeded. Remaining available weightage is only ' . number_format(100 - $usedOtherWeightage, 2) . '%.');
-        }
     }
 
     private function normalizeStatus(?string $status): string
@@ -859,7 +672,6 @@ class KpiController extends Controller
             'sub_category',
             'kpi_title',
             'kpi_description',
-            'weightage',
             'base_target',
             'stretch_target',
             'actual_value',

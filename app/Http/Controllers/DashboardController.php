@@ -333,6 +333,24 @@ class DashboardController extends Controller
 
         $employeeMap = collect($employees)->keyBy('id');
 
+        $creatorIds = collect($kpis)
+            ->pluck('created_by')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $creators = [];
+
+        if (!empty($creatorIds)) {
+            $creators = $supabase->get('employees', [
+                'id' => 'in.(' . implode(',', $creatorIds) . ')',
+                'select' => 'id,employee_id,short_name,role,department_code'
+            ]);
+        }
+
+        $creatorMap = collect($creators)->keyBy('id');
+
         return collect($kpis)->map(function ($kpi) use ($employeeMap, $user) {
             $owner = $employeeMap->get($kpi['employee_id']);
 
