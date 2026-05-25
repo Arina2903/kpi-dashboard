@@ -94,7 +94,7 @@
                 'title' => 'KPI Work',
                 'items' => [
                     [
-                        'label' => 'View KPI List',
+                        'label' => 'View My KPI',
                         'href' => '/kpi',
                         'match' => 'kpi',
                         'icon' => 'list',
@@ -104,6 +104,30 @@
                         'href' => '/kpi/create',
                         'match' => 'kpi/create',
                         'icon' => 'plus',
+                    ],
+                    [
+                        'label' => 'My Department KPI',
+                        'href' => route('kpi.my-department-kpi'),
+                        'match' => 'my-department-kpi*',
+                        'icon' => 'department',
+                    ],
+                    [
+                        'label' => 'Manage Weightage',
+                        'href' => '/weightage',
+                        'match' => 'weightage*',
+                        'icon' => 'weightage',
+                    ],
+                ],
+            ],
+
+            [
+                'title' => 'Monitoring',
+                'items' => [
+                    [
+                        'label' => 'User Activity Log',
+                        'href' => '/activity-log',
+                        'match' => 'activity-log*',
+                        'icon' => 'activity',
                     ],
                 ],
             ],

@@ -7,7 +7,7 @@ use App\Http\Controllers\KpiController;
 
 /*
 |--------------------------------------------------------------------------
-| Public Routes (No Auth)
+| PUBLIC ROUTES
 |--------------------------------------------------------------------------
 */
 
@@ -23,7 +23,7 @@ Route::post('/login', [AuthController::class, 'submitLogin'])
 
 /*
 |--------------------------------------------------------------------------
-| First Time Setup / Email
+| FIRST TIME PASSWORD
 |--------------------------------------------------------------------------
 */
 
@@ -33,28 +33,38 @@ Route::get('/create-password', [AuthController::class, 'firstPassword'])
 Route::post('/create-password', [AuthController::class, 'storeFirstPassword'])
     ->name('password.first.submit');
 
+/*
+|--------------------------------------------------------------------------
+| EMAIL VERIFICATION
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/verify-email/{token}', [AuthController::class, 'verifyEmail'])
     ->name('verify.email');
 
 /*
 |--------------------------------------------------------------------------
-| Logout
+| LOGOUT
 |--------------------------------------------------------------------------
 */
 
 Route::post('/logout', [AuthController::class, 'logout'])
     ->name('logout');
 
-
 /*
 |--------------------------------------------------------------------------
-| Protected Routes (WITH middleware)
+| PROTECTED ROUTES
 |--------------------------------------------------------------------------
 */
 
 Route::middleware(['kpi.auth'])->group(function () {
 
-    // DASHBOARD
+    /*
+    |--------------------------------------------------------------------------
+    | DASHBOARD
+    |--------------------------------------------------------------------------
+    */
+
     Route::get('/choose-dashboard', [AuthController::class, 'showChooseDashboard'])
         ->name('dashboard.choose');
 
@@ -67,16 +77,45 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::post('/switch-department', [DashboardController::class, 'switchDepartment'])
         ->name('switch.department');
 
-    // KPI
-    Route::get('/kpi', [KpiController::class, 'index'])->name('kpi.index');
-    Route::get('/kpi/create', [KpiController::class, 'create'])->name('kpi.create');
-    Route::post('/kpi', [KpiController::class, 'store'])->name('kpi.store');
-    Route::get('/kpi/{id}/edit', [KpiController::class, 'edit'])->name('kpi.edit');
-    Route::put('/kpi/{id}', [KpiController::class, 'update'])->name('kpi.update');
-    Route::put('/kpi/{id}/inline-update', [KpiController::class, 'inlineUpdate'])->name('kpi.update.inline');
-    Route::delete('/kpi/{id}', [KpiController::class, 'destroy'])->name('kpi.destroy');
+    /*
+    |--------------------------------------------------------------------------
+    | KPI MAIN
+    |--------------------------------------------------------------------------
+    */
 
-    // KPI QUARTER
+    Route::get('/kpi', [KpiController::class, 'index'])
+        ->name('kpi.index');
+
+    Route::get('/kpi/create', [KpiController::class, 'create'])
+        ->name('kpi.create');
+
+    Route::post('/kpi', [KpiController::class, 'store'])
+        ->name('kpi.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | KPI VIEW / EDIT
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/kpi/{id}/edit', [KpiController::class, 'edit'])
+        ->name('kpi.edit');
+
+    Route::put('/kpi/{id}', [KpiController::class, 'update'])
+        ->name('kpi.update');
+
+    Route::put('/kpi/{id}/inline-update', [KpiController::class, 'inlineUpdate'])
+        ->name('kpi.update.inline');
+
+    Route::delete('/kpi/{id}', [KpiController::class, 'destroy'])
+        ->name('kpi.destroy');
+
+    /*
+    |--------------------------------------------------------------------------
+    | KPI QUARTER
+    |--------------------------------------------------------------------------
+    */
+
     Route::post('/kpi/{kpiId}/quarters', [KpiController::class, 'storeQuarter'])
         ->name('kpi.quarters.store');
 
@@ -89,13 +128,83 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::post('/kpi-quarter/save', [KpiController::class, 'saveQuarter'])
         ->name('kpi.quarter.save');
 
-    // KPI TARGET REQUEST
-    Route::post('/kpi/{id}/target-change-request', [KpiController::class, 'requestTargetChange'])
-        ->name('kpi.target.request');
+    /*
+    |--------------------------------------------------------------------------
+    | KPI QUARTER UPDATE GOVERNANCE
+    |--------------------------------------------------------------------------
+    */
 
-    Route::post('/kpi-target-request/{id}/approve', [KpiController::class, 'approveTargetChange'])
-        ->name('kpi.target.approve');
+    Route::post('/kpi/update-quarter', [KpiController::class, 'updateQuarterActual'])
+        ->name('kpi.quarter.actual.update');
 
-    Route::post('/kpi-target-request/{id}/reject', [KpiController::class, 'rejectTargetChange'])
-        ->name('kpi.target.reject');
+    Route::post('/kpi/request-quarter-approval', [KpiController::class, 'requestQuarterApproval'])
+        ->name('kpi.quarter.approval.request');
+
+    /*
+    |--------------------------------------------------------------------------
+    | KPI GOVERNANCE REQUESTS
+    |--------------------------------------------------------------------------
+    */
+
+    /*
+    | REQUEST EDIT
+    */
+
+    Route::get('/kpi/{id}/request-edit', [KpiController::class, 'requestEdit'])
+        ->name('kpi.request.edit');
+
+    Route::post('/kpi/{id}/request-edit', [KpiController::class, 'submitEditRequest'])
+        ->name('kpi.request.edit.submit');
+
+    /*
+    | REQUEST DELETE
+    */
+
+    Route::get('/kpi/{id}/request-delete', [KpiController::class, 'requestDelete'])
+        ->name('kpi.request.delete');
+
+    Route::post('/kpi/{id}/request-delete', [KpiController::class, 'submitDeleteRequest'])
+        ->name('kpi.request.delete.submit');
+
+    /*
+    |--------------------------------------------------------------------------
+    | KPI APPROVAL CENTER
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/kpi-approvals', [KpiController::class, 'approvalCenter'])
+        ->name('kpi.approvals');
+
+    /*
+    |--------------------------------------------------------------------------
+    | WEIGHTAGE
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/weightage/bulk-update',
+        [KpiController::class, 'bulkUpdateWeightage']
+    )->name('weightage.bulk-update');
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACTIVITY LOG
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/activity-log', function () {
+        return view('kpi.activity-log');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | MY DEPARTMENT KPI
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/my-department-kpi',
+        [KpiController::class, 'myDepartmentKpi']
+    )->name('kpi.my-department-kpi');
+
 });

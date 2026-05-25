@@ -85,4 +85,28 @@
         </svg>
         @break
 
+    @case('department')
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M3 21h18"/>
+            <path d="M5 21V7l7-4 7 4v14"/>
+            <path d="M9 9h.01M9 13h.01M9 17h.01"/>
+            <path d="M15 9h.01M15 13h.01M15 17h.01"/>
+        </svg>
+        @break
+
+    @case('weightage')
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M12 3v18"/>
+            <path d="M5 8h14"/>
+            <path d="M7 8a5 5 0 1 0 0 8"/>
+            <path d="M17 8a5 5 0 1 1 0 8"/>
+        </svg>
+        @break
+
+    @case('activity')
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M3 12h4l3 8 4-16 3 8h4"/>
+        </svg>
+        @break
+
 @endswitch
