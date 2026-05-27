@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KpiController;
+use App\Http\Controllers\ApprovalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -168,18 +169,35 @@ Route::middleware(['kpi.auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | KPI APPROVAL CENTER
+    | APPROVAL CENTER
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/kpi-approvals', [KpiController::class, 'approvalCenter'])
-        ->name('kpi.approvals');
+    Route::get(
+        '/approval',
+        [ApprovalController::class, 'index']
+    )->name('approval.index');
+
+    Route::post(
+        '/approval/{id}/approve',
+        [ApprovalController::class, 'approve']
+    )->name('approval.approve');
+
+    Route::post(
+        '/approval/{id}/reject',
+        [ApprovalController::class, 'reject']
+    )->name('approval.reject');
 
     /*
     |--------------------------------------------------------------------------
     | WEIGHTAGE
     |--------------------------------------------------------------------------
     */
+
+    Route::get(
+        '/weightage',
+        [KpiController::class, 'weightage']
+    )->name('weightage');
 
     Route::post(
         '/weightage/bulk-update',

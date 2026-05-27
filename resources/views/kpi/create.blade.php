@@ -892,11 +892,6 @@
                                     <label class="text-sm font-bold text-slate-700">Stretch Target</label>
                                     <input name="stretch_target" id="stretchTarget" type="number" step="0.01" value="{{ old('stretch_target') }}" class="field w-full mt-2 rounded-2xl p-3" required>
                                 </div>
-
-                                <div>
-                                    <label class="text-sm font-bold text-slate-700">Actual Now</label>
-                                    <input name="actual_value" id="actualValue" type="number" step="0.01" value="{{ old('actual_value', 0) }}" class="field w-full mt-2 rounded-2xl p-3" required>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -1044,7 +1039,7 @@
                                             value="{{ $quarter }}"
                                         >
 
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 
                                             <!-- TITLE -->
                                             <div>
@@ -1136,52 +1131,34 @@
 
                                             </div>
 
-                                            <!-- ACTUAL -->
-                                            <div>
+                                            <!-- TIMELINE -->
+                                            <div class="md:col-span-2">
 
                                                 <label class="label">
-                                                    Quarter Actual
+                                                    Timeline
                                                 </label>
 
-                                                <input
-                                                    type="number"
-                                                    step="0.01"
-                                                    name="quarters[{{ $quarter }}][quarter_actual]"
-                                                    value="{{ old("quarters.$quarter.quarter_actual",0) }}"
-                                                    class="quarter-actual field mt-2 rounded-2xl px-4 py-3 text-sm"
-                                                >
+                                                <div class="grid grid-cols-2 gap-3 mt-2">
 
-                                            </div>
+                                                    <div>
+                                                        <input
+                                                            type="date"
+                                                            name="quarters[{{ $quarter }}][start_date]"
+                                                            value="{{ old("quarters.$quarter.start_date") }}"
+                                                            class="field rounded-2xl px-4 py-3 text-sm"
+                                                        >
+                                                    </div>
 
-                                            <!-- START -->
-                                            <div>
+                                                    <div>
+                                                        <input
+                                                            type="date"
+                                                            name="quarters[{{ $quarter }}][end_date]"
+                                                            value="{{ old("quarters.$quarter.end_date") }}"
+                                                            class="field rounded-2xl px-4 py-3 text-sm"
+                                                        >
+                                                    </div>
 
-                                                <label class="label">
-                                                    Start Date
-                                                </label>
-
-                                                <input
-                                                    type="date"
-                                                    name="quarters[{{ $quarter }}][start_date]"
-                                                    value="{{ old("quarters.$quarter.start_date") }}"
-                                                    class="field mt-2 rounded-2xl px-4 py-3 text-sm"
-                                                >
-
-                                            </div>
-
-                                            <!-- END -->
-                                            <div>
-
-                                                <label class="label">
-                                                    End Date
-                                                </label>
-
-                                                <input
-                                                    type="date"
-                                                    name="quarters[{{ $quarter }}][end_date]"
-                                                    value="{{ old("quarters.$quarter.end_date") }}"
-                                                    class="field mt-2 rounded-2xl px-4 py-3 text-sm"
-                                                >
+                                                </div>
 
                                             </div>
 
@@ -1220,21 +1197,6 @@
 
                                     <p
                                         id="quarterTargetTotal"
-                                        class="text-2xl font-black text-[#06142f] mt-2"
-                                    >
-                                        0.00
-                                    </p>
-
-                                </div>
-
-                                <div class="metric-card metric-cyan p-5">
-
-                                    <p class="text-xs font-bold text-cyan-600 uppercase tracking-wide">
-                                        Quarter Actual Total
-                                    </p>
-
-                                    <p
-                                        id="quarterActualTotal"
                                         class="text-2xl font-black text-[#06142f] mt-2"
                                     >
                                         0.00
@@ -1317,11 +1279,6 @@
                                     <p class="text-xs text-slate-400">Stretch</p>
                                     <p id="summaryStretch" class="font-black text-[#06142f]">0</p>
                                 </div>
-
-                                <div class="bg-white rounded-2xl p-3 border border-cyan-100 shadow-sm">
-                                    <p class="text-xs text-slate-400">Actual</p>
-                                    <p id="summaryActual" class="font-black text-[#06142f]">0</p>
-                                </div>
                             </div>
 
                             <div>
@@ -1392,12 +1349,10 @@
 
     const baseTarget = document.getElementById('baseTarget');
     const stretchTarget = document.getElementById('stretchTarget');
-    const actualValue = document.getElementById('actualValue');
 
     const statusInput = document.getElementById('status');
 
     const quarterTargetInputs = document.querySelectorAll('.quarter-target');
-    const quarterActualInputs = document.querySelectorAll('.quarter-actual');
 
     /*
     |--------------------------------------------------------------------------
@@ -1486,21 +1441,13 @@
     function updateQuarterTotals() {
 
         let targetTotal = 0;
-        let actualTotal = 0;
 
         quarterTargetInputs.forEach(input => {
             targetTotal += Number(input.value || 0);
         });
 
-        quarterActualInputs.forEach(input => {
-            actualTotal += Number(input.value || 0);
-        });
-
         document.getElementById('quarterTargetTotal')
             .textContent = formatValue(targetTotal);
-
-        document.getElementById('quarterActualTotal')
-            .textContent = formatValue(actualTotal);
 
         const base = Number(baseTarget.value || 0);
 
@@ -1702,10 +1649,6 @@
             .textContent =
                 formatValue(stretchTarget.value);
 
-        document.getElementById('summaryActual')
-            .textContent =
-                formatValue(actualValue.value);
-
         updateQuarterTotals();
         updateStatusBadge();
         updateStatusTheme();
@@ -1861,21 +1804,12 @@
         updateSummary
     );
 
-    actualValue.addEventListener(
-        'input',
-        updateSummary
-    );
-
     statusInput.addEventListener(
         'change',
         updateSummary
     );
 
     quarterTargetInputs.forEach(input => {
-        input.addEventListener('input', updateSummary);
-    });
-
-    quarterActualInputs.forEach(input => {
         input.addEventListener('input', updateSummary);
     });
 
@@ -1947,86 +1881,33 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    /*
-    |--------------------------------------------------------------------------
-    | CURRENT DATE
-    |--------------------------------------------------------------------------
-    */
-
-    const today = new Date();
-
-    const currentMonth = today.getMonth() + 1;
-
-    const currentYear = today.getFullYear();
-
-    /*
-    |--------------------------------------------------------------------------
-    | DETERMINE ACTIVE QUARTER
-    |--------------------------------------------------------------------------
-    */
-
-    let activeQuarter = '';
-
-    if(currentMonth >= 1 && currentMonth <= 3){
-
-        activeQuarter = 'Q1';
-
-    }else if(currentMonth >= 4 && currentMonth <= 6){
-
-        activeQuarter = 'Q2';
-
-    }else if(currentMonth >= 7 && currentMonth <= 9){
-
-        activeQuarter = 'Q3';
-
-    }else{
-
-        activeQuarter = 'Q4';
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | QUARTER DATE RANGE
-    |--------------------------------------------------------------------------
-    */
+    const currentYear = new Date().getFullYear();
 
     const quarterRanges = {
 
         Q1: {
-            min: `${currentYear}-01-01`,
-            max: `${currentYear}-03-31`
+            start: `${currentYear}-01-01`,
+            end: `${currentYear}-03-31`
         },
 
         Q2: {
-            min: `${currentYear}-04-01`,
-            max: `${currentYear}-06-30`
+            start: `${currentYear}-04-01`,
+            end: `${currentYear}-06-30`
         },
 
         Q3: {
-            min: `${currentYear}-07-01`,
-            max: `${currentYear}-09-30`
+            start: `${currentYear}-07-01`,
+            end: `${currentYear}-09-30`
         },
 
         Q4: {
-            min: `${currentYear}-10-01`,
-            max: `${currentYear}-12-31`
+            start: `${currentYear}-10-01`,
+            end: `${currentYear}-12-31`
         }
 
     };
 
-    /*
-    |--------------------------------------------------------------------------
-    | APPLY RESTRICTIONS
-    |--------------------------------------------------------------------------
-    */
-
     ['Q1','Q2','Q3','Q4'].forEach((quarter) => {
-
-        /*
-        |--------------------------------------------------------------------------
-        | INPUTS
-        |--------------------------------------------------------------------------
-        */
 
         const startInput = document.querySelector(
             `input[name="quarters[${quarter}][start_date]"]`
@@ -2036,119 +1917,80 @@ document.addEventListener('DOMContentLoaded', () => {
             `input[name="quarters[${quarter}][end_date]"]`
         );
 
-        const targetInput = document.querySelector(
-            `input[name="quarters[${quarter}][quarter_target]"]`
-        );
-
-        const actualInput = document.querySelector(
-            `input[name="quarters[${quarter}][quarter_actual]"]`
-        );
-
-        const titleInput = document.querySelector(
-            `input[name="quarters[${quarter}][quarter_title]"]`
-        );
-
-        const descInput = document.querySelector(
-            `textarea[name="quarters[${quarter}][quarter_description]"]`
-        );
-
-        const remarkInput = document.querySelector(
-            `textarea[name="quarters[${quarter}][remark]"]`
-        );
-
-        const statusInput = document.querySelector(
-            `select[name="quarters[${quarter}][status]"]`
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | ACTIVE QUARTER
-        |--------------------------------------------------------------------------
-        */
-
-        if(quarter === activeQuarter){
+        if(startInput){
 
             /*
             |--------------------------------------------------------------------------
-            | ENABLE
+            | AUTO SET DEFAULT DATE
             |--------------------------------------------------------------------------
             */
 
-            [
-                startInput,
-                endInput,
-                targetInput,
-                actualInput,
-                titleInput,
-                descInput,
-                remarkInput,
-                statusInput
-            ].forEach((el) => {
+            if(!startInput.value){
 
-                if(el){
-
-                    el.disabled = false;
-                }
-            });
-
-            /*
-            |--------------------------------------------------------------------------
-            | DATE LIMIT
-            |--------------------------------------------------------------------------
-            */
-
-            if(startInput){
-
-                startInput.min = quarterRanges[quarter].min;
-                startInput.max = quarterRanges[quarter].max;
-
-                if(!startInput.value){
-
-                    startInput.value = quarterRanges[quarter].min;
-                }
+                startInput.value =
+                    quarterRanges[quarter].start;
             }
 
-            if(endInput){
-
-                endInput.min = quarterRanges[quarter].min;
-                endInput.max = quarterRanges[quarter].max;
-
-                if(!endInput.value){
-
-                    endInput.value = quarterRanges[quarter].max;
-                }
-            }
-
-        }else{
-
             /*
             |--------------------------------------------------------------------------
-            | DISABLE OTHER QUARTERS
+            | LIMIT RANGE
             |--------------------------------------------------------------------------
             */
 
-            [
-                startInput,
-                endInput,
-                targetInput,
-                actualInput,
-                titleInput,
-                descInput,
-                remarkInput,
-                statusInput
-            ].forEach((el) => {
+            startInput.min =
+                quarterRanges[quarter].start;
 
-                if(el){
+            startInput.max =
+                quarterRanges[quarter].end;
 
-                    el.disabled = true;
+            /*
+            |--------------------------------------------------------------------------
+            | WHEN START CHANGE
+            |--------------------------------------------------------------------------
+            */
 
-                    el.classList.add(
-                        'opacity-50',
-                        'cursor-not-allowed',
-                        'bg-slate-100'
-                    );
+            startInput.addEventListener('change', () => {
+
+                if(endInput){
+
+                    endInput.min = startInput.value;
+
+                    if(endInput.value < startInput.value){
+
+                        endInput.value = startInput.value;
+                    }
                 }
+
             });
+
+        }
+
+        if(endInput){
+
+            /*
+            |--------------------------------------------------------------------------
+            | AUTO SET DEFAULT DATE
+            |--------------------------------------------------------------------------
+            */
+
+            if(!endInput.value){
+
+                endInput.value =
+                    quarterRanges[quarter].end;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | LIMIT RANGE
+            |--------------------------------------------------------------------------
+            */
+
+            endInput.min =
+                quarterRanges[quarter].start;
+
+            endInput.max =
+                quarterRanges[quarter].end;
+
         }
 
     });

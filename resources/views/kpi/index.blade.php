@@ -117,6 +117,7 @@
         };
 
         $individualKpiRows = collect($kpis ?? [])->filter(fn($item) => $isCurrentUserKpi($item));
+        $myKpis = $individualKpiRows;
         $individualKpiCount = $individualKpiRows->count();
         $individualTotalWeightage = round($individualKpiRows->sum(fn($item) => (float) ($item['weightage'] ?? 0)), 2);
         $individualPerformance = round($individualKpiRows->sum(function ($item) use ($calculateDashboardKpiScore) {
@@ -206,17 +207,16 @@
 
         <div class="glass card-hover p-4 rounded-[18px] border border-white/70">
             <p class="text-slate-500 text-xs font-semibold uppercase">Total KPI</p>
-            <h3 class="text-xl font-bold text-slate-900 mt-1">{{ count($kpis) }}</h3>
+            <h3 class="text-xl font-bold text-slate-900 mt-1">{{ $individualKpiCount }}</h3>
         </div>
 
         <div class="glass card-hover p-4 rounded-[18px] border border-white/70">
-            <p class="text-slate-500 text-xs font-semibold uppercase">Scope</p>
+            <p class="text-slate-500 text-xs font-semibold uppercase">
+                Scope
+            </p>
+
             <h3 class="text-xl font-bold text-slate-900 mt-1">
-                @if(in_array($user['role'], ['SLT', 'VP', 'CCO', 'CCMO']))
-                    Company
-                @else
-                    Department
-                @endif
+                Individual
             </h3>
         </div>
     </div>
@@ -260,407 +260,188 @@
         </div>
     </div>
 
-        @php
+    @php
 
-        $staffGroupedKpis = collect($kpis)->groupBy(function($item){
-            return $item['employee_name'] ?? 'Unknown';
-        });
+    $myKpis = collect($kpis)->filter(function($item) use ($user){
 
-        @endphp
+        return
+            (string)($item['employee_id'] ?? '') === (string)$user['id']
+            ||
+            (string)($item['created_by'] ?? '') === (string)$user['id'];
 
-        <div class="space-y-3">
+    });
 
-        @foreach($staffGroupedKpis as $staffName => $staffKpis)
+    @endphp
+
+    <div class="space-y-4">
+
+        @forelse($myKpis as $kpi)
 
             @php
 
-                $staffPerformance = 0;
-                $staffWeightage = 0;
+                $quarters = collect($kpi['quarters'] ?? []);
 
-                foreach($staffKpis as $staffKpi){
+                $baseTotal = 0;
+                $actualTotal = 0;
 
-                    $quarters = collect($staffKpi['quarters'] ?? []);
+                foreach(['Q1','Q2','Q3','Q4'] as $quarterName){
 
-                    $baseTotal = 0;
-                    $actualTotal = 0;
+                    $quarter = $quarters->firstWhere('quarter', $quarterName) ?? [];
 
-                    foreach(['Q1','Q2','Q3','Q4'] as $quarterName){
+                    $baseTotal += (float)($quarter['quarter_target'] ?? 0);
 
-                        $quarter = $quarters->firstWhere('quarter', $quarterName) ?? [];
-
-                        $baseTotal += (float)($quarter['quarter_target'] ?? 0);
-                        $actualTotal += (float)($quarter['quarter_actual'] ?? 0);
-                    }
-
-                    $achievement = $baseTotal > 0
-                        ? (($actualTotal / $baseTotal) * 100)
-                        : 0;
-
-                    $weightage = (float)($staffKpi['weightage'] ?? 0);
-
-                    $staffPerformance += (($achievement * $weightage) / 100);
-
-                    $staffWeightage += $weightage;
+                    $actualTotal += (float)($quarter['quarter_actual'] ?? 0);
                 }
 
-                if($staffPerformance >= 75){
-                    $staffColor = 'from-emerald-500 to-green-600';
-                    $staffText = 'text-emerald-600';
-                }
-                elseif($staffPerformance >= 50){
-                    $staffColor = 'from-yellow-400 to-orange-500';
-                    $staffText = 'text-yellow-600';
-                }
-                else{
-                    $staffColor = 'from-red-500 to-red-700';
-                    $staffText = 'text-red-600';
+                $achievement = $baseTotal > 0
+                    ? round(($actualTotal / $baseTotal) * 100,2)
+                    : 0;
+
+                if($achievement >= 75){
+
+                    $progressColor = 'from-emerald-400 to-green-600';
+                    $progressText = 'text-emerald-600';
+
+                }elseif($achievement >= 50){
+
+                    $progressColor = 'from-yellow-400 to-orange-500';
+                    $progressText = 'text-yellow-600';
+
+                }else{
+
+                    $progressColor = 'from-red-500 to-red-700';
+                    $progressText = 'text-red-600';
                 }
 
             @endphp
 
-            <!-- STAFF CARD -->
-            <div class="staff-wrapper">
+            <div
+                onclick="openKpiDetail(this)"
+                class="kpi-card cursor-pointer bg-white border border-slate-200 rounded-[22px] p-5 hover:shadow-[0_10px_30px_rgba(15,23,42,.08)] transition-all duration-200"
 
-                <!-- STAFF HEADER -->
-                <div
-                    onclick="toggleStaff('{{ Str::slug($staffName) }}')"
-                    class="cursor-pointer bg-white border border-slate-200 rounded-[18px] overflow-hidden hover:shadow-lg transition-all duration-300">
+                data-search="{{ strtolower(($kpi['kpi_title'] ?? '') . ' ' . ($kpi['category'] ?? '')) }}"
+                data-category="{{ $kpi['category'] ?? '' }}"
+                data-status="{{ $kpi['status'] ?? '' }}"
+                data-kpi='@json($kpi)'
+            >
 
-                    <div class="px-4 py-3">
+                <!-- TOP -->
+                <div class="flex items-start justify-between gap-5">
 
-                        <div class="flex items-center justify-between gap-4">
+                    <!-- LEFT -->
+                    <div class="flex-1 min-w-0">
 
-                            <!-- LEFT -->
-                            <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
 
-                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#06142f] to-blue-700 flex items-center justify-center text-white text-sm font-black">
-                                    {{ strtoupper(substr($staffName,0,1)) }}
-                                </div>
+                            <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black">
+                                {{ $kpi['category'] ?? 'General' }}
+                            </span>
 
-                                <div>
+                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black">
+                                {{ $kpi['sub_category'] ?? 'Sub Category' }}
+                            </span>
 
-                                    <h2 class="text-[15px] font-black text-slate-900">
-                                        {{ $staffName }}
-                                    </h2>
+                            <span class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-black">
+                                {{ $kpi['financial_year'] ?? '-' }}
+                            </span>
 
-                                    <div class="flex items-center gap-2 mt-1">
+                        </div>
 
-                                        <div class="px-2 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">
-                                            {{ count($staffKpis) }} KPI
-                                        </div>
+                        <h3 class="text-lg font-black text-slate-900 leading-tight">
+                            {{ $kpi['kpi_title'] }}
+                        </h3>
 
-                                        <div class="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold">
-                                            {{ number_format($staffWeightage,0) }}%
-                                        </div>
+                        <p class="text-xs text-slate-500 mt-2 leading-relaxed max-w-3xl">
+                            {{ $kpi['kpi_description'] ?? 'No description available.' }}
+                        </p>
 
-                                    </div>
+                    </div>
 
-                                </div>
+                    <!-- RIGHT -->
+                    <div class="text-right shrink-0">
 
-                            </div>
+                        <p class="text-[10px] uppercase text-slate-400 font-black">
+                            Performance
+                        </p>
 
-                            <!-- RIGHT -->
-                            <div class="w-[220px]">
+                        <h2 class="text-2xl font-black {{ $progressText }} mt-1">
+                            {{ number_format($achievement,2) }}%
+                        </h2>
 
-                                <div class="flex items-center justify-between mb-2">
+                    </div>
 
-                                    <p class="text-[10px] uppercase font-black text-slate-400">
-                                        Performance
-                                    </p>
+                </div>
 
-                                    <p class="text-lg font-black {{ $staffText }}">
-                                        {{ number_format($staffPerformance,2) }}%
-                                    </p>
+                <!-- PROGRESS -->
+                <div class="mt-4">
 
-                                </div>
+                    <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
 
-                                <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-
-                                    <div
-                                        class="h-2.5 rounded-full bg-gradient-to-r {{ $staffColor }}"
-                                        style="width: {{ min(100,$staffPerformance) }}%">
-                                    </div>
-
-                                </div>
-
-                            </div>
-
+                        <div
+                            class="h-2 rounded-full bg-gradient-to-r {{ $progressColor }}"
+                            style="width: {{ min(100,$achievement) }}%">
                         </div>
 
                     </div>
 
                 </div>
 
-                <!-- STAFF MODAL -->
-                <div
-                    id="staff-{{ Str::slug($staffName) }}"
-                    class="hidden fixed inset-0 z-[100]">
+                <!-- KPI META -->
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
 
-                    <!-- BACKDROP -->
-                    <div
-                        onclick="toggleStaff('{{ Str::slug($staffName) }}')"
-                        class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm">
+                    <div class="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3">
+
+                        <p class="text-[10px] uppercase text-slate-400 font-black">
+                            Weightage
+                        </p>
+
+                        <p class="text-sm font-black text-slate-900 mt-1">
+                            {{ $kpi['weightage'] ?? 0 }}%
+                        </p>
+
                     </div>
 
-                    <!-- PANEL -->
-                    <div class="absolute right-0 top-0 h-full w-full max-w-[900px] bg-[#f8fafc] overflow-y-auto shadow-2xl border-l border-slate-200">
+                    <div class="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3">
 
-                        <!-- HEADER -->
-                        <div class="sticky top-0 z-20 bg-white border-b border-slate-200 px-5 py-3 flex items-center justify-between">
+                        <p class="text-[10px] uppercase text-slate-400 font-black">
+                            Base
+                        </p>
 
-                            <div>
+                        <p class="text-sm font-black text-slate-900 mt-1">
+                            {{ $kpi['base_target'] ?? 0 }}
+                        </p>
 
-                                <h2 class="text-lg font-black text-slate-900">
-                                    {{ $staffName }}
-                                </h2>
+                    </div>
 
-                                <p class="text-xs text-slate-500 mt-1">
-                                    {{ count($staffKpis) }} KPI · Performance Overview
-                                </p>
+                    <div class="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3">
 
-                            </div>
+                        <p class="text-[10px] uppercase text-slate-400 font-black">
+                            Stretch
+                        </p>
 
-                            <button
-                                onclick="toggleStaff('{{ Str::slug($staffName) }}')"
-                                class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black">
+                        <p class="text-sm font-black text-indigo-700 mt-1">
+                            {{ $kpi['stretch_target'] ?? 0 }}
+                        </p>
 
-                                ✕
+                    </div>
 
-                            </button>
+                    <div class="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3">
 
-                        </div>
+                        <p class="text-[10px] uppercase text-slate-400 font-black">
+                            Status
+                        </p>
 
-                        <!-- KPI LIST -->
-                        <div class="p-4 space-y-3">
+                        <p class="text-sm font-black text-slate-900 mt-1">
+                            {{ str_replace('_',' ', $kpi['status'] ?? '-') }}
+                        </p>
 
-                            @if(count($staffKpis) === 0)
+                    </div>
 
-                                <div class="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center">
+                    <div class="rounded-2xl bg-slate-900 text-white px-4 py-3 flex items-center justify-center">
 
-                                    <h3 class="text-lg font-black text-slate-900">
-                                        No KPI Assigned
-                                    </h3>
-
-                                    <p class="text-xs text-slate-500 mt-2">
-                                        This staff currently has no KPI assigned.
-                                    </p>
-
-                                </div>
-
-                                @endif
-
-                            @foreach($staffKpis as $kpi)
-
-                                @php
-
-                                    $quarters = collect($kpi['quarters'] ?? []);
-
-                                    $baseTotal = 0;
-                                    $actualTotal = 0;
-
-                                    foreach(['Q1','Q2','Q3','Q4'] as $quarterName){
-
-                                        $quarter = $quarters->firstWhere('quarter', $quarterName) ?? [];
-
-                                        $baseTotal += (float)($quarter['quarter_target'] ?? 0);
-                                        $actualTotal += (float)($quarter['quarter_actual'] ?? 0);
-                                    }
-
-                                    $achievement = $baseTotal > 0
-                                        ? round(($actualTotal / $baseTotal) * 100,2)
-                                        : 0;
-
-                                    if($achievement >= 75){
-                                        $progressColor = 'from-emerald-400 to-green-600';
-                                        $progressText = 'text-emerald-600';
-                                    }
-                                    elseif($achievement >= 50){
-                                        $progressColor = 'from-yellow-400 to-orange-500';
-                                        $progressText = 'text-yellow-600';
-                                    }
-                                    else{
-                                        $progressColor = 'from-red-500 to-red-700';
-                                        $progressText = 'text-red-600';
-                                    }
-
-                                    $today = \Carbon\Carbon::today();
-
-                                        $quarterStatus = null;
-                                        $quarterStatusText = null;
-                                        $quarterStatusColor = null;
-
-                                        $activeQuarter = null;
-
-                                        foreach(($kpi['quarters'] ?? []) as $quarterCheck){
-
-                                            $startDate = !empty($quarterCheck['start_date'])
-                                                ? \Carbon\Carbon::parse($quarterCheck['start_date'])
-                                                : null;
-
-                                            $endDate = !empty($quarterCheck['end_date'])
-                                                ? \Carbon\Carbon::parse($quarterCheck['end_date'])
-                                                : null;
-
-                                            if(!$startDate || !$endDate){
-                                                continue;
-                                            }
-
-                                            if($today->between($startDate, $endDate)){
-
-                                                $activeQuarter = $quarterCheck;
-
-                                                $daysLeft = $today->diffInDays($endDate, false);
-
-                                                if($daysLeft == 0){
-
-                                                    $quarterStatus = 'today';
-                                                    $quarterStatusText = 'Ends Today';
-                                                    $quarterStatusColor = 'bg-orange-50 text-orange-700';
-
-                                                } else {
-
-                                                    $quarterStatus = 'ongoing';
-                                                    $quarterStatusText = $daysLeft . ' days left';
-                                                    $quarterStatusColor = 'bg-emerald-50 text-emerald-700';
-                                                }
-
-                                                break;
-                                            }
-
-                                            if($today->lt($startDate)){
-
-                                                $daysToStart = $today->diffInDays($startDate, false);
-
-                                                $quarterStatus = 'not_started';
-                                                $quarterStatusText = 'Starts in ' . $daysToStart . ' days';
-                                                $quarterStatusColor = 'bg-blue-50 text-blue-700';
-
-                                                break;
-                                            }
-
-                                            if($today->gt($endDate)){
-
-                                                $daysEnded = $endDate->diffInDays($today);
-
-                                                $quarterStatus = 'ended';
-                                                $quarterStatusText = 'Ended ' . $daysEnded . ' days ago';
-                                                $quarterStatusColor = 'bg-red-50 text-red-700';
-                                            }
-                                        }
-
-                                    @endphp
-
-                                <!-- KPI CARD -->
-                                <div
-                                    onclick="event.stopPropagation(); openKpiDetail(this)"
-
-                                    class="kpi-card cursor-pointer bg-white border border-slate-200 rounded-[18px] overflow-hidden hover:shadow-[0_20px_50px_rgba(15,23,42,.12)] hover:-translate-y-[2px] transition-all duration-300"
-
-                                    data-search="{{ strtolower(($kpi['kpi_title'] ?? '') . ' ' . ($kpi['employee_name'] ?? '') . ' ' . ($kpi['category'] ?? '')) }}"
-
-                                    data-category="{{ $kpi['category'] ?? '' }}"
-
-                                    data-status="{{ $kpi['status'] ?? '' }}"
-
-                                    data-kpi='@json($kpi)'
-                                >
-
-                                    <div class="px-4 py-3">
-
-                                        <div class="flex flex-col xl:flex-row xl:items-center gap-4">
-
-                                            <!-- LEFT -->
-                                            <div class="flex-1 min-w-0">
-
-                                                <div class="flex flex-wrap items-center gap-2 mb-2">
-
-                                                    <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold">
-                                                        {{ $kpi['category'] ?? 'General' }}
-                                                    </span>
-
-                                                    <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">
-                                                        {{ $kpi['sub_category'] ?? 'Sub Category' }}
-                                                    </span>
-
-                                                </div>
-
-                                                <h3 class="text-[15px] font-black text-slate-900">
-                                                    {{ $kpi['kpi_title'] }}
-                                                </h3>
-
-                                                <p class="text-xs text-slate-500 mt-2">
-                                                    {{ $kpi['kpi_description'] ?? 'No description available.' }}
-                                                </p>
-
-                                                @if($quarterStatus)
-
-                                                    <div class="mt-3">
-
-                                                        <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-black {{ $quarterStatusColor }}">
-
-                                                            @if($quarterStatus == 'ongoing')
-
-                                                                <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-
-                                                            @elseif($quarterStatus == 'not_started')
-
-                                                                <div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-
-                                                            @elseif($quarterStatus == 'ended')
-
-                                                                <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-
-                                                            @elseif($quarterStatus == 'today')
-
-                                                                <div class="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
-
-                                                            @endif
-
-                                                            {{ $quarterStatusText }}
-
-                                                        </div>
-
-                                                    </div>
-
-                                                @endif
-
-                                            </div>
-
-                                            <!-- RIGHT -->
-                                            <div class="w-full xl:w-[220px]">
-
-                                                <div class="flex items-center justify-between mb-2">
-
-                                                    <p class="text-xs uppercase font-black text-slate-400">
-                                                        Performance
-                                                    </p>
-
-                                                    <p class="text-[15px] font-black {{ $progressText }}">
-                                                        {{ number_format($achievement,2) }}%
-                                                    </p>
-
-                                                </div>
-
-                                                <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
-
-                                                    <div
-                                                        class="h-3 rounded-full bg-gradient-to-r {{ $progressColor }}"
-                                                        style="width: {{ min(100,$achievement) }}%; transition: width .5s ease;">
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            @endforeach
-
-                        </div>
+                        <p class="text-xs font-black">
+                            View Details →
+                        </p>
 
                     </div>
 
@@ -668,9 +449,23 @@
 
             </div>
 
-        @endforeach
+        @empty
 
-        </div>
+            <div class="bg-white border border-dashed border-slate-300 rounded-[24px] p-16 text-center">
+
+                <h3 class="text-2xl font-black text-slate-900">
+                    No KPI Created Yet
+                </h3>
+
+                <p class="text-sm text-slate-500 mt-3">
+                    Start creating KPI for your yearly execution tracking.
+                </p>
+
+            </div>
+
+        @endforelse
+
+    </div>
 
         <!-- NO RESULT -->
         <div id="noFilterResult"
@@ -732,18 +527,6 @@
     categoryFilter.addEventListener('change', filterRows);
     statusFilter.addEventListener('change', filterRows);
 
-    function openQuarterModal(id) {
-
-        const modal = document.getElementById('quarterUpdateModal-' + id);
-
-        if (!modal) return;
-
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-
-        document.body.classList.add('overflow-hidden');
-    }
-
     function closeQuarterModal(id) {
 
         const modal = document.getElementById('quarterUpdateModal-' + id);
@@ -768,705 +551,442 @@
         document.body.classList.add('overflow-hidden');
     }
 
-    function closeEditApprovalModal(id) {
+    let activeKpi = null;
 
-        const modal = document.getElementById('editApprovalModal-' + id);
+function openKpiDetail(card){
 
-        if (!modal) return;
+    const modal = document.getElementById('kpiDetailModal');
+    const content = document.getElementById('kpiDetailContent');
 
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
+    if(!modal || !content || !card) return;
 
-        document.body.classList.remove('overflow-hidden');
-    }
+    activeKpi = JSON.parse(
+        card.dataset.kpi || '{}'
+    );
 
-    function toggleStaff(id){
+    renderKpiDetail('Q1');
 
-        const panel = document.getElementById('staff-' + id);
+    modal.classList.remove('hidden');
 
-        if(!panel) return;
+    document.body.classList.add('overflow-hidden');
+}
 
-        panel.classList.toggle('hidden');
+function renderKpiDetail(activeQuarter){
 
-        if(panel.classList.contains('hidden')){
-            document.body.classList.remove('overflow-hidden');
-        }
-        else{
-            document.body.classList.add('overflow-hidden');
-        }
-    }
+    const content = document.getElementById(
+        'kpiDetailContent'
+    );
 
-    function openKpiDetail(card){
+    const kpi = activeKpi;
 
-        const modal = document.getElementById('kpiDetailModal');
-        const content = document.getElementById('kpiDetailContent');
+    if(!kpi || !content) return;
 
-        if(!modal || !content || !card) return;
+    const quarters = kpi.quarters || [];
 
-        const kpi = JSON.parse(card.dataset.kpi || '{}');
+    const quarter =
+        quarters.find(
+            q => q.quarter === activeQuarter
+        ) || {};
 
-        const quarters = kpi.quarters || [];
+    const target = parseFloat(
+        quarter.quarter_target || 0
+    );
 
-        let quarterHtml = '';
+    const actual = parseFloat(
+        quarter.quarter_actual || 0
+    );
 
-        ['Q1','Q2','Q3','Q4'].forEach(function(q){
+    const score =
+        target > 0
+        ? ((actual / target) * 100).toFixed(1)
+        : 0;
 
-            const quarter = quarters.find(x => x.quarter === q) || {};
+    let tabs = '';
 
-            let timelineStatus = 'No Timeline';
-            let timelineColor = 'text-slate-500';
+    ['Q1','Q2','Q3','Q4'].forEach(function(tab){
 
-            const today = new Date();
-            today.setHours(0,0,0,0);
+        tabs += `
 
-            let isExpired = false;
-
-            let isEditable = false;
-
-            let startDate = null;
-
-            let endDate = null;
-
-            if(
-                quarter.start_date &&
-                quarter.end_date
-            ){
-
-                startDate = new Date(quarter.start_date);
-
-                endDate = new Date(quarter.end_date);
-
-                startDate.setHours(0,0,0,0);
-
-                endDate.setHours(0,0,0,0);
-
-                isExpired =
-                    today.getTime() > endDate.getTime();
-
-                isEditable =
-                    today.getTime() >= startDate.getTime()
-                    &&
-                    today.getTime() <= endDate.getTime();
-
-                const diffStart = Math.ceil(
-                    (startDate - today) / (1000 * 60 * 60 * 24)
-                );
-
-                const diffEnd = Math.ceil(
-                    (endDate - today) / (1000 * 60 * 60 * 24)
-                );
-
-                if(today < startDate){
-
-                    timelineStatus =
-                        'Starts in ' + diffStart + ' days';
-
-                    timelineColor = 'text-blue-600';
+        <button
+            onclick="renderKpiDetail('${tab}')"
+            class="
+                h-[42px]
+                px-5
+                rounded-2xl
+                text-sm
+                font-black
+                transition-all
+                duration-200
+                ${
+                    activeQuarter === tab
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-white border border-slate-200 text-slate-600'
                 }
-                else if(today > endDate){
+            ">
 
-                    timelineStatus = 'Ended';
+            ${tab}
 
-                    timelineColor = 'text-red-600';
-                }
-                else if(diffEnd === 0){
+        </button>
+        `;
+    });
 
-                    timelineStatus = 'Ends Today';
+    content.innerHTML = `
 
-                    timelineColor = 'text-orange-600';
-                }
-                else{
+    <div class="min-h-screen bg-[#f8fafc]">
 
-                    timelineStatus =
-                        diffEnd + ' days left';
+        <!-- HEADER -->
+        <div class="sticky top-0 z-30 bg-white border-b border-slate-200 px-6 py-5">
 
-                    timelineColor = 'text-emerald-600';
-                }
-            }
-            const target = parseFloat(quarter.quarter_target || 0);
-            const actual = parseFloat(quarter.quarter_actual || 0);
+            <div class="flex items-start justify-between gap-4">
 
-            const score = target > 0
-                ? ((actual / target) * 100).toFixed(1)
-                : 0;
+                <div>
 
-            const safeScore = Math.max(
-                0,
-                Math.min(parseFloat(score), 200)
-            );
+                    <div class="flex flex-wrap items-center gap-2 mb-3">
 
-            const width = Math.min(safeScore, 100);
+                        <div class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black">
+                            ${kpi.category || 'General'}
+                        </div>
 
-            quarterHtml += `
+                        <div class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-[10px] font-black">
+                            ${kpi.sub_category || '-'}
+                        </div>
 
-            <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-
-                <!-- HEADER -->
-                <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-
-                    <div>
-
-                        <div class="flex items-center gap-2">
-
-                            <div class="w-9 h-9 rounded-2xl bg-indigo-100 text-indigo-700 font-black text-sm flex items-center justify-center">
-                                ${q}
-                            </div>
-
-                            <div>
-
-                                <h3 class="text-sm font-black text-slate-900">
-                                    ${quarter.quarter_title || 'Quarter KPI'}
-                                </h3>
-
-                                <p class="text-xs text-slate-400 mt-1">
-                                    ${timelineStatus}
-                                </p>
-
-                            </div>
-
+                        <div class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-black">
+                            ${kpi.financial_year || '-'}
                         </div>
 
                     </div>
 
-                    <div class="text-right">
+                    <h2 class="text-3xl font-black text-slate-900">
+                        ${kpi.kpi_title || '-'}
+                    </h2>
 
-                        <p class="text-[10px] uppercase text-slate-400 font-black">
-                            Achievement
-                        </p>
-
-                        <h2 class="text-xl font-black ${timelineColor}">
-                            ${safeScore.toFixed(1)}%
-                        </h2>
-
-                    </div>
+                    <p class="text-sm text-slate-500 mt-2 max-w-3xl">
+                        ${kpi.kpi_description || 'No description'}
+                    </p>
 
                 </div>
 
-                <!-- BODY -->
-                <div class="p-5">
+                <button
+                    onclick="closeKpiDetail()"
+                    class="w-11 h-11 rounded-2xl bg-slate-100 hover:bg-slate-200 text-xl font-black">
 
-                    <p class="text-sm text-slate-500 leading-relaxed">
-                        ${quarter.quarter_description || 'No quarter description'}
-                    </p>
+                    ×
 
-                    <!-- TARGET -->
-                    <div class="grid grid-cols-2 gap-4 mt-5">
+                </button>
 
-                        <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4">
+            </div>
 
-                            <p class="text-[10px] uppercase text-slate-400 font-black">
-                                Quarter Target
-                            </p>
+        </div>
 
-                            <h3 class="text-xl font-black text-slate-900 mt-2">
-                                ${target}
-                            </h3>
+        <!-- BODY -->
+        <div class="p-6 grid grid-cols-1 xl:grid-cols-12 gap-6">
 
-                        </div>
+            <!-- LEFT -->
+            <div class="xl:col-span-8 space-y-5">
 
-                        <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4">
+                <!-- QUARTER TABS -->
+                <div class="flex flex-wrap gap-3">
 
-                            <p class="text-[10px] uppercase text-slate-400 font-black">
-                                Actual
-                            </p>
+                    ${tabs}
 
-                            <h3 class="text-xl font-black text-emerald-600 mt-2">
-                                ${actual}
-                            </h3>
+                </div>
 
-                        </div>
+                <!-- MAIN QUARTER CARD -->
+                <div class="bg-white rounded-3xl border border-slate-200 p-6">
 
-                    </div>
-
-                    <!-- TIMELINE -->
-                    <div class="grid grid-cols-2 gap-4 mt-4">
+                    <div class="flex items-start justify-between gap-5">
 
                         <div>
 
-                            <p class="text-[10px] uppercase text-slate-400 font-black">
-                                Start Date
-                            </p>
+                            <div class="flex items-center gap-3">
 
-                            <p class="text-sm font-bold text-slate-800 mt-2">
-                                ${quarter.start_date || '-'}
-                            </p>
-
-                        </div>
-
-                        <div>
-
-                            <p class="text-[10px] uppercase text-slate-400 font-black">
-                                End Date
-                            </p>
-
-                            <p class="text-sm font-bold text-slate-800 mt-2">
-                                ${quarter.end_date || '-'}
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                    <!-- UPDATE SECTION -->
-                    <div class="mt-5">
-
-                        <div class="flex items-center justify-between mb-2">
-
-                            <p class="text-[10px] uppercase text-slate-400 font-black">
-                                Quarter Update
-                            </p>
-
-                            ${
-                                isEditable
-                                ?
-                                `
-                                <div class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black">
-                                    Editable
+                                <div class="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg font-black">
+                                    ${activeQuarter}
                                 </div>
-                                `
-                                :
-                                isExpired
-                                ?
-                                `
-                                <div class="px-2 py-1 rounded-full bg-red-50 text-red-700 text-[10px] font-black">
-                                    Approval Required
+
+                                <div>
+
+                                    <h3 class="text-xl font-black text-slate-900">
+                                        ${quarter.quarter_title || 'Quarter KPI'}
+                                    </h3>
+
+                                    <p class="text-sm text-slate-500 mt-1">
+                                        ${quarter.quarter_description || 'No description'}
+                                    </p>
+
                                 </div>
-                                `
-                                :
-                                `
-                                <div class="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black">
-                                    Upcoming Quarter
-                                </div>
-                                `
-                            }
-
-                        </div>
-
-                        <div class="space-y-4">
-
-                            <!-- ACTUAL -->
-                            <div>
-
-                                <label class="text-[10px] uppercase text-slate-400 font-black">
-                                    Quarter Actual
-                                </label>
-
-                                <input
-                                    id="actual-${kpi.id}-${q}"
-                                    type="number"
-                                    value="${actual}"
-                                    ${isEditable ? '' : 'disabled'}
-                                    class="
-                                        w-full mt-2 h-[46px]
-                                        rounded-2xl
-                                        border border-slate-200
-                                        px-4
-                                        text-sm
-                                        font-bold
-                                        ${isEditable
-                                            ? 'bg-white text-slate-900'
-                                            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                        }
-                                    "
-                                >
 
                             </div>
 
-                            <!-- REMARK -->
-                            <div>
+                        </div>
 
-                                <label class="text-[10px] uppercase text-slate-400 font-black">
-                                    Remark
-                                </label>
+                        <div class="text-right">
 
-                                <textarea
-                                    id="remark-${kpi.id}-${q}"
-                                    ${isEditable ? '' : 'disabled'}
-                                    class="
-                                        w-full mt-2 rounded-2xl border border-slate-200
-                                        p-4 text-sm
-                                        ${isEditable
-                                            ? 'bg-white text-slate-900'
-                                            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                        }
-                                    "
-                                    rows="4"
-                                >${quarter.remark || ''}</textarea>
+                            <p class="text-[10px] uppercase text-slate-400 font-black">
+                                Achievement
+                            </p>
 
-                            </div>
-
-                            ${
-                                isEditable
-                                ?
-                                `
-                                <button
-                                    onclick="event.stopPropagation(); updateQuarter(
-                                        '${kpi.id}',
-                                        '${q}'
-                                    )"
-                                    class="w-full h-[44px] rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black">
-
-                                    Update Quarter
-
-                                </button>
-                                `
-                                :
-                                isExpired
-                                ?
-                                `
-                                <button
-                                    onclick="event.stopPropagation(); requestApproval(
-                                        '${kpi.id}',
-                                        '${q}'
-                                    )"
-                                    class="w-full h-[44px] rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black">
-
-                                    Request Approval
-
-                                </button>
-                                `
-                                :
-                                `
-                                <button
-                                    disabled
-                                    class="w-full h-[44px] rounded-2xl bg-slate-200 text-slate-500 text-xs font-black cursor-not-allowed">
-
-                                    Quarter Not Started Yet
-
-                                </button>
-                                `
-                            }
+                            <h2 class="text-4xl font-black text-indigo-700 mt-1">
+                                ${score}%
+                            </h2>
 
                         </div>
 
                     </div>
 
                     <!-- PERFORMANCE -->
-                    <div class="mt-5">
-
-                        <div class="flex items-center justify-between mb-2">
-
-                            <p class="text-[10px] uppercase text-slate-400 font-black">
-                                Quarter Performance
-                            </p>
-
-                            <p class="text-sm font-black text-slate-900">
-                                ${safeScore.toFixed(1)}%
-                            </p>
-
-                        </div>
+                    <div class="mt-6">
 
                         <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
 
                             <div
-                                class="h-3 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600"
-                                style="width:${width}%">
+                                class="h-3 rounded-full bg-gradient-to-r from-indigo-500 to-blue-600"
+                                style="width:${Math.min(score,100)}%">
                             </div>
 
                         </div>
 
                     </div>
 
-                </div>
+                    <!-- KPI DETAILS -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
 
-            </div>
-            `;
-        });
+                        <div class="rounded-2xl bg-slate-50 p-4">
 
-        content.innerHTML = `
-
-        <div class="min-h-screen bg-[#f8fafc]">
-
-            <!-- HEADER -->
-            <div class="sticky top-0 z-30 bg-white border-b border-slate-200 px-6 py-4">
-
-                <div class="flex items-start justify-between gap-4">
-
-                    <div>
-
-                        <div class="flex items-center gap-2 mb-2">
-
-                            <div class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black">
-                                ${kpi.category || 'General'}
-                            </div>
-
-                            <div class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-[10px] font-black">
-                                ${kpi.sub_category || 'Sub Category'}
-                            </div>
-
-                            <div class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-black">
-                                ${kpi.financial_year || 'FY'}
-                            </div>
-
-                        </div>
-
-                        <h2 class="text-2xl font-black text-slate-900">
-                            ${kpi.kpi_title || '-'}
-                        </h2>
-
-                        <p class="text-sm text-slate-500 mt-2 max-w-3xl leading-relaxed">
-                            ${kpi.kpi_description || 'No KPI description available'}
-                        </p>
-
-                    </div>
-
-                    <button
-                        onclick="closeKpiDetail()"
-                        class="w-11 h-11 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xl font-black flex items-center justify-center">
-
-                        ×
-
-                    </button>
-
-                </div>
-
-            </div>
-
-            <!-- BODY -->
-            <div class="p-6 grid grid-cols-1 xl:grid-cols-12 gap-5">
-
-                <!-- LEFT -->
-                <div class="xl:col-span-8 space-y-5">
-
-                    ${quarterHtml}
-
-                </div>
-
-                <!-- RIGHT -->
-                <div class="xl:col-span-4 space-y-5">
-
-                    <!-- KPI INFO -->
-                    <div class="rounded-3xl overflow-hidden bg-gradient-to-br from-[#06142f] via-blue-900 to-indigo-900 text-white shadow-xl">
-
-                        <div class="p-5">
-
-                            <p class="text-[11px] uppercase tracking-wider text-blue-200 font-black">
-                                KPI Owner
+                            <p class="text-[10px] uppercase text-slate-400 font-black">
+                                Quarter Target
                             </p>
 
-                            <h2 class="text-2xl font-black mt-2">
-                                ${kpi.employee_name || '-'}
-                            </h2>
-
-                            <div class="grid grid-cols-2 gap-3 mt-6">
-
-                                <div class="bg-white/10 rounded-2xl p-4">
-
-                                    <p class="text-[10px] uppercase text-blue-200 font-black">
-                                        Weightage
-                                    </p>
-
-                                    <h3 class="text-2xl font-black mt-2">
-                                        ${kpi.weightage || 0}%
-                                    </h3>
-
-                                </div>
-
-                                <div class="bg-white/10 rounded-2xl p-4">
-
-                                    <p class="text-[10px] uppercase text-blue-200 font-black">
-                                        KPI Status
-                                    </p>
-
-                                    <h3 class="text-sm font-black mt-3">
-                                        ${(kpi.status || 'not_started').replaceAll('_',' ')}
-                                    </h3>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <!-- TARGET SUMMARY -->
-                    <div class="bg-white rounded-3xl border border-slate-200 p-5">
-
-                        <div class="flex items-center justify-between mb-4">
-
-                            <h3 class="text-sm font-black text-slate-900">
-                                KPI Summary
+                            <h3 class="text-2xl font-black text-slate-900 mt-2">
+                                ${target}
                             </h3>
 
                         </div>
 
-                        <div class="space-y-4">
+                        <div class="rounded-2xl bg-slate-50 p-4">
 
-                            <div class="flex items-center justify-between">
+                            <p class="text-[10px] uppercase text-slate-400 font-black">
+                                Actual
+                            </p>
 
-                                <div>
-                                    <p class="text-[10px] uppercase text-slate-400 font-black">
-                                        Base Target
-                                    </p>
+                            <h3 class="text-2xl font-black text-emerald-600 mt-2">
+                                ${actual}
+                            </h3>
 
-                                    <p class="text-lg font-black text-slate-900 mt-1">
-                                        ${kpi.base_target || 0}
-                                    </p>
-                                </div>
+                        </div>
 
-                                <div class="text-right">
-                                    <p class="text-[10px] uppercase text-slate-400 font-black">
-                                        Stretch Target
-                                    </p>
+                        <div class="rounded-2xl bg-slate-50 p-4">
 
-                                    <p class="text-lg font-black text-indigo-700 mt-1">
-                                        ${kpi.stretch_target || 0}
-                                    </p>
-                                </div>
+                            <p class="text-[10px] uppercase text-slate-400 font-black">
+                                Start Date
+                            </p>
 
-                            </div>
+                            <h3 class="text-sm font-black text-slate-900 mt-3">
+                                ${quarter.start_date || '-'}
+                            </h3>
 
-                            <div class="border-t border-slate-100 pt-4">
+                        </div>
 
-                                <div class="flex items-center justify-between">
+                        <div class="rounded-2xl bg-slate-50 p-4">
 
-                                    <div>
-                                        <p class="text-[10px] uppercase text-slate-400 font-black">
-                                            Overall Actual
-                                        </p>
+                            <p class="text-[10px] uppercase text-slate-400 font-black">
+                                End Date
+                            </p>
 
-                                        <p class="text-lg font-black text-emerald-600 mt-1">
-                                            Auto Calculated
-                                        </p>
-                                    </div>
-
-                                    <div class="text-right">
-                                        <p class="text-[10px] uppercase text-slate-400 font-black">
-                                            Unit
-                                        </p>
-
-                                        <p class="text-sm font-black text-slate-900 mt-2">
-                                            ${kpi.unit || '-'}
-                                        </p>
-                                    </div>
-
-                                </div>
-
-                            </div>
+                            <h3 class="text-sm font-black text-slate-900 mt-3">
+                                ${quarter.end_date || '-'}
+                            </h3>
 
                         </div>
 
                     </div>
 
-                    ${
-                        ['ADMIN','SLT','CCO','CCMO','VP','MANAGER']
-                        .includes('{{ strtoupper($user["role"]) }}')
+                    <!-- UPDATE FLOW -->
+                    <div class="grid grid-cols-1 gap-4 mt-6">
 
-                        ?
+                        <div>
 
-                        `
+                            <label class="text-[10px] uppercase text-slate-400 font-black">
+                                Quarter Actual
+                            </label>
 
-                        <!-- KPI ACTION -->
-                        <div class="bg-white rounded-3xl border border-slate-200 p-5">
+                            <input
+                                id="actual-${kpi.id}-${activeQuarter}"
+                                type="number"
+                                value="${actual}"
+                                class="w-full mt-2 h-[48px] rounded-2xl border border-slate-200 px-4 text-sm font-bold"
+                            >
 
-                            <div class="flex items-center justify-between mb-4">
+                        </div>
 
-                                <h3 class="text-sm font-black text-slate-900">
-                                    KPI Action
-                                </h3>
+                        <div>
 
-                            </div>
+                            <label class="text-[10px] uppercase text-slate-400 font-black">
+                                Remark
+                            </label>
 
-                            ${
-                                kpi.has_pending_edit_request
+                            <textarea
+                                id="remark-${kpi.id}-${activeQuarter}"
+                                rows="5"
+                                class="w-full mt-2 rounded-2xl border border-slate-200 p-4 text-sm"
+                            >${quarter.remark || ''}</textarea>
 
-                                ?
+                        </div>
 
-                                `
-                                <div class="w-full h-[46px] rounded-2xl bg-blue-50 text-blue-700 text-sm font-black flex items-center justify-center border border-blue-100">
+                        <button
+                            onclick="updateQuarter('${kpi.id}','${activeQuarter}')"
+                            class="h-[50px] rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black">
 
-                                    Edit Approval Pending
+                            Update Quarter
 
-                                </div>
-                                `
+                        </button>
 
-                                :
+                    </div>
 
-                                `
-                                <button
-                                    onclick="openEditTargetModal(
-                                        '${kpi.id}',
-                                        '${kpi.base_target || 0}',
-                                        '${kpi.stretch_target || 0}'
-                                    )"
-                                    class="w-full h-[46px] rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-black transition-all duration-200">
+                </div>
 
-                                    Request Target Edit
+            </div>
 
-                                </button>
-                                `
-                            }
+            <!-- RIGHT -->
+            <div class="xl:col-span-4 space-y-5">
 
-                            <p class="text-[11px] text-slate-400 mt-3 leading-relaxed">
+                <!-- OWNER -->
+                <div class="rounded-3xl overflow-hidden bg-gradient-to-br from-[#06142f] via-blue-900 to-indigo-900 text-white p-6">
 
-                                Only Base Target & Stretch Target can be edited.
-                                Approval from reporting superior is required.
+                    <p class="text-xs uppercase text-blue-200 font-black">
+                        KPI Owner
+                    </p>
 
+                    <h2 class="text-2xl font-black mt-2">
+                        ${kpi.employee_name || '-'}
+                    </h2>
+
+                    <div class="grid grid-cols-2 gap-4 mt-6">
+
+                        <div class="bg-white/10 rounded-2xl p-4">
+
+                            <p class="text-[10px] uppercase text-blue-200 font-black">
+                                Weightage
                             </p>
 
-                            ${
-                                kpi.has_pending_delete_request
+                            <h3 class="text-2xl font-black mt-2">
+                                ${kpi.weightage || 0}%
+                            </h3>
 
-                                ?
+                        </div>
 
-                                `
-                                <div class="w-full mt-3 h-[46px] rounded-2xl bg-amber-50 text-amber-700 text-sm font-black flex items-center justify-center border border-amber-100">
+                        <div class="bg-white/10 rounded-2xl p-4">
 
-                                    Delete Approval Pending
+                            <p class="text-[10px] uppercase text-blue-200 font-black">
+                                Status
+                            </p>
 
-                                </div>
-                                `
+                            <h3 class="text-sm font-black mt-3">
+                                ${(kpi.status || '-').replaceAll('_',' ')}
+                            </h3>
 
-                                :
+                        </div>
 
-                                `
-                                <button
-                                    onclick="openDeleteKpiModal(
-                                        '${kpi.id}',
-                                        \`${kpi.kpi_title || ''}\`
-                                    )"
-                                    class="w-full mt-3 h-[46px] rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-black transition-all duration-200">
+                    </div>
 
-                                    Request KPI Delete
+                </div>
 
-                                </button>
-                                `
-                            }
+                <!-- HISTORY -->
+                <div class="bg-white rounded-3xl border border-slate-200 p-5">
 
-                            <p class="text-[11px] text-red-400 mt-3 leading-relaxed">
+                    <h3 class="text-sm font-black text-slate-900 mb-5">
+                        KPI History
+                    </h3>
 
-                                KPI deletion requires approval from superior.
+                    <div class="space-y-4">
 
+                        <div class="border-l-2 border-indigo-500 pl-4">
+
+                            <p class="text-xs font-black text-slate-900">
+                                Quarter Updated
+                            </p>
+
+                            <p class="text-xs text-slate-500 mt-1">
+                                ${quarter.updated_at || 'No update yet'}
                             </p>
 
                         </div>
 
-                        `
-
-                        :
-
-                        `
-
-                        <div class="rounded-2xl bg-slate-100 p-4 text-xs text-slate-500 font-bold">
-
-                            KPI governance actions are restricted for your role.
-
-                        </div>
-
-                        `
-                    }
+                    </div>
 
                 </div>
 
             </div>
 
         </div>
-        `;
 
-        modal.classList.remove('hidden');
+    </div>
+    `;
+}
 
-        document.body.classList.add('overflow-hidden');
+function closeKpiDetail(){
+
+    const modal = document.getElementById(
+        'kpiDetailModal'
+    );
+
+    if(!modal) return;
+
+    modal.classList.add('hidden');
+
+    document.body.classList.remove(
+        'overflow-hidden'
+    );
+}
+
+    function switchQuarterTab(quarter){
+
+        document.querySelectorAll('.quarter-tab')
+        .forEach(function(tab){
+
+            tab.classList.remove(
+                'bg-slate-900',
+                'text-white'
+            );
+
+            tab.classList.add(
+                'bg-white',
+                'border',
+                'border-slate-200',
+                'text-slate-600'
+            );
+
+        });
+
+        const activeTab = document.getElementById(
+            'tab-' + quarter
+        );
+
+        if(activeTab){
+
+            activeTab.classList.remove(
+                'bg-white',
+                'border',
+                'border-slate-200',
+                'text-slate-600'
+            );
+
+            activeTab.classList.add(
+                'bg-slate-900',
+                'text-white'
+            );
+        }
+
+        const kpi = JSON.parse(
+            document.querySelector('.kpi-card[data-kpi]')
+            .dataset.kpi
+        );
+
+        const quarters = kpi.quarters || [];
+
+        document.getElementById('quarterContent')
+        .innerHTML = renderQuarter(quarter);
     }
 
     async function updateQuarter(kpiId, quarter){
@@ -1477,7 +997,7 @@
 
         button.disabled = true;
 
-        button.innerText = 'Updating...';
+        button.innerText = 'Processing...';
 
         const actualInput = document.getElementById(
             `actual-${kpiId}-${quarter}`
@@ -1497,7 +1017,13 @@
 
         try{
 
-            const response = await fetch('/kpi/update-quarter', {
+            /*
+            |--------------------------------------------------------------------------
+            | TRY DIRECT UPDATE FIRST
+            |--------------------------------------------------------------------------
+            */
+
+            let response = await fetch('/kpi/update-quarter', {
 
                 method: 'POST',
 
@@ -1507,14 +1033,25 @@
                 },
 
                 body: JSON.stringify({
+
                     kpi_id: kpiId,
+
                     quarter: quarter,
+
                     actual: actual,
+
                     remark: remark
+
                 })
             });
 
-            const result = await response.json();
+            let result = await response.json();
+
+            /*
+            |--------------------------------------------------------------------------
+            | SUCCESS DIRECT UPDATE
+            |--------------------------------------------------------------------------
+            */
 
             if(result.success){
 
@@ -1522,11 +1059,76 @@
 
                 location.reload();
 
+                return;
             }
-            else{
 
-                alert(result.message || 'Update failed.');
+            /*
+            |--------------------------------------------------------------------------
+            | LOCKED QUARTER -> REQUEST APPROVAL
+            |--------------------------------------------------------------------------
+            */
+
+            if(
+                result.message &&
+                result.message.includes('Approval required')
+            ){
+
+                let approvalResponse = await fetch(
+
+                    '/kpi/request-quarter-approval',
+
+                    {
+
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+
+                        body: JSON.stringify({
+
+                            kpi_id: kpiId,
+
+                            quarter: quarter,
+
+                            actual: actual,
+
+                            remark: remark
+
+                        })
+                    }
+                );
+
+                let approvalResult =
+                    await approvalResponse.json();
+
+                if(approvalResult.success){
+
+                    alert(
+                        'Quarter locked. Approval request submitted.'
+                    );
+
+                    location.reload();
+
+                    return;
+                }
+
+                alert(
+                    approvalResult.message
+                    || 'Approval request failed.'
+                );
+
+                return;
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | OTHER ERROR
+            |--------------------------------------------------------------------------
+            */
+
+            alert(result.message || 'Update failed.');
 
         }
         catch(error){
@@ -1542,6 +1144,7 @@
             button.innerText = originalText;
         }
     }
+
     async function requestApproval(kpiId, quarter){
 
         const actualInput = document.getElementById(
@@ -1786,17 +1389,6 @@
         }
     }
 
-    function closeKpiDetail(){
-
-        const modal = document.getElementById('kpiDetailModal');
-
-        if(!modal) return;
-
-        modal.classList.add('hidden');
-
-        document.body.classList.remove('overflow-hidden');
-    }
-
 </script>
 
 <!-- KPI DETAIL MODAL -->
@@ -1811,204 +1403,21 @@
     </div>
 
     <!-- PANEL -->
-    <div class="absolute right-0 top-0 h-full w-full max-w-[1000px] bg-[#f8fafc] overflow-y-auto shadow-2xl">
+    <div class="absolute right-0 top-0 h-full w-full max-w-[1400px] bg-[#f8fafc] overflow-y-auto shadow-2xl">
 
         <div id="kpiDetailContent">
 
-        </div>
+            <div class="bg-white rounded-3xl border border-slate-200 p-5">
 
-    </div>
+                <h3 class="text-sm font-black text-slate-900 mb-4">
+                    KPI History
+                </h3>
 
-</div>
+                <div class="space-y-4 max-h-[400px] overflow-y-auto">
 
-<!-- EDIT TARGET MODAL -->
-<div
-    id="editTargetModal"
-    class="hidden fixed inset-0 z-[99999]">
-
-    <!-- BACKDROP -->
-    <div
-        onclick="closeEditTargetModal()"
-        class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm">
-    </div>
-
-    <!-- PANEL -->
-    <div class="absolute inset-0 flex items-center justify-center p-4">
-
-        <div class="w-full max-w-[520px] bg-white rounded-[28px] shadow-2xl overflow-hidden">
-
-            <!-- HEADER -->
-            <div class="px-6 py-5 border-b border-slate-100">
-
-                <h2 class="text-xl font-black text-slate-900">
-                    Request KPI Target Edit
-                </h2>
-
-                <p class="text-xs text-slate-500 mt-2">
-                    Changes require approval from superior.
-                </p>
-
-            </div>
-
-            <!-- BODY -->
-            <div class="p-6 space-y-5">
-
-                <input type="hidden" id="editKpiId">
-
-                <div>
-
-                    <label class="text-[10px] uppercase font-black text-slate-400">
-                        Base Target
-                    </label>
-
-                    <input
-                        id="editBaseTarget"
-                        type="number"
-                        class="w-full mt-2 h-[48px] rounded-2xl border border-slate-200 px-4 text-sm font-bold"
-                    >
+                    <!-- Dynamic history here -->
 
                 </div>
-
-                <div>
-
-                    <label class="text-[10px] uppercase font-black text-slate-400">
-                        Stretch Target
-                    </label>
-
-                    <input
-                        id="editStretchTarget"
-                        type="number"
-                        class="w-full mt-2 h-[48px] rounded-2xl border border-slate-200 px-4 text-sm font-bold"
-                    >
-
-                </div>
-
-                <div>
-
-                    <label class="text-[10px] uppercase font-black text-slate-400">
-                        Reason
-                    </label>
-
-                    <textarea
-                        id="editReason"
-                        rows="5"
-                        class="w-full mt-2 rounded-2xl border border-slate-200 p-4 text-sm"
-                        placeholder="Why target needs revision..."
-                    ></textarea>
-
-                </div>
-
-            </div>
-
-            <!-- FOOTER -->
-            <div class="px-6 py-5 border-t border-slate-100 flex items-center gap-3">
-
-                <button
-                    onclick="closeEditTargetModal()"
-                    class="flex-1 h-[46px] rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-black">
-
-                    Cancel
-
-                </button>
-
-                <button
-                    onclick="submitEditTargetRequest()"
-                    class="flex-1 h-[46px] rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black">
-
-                    Submit Request
-
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-<!-- DELETE KPI MODAL -->
-<div
-    id="deleteKpiModal"
-    class="hidden fixed inset-0 z-[999999]">
-
-    <!-- BACKDROP -->
-    <div
-        onclick="closeDeleteKpiModal()"
-        class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm">
-    </div>
-
-    <!-- PANEL -->
-    <div class="absolute inset-0 flex items-center justify-center p-4">
-
-        <div class="w-full max-w-[520px] bg-white rounded-[28px] shadow-2xl overflow-hidden">
-
-            <!-- HEADER -->
-            <div class="px-6 py-5 border-b border-slate-100">
-
-                <h2 class="text-xl font-black text-red-700">
-                    Request KPI Delete
-                </h2>
-
-                <p class="text-xs text-slate-500 mt-2">
-                    This action requires approval from superior.
-                </p>
-
-            </div>
-
-            <!-- BODY -->
-            <div class="p-6 space-y-5">
-
-                <input type="hidden" id="deleteKpiId">
-
-                <div>
-
-                    <label class="text-[10px] uppercase font-black text-slate-400">
-                        KPI
-                    </label>
-
-                    <div
-                        id="deleteKpiTitle"
-                        class="mt-2 rounded-2xl bg-slate-100 p-4 text-sm font-black text-slate-900">
-                    </div>
-
-                </div>
-
-                <div>
-
-                    <label class="text-[10px] uppercase font-black text-slate-400">
-                        Reason
-                    </label>
-
-                    <textarea
-                        id="deleteReason"
-                        rows="5"
-                        class="w-full mt-2 rounded-2xl border border-slate-200 p-4 text-sm"
-                        placeholder="Why KPI should be deleted..."
-                    ></textarea>
-
-                </div>
-
-            </div>
-
-            <!-- FOOTER -->
-            <div class="px-6 py-5 border-t border-slate-100 flex items-center gap-3">
-
-                <button
-                    onclick="closeDeleteKpiModal()"
-                    class="flex-1 h-[46px] rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-black">
-
-                    Cancel
-
-                </button>
-
-                <button
-                    onclick="submitDeleteRequest()"
-                    class="flex-1 h-[46px] rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-black">
-
-                    Submit Delete Request
-
-                </button>
 
             </div>
 

@@ -1017,6 +1017,50 @@ class KpiController extends Controller
         };
     }
 
+    private function resolveApproverId(
+        array $employee
+    ): ?string {
+
+        /*
+        |--------------------------------------------------------------------------
+        | REPORTS TO ONLY
+        |--------------------------------------------------------------------------
+        */
+
+        if(
+            empty($employee['reports_to'])
+        ){
+            return null;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | FIND BOSS
+        |--------------------------------------------------------------------------
+        */
+
+        $boss = $this->supabase->get(
+
+            'employees',
+
+            [
+
+                'employee_id'
+                    => 'eq.' . $employee['reports_to'],
+
+                'select'
+                    => 'id,short_name',
+
+                'limit'
+                    => 1,
+
+            ]
+
+        ) ?? [];
+
+        return $boss[0]['id'] ?? null;
+    }
+
     private function recordKpiHistory(
         SupabaseService $supabase,
         array $oldKpi,
@@ -1411,85 +1455,37 @@ class KpiController extends Controller
             ], 409);
         }
 
+        $approverId = null;
+
+        if (!empty($user['manager_code'])) {
+            $manager = $this->supabase->get('employees', [
+                'employee_id' => 'eq.' . $user['manager_code'],
+                'select' => 'id',
+                'limit' => 1,
+            ]) ?? [];
+
+            $approverId = $manager[0]['id'] ?? null;
+        }
+
+        if (!$approverId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Approver not found.'
+            ], 422);
+        }
+
         $this->supabase->insert('kpi_delete_requests', [
-
             'kpi_id' => $id,
-
             'requested_by' => $user['id'],
-
+            'approver_id' => $approverId,
             'reason' => $validated['reason'],
-
             'status' => 'pending',
-
             'created_at' => $this->nowMy(),
-
         ]);
 
         return response()->json([
-
             'success' => true,
-
             'message' => 'Delete request submitted successfully.'
-
-        ]);
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | APPROVAL CENTER
-    |--------------------------------------------------------------------------
-    */
-
-    public function approvalCenter()
-    {
-        $user = $this->currentUser($this->supabase);
-
-        $role = strtoupper(trim($user['role'] ?? ''));
-
-        if (!in_array($role, [
-            'ADMIN',
-            'SLT',
-            'CCO',
-            'CCMO',
-            'VP',
-            'MANAGER'
-        ])) {
-
-            abort(403);
-        }
-
-        $editRequests = $this->supabase->get(
-            'kpi_target_change_requests',
-            [
-                'status' => 'eq.pending',
-                'select' => '*',
-                'order' => 'created_at.desc',
-            ]
-        ) ?? [];
-
-        $deleteRequests = $this->supabase->get(
-            'kpi_delete_requests',
-            [
-                'status' => 'eq.pending',
-                'select' => '*',
-                'order' => 'created_at.desc',
-            ]
-        ) ?? [];
-
-        $quarterRequests = $this->supabase->get(
-            'kpi_update_approvals',
-            [
-                'status' => 'eq.pending',
-                'select' => '*',
-                'order' => 'created_at.desc',
-            ]
-        ) ?? [];
-
-        return view('kpi.approvals', [
-            'user' => $user,
-            'editRequests' => $editRequests,
-            'deleteRequests' => $deleteRequests,
-            'quarterRequests' => $quarterRequests,
         ]);
     }
 
@@ -1748,6 +1744,20 @@ class KpiController extends Controller
                 ], 409);
             }
 
+            $employee = session('employee');
+
+            $approverId = $this->resolveApproverId(
+                $employee
+            );
+
+            if(!$approverId){
+                return response()->json([
+                    'success' => false,
+                    'message' =>
+                        'No approver configured for this role.'
+                ], 422);
+            }
+
             /*
             |--------------------------------------------------------------------------
             | CREATE REQUEST
@@ -1755,23 +1765,15 @@ class KpiController extends Controller
             */
 
             $this->supabase->insert('kpi_update_approvals', [
-
                 'kpi_id' => $validated['kpi_id'],
-
                 'quarter' => $validated['quarter'],
-
                 'requested_actual' => $validated['actual'] ?? 0,
-
                 'request_remark' => $validated['remark'] ?? null,
-
                 'requested_by' => $user['id'] ?? null,
-
                 'requested_by_name' => $user['short_name'] ?? 'Unknown',
-
+                'approver_id' => $approverId,
                 'status' => 'pending',
-
                 'created_at' => $this->nowMy(),
-
             ]);
 
             return response()->json([
@@ -1816,7 +1818,7 @@ class KpiController extends Controller
 
         $total = round($total, 2);
 
-        if($total != 100){
+        if($total > 100)
 
             return back()->with(
 
@@ -1825,7 +1827,6 @@ class KpiController extends Controller
                 'Total weightage must be exactly 100%.'
 
             );
-        }
 
         /*
         |--------------------------------------------------------------------------
@@ -1917,16 +1918,9 @@ class KpiController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        return redirect()
-
-            ->route('weightage')
-
-            ->with(
-
-                'success',
-
-                'Weightage updated successfully.'
-
-            );
+        return response()->json([
+            'success' => true,
+            'message' => 'Weightage updated successfully.'
+        ]);
     }
 }

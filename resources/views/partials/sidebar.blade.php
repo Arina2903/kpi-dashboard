@@ -96,13 +96,18 @@
                     [
                         'label' => 'View My KPI',
                         'href' => '/kpi',
-                        'match' => 'kpi',
+                        'match' => [
+                            'kpi',
+                            'kpi/*/edit'
+                        ],
                         'icon' => 'list',
                     ],
                     [
                         'label' => 'Create New KPI',
                         'href' => '/kpi/create',
-                        'match' => 'kpi/create',
+                        'match' => [
+                            'kpi/create'
+                        ],
                         'icon' => 'plus',
                     ],
                     [
@@ -113,16 +118,27 @@
                     ],
                     [
                         'label' => 'Manage Weightage',
-                        'href' => '/weightage',
-                        'match' => 'weightage*',
+                        'href' => route('weightage'),
+                        'match' => [
+                            'weightage',
+                            'weightage/*'
+                        ],
                         'icon' => 'weightage',
                     ],
                 ],
             ],
-
             [
                 'title' => 'Monitoring',
                 'items' => [
+
+                    [
+                        'label' => 'Approval',
+                        'href' => '/approval',
+                        'match' => 'approval*',
+                        'icon' => 'approval',
+                        'badge' => $pendingApprovalCount ?? 0,
+                    ],
+
                     [
                         'label' => 'User Activity Log',
                         'href' => '/activity-log',
@@ -208,7 +224,23 @@
                 <div class="space-y-1">
                     @foreach($section['items'] as $item)
                         @php
-                            $isActive = request()->is($item['match']);
+                            $isActive = false;
+
+                            if(is_array($item['match'])){
+
+                                foreach($item['match'] as $pattern){
+
+                                    if(request()->is($pattern)){
+
+                                        $isActive = true;
+                                        break;
+                                    }
+                                }
+
+                            }else{
+
+                                $isActive = request()->is($item['match']);
+                            }
                         @endphp
 
                         <a
@@ -223,9 +255,26 @@
                                 @include('partials.sidebar-icons', ['icon' => $item['icon']])
                             </span>
 
-                            <span class="sidebar-text truncate">
-                                {{ $item['label'] }}
-                            </span>
+                            <div class="flex items-center justify-between w-full min-w-0 gap-2">
+
+                                <span class="sidebar-text truncate">
+                                    {{ $item['label'] }}
+                                </span>
+
+                                @if(($item['badge'] ?? 0) > 0)
+
+                                    <span class="sidebar-text min-w-[20px] h-[20px]
+                                        rounded-full bg-red-500 text-white text-[10px]
+                                        font-black flex items-center justify-center
+                                        px-1 shadow-lg shadow-red-500/30">
+
+                                        {{ $item['badge'] }}
+
+                                    </span>
+
+                                @endif
+
+                            </div>
 
                             <div class="sidebar-tooltip hidden absolute left-[58px] top-1/2 -translate-y-1/2
                                 bg-black text-white text-[10px] px-2 py-1 rounded-md

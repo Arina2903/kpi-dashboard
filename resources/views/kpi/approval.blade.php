@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>Approval Center</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+
+        .glass{
+            background: rgba(255,255,255,.9);
+            backdrop-filter: blur(14px);
+        }
+
+        .card-hover{
+            transition:.2s ease;
+        }
+
+        .card-hover:hover{
+            transform:translateY(-2px);
+            box-shadow:0 18px 35px rgba(15,23,42,.08);
+        }
+
+    </style>
+
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100">
+
+@include('partials.sidebar')
+
+<main
+    id="mainContent"
+    class="ml-[230px] min-h-screen transition-all duration-300 bg-[#f4f7fb]"
+>
+
+<div class="p-6 space-y-6">
+
+    <!-- HEADER -->
+    <div class="rounded-[20px] bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white p-6 shadow-xl">
+
+        <div class="flex justify-between items-center">
+
+            <div>
+
+                <a
+                    href="/dashboard"
+                    class="text-xs text-blue-100 hover:text-white"
+                >
+                    ← Dashboard
+                </a>
+
+                <h1 class="text-3xl font-black mt-3">
+                    Approval Center
+                </h1>
+
+                <p class="text-blue-100 text-xs mt-2">
+
+                    {{ session('short_name') }}
+                    ·
+                    KPI Governance Workflow
+
+                </p>
+
+            </div>
+
+            <div class="bg-white/10 rounded-3xl px-6 py-5 text-center min-w-[150px]">
+
+                <p class="text-[10px] uppercase tracking-wider text-blue-200 font-black">
+                    Pending
+                </p>
+
+                <h2 class="text-4xl font-black mt-2">
+
+                    {{ count($approvals ?? []) }}
+
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- FILTER -->
+    <div class="glass rounded-[20px] border border-white/70 p-4 shadow-sm">
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            <div>
+
+                <label class="text-xs font-black uppercase text-slate-500">
+                    Search
+                </label>
+
+                <input
+                    id="searchInput"
+                    type="text"
+                    placeholder="Search KPI or employee..."
+                    class="w-full mt-2 border border-slate-200 rounded-2xl px-4 py-3 text-sm"
+                >
+
+            </div>
+
+            <div>
+
+                <label class="text-xs font-black uppercase text-slate-500">
+                    Type
+                </label>
+
+                <select
+                    id="typeFilter"
+                    class="w-full mt-2 border border-slate-200 rounded-2xl px-4 py-3 text-sm"
+                >
+
+                    <option value="">
+                        All Types
+                    </option>
+
+                    <option value="quarter_update">
+                        Quarter Update
+                    </option>
+
+                    <option value="target_change">
+                        Target Change
+                    </option>
+
+                    <option value="delete_request">
+                        Delete Request
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="bg-slate-900 text-white rounded-2xl p-4 flex items-center justify-between">
+
+                <div>
+
+                    <p class="text-xs text-blue-100">
+                        Visible Request
+                    </p>
+
+                    <h2
+                        id="visibleCount"
+                        class="text-2xl font-black mt-1"
+                    >
+
+                        {{ count($approvals ?? []) }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- LIST -->
+    <div class="space-y-4">
+
+        @forelse(($approvals ?? []) as $approval)
+
+            @php
+
+                $type =
+                    $approval['type']
+                    ?? 'quarter_update';
+
+                $badgeColor =
+                    match($type){
+
+                        'quarter_update'
+                            => 'bg-blue-50 text-blue-700',
+
+                        'target_change'
+                            => 'bg-yellow-50 text-yellow-700',
+
+                        'delete_request'
+                            => 'bg-red-50 text-red-700',
+
+                        default
+                            => 'bg-slate-100 text-slate-700'
+                    };
+
+                $typeLabel =
+                    match($type){
+
+                        'quarter_update'
+                            => 'Quarter Update',
+
+                        'target_change'
+                            => 'Target Change',
+
+                        'delete_request'
+                            => 'Delete Request',
+
+                        default
+                            => 'Approval'
+                    };
+
+            @endphp
+
+            <div
+                class="approval-card glass card-hover rounded-[24px] border border-white/70 p-5"
+
+                data-search="{{ strtolower(($approval['kpi_title'] ?? '') . ' ' . ($approval['requested_by_name'] ?? '')) }}"
+
+                data-type="{{ $type }}"
+            >
+
+                <div class="flex flex-col xl:flex-row gap-5">
+
+                    <!-- LEFT -->
+                    <div class="flex-1">
+
+                        <!-- BADGES -->
+                        <div class="flex flex-wrap items-center gap-2 mb-4">
+
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black {{ $badgeColor }}">
+
+                                {{ $typeLabel }}
+
+                            </span>
+
+                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-[10px] font-black">
+
+                                {{ $approval['quarter'] ?? '-' }}
+
+                            </span>
+
+                            <span class="px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-[10px] font-black">
+
+                                Pending
+
+                            </span>
+
+                        </div>
+
+                        <!-- KPI TITLE -->
+                        <h2 class="text-2xl font-black text-slate-900 leading-tight">
+
+                            {{ $approval['kpi_title'] ?? 'Untitled KPI' }}
+
+                        </h2>
+
+                        <!-- META -->
+                        <div class="mt-4 flex flex-wrap gap-4 text-sm text-slate-500">
+
+                            <div>
+
+                                Requested By:
+
+                                <span class="font-black text-slate-700">
+
+                                    {{ $approval['requested_by_name'] ?? '-' }}
+
+                                </span>
+
+                            </div>
+
+                            <div>
+
+                                {{ $approval['created_at'] ?? '-' }}
+
+                            </div>
+
+                        </div>
+
+                        <!-- QUARTER UPDATE -->
+                        @if($type === 'quarter_update')
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+
+                                <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4">
+
+                                    <p class="text-[10px] uppercase text-slate-400 font-black">
+                                        Previous
+                                    </p>
+
+                                    <h3 class="text-xl font-black mt-2">
+
+                                        {{ $approval['old_actual'] ?? 0 }}
+
+                                    </h3>
+
+                                </div>
+
+                                <div class="rounded-2xl bg-blue-50 border border-blue-100 p-4">
+
+                                    <p class="text-[10px] uppercase text-blue-500 font-black">
+                                        Requested
+                                    </p>
+
+                                    <h3 class="text-xl font-black mt-2 text-blue-700">
+
+                                        {{ $approval['requested_actual'] ?? 0 }}
+
+                                    </h3>
+
+                                </div>
+
+                                <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
+
+                                    <p class="text-[10px] uppercase text-emerald-500 font-black">
+                                        Target
+                                    </p>
+
+                                    <h3 class="text-xl font-black mt-2 text-emerald-700">
+
+                                        {{ $approval['quarter_target'] ?? 0 }}
+
+                                    </h3>
+
+                                </div>
+
+                                <div class="rounded-2xl bg-orange-50 border border-orange-100 p-4">
+
+                                    <p class="text-[10px] uppercase text-orange-500 font-black">
+                                        Achievement
+                                    </p>
+
+                                    <h3 class="text-xl font-black mt-2 text-orange-700">
+
+                                        @php
+
+                                            $target =
+                                                (float)($approval['quarter_target'] ?? 0);
+
+                                            $actual =
+                                                (float)($approval['requested_actual'] ?? 0);
+
+                                            $achievement =
+                                                $target > 0
+                                                ? round(($actual / $target) * 100, 2)
+                                                : 0;
+
+                                        @endphp
+
+                                        {{ number_format($achievement,2) }}%
+
+                                    </h3>
+
+                                </div>
+
+                            </div>
+
+                        @endif
+
+                        <!-- REMARK -->
+                        <div class="mt-5 rounded-2xl bg-slate-50 border border-slate-100 p-5">
+
+                            <p class="text-[10px] uppercase text-slate-400 font-black">
+                                Remark
+                            </p>
+
+                            <p class="text-sm text-slate-700 mt-3 leading-relaxed">
+
+                                {{ $approval['request_remark'] ?? $approval['remark'] ?? '-' }}
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <!-- ACTION -->
+                    <div class="w-full xl:w-[220px] space-y-3">
+
+                        <button
+                            onclick="approveRequest('{{ $approval['id'] }}')"
+                            class="w-full h-[54px] rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black"
+                        >
+
+                            Approve
+
+                        </button>
+
+                        <button
+                            onclick="rejectRequest('{{ $approval['id'] }}')"
+                            class="w-full h-[54px] rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black"
+                        >
+
+                            Reject
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        @empty
+
+            <div class="glass rounded-[24px] border border-dashed border-slate-300 p-20 text-center">
+
+                <h2 class="text-3xl font-black text-slate-900">
+
+                    No Pending Approval
+
+                </h2>
+
+                <p class="text-sm text-slate-500 mt-3">
+
+                    Everything already reviewed.
+
+                </p>
+
+            </div>
+
+        @endforelse
+
+    </div>
+
+</div>
+
+</main>
+
+<script>
+
+const searchInput =
+    document.getElementById('searchInput');
+
+const typeFilter =
+    document.getElementById('typeFilter');
+
+const visibleCount =
+    document.getElementById('visibleCount');
+
+const cards =
+    document.querySelectorAll('.approval-card');
+
+function filterCards(){
+
+    const search =
+        searchInput.value
+        .toLowerCase()
+        .trim();
+
+    const type =
+        typeFilter.value;
+
+    let visible = 0;
+
+    cards.forEach(card => {
+
+        const matchesSearch =
+            (card.dataset.search || '')
+            .includes(search);
+
+        const matchesType =
+            !type ||
+            card.dataset.type === type;
+
+        if(
+            matchesSearch &&
+            matchesType
+        ){
+
+            card.classList.remove('hidden');
+
+            visible++;
+
+        }else{
+
+            card.classList.add('hidden');
+        }
+
+    });
+
+    visibleCount.innerText = visible;
+}
+
+searchInput.addEventListener(
+    'input',
+    filterCards
+);
+
+typeFilter.addEventListener(
+    'change',
+    filterCards
+);
+
+async function approveRequest(id){
+
+    if(
+        !confirm(
+            'Approve this request?'
+        )
+    ){
+        return;
+    }
+
+    try{
+
+        const response = await fetch(
+
+            '/approval/' + id + '/approve',
+
+            {
+
+                method:'POST',
+
+                headers:{
+                    'Content-Type':'application/json',
+                    'X-CSRF-TOKEN':'{{ csrf_token() }}'
+                }
+
+            }
+
+        );
+
+        const result =
+            await response.json();
+
+        if(result.success){
+
+            alert('Approval successful.');
+
+            location.reload();
+
+        }else{
+
+            alert(
+                result.message ||
+                'Approval failed.'
+            );
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+        alert('System error.');
+    }
+}
+
+async function rejectRequest(id){
+
+    const reason = prompt(
+        'Reason for rejection'
+    );
+
+    if(!reason){
+        return;
+    }
+
+    try{
+
+        const response = await fetch(
+
+            '/approval/' + id + '/reject',
+
+            {
+
+                method:'POST',
+
+                headers:{
+                    'Content-Type':'application/json',
+                    'X-CSRF-TOKEN':'{{ csrf_token() }}'
+                },
+
+                body: JSON.stringify({
+
+                    reason: reason
+
+                })
+
+            }
+
+        );
+
+        const result =
+            await response.json();
+
+        if(result.success){
+
+            alert('Request rejected.');
+
+            location.reload();
+
+        }else{
+
+            alert(
+                result.message ||
+                'Reject failed.'
+            );
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+        alert('System error.');
+    }
+}
+
+</script>
+
+</body>
+</html>

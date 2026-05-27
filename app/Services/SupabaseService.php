@@ -7,74 +7,232 @@ use Illuminate\Support\Facades\Http;
 class SupabaseService
 {
     protected string $url;
+
     protected string $key;
 
     public function __construct()
     {
-        $this->url = rtrim(env('SUPABASE_URL'), '/');
-        $this->key = env('SUPABASE_SERVICE_ROLE_KEY');
+        $this->url = rtrim(
+            env('SUPABASE_URL'),
+            '/'
+        );
+
+        $this->key = env(
+            'SUPABASE_SERVICE_ROLE_KEY'
+        );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | BASE REQUEST
+    |--------------------------------------------------------------------------
+    */
 
     private function request()
     {
         return Http::withHeaders([
+
             'apikey' => $this->key,
+
             'Authorization' => 'Bearer ' . $this->key,
+
             'Content-Type' => 'application/json',
+
             'Accept' => 'application/json',
+
             'Prefer' => 'return=representation',
+
         ]);
     }
 
-    public function get(string $table, array $query = [])
-    {
+    /*
+    |--------------------------------------------------------------------------
+    | ENDPOINT
+    |--------------------------------------------------------------------------
+    */
+
+    private function endpoint(
+        string $table
+    ){
+        return $this->url . '/rest/v1/' . $table;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET
+    |--------------------------------------------------------------------------
+    */
+
+    public function get(
+        string $table,
+        array $query = []
+    ){
+
         return $this->request()
-            ->get($this->url . '/rest/v1/' . $table, $query)
+
+            ->get(
+                $this->endpoint($table),
+                $query
+            )
+
             ->throw()
+
             ->json();
     }
 
-    public function insert(string $table, array $data)
-    {
+    /*
+    |--------------------------------------------------------------------------
+    | FIRST
+    |--------------------------------------------------------------------------
+    */
+
+    public function first(
+        string $table,
+        array $query = []
+    ){
+
+        $result = $this->get(
+            $table,
+            $query
+        );
+
+        return $result[0] ?? null;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | FIND BY ID
+    |--------------------------------------------------------------------------
+    */
+
+    public function findById(
+        string $table,
+        string $id
+    ){
+
+        return $this->first(
+            $table,
+            [
+                'id' => 'eq.' . $id
+            ]
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | INSERT
+    |--------------------------------------------------------------------------
+    */
+
+    public function insert(
+        string $table,
+        array $data
+    ){
+
         return $this->request()
-            ->post($this->url . '/rest/v1/' . $table, $data)
+
+            ->post(
+                $this->endpoint($table),
+                $data
+            )
+
             ->throw()
+
             ->json();
     }
 
-    public function update(string $table, array $filters, array $data)
-    {
-        $query = http_build_query($filters);
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE
+    |--------------------------------------------------------------------------
+    */
+
+    public function update(
+        string $table,
+        array $filters,
+        array $data
+    ){
+
+        $query = http_build_query(
+            $filters
+        );
 
         return $this->request()
-            ->patch($this->url . '/rest/v1/' . $table . '?' . $query, $data)
+
+            ->patch(
+                $this->endpoint($table) . '?' . $query,
+                $data
+            )
+
             ->throw()
+
             ->json();
     }
 
-    public function patch(string $table, string $id, array $data)
-    {
-        return $this->update($table, [
-            'id' => 'eq.' . $id,
-        ], $data);
+    /*
+    |--------------------------------------------------------------------------
+    | PATCH
+    |--------------------------------------------------------------------------
+    */
+
+    public function patch(
+        string $table,
+        array $filters,
+        array $data
+    ){
+
+        return $this->update(
+            $table,
+            $filters,
+            $data
+        );
     }
 
-    public function post(string $table, array $data)
-    {
-        return $this->insert($table, $data);
+    /*
+    |--------------------------------------------------------------------------
+    | POST
+    |--------------------------------------------------------------------------
+    */
+
+    public function post(
+        string $table,
+        array $data
+    ){
+
+        return $this->insert(
+            $table,
+            $data
+        );
     }
 
-    public function delete(string $table, array $query = [])
-    {
-        $url = $this->url . '/rest/v1/' . $table;
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE
+    |--------------------------------------------------------------------------
+    */
 
-        if (!empty($query)) {
-            $url .= '?' . http_build_query($query);
+    public function delete(
+        string $table,
+        array $filters = []
+    ){
+
+        $url = $this->endpoint(
+            $table
+        );
+
+        if(!empty($filters)){
+
+            $url .= '?' . http_build_query(
+                $filters
+            );
         }
 
         return $this->request()
+
             ->delete($url)
+
             ->throw()
+
             ->json();
     }
 }

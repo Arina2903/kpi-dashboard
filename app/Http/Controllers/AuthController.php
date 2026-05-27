@@ -62,7 +62,10 @@ class AuthController extends Controller
             'using_default_password' => $usingDefaultPassword,
         ]);
 
-        $dashboards = $this->getUserDashboards($supabase, $user['id']);
+        $dashboards = $this->getUserDashboards(
+            $supabase,
+            $user['id']
+        );
 
         if (empty($dashboards)) {
             session()->flush();
@@ -72,7 +75,10 @@ class AuthController extends Controller
                 ->with('error', 'Akaun ini belum diberi akses kepada mana-mana dashboard.');
         }
 
-        $this->updateLastLogin($supabase, $user['id']);
+        $this->updateLastLogin(
+            $supabase,
+            $user['id']
+        );
 
         if (count($dashboards) === 1) {
             $this->setDashboardSession($dashboards[0]);
@@ -212,6 +218,7 @@ class AuthController extends Controller
     private function setDashboardSession(array $dashboard): void
     {
         session([
+            'employee' => $dashboard,
             'employee_uuid' => $dashboard['employee_uuid'],
             'employee_id' => $dashboard['employee_id'],
 

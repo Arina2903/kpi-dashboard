@@ -103,6 +103,26 @@
         </svg>
         @break
 
+    @case('approval')
+        <svg class="w-4 h-4"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             viewBox="0 0 24 24">
+
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 12l2 2 4-4"/>
+
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 22c5 0 9-4 9-9s-4-9-9-9-9 4-9 9 4 9 9 9z"/>
+
+        </svg>
+        @break
+
     @case('activity')
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M3 12h4l3 8 4-16 3 8h4"/>
