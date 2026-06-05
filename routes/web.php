@@ -135,11 +135,31 @@ Route::middleware(['kpi.auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::post('/kpi/update-quarter', [KpiController::class, 'updateQuarterActual'])
-        ->name('kpi.quarter.actual.update');
+    Route::post(
+        '/kpi/update-quarter',
+        [KpiController::class, 'updateQuarterActual']
+    )->name('kpi.quarter.actual.update');
 
-    Route::post('/kpi/request-quarter-approval', [KpiController::class, 'requestQuarterApproval'])
-        ->name('kpi.quarter.approval.request');
+    Route::post(
+        '/kpi/request-quarter-approval',
+        [KpiController::class, 'requestQuarterApproval']
+    )->name('kpi.quarter.approval.request');
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACTUAL CHANGE REQUEST
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/kpi/{kpiId}/quarter/{quarterId}/actual-request',
+        [KpiController::class, 'submitActualUpdateRequest']
+    )->name('kpi.actual.request');
+
+    Route::post(
+        '/kpi/quarter/{quarterId}/status',
+        [KpiController::class, 'saveQuarterStatus']
+    )->name('kpi.quarter.status');
 
     /*
     |--------------------------------------------------------------------------
@@ -156,6 +176,31 @@ Route::middleware(['kpi.auth'])->group(function () {
 
     Route::post('/kpi/{id}/request-edit', [KpiController::class, 'submitEditRequest'])
         ->name('kpi.request.edit.submit');
+
+    /*
+    | REQUEST TARGET CHANGE
+    */
+
+    Route::post(
+
+        '/kpi/{id}/request-target-change',
+
+        [KpiController::class,
+        'requestTargetChange']
+
+    )->name(
+        'kpi.requestTargetChange'
+    );
+
+    Route::post(
+        '/kpi/{id}/request-weightage-change',
+        [
+            ApprovalController::class,
+            'requestWeightageChange'
+        ]
+    )->name(
+        'kpi.request-weightage-change'
+    );
 
     /*
     | REQUEST DELETE
@@ -187,6 +232,11 @@ Route::middleware(['kpi.auth'])->group(function () {
         '/approval/{id}/reject',
         [ApprovalController::class, 'reject']
     )->name('approval.reject');
+
+    Route::get(
+        '/approval/rejected',
+        [ApprovalController::class,'rejected']
+    )->name('approval.rejected');
 
     /*
     |--------------------------------------------------------------------------

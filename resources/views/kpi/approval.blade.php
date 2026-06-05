@@ -73,13 +73,129 @@
 
                 <h2 class="text-4xl font-black mt-2">
 
-                    {{ count($approvals ?? []) }}
+                    {{ $totalPending ?? 0 }}
 
                 </h2>
 
             </div>
 
         </div>
+
+    </div>
+
+    <!-- SUMMARY CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+        <div class="glass rounded-[20px] p-5 border border-white/70">
+
+            <p class="text-xs uppercase text-slate-500 font-black">
+                Quarter Requests
+            </p>
+
+            <h2 class="text-3xl font-black mt-2 text-blue-700">
+                {{ $quarterCount ?? 0 }}
+            </h2>
+
+        </div>
+
+        <div class="glass rounded-[20px] p-5 border border-white/70">
+
+            <p class="text-xs uppercase text-slate-500 font-black">
+                Target Requests
+            </p>
+
+            <h2 class="text-3xl font-black mt-2 text-yellow-600">
+                {{ $targetCount ?? 0 }}
+            </h2>
+
+        </div>
+
+        <div class="glass rounded-[20px] p-5 border border-white/70">
+
+            <p class="text-xs uppercase text-slate-500 font-black">
+                Delete Requests
+            </p>
+
+            <h2 class="text-3xl font-black mt-2 text-red-600">
+                {{ $deleteCount ?? 0 }}
+            </h2>
+
+        </div>
+
+        <div class="bg-slate-900 text-white rounded-[20px] p-5">
+
+            <p class="text-xs uppercase text-slate-300 font-black">
+                Total Pending
+            </p>
+
+            <h2 class="text-3xl font-black mt-2">
+                {{ $totalPending ?? 0 }}
+            </h2>
+
+        </div>
+
+    </div>
+
+    <!-- APPROVAL TABS -->
+    <div
+        class="
+        glass
+        rounded-[20px]
+        border
+        border-white/70
+        p-2
+        flex
+        gap-2
+        "
+    >
+
+        <button
+            id="tab-pending"
+            class="
+            approval-tab
+            flex-1
+            h-[56px]
+            rounded-2xl
+            bg-slate-900
+            text-white
+            font-black
+            "
+            onclick="switchApprovalTab('pending')"
+        >
+            Pending
+        </button>
+
+        <button
+            id="tab-approved"
+            class="
+            approval-tab
+            flex-1
+            h-[56px]
+            rounded-2xl
+            bg-slate-100
+            text-slate-700
+            font-black
+            "
+            onclick="switchApprovalTab('approved')"
+        >
+            Approved
+        </button>
+
+        <button
+            id="tab-rejected"
+            class="
+            approval-tab
+            flex-1
+            h-[56px]
+            rounded-2xl
+            bg-slate-100
+            text-slate-700
+            font-black
+            "
+            onclick="switchApprovalTab('rejected')"
+        >
+            Rejected
+        </button>
 
     </div>
 
@@ -146,9 +262,7 @@
                         id="visibleCount"
                         class="text-2xl font-black mt-1"
                     >
-
-                        {{ count($approvals ?? []) }}
-
+                        {{ $totalPending ?? 0 }}
                     </h2>
 
                 </div>
@@ -202,16 +316,52 @@
                             => 'Approval'
                     };
 
+                $priority =
+                    strtolower(
+                        $approval['risk_level']
+                        ??
+                        $approval['priority']
+                        ??
+                        'normal'
+                    );
+
+                $priorityColor =
+                    match($priority){
+
+                        'critical'
+                            => 'bg-red-100 text-red-700 border-red-200',
+
+                        'high'
+                            => 'bg-orange-100 text-orange-700 border-orange-200',
+
+                        default
+                            => 'bg-slate-100 text-slate-700 border-slate-200'
+                    };
+
+                $priorityLabel =
+                    ucfirst($priority);
+
             @endphp
 
             <div
-                class="approval-card glass card-hover rounded-[24px] border border-white/70 p-5"
-
-                data-search="{{ strtolower(($approval['kpi_title'] ?? '') . ' ' . ($approval['requested_by_name'] ?? '')) }}"
-
+                class="approval-card glass card-hover rounded-[24px] border p-5
+                @if($priority === 'critical')
+                    border-red-300
+                @elseif($priority === 'high')
+                    border-orange-300
+                @else
+                    border-white/70
+                @endif
+                "
+                data-status="{{ strtolower($approval['status'] ?? 'pending') }}"
                 data-type="{{ $type }}"
+                data-search="
+                    {{ strtolower($approval['kpi_title'] ?? '') }}
+                    {{ strtolower($approval['requested_by_name'] ?? '') }}
+                    {{ strtolower($typeLabel ?? '') }}
+                    {{ strtolower($priorityLabel ?? '') }}
+                "
             >
-
                 <div class="flex flex-col xl:flex-row gap-5">
 
                     <!-- LEFT -->
@@ -219,24 +369,40 @@
 
                         <!-- BADGES -->
                         <div class="flex flex-wrap items-center gap-2 mb-4">
-
                             <span class="px-3 py-1 rounded-full text-[10px] font-black {{ $badgeColor }}">
-
                                 {{ $typeLabel }}
-
                             </span>
 
-                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-[10px] font-black">
-
-                                {{ $approval['quarter'] ?? '-' }}
-
+                            <span
+                                class="px-3 py-1 rounded-full border text-[10px] font-black {{ $priorityColor }}">
+                                {{ $priorityLabel }}
                             </span>
+
+                            @if($type === 'quarter_update')
+                                <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-[10px] font-black">
+                                    {{ $approval['quarter'] }}
+                                </span>
+                            @endif
+
+                            @if(($approval['status'] ?? '') === 'approved')
+
+                            <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black">
+                                Approved
+                            </span>
+
+                            @elseif(($approval['status'] ?? '') === 'rejected')
+
+                            <span class="px-3 py-1 rounded-full bg-red-50 text-red-700 text-[10px] font-black">
+                                Rejected
+                            </span>
+
+                            @else
 
                             <span class="px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-[10px] font-black">
-
                                 Pending
-
                             </span>
+
+                            @endif
 
                         </div>
 
@@ -350,48 +516,388 @@
 
                         @endif
 
-                        <!-- REMARK -->
-                        <div class="mt-5 rounded-2xl bg-slate-50 border border-slate-100 p-5">
+                        <!-- REMARK / DETAILS -->
+
+                        @if($type === 'quarter_update')
+
+                        <div class="mt-4 rounded-2xl bg-slate-50 border border-slate-100 p-5">
 
                             <p class="text-[10px] uppercase text-slate-400 font-black">
-                                Remark
+                                Reason
                             </p>
 
                             <p class="text-sm text-slate-700 mt-3 leading-relaxed">
 
-                                {{ $approval['request_remark'] ?? $approval['remark'] ?? '-' }}
+                                {{ $approval['reason'] ?? '-' }}
 
                             </p>
 
                         </div>
 
-                    </div>
+                        @elseif($type === 'target_change')
+                        @php
 
-                    <!-- ACTION -->
-                    <div class="w-full xl:w-[220px] space-y-3">
+                            $baseImpact = 0;
 
-                        <button
-                            onclick="approveRequest('{{ $approval['id'] }}')"
-                            class="w-full h-[54px] rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black"
+                            if(
+                                ($approval['old_base_target'] ?? 0) > 0
+                            ){
+                                $baseImpact =
+                                    (
+                                        (
+                                            ($approval['new_base_target'] ?? 0)
+                                            -
+                                            ($approval['old_base_target'] ?? 0)
+                                        )
+                                        /
+                                        ($approval['old_base_target'] ?? 1)
+                                    ) * 100;
+                            }
+
+                            $stretchImpact = 0;
+
+                            if(
+                                ($approval['old_stretch_target'] ?? 0) > 0
+                            ){
+                                $stretchImpact =
+                                    (
+                                        (
+                                            ($approval['new_stretch_target'] ?? 0)
+                                            -
+                                            ($approval['old_stretch_target'] ?? 0)
+                                        )
+                                        /
+                                        ($approval['old_stretch_target'] ?? 1)
+                                    ) * 100;
+                            }
+
+                        @endphp
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+
+                            <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4">
+
+                                <p class="text-[10px] uppercase text-slate-400 font-black">
+                                    Current Base
+                                </p>
+
+                                <h3 class="text-xl font-black mt-2">
+                                    {{ number_format($approval['old_base_target'] ?? 0,0) }}
+                                </h3>
+
+                            </div>
+
+                            <div class="rounded-2xl bg-blue-50 border border-blue-100 p-4">
+
+                                <p class="text-[10px] uppercase text-blue-500 font-black">
+                                    Requested Base
+                                </p>
+
+                                <h3 class="text-xl font-black mt-2 text-blue-700">
+                                    {{ number_format($approval['new_base_target'] ?? 0,0) }}
+                                </h3>
+
+                            </div>
+
+                            <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4">
+
+                                <p class="text-[10px] uppercase text-slate-400 font-black">
+                                    Current Stretch
+                                </p>
+
+                                <h3 class="text-xl font-black mt-2">
+                                    {{ number_format($approval['old_stretch_target'] ?? 0,0) }}
+                                </h3>
+
+                            </div>
+
+                            <div class="rounded-2xl bg-blue-50 border border-blue-100 p-4">
+
+                                <p class="text-[10px] uppercase text-blue-500 font-black">
+                                    Requested Stretch
+                                </p>
+
+                                <h3 class="text-xl font-black mt-2 text-blue-700">
+                                    {{ number_format($approval['new_stretch_target'] ?? 0,0) }}
+                                </h3>
+
+                            </div>
+
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+
+                            <div class="rounded-2xl bg-amber-50 border border-amber-100 p-5">
+
+                                <p class="text-[10px] uppercase text-amber-500 font-black">
+                                    Impact
+                                </p>
+
+                                <div class="mt-3 space-y-3">
+
+                                    <div class="flex justify-between">
+
+                                        <span>Base</span>
+
+                                        <span class="font-black">
+
+                                            {{ number_format($baseImpact,1) }}%
+
+                                        </span>
+
+                                    </div>
+
+                                    <div class="flex justify-between">
+
+                                        <span>Stretch</span>
+
+                                        <span class="font-black">
+
+                                            {{ number_format($stretchImpact,1) }}%
+
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="rounded-2xl bg-slate-50 border border-slate-100 p-5">
+
+                                <p class="text-[10px] uppercase text-slate-400 font-black">
+                                    Reason
+                                </p>
+
+                                <p class="text-sm text-slate-700 mt-3 leading-relaxed">
+
+                                    {{ $approval['reason'] ?? '-' }}
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        @else
+
+                        <div
+                            class="
+                                mt-5
+                                rounded-2xl
+                                bg-red-50
+                                border
+                                border-red-100
+                                p-5
+                            "
                         >
 
-                            Approve
+                            <p
+                                class="
+                                    text-[10px]
+                                    uppercase
+                                    text-red-500
+                                    font-black
+                                "
+                            >
+                                Reason For Deletion
+                            </p>
 
-                        </button>
+                            <p
+                                class="
+                                    text-sm
+                                    text-slate-700
+                                    mt-3
+                                    leading-relaxed
+                                "
+                            >
 
-                        <button
-                            onclick="rejectRequest('{{ $approval['id'] }}')"
-                            class="w-full h-[54px] rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black"
-                        >
+                                {{ $approval['reason'] ?? '-' }}
 
-                            Reject
+                            </p>
 
-                        </button>
+                        </div>
 
+                        @endif
                     </div>
 
+                    <!-- ACTION / STATUS PANEL -->
+                    <div class="w-full xl:w-[280px]"
+                    >
+                        @php
+
+                            $status =
+                                strtolower(
+                                    $approval['status']
+                                    ?? 'pending'
+                                );
+
+                            $statusClass =
+                                match($status){
+
+                                    'approved'
+                                        => 'bg-emerald-50 border-emerald-200',
+
+                                    'rejected'
+                                        => 'bg-red-50 border-red-200',
+
+                                    default
+                                        => 'bg-yellow-50 border-yellow-200'
+                                };
+
+                            $statusText =
+                                match($status){
+
+                                    'approved'
+                                        => 'APPROVED',
+
+                                    'rejected'
+                                        => 'REJECTED',
+
+                                    default
+                                        => 'PENDING'
+                                };
+
+                        @endphp
+
+                        <div
+                            class="
+                            rounded-2xl
+                            border
+                            p-5
+                            {{ $statusClass }}
+                            "
+                        >
+
+                            <h3
+                                class="
+                                text-lg
+                                font-black
+                                "
+                            >
+                                {{ $statusText }}
+                            </h3>
+
+                            <div class="mt-5 space-y-4">
+
+                                <div>
+
+                                    <div
+                                        class="
+                                        text-[10px]
+                                        uppercase
+                                        text-slate-400
+                                        font-black
+                                        "
+                                    >
+                                        Action By
+                                    </div>
+
+                                    <div class="font-bold">
+
+                                        {{
+                                            $approval['approved_by_name']
+                                            ??
+                                            $approval['rejected_by_name']
+                                            ??
+                                            '-'
+                                        }}
+
+                                    </div>
+
+                                </div>
+
+                                <div>
+
+                                    <div
+                                        class="
+                                        text-[10px]
+                                        uppercase
+                                        text-slate-400
+                                        font-black
+                                        "
+                                    >
+                                        Action Date
+                                    </div>
+
+                                    <div class="font-bold">
+
+                                        {{
+                                            $approval['approved_at']
+                                            ??
+                                            $approval['rejected_at']
+                                            ??
+                                            '-'
+                                        }}
+
+                                    </div>
+
+                                </div>
+
+                                <div>
+
+                                    <div
+                                        class="
+                                        text-[10px]
+                                        uppercase
+                                        text-slate-400
+                                        font-black
+                                        "
+                                    >
+                                        Remark
+                                    </div>
+
+                                    <div
+                                        class="
+                                        mt-2
+                                        rounded-xl
+                                        bg-white
+                                        border
+                                        p-3
+                                        text-sm
+                                        "
+                                    >
+
+                                        {{
+                                            $approval['rejection_reason']
+                                            ??
+                                            $approval['approver_remark']
+                                            ??
+                                            'Waiting for approval'
+                                        }}
+
+                                    </div>
+
+                                </div>
+
+                                @if($status === 'pending')
+
+                                <div class="pt-2 space-y-3">
+
+                                    <button
+                                        onclick="approveRequest('{{ $approval['id'] }}')"
+                                        class="w-full h-[54px] rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black"
+                                    >
+                                        Approve
+                                    </button>
+
+                                    <button
+                                        onclick="rejectRequest('{{ $approval['id'] }}')"
+                                        class="w-full h-[54px] rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black"
+                                    >
+                                        Reject
+                                    </button>
+
+                                </div>
+
+                                @endif
+
+                            </div>
+
+                        </div>
+
+                    </div>
                 </div>
-
             </div>
 
         @empty
@@ -434,6 +940,8 @@ const visibleCount =
 const cards =
     document.querySelectorAll('.approval-card');
 
+let activeApprovalTab = 'pending';
+
 function filterCards(){
 
     const search =
@@ -456,16 +964,22 @@ function filterCards(){
             !type ||
             card.dataset.type === type;
 
+        const matchesStatus =
+            (card.dataset.status || 'pending')
+            === activeApprovalTab;
+
         if(
             matchesSearch &&
-            matchesType
+            matchesType &&
+            matchesStatus
         ){
 
             card.classList.remove('hidden');
 
             visible++;
 
-        }else{
+        }
+        else{
 
             card.classList.add('hidden');
         }
@@ -484,6 +998,53 @@ typeFilter.addEventListener(
     'change',
     filterCards
 );
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function(){
+
+        filterCards();
+
+    }
+);
+
+function switchApprovalTab(status){
+
+    activeApprovalTab = status;
+
+    document
+        .querySelectorAll('.approval-tab')
+        .forEach(btn => {
+
+            btn.classList.remove(
+                'bg-slate-900',
+                'text-white'
+            );
+
+            btn.classList.add(
+                'bg-slate-100',
+                'text-slate-700'
+            );
+
+        });
+
+    const activeBtn =
+        document.getElementById(
+            'tab-' + status
+        );
+
+    activeBtn.classList.remove(
+        'bg-slate-100',
+        'text-slate-700'
+    );
+
+    activeBtn.classList.add(
+        'bg-slate-900',
+        'text-white'
+    );
+
+    filterCards();
+}
 
 async function approveRequest(id){
 

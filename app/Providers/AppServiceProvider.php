@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
+use App\Services\ApprovalHierarchyService;
+use App\Services\SupabaseService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -12,7 +14,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(
+            ApprovalHierarchyService::class,
+            function ($app) {
+
+                return new ApprovalHierarchyService(
+                    $app->make(
+                        SupabaseService::class
+                    )
+                );
+            }
+        );
     }
 
     /**
@@ -20,7 +32,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (app()->environment('production')) {
+        if (
+            app()->environment('production')
+        ) {
             URL::forceScheme('https');
         }
     }

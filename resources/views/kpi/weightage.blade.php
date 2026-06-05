@@ -741,6 +741,41 @@ function saveSingleWeightage(button, kpiId){
     const value =
         parseFloat(input.value || 0);
 
+    const original =
+        parseFloat(
+            input.dataset.original || 0
+        );
+
+    const changedWeightage =
+        original > 0
+        &&
+        original !== value;
+
+    const unchanged =
+        original === value;
+
+    if(unchanged){
+
+        return;
+    }
+
+    if(changedWeightage){
+
+        openWeightageApprovalModal(
+            kpiId,
+            original,
+            value
+        );
+
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | DIRECT SAVE
+    |--------------------------------------------------------------------------
+    */
+
     button.disabled = true;
 
     button.innerText = 'Saving...';
@@ -816,7 +851,279 @@ function saveSingleWeightage(button, kpiId){
 
 recalculateWeightage();
 
+let weightageApprovalData = null;
+
+function openWeightageApprovalModal(
+    kpiId,
+    oldValue,
+    newValue
+){
+
+    weightageApprovalData = {
+
+        kpiId,
+        oldValue,
+        newValue
+
+    };
+
+    document
+        .getElementById(
+            'weightageChangeSummary'
+        )
+        .innerHTML = `
+
+        <div>
+
+            Old Weightage:
+            <b>${oldValue}%</b>
+
+        </div>
+
+        <div>
+
+            New Weightage:
+            <b>${newValue}%</b>
+
+        </div>
+
+    `;
+
+    document
+        .getElementById(
+            'weightageReason'
+        )
+        .value = '';
+
+    const modal =
+        document.getElementById(
+            'weightageApprovalModal'
+        );
+
+    modal.style.display = 'flex';
+}
+
+function closeWeightageApprovalModal(){
+
+    const modal =
+    document.getElementById(
+        'weightageApprovalModal'
+    );
+
+    modal.style.display = 'none';
+}
+
+async function submitWeightageApproval(){
+
+    const reason =
+        document
+        .getElementById(
+            'weightageReason'
+        )
+        .value;
+
+    if(
+        reason.trim().length < 20
+    ){
+
+        alert(
+            'Reason minimum 20 characters'
+        );
+
+        return;
+    }
+
+    const response =
+        await fetch(
+
+            '/kpi/' +
+            weightageApprovalData.kpiId +
+            '/request-weightage-change',
+
+            {
+
+                method : 'POST',
+
+                headers : {
+
+                    'Content-Type'
+                        : 'application/json',
+
+                    'X-CSRF-TOKEN'
+                        : '{{ csrf_token() }}'
+
+                },
+
+                body : JSON.stringify({
+
+                    old_weightage:
+                        weightageApprovalData.oldValue,
+
+                    new_weightage:
+                        weightageApprovalData.newValue,
+
+                    reason:
+                        reason
+
+                })
+
+            }
+
+        );
+
+    const result =
+        await response.json();
+
+    alert(
+        result.message
+    );
+
+    if(result.success){
+
+        location.reload();
+
+    }
+}
+
 </script>
+
+<div
+    id="weightageApprovalModal"
+    style="display:none;"
+    class="
+        fixed
+        inset-0
+        z-[99999]
+        bg-black/60
+        items-center
+        justify-center
+        p-6
+    "
+>
+
+    <div
+        class="
+            bg-white
+            rounded-3xl
+            w-full
+            max-w-xl
+            p-6
+        "
+    >
+
+        <h2
+            class="
+                text-xl
+                font-black
+                text-red-700
+            "
+        >
+
+            Weightage Change Approval
+
+        </h2>
+
+        <p
+            class="
+                mt-2
+                text-sm
+                text-slate-500
+            "
+        >
+
+            Any modification to an existing KPI weightage requires approval.
+
+            Initial allocation from 0% does not require approval.
+
+        </p>
+
+        <div
+            id="weightageChangeSummary"
+            class="
+                mt-4
+                rounded-xl
+                bg-slate-50
+                p-4
+            "
+        >
+        </div>
+
+        <div class="mt-4">
+
+            <label
+                class="
+                    text-xs
+                    font-black
+                    uppercase
+                "
+            >
+
+                Reason
+
+            </label>
+
+            <textarea
+                id="weightageReason"
+                rows="5"
+                class="
+                    w-full
+                    mt-2
+                    border
+                    rounded-xl
+                    p-4
+                "
+            ></textarea>
+
+        </div>
+
+        <div
+            class="
+                mt-5
+                flex
+                justify-end
+                gap-3
+            "
+        >
+
+            <button
+                onclick="
+                    closeWeightageApprovalModal()
+                "
+                class="
+                    px-4
+                    py-2
+                    border
+                    rounded-xl
+                "
+            >
+
+                Cancel
+
+            </button>
+
+            <button
+                onclick="
+                    submitWeightageApproval()
+                "
+                class="
+                    px-4
+                    py-2
+                    bg-red-600
+                    text-white
+                    rounded-xl
+                    font-black
+                "
+            >
+
+                Submit Request
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
 </body>
 </html>

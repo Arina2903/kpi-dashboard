@@ -4,9 +4,21 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\SupabaseService;
+use App\Services\ApprovalActionService;
 
 class ApprovalController extends Controller
 {
+    protected ApprovalActionService $approvalActionService;
+
+    public function __construct(
+        ApprovalActionService $approvalActionService
+    ){
+        $this->approvalActionService =
+            $approvalActionService;
+    }
+
+
+
     /*
     |--------------------------------------------------------------------------
     | INDEX
@@ -17,8 +29,7 @@ class ApprovalController extends Controller
         SupabaseService $supabase
     ){
 
-        $userId =
-            session('employee_uuid');
+        $userId = session('employee_uuid');
 
         if(!$userId){
 
@@ -38,14 +49,11 @@ class ApprovalController extends Controller
 
             [
 
-                'approved_by' =>
+                'approver_id' =>
                     'eq.' . $userId,
 
                 'requested_by' =>
                     'neq.' . $userId,
-
-                'status' =>
-                    'eq.pending',
 
                 'order' =>
                     'created_at.desc',
@@ -66,14 +74,11 @@ class ApprovalController extends Controller
 
             [
 
-                'approved_by' =>
+                'approver_id' =>
                     'eq.' . $userId,
 
                 'requested_by' =>
                     'neq.' . $userId,
-
-                'status' =>
-                    'eq.pending',
 
                 'order' =>
                     'created_at.desc',
@@ -94,14 +99,11 @@ class ApprovalController extends Controller
 
             [
 
-                'approved_by' =>
+                'approver_id' =>
                     'eq.' . $userId,
 
                 'requested_by' =>
                     'neq.' . $userId,
-
-                'status' =>
-                    'eq.pending',
 
                 'order' =>
                     'created_at.desc',
@@ -116,26 +118,64 @@ class ApprovalController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $quarterApprovals =
-            $this->enrichApprovals(
-                $quarterApprovals,
-                'quarter_update',
-                $supabase
+        $quarterApprovals = $this->enrichApprovals(
+            $quarterApprovals,
+            'quarter_update',
+            $supabase
+        );
+
+        $targetRequests = $this->enrichApprovals(
+            $targetRequests,
+            'target_change',
+            $supabase
+        );
+
+        $deleteRequests = $this->enrichApprovals(
+            $deleteRequests,
+            'delete_request',
+            $supabase
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | SUMMARY
+        |--------------------------------------------------------------------------
+        */
+
+        $quarterCount =
+            count(
+                array_filter(
+                    $quarterApprovals,
+                    fn($x)
+                        => ($x['status'] ?? '')
+                        === 'pending'
+                )
             );
 
-        $targetRequests =
-            $this->enrichApprovals(
-                $targetRequests,
-                'target_change',
-                $supabase
+        $targetCount =
+            count(
+                array_filter(
+                    $targetRequests,
+                    fn($x)
+                        => ($x['status'] ?? '')
+                        === 'pending'
+                )
             );
 
-        $deleteRequests =
-            $this->enrichApprovals(
-                $deleteRequests,
-                'delete_request',
-                $supabase
+        $deleteCount =
+            count(
+                array_filter(
+                    $deleteRequests,
+                    fn($x)
+                        => ($x['status'] ?? '')
+                        === 'pending'
+                )
             );
+
+        $totalPending =
+            $quarterCount +
+            $targetCount +
+            $deleteCount;
 
         /*
         |--------------------------------------------------------------------------
@@ -144,11 +184,9 @@ class ApprovalController extends Controller
         */
 
         $approvals = array_merge(
-
             $quarterApprovals,
             $targetRequests,
             $deleteRequests
-
         );
 
         /*
@@ -167,14 +205,13 @@ class ApprovalController extends Controller
         });
 
         return view(
-
             'kpi.approval',
-
             [
-
-                'approvals' =>
-                    $approvals
-
+                'approvals' => $approvals,
+                'quarterCount' => $quarterCount,
+                'targetCount' => $targetCount,
+                'deleteCount' => $deleteCount,
+                'totalPending' => $totalPending,
             ]
         );
     }
@@ -191,263 +228,72 @@ class ApprovalController extends Controller
         SupabaseService $supabase
     ){
 
-        if(!is_array($items)){
-
+        if(empty($items)){
             return [];
         }
 
+        $kpiIds = collect($items)
+            ->pluck('kpi_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if($kpiIds->isEmpty()){
+            return $items;
+        }
+
+        $kpiIds = $kpiIds->implode(',');
+
+        $kpis = $supabase->get(
+
+            'kpis',
+
+            [
+
+                'id' => 'in.(' . $kpiIds . ')'
+
+            ]
+
+        ) ?? [];
+
+        $kpiMap = collect($kpis)
+            ->keyBy('id');
+
         foreach($items as &$item){
 
-            $kpi = $supabase->first(
+            $kpi = $kpiMap[
+                $item['kpi_id']
+            ] ?? [];
 
-                'kpis',
-
-                [
-                    'id' =>
-                        'eq.' . $item['kpi_id']
-                ]
-
-            ) ?? [];
-
-            $item['kpi_title'] =
-                $kpi['kpi_title']
+            $item['kpi_title']
+                = $kpi['kpi_title']
                 ?? 'Untitled KPI';
 
-            $item['category'] =
-                $kpi['category']
+            $item['category']
+                = $kpi['category']
                 ?? '-';
 
-            $item['sub_category'] =
-                $kpi['sub_category']
+            $item['sub_category']
+                = $kpi['sub_category']
                 ?? '-';
 
-            $item['unit'] =
-                $kpi['unit']
+            $item['unit']
+                = $kpi['unit']
                 ?? '';
 
-            $item['type'] =
-                $type;
+            $item['type'] = $type;
+                if(
+                    empty($item['priority'])
+                ){
+                    $item['priority'] = match($type){
+                        'delete_request' => 'critical',
+                        'target_change' => 'high',
+                        default => 'normal'
+                    };
+                }
         }
 
         return $items;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | RESOLVE APPROVER
-    |--------------------------------------------------------------------------
-    */
-
-    protected function resolveApproverId(
-        array $employee,
-        SupabaseService $supabase
-    ){
-
-        /*
-        |--------------------------------------------------------------------------
-        | TOP MANAGEMENT
-        |--------------------------------------------------------------------------
-        */
-
-        if(
-
-            in_array(
-
-                $employee['role'],
-
-                [
-
-                    'SLT',
-                    'Admin',
-                    'CCO',
-                    'CCMO'
-
-                ]
-
-            )
-
-        ){
-
-            return null;
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | REPORTING_TO PRIORITY
-        |--------------------------------------------------------------------------
-        */
-
-        if(!empty($employee['reports_to'])){
-
-            $reportingTo = $supabase->first(
-
-                'employees',
-
-                [
-
-                    'employee_id' =>
-                        'eq.' . $employee['reports_to']
-
-                ]
-
-            );
-
-            if(
-
-                $reportingTo
-                &&
-                $reportingTo['id']
-                !== $employee['id']
-
-            ){
-
-                return $reportingTo['id'];
-            }
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | EXECUTIVE
-        |--------------------------------------------------------------------------
-        */
-
-        if($employee['role'] === 'Executive'){
-
-            if(!empty($employee['manager_code'])){
-
-                $manager = $supabase->first(
-
-                    'employees',
-
-                    [
-
-                        'employee_id' =>
-                            'eq.' . $employee['manager_code']
-
-                    ]
-
-                );
-
-                if(
-
-                    $manager
-                    &&
-                    $manager['id']
-                    !== $employee['id']
-
-                ){
-
-                    return $manager['id'];
-                }
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | FALLBACK VP
-            |--------------------------------------------------------------------------
-            */
-
-            if(!empty($employee['vp_code'])){
-
-                $vp = $supabase->first(
-
-                    'employees',
-
-                    [
-
-                        'employee_id' =>
-                            'eq.' . $employee['vp_code']
-
-                    ]
-
-                );
-
-                if(
-
-                    $vp
-                    &&
-                    $vp['id']
-                    !== $employee['id']
-
-                ){
-
-                    return $vp['id'];
-                }
-            }
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | MANAGER
-        |--------------------------------------------------------------------------
-        */
-
-        if($employee['role'] === 'Manager'){
-
-            if(!empty($employee['vp_code'])){
-
-                $vp = $supabase->first(
-
-                    'employees',
-
-                    [
-
-                        'employee_id' =>
-                            'eq.' . $employee['vp_code']
-
-                    ]
-
-                );
-
-                if(
-
-                    $vp
-                    &&
-                    $vp['id']
-                    !== $employee['id']
-
-                ){
-
-                    return $vp['id'];
-                }
-            }
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | VP
-        |--------------------------------------------------------------------------
-        */
-
-        if($employee['role'] === 'VP'){
-
-            $slt = $supabase->first(
-
-                'employees',
-
-                [
-
-                    'role' =>
-                        'eq.SLT'
-
-                ]
-
-            );
-
-            if(
-
-                $slt
-                &&
-                $slt['id']
-                !== $employee['id']
-
-            ){
-
-                return $slt['id'];
-            }
-        }
-
-        return null;
     }
 
     /*
@@ -457,107 +303,146 @@ class ApprovalController extends Controller
     */
 
     public function approve(
-        $id,
         Request $request,
-        SupabaseService $supabase
-    ){
+        string $id
+    )
+    {
+        try {
+
+            $approval =
+                $this->findApprovalById(
+                    $id
+                );
+
+            if(!$approval){
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Approval not found'
+                ],404);
+            }
+
+            if(
+                ($approval['status'] ?? '')
+                !== 'pending'
+            ){
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Already processed'
+                ],422);
+            }
+
+            $type =
+                $approval['type']
+                ?? null;
+
+            if(
+                $type === 'delete_request'
+            ){
+
+                return $this
+                    ->approvalActionService
+                    ->approveDelete(
+
+                        $approval,
+
+                        session(
+                            'employee_uuid'
+                        ),
+
+                        session(
+                            'short_name'
+                        )
+
+                    );
+            }
+
+            if(
+                $type === 'target_change'
+            ){
+
+                return $this
+                    ->approvalActionService
+                    ->approveTarget(
+
+                        $approval,
+
+                        session(
+                            'employee_uuid'
+                        ),
+
+                        session(
+                            'short_name'
+                        )
+
+                    );
+            }
+
+            if(
+                $type === 'quarter_update'
+            ){
+
+                return $this
+                    ->approvalActionService
+                    ->approveQuarter(
+
+                        $approval,
+
+                        session(
+                            'employee_uuid'
+                        ),
+
+                        session(
+                            'short_name'
+                        )
+
+                    );
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unknown approval type'
+            ],422);
+
+        } catch (\Throwable $e) {
+
+            dd([
+                'ERROR' => $e->getMessage(),
+                'LINE'  => $e->getLine(),
+                'FILE'  => $e->getFile(),
+            ]);
+
+        }
+    }
+
+    protected function findApprovalById(
+        string $id
+    ): ?array
+    {
+        $supabase = app(
+            \App\Services\SupabaseService::class
+        );
 
         /*
         |--------------------------------------------------------------------------
-        | QUARTER UPDATE
+        | QUARTER APPROVAL
         |--------------------------------------------------------------------------
         */
 
         $approval = $supabase->first(
-
             'kpi_update_approvals',
-
             [
-
-                'id' =>
-                    'eq.' . $id
-
+                'id' => 'eq.' . $id,
+                'approver_id' => 'eq.' . session('employee_uuid'),
             ]
-
         );
 
         if($approval){
 
-            $supabase->patch(
+            $approval['type']
+                = 'quarter_update';
 
-                'kpi_update_approvals',
-
-                [
-
-                    'id' =>
-                        'eq.' . $id
-
-                ],
-
-                [
-
-                    'status' =>
-                        'approved',
-
-                    'approved_by' =>
-                        session('employee_uuid'),
-
-                    'approved_by_name' =>
-                        session('short_name'),
-
-                    'approved_at' =>
-                        now(),
-
-                    'is_viewed' =>
-                        true,
-
-                    'viewed_at' =>
-                        now(),
-
-                ]
-
-            );
-
-            /*
-            |--------------------------------------------------------------------------
-            | UPDATE KPI QUARTER
-            |--------------------------------------------------------------------------
-            */
-
-            $supabase->patch(
-
-                'kpi_quarters',
-
-                [
-
-                    'kpi_id' =>
-                        'eq.' . $approval['kpi_id'],
-
-                    'quarter' =>
-                        'eq.' . $approval['quarter']
-
-                ],
-
-                [
-
-                    'quarter_actual' =>
-                        $approval['requested_actual'],
-
-                    'remark' =>
-                        $approval['request_remark'],
-
-                    'updated_at' =>
-                        now()
-
-                ]
-
-            );
-
-            return response()->json([
-
-                'success' => true
-
-            ]);
+            return $approval;
         }
 
         /*
@@ -566,96 +451,20 @@ class ApprovalController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $targetRequest = $supabase->first(
-
+        $approval = $supabase->first(
             'kpi_target_change_requests',
-
             [
-
-                'id' =>
-                    'eq.' . $id
-
+                'id' => 'eq.' . $id,
+                'approver_id' => 'eq.' . session('employee_uuid'),
             ]
-
         );
 
-        if($targetRequest){
+        if($approval){
 
-            $supabase->patch(
+            $approval['type']
+                = 'target_change';
 
-                'kpi_target_change_requests',
-
-                [
-
-                    'id' =>
-                        'eq.' . $id
-
-                ],
-
-                [
-
-                    'status' =>
-                        'approved',
-
-                    'approved_by' =>
-                        session('employee_uuid'),
-
-                    'approved_at' =>
-                        now()
-
-                ]
-
-            );
-
-            $updateData = [
-
-                'updated_at' =>
-                    now()
-
-            ];
-
-            if(
-
-                $targetRequest['field_name']
-                === 'base_target'
-
-            ){
-
-                $updateData['base_target'] =
-                    $targetRequest['requested_value'];
-            }
-
-            if(
-
-                $targetRequest['field_name']
-                === 'stretch_target'
-
-            ){
-
-                $updateData['stretch_target'] =
-                    $targetRequest['requested_value'];
-            }
-
-            $supabase->patch(
-
-                'kpis',
-
-                [
-
-                    'id' =>
-                        'eq.' . $targetRequest['kpi_id']
-
-                ],
-
-                $updateData
-
-            );
-
-            return response()->json([
-
-                'success' => true
-
-            ]);
+            return $approval;
         }
 
         /*
@@ -664,113 +473,23 @@ class ApprovalController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $deleteRequest = $supabase->first(
-
+        $approval = $supabase->first(
             'kpi_delete_requests',
-
             [
-
-                'id' =>
-                    'eq.' . $id
-
+                'id' => 'eq.' . $id,
+                'approver_id' => 'eq.' . session('employee_uuid'),
             ]
-
         );
 
-        if($deleteRequest){
+        if($approval){
 
-            $supabase->patch(
+            $approval['type']
+                = 'delete_request';
 
-                'kpi_delete_requests',
-
-                [
-
-                    'id' =>
-                        'eq.' . $id
-
-                ],
-
-                [
-
-                    'status' =>
-                        'approved',
-
-                    'approved_by' =>
-                        session('employee_uuid'),
-
-                    'approved_at' =>
-                        now()
-
-                ]
-
-            );
-
-            /*
-            |--------------------------------------------------------------------------
-            | DELETE CHILD TABLES
-            |--------------------------------------------------------------------------
-            */
-
-            $tables = [
-
-                'kpi_quarters',
-                'kpi_histories',
-                'kpi_assignments',
-                'kpi_update_approvals',
-                'kpi_target_change_requests',
-
-            ];
-
-            foreach($tables as $table){
-
-                $supabase->delete(
-
-                    $table,
-
-                    [
-
-                        'kpi_id' =>
-                            'eq.' . $deleteRequest['kpi_id']
-
-                    ]
-
-                );
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | DELETE KPI
-            |--------------------------------------------------------------------------
-            */
-
-            $supabase->delete(
-
-                'kpis',
-
-                [
-
-                    'id' =>
-                        'eq.' . $deleteRequest['kpi_id']
-
-                ]
-
-            );
-
-            return response()->json([
-
-                'success' => true
-
-            ]);
+            return $approval;
         }
 
-        return response()->json([
-
-            'success' => false,
-
-            'message' =>
-                'Approval not found.'
-
-        ], 404);
+        return null;
     }
 
     /*
@@ -785,73 +504,53 @@ class ApprovalController extends Controller
         SupabaseService $supabase
     ){
 
-        $reason =
-            $request->reason
-            ?? 'Rejected';
+        $reason = $request->reason ?? 'Rejected';
 
         /*
         |--------------------------------------------------------------------------
-        | QUARTER UPDATE
+        | QUARTER APPROVAL
         |--------------------------------------------------------------------------
         */
 
         $approval = $supabase->first(
-
             'kpi_update_approvals',
-
             [
-
-                'id' =>
-                    'eq.' . $id
-
+                'id' => 'eq.' . $id,
+                'approver_id' => 'eq.' . session('employee_uuid'),
             ]
-
         );
 
         if($approval){
 
-            $supabase->patch(
+            if(
+                ($approval['status'] ?? '')
+                !== 'pending'
+            ){
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Already processed'
+                ],422);
+            }
 
+            $this->approvalActionService->reject(
                 'kpi_update_approvals',
+                $id,
+                session('employee_uuid'),
+                session('short_name'),
+                $reason
+            );
 
-                [
-
-                    'id' =>
-                        'eq.' . $id
-
-                ],
-
-                [
-
-                    'status' =>
-                        'rejected',
-
-                    'rejected_by' =>
-                        session('employee_uuid'),
-
-                    'rejected_by_name' =>
-                        session('short_name'),
-
-                    'rejected_at' =>
-                        now(),
-
-                    'approver_remark' =>
-                        $reason,
-
-                    'is_viewed' =>
-                        true,
-
-                    'viewed_at' =>
-                        now(),
-
-                ]
-
+            $this->approvalActionService->history(
+                $approval['kpi_id'],
+                'quarter_rejected',
+                $approval['requested_actual'],
+                'REJECTED',
+                session('employee_uuid'),
+                session('short_name')
             );
 
             return response()->json([
-
                 'success' => true
-
             ]);
         }
 
@@ -862,53 +561,44 @@ class ApprovalController extends Controller
         */
 
         $targetRequest = $supabase->first(
-
             'kpi_target_change_requests',
-
             [
-
-                'id' =>
-                    'eq.' . $id
-
+                'id' => 'eq.' . $id,
+                'approver_id' => 'eq.' . session('employee_uuid'),
             ]
-
         );
 
         if($targetRequest){
 
-            $supabase->patch(
+            if(
+                ($targetRequest['status'] ?? '')
+                !== 'pending'
+            ){
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Already processed'
+                ],422);
+            }
 
+            $this->approvalActionService->history(
+                $targetRequest['kpi_id'],
+                'target_rejected',
+                $targetRequest['old_value'],
+                $targetRequest['requested_value'],
+                session('employee_uuid'),
+                session('short_name')
+            );
+
+            $this->approvalActionService->reject(
                 'kpi_target_change_requests',
-
-                [
-
-                    'id' =>
-                        'eq.' . $id
-
-                ],
-
-                [
-
-                    'status' =>
-                        'rejected',
-
-                    'rejected_by' =>
-                        session('employee_uuid'),
-
-                    'rejected_at' =>
-                        now(),
-
-                    'approver_remark' =>
-                        $reason,
-
-                ]
-
+                $id,
+                session('employee_uuid'),
+                session('short_name'),
+                $reason
             );
 
             return response()->json([
-
                 'success' => true
-
             ]);
         }
 
@@ -919,63 +609,124 @@ class ApprovalController extends Controller
         */
 
         $deleteRequest = $supabase->first(
-
             'kpi_delete_requests',
-
             [
-
-                'id' =>
-                    'eq.' . $id
-
+                'id' => 'eq.' . $id,
+                'approver_id' => 'eq.' . session('employee_uuid'),
             ]
-
         );
 
         if($deleteRequest){
 
-            $supabase->patch(
+            if(
+                ($deleteRequest['status'] ?? '')
+                !== 'pending'
+            ){
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Already processed'
+                ],422);
+            }
 
+            $this->approvalActionService->reject(
                 'kpi_delete_requests',
+                $id,
+                session('employee_uuid'),
+                session('short_name'),
+                $reason
+            );
 
-                [
-
-                    'id' =>
-                        'eq.' . $id
-
-                ],
-
-                [
-
-                    'status' =>
-                        'rejected',
-
-                    'rejected_by' =>
-                        session('employee_uuid'),
-
-                    'rejected_at' =>
-                        now(),
-
-                    'approver_remark' =>
-                        $reason,
-
-                ]
-
+            $this->approvalActionService->history(
+                $deleteRequest['kpi_id'],
+                'delete_rejected',
+                'PENDING_DELETE',
+                'REJECTED',
+                session('employee_uuid'),
+                session('short_name')
             );
 
             return response()->json([
-
                 'success' => true
-
             ]);
         }
 
         return response()->json([
-
             'success' => false,
+            'message' => 'Approval not found.'
+        ],404);
+    }
 
-            'message' =>
-                'Approval not found.'
+    /*
+    |--------------------------------------------------------------------------
+    | REJECTED HISTORY
+    |--------------------------------------------------------------------------
+    */
 
-        ], 404);
+    public function rejected(
+        SupabaseService $supabase
+    ){
+
+        $userId = session('employee_uuid');
+
+        $records = array_merge(
+
+            $supabase->get(
+                'kpi_update_approvals',
+                [
+                    'approver_id' =>
+                        'eq.' . $userId,
+
+                    'status' =>
+                        'eq.rejected',
+
+                    'order' =>
+                        'rejected_at.desc',
+                ]
+            ) ?? [],
+
+            $supabase->get(
+                'kpi_target_change_requests',
+                [
+                    'approver_id' =>
+                        'eq.' . $userId,
+
+                    'status' =>
+                        'eq.rejected',
+
+                    'order' =>
+                        'rejected_at.desc',
+                ]
+            ) ?? [],
+
+            $supabase->get(
+                'kpi_delete_requests',
+                [
+                    'approver_id' =>
+                        'eq.' . $userId,
+
+                    'status' =>
+                        'eq.rejected',
+
+                    'order' =>
+                        'rejected_at.desc',
+                ]
+            ) ?? []
+
+        );
+
+        usort($records,function($a,$b){
+
+            return strtotime(
+                $b['rejected_at'] ?? now()
+            ) <=> strtotime(
+                $a['rejected_at'] ?? now()
+            );
+
+        });
+
+        return view(
+            'approval.rejected',
+            compact('records')
+        );
     }
 }

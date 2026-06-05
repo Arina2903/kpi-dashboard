@@ -120,13 +120,31 @@
         $myKpis = $individualKpiRows;
         $individualKpiCount = $individualKpiRows->count();
         $individualTotalWeightage = round($individualKpiRows->sum(fn($item) => (float) ($item['weightage'] ?? 0)), 2);
-        $individualPerformance = round($individualKpiRows->sum(function ($item) use ($calculateDashboardKpiScore) {
-            $score = $calculateDashboardKpiScore($item);
-            $weightage = max(0, (float) ($item['weightage'] ?? 0));
-            return ($score * $weightage) / 100;
-        }), 2);
+        $individualPerformance = $individualKpiRows->sum(
+            function ($item) use ($calculateDashboardKpiScore) {
+                $score = $calculateDashboardKpiScore($item);
+                $weightage = max(
+                    0,
+                    (float) ($item['weightage'] ?? 0)
+                );
+                return ($score * $weightage) / 100;
+            }
+        );
 
-        $individualPerformanceWidth = max(0, min(100, $individualPerformance));
+        $individualPerformanceDisplay =
+        round(
+            $individualPerformance,
+            1
+        );
+
+        $individualPerformanceWidth =
+        max(
+            0,
+            min(
+                100,
+                $individualPerformanceDisplay
+            )
+        );
 
         if ($individualPerformance <= 25) {
             $individualPerformanceBar = 'bg-red-600';
@@ -164,8 +182,12 @@
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <p class="text-slate-500 text-xs font-semibold uppercase">Individual Performance</p>
-                    <h3 id="individualPerformanceText" class="text-3xl font-black {{ $individualPerformanceText }} mt-1">
-                        {{ number_format($individualPerformance, 2) }}%
+                    <h3
+                        id="individualPerformanceText"
+                        class="text-3xl font-black {{ $individualPerformanceText }} mt-1">
+
+                        {{ number_format($individualPerformanceDisplay, 1) }}%
+
                     </h3>
                 </div>
 
@@ -180,49 +202,62 @@
                      style="width: {{ $individualPerformanceWidth }}%">
                 </div>
             </div>
+        </div>
 
-            <div class="mt-3 grid grid-cols-2 gap-2 text-[10px]">
-                <div class="rounded-xl bg-white/80 border border-white p-2">
-                    <p class="text-slate-400 uppercase font-bold">My KPI</p>
-                    <p id="individualKpiCountText" class="text-xs font-black text-slate-900">{{ $individualKpiCount }}</p>
-                </div>
-                <div class="rounded-xl bg-white/80 border border-white p-2">
-                    <p class="text-slate-400 uppercase font-bold">Weightage</p>
-                    <p id="individualWeightageText" class="text-xs font-black {{ $individualTotalWeightage == 100 ? 'text-emerald-700' : ($individualTotalWeightage > 100 ? 'text-red-700' : 'text-amber-700') }}">
-                        {{ number_format($individualTotalWeightage, 2) }}%
+        <!-- FY -->
+        <div class="glass card-hover p-4 rounded-[18px] border border-emerald-100 bg-gradient-to-br from-white via-emerald-50 to-green-50 shadow-sm">
+
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 text-xs font-semibold uppercase">
+                        Financial Year
                     </p>
+
+                    <h3 class="text-2xl font-black text-emerald-700 mt-1">
+                        {{ $fy }}
+                    </h3>
                 </div>
             </div>
+
         </div>
 
-        <div class="glass card-hover p-4 rounded-[18px] border border-white/70">
-            <p class="text-slate-500 text-xs font-semibold uppercase">FY</p>
-            <h3 class="text-xl font-bold text-slate-900 mt-1">{{ $fy }}</h3>
+        <!-- TOTAL KPI -->
+        <div class="glass card-hover p-4 rounded-[18px] border border-violet-100 bg-gradient-to-br from-white via-violet-50 to-purple-50 shadow-sm">
+
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 text-xs font-semibold uppercase">
+                        Total KPI
+                    </p>
+
+                    <h3 class="text-2xl font-black text-violet-700 mt-1">
+                        {{ $individualKpiCount }}
+                    </h3>
+                </div>
+            </div>
+
         </div>
 
-        <div class="glass card-hover p-4 rounded-[18px] border border-white/70">
-            <p class="text-slate-500 text-xs font-semibold uppercase">Staff</p>
-            <h3 class="text-xl font-bold text-slate-900 mt-1">{{ count($employees) }}</h3>
-        </div>
+        <!-- WEIGHTAGE -->
+        <div class="glass card-hover p-4 rounded-[18px] border border-amber-100 bg-gradient-to-br from-white via-amber-50 to-yellow-50 shadow-sm">
 
-        <div class="glass card-hover p-4 rounded-[18px] border border-white/70">
-            <p class="text-slate-500 text-xs font-semibold uppercase">Total KPI</p>
-            <h3 class="text-xl font-bold text-slate-900 mt-1">{{ $individualKpiCount }}</h3>
-        </div>
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 text-xs font-semibold uppercase">
+                        Weightage
+                    </p>
 
-        <div class="glass card-hover p-4 rounded-[18px] border border-white/70">
-            <p class="text-slate-500 text-xs font-semibold uppercase">
-                Scope
-            </p>
-
-            <h3 class="text-xl font-bold text-slate-900 mt-1">
-                Individual
-            </h3>
+                    <h3 class="text-2xl font-black
+                        {{ $individualTotalWeightage == 100 ? 'text-emerald-700' : ($individualTotalWeightage > 100 ? 'text-red-700' : 'text-amber-700') }}">
+                        {{ number_format($individualTotalWeightage,2) }}%
+                    </h3>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- FILTER -->
-    <div class="sticky top-4 z-40 glass rounded-[18px] shadow-sm border border-white/70 p-4">
+    <div class="glass rounded-[20px] shadow-sm border border-indigo-100 bg-gradient-to-r from-white via-indigo-50/40 to-blue-50/40 p-5">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
                 <label class="text-xs font-bold text-slate-500 uppercase">Search</label>
@@ -252,30 +287,58 @@
                     <option value="completed">Completed</option>
                 </select>
             </div>
-
-            <div class="bg-slate-900 text-white rounded-2xl p-4">
-                <p class="text-xs text-blue-100">Visible KPI</p>
-                <p id="visibleCount" class="text-xl font-bold">{{ count($kpis) }}</p>
-            </div>
         </div>
     </div>
 
     @php
 
-    $myKpis = collect($kpis)->filter(function($item) use ($user){
+        $myKpis = $individualKpiRows;
 
-        return
-            (string)($item['employee_id'] ?? '') === (string)$user['id']
-            ||
-            (string)($item['created_by'] ?? '') === (string)$user['id'];
-
-    });
+        $groupedKpis =
+        $myKpis->groupBy('category');
 
     @endphp
 
     <div class="space-y-4">
 
-        @forelse($myKpis as $kpi)
+        @forelse($groupedKpis as $category => $categoryKpis)
+
+        @php
+
+            $headerStyle = match($category){
+
+                'Financial'
+                    => 'bg-emerald-700',
+
+                'Growth & Customer'
+                    => 'bg-indigo-700',
+
+                'Initiatives'
+                    => 'bg-amber-600',
+
+                'People'
+                    => 'bg-pink-700',
+
+                default
+                    => 'bg-slate-700'
+            };
+
+            @endphp
+
+            <div class="category-group">
+
+            <div class="category-header {{ $headerStyle }} rounded-[24px] text-white px-6 py-5 mb-4 ">
+                <h2 class="text-xl font-black">
+                    {{ strtoupper($category) }}
+                </h2>
+
+                <p class="text-sm text-white/80">
+                    {{ count($categoryKpis) }} KPI
+                </p>
+
+            </div>
+
+            @foreach($categoryKpis as $kpi)
 
             @php
 
@@ -284,41 +347,195 @@
                 $baseTotal = 0;
                 $actualTotal = 0;
 
+                $latestActual = 0;
+
                 foreach(['Q1','Q2','Q3','Q4'] as $quarterName){
 
                     $quarter = $quarters->firstWhere('quarter', $quarterName) ?? [];
 
-                    $baseTotal += (float)($quarter['quarter_target'] ?? 0);
+                    $targetValue = (float)($quarter['quarter_target'] ?? 0);
+                    $actualValue = (float)($quarter['quarter_actual'] ?? 0);
 
-                    $actualTotal += (float)($quarter['quarter_actual'] ?? 0);
+                    $baseTotal += $targetValue;
+                    $actualTotal += $actualValue;
+
+                    if($actualValue > 0){
+                        $latestActual = $actualValue;
+                    }
+                }
+
+                if($latestActual <= 0){
+                    $latestActual = (float)($kpi['actual_value'] ?? 0);
                 }
 
                 $achievement = $baseTotal > 0
                     ? round(($actualTotal / $baseTotal) * 100,2)
                     : 0;
 
-                if($achievement >= 75){
-
-                    $progressColor = 'from-emerald-400 to-green-600';
+                if($achievement >= 90){
                     $progressText = 'text-emerald-600';
-
-                }elseif($achievement >= 50){
-
-                    $progressColor = 'from-yellow-400 to-orange-500';
+                }
+                elseif($achievement >= 75){
                     $progressText = 'text-yellow-600';
-
-                }else{
-
-                    $progressColor = 'from-red-500 to-red-700';
+                }
+                elseif($achievement >= 50){
+                    $progressText = 'text-orange-600';
+                }
+                else{
                     $progressText = 'text-red-600';
+                }
+                if($achievement >= 90){
+                    $achievementBadge =
+                    'bg-emerald-100 text-emerald-700';
+
+                    $achievementLabel =
+                    'Excellent';
+                }
+                elseif($achievement >= 75){
+
+                    $achievementBadge =
+                    'bg-yellow-100 text-yellow-700';
+
+                    $achievementLabel =
+                    'Watch';
+
+                }
+                elseif($achievement >= 50){
+
+                    $achievementBadge =
+                    'bg-orange-100 text-orange-700';
+
+                    $achievementLabel =
+                    'Risk';
+
+                }
+                else{
+
+                    $achievementBadge =
+                    'bg-red-100 text-red-700';
+
+                    $achievementLabel =
+                    'Critical';
                 }
 
             @endphp
 
+            @php
+                $categoryStyle = match($kpi['category'] ?? '') {
+                    'Financial'
+                        => 'bg-emerald-700 text-white',
+
+                    'Growth & Customer'
+                        => 'bg-indigo-700 text-white',
+
+                    'Initiatives'
+                        => 'bg-amber-600 text-white',
+
+                    'People'
+                        => 'bg-pink-700 text-white',
+
+                    default
+                        => 'bg-slate-700 text-white'
+                };
+
+                $buttonStyle = match($kpi['category'] ?? '') {
+
+                    'Financial'
+                        => 'from-emerald-600 to-emerald-700',
+
+                    'Growth & Customer'
+                        => 'from-indigo-600 to-indigo-700',
+
+                    'Initiatives'
+                        => 'from-amber-500 to-amber-700',
+
+                    'People'
+                        => 'from-pink-600 to-pink-700',
+
+                    default
+                        => 'from-slate-600 to-slate-700'
+                };
+
+                if($achievement >= 90){
+                    $progressBar =
+                    'from-emerald-500 to-green-600';
+                }
+                elseif($achievement >= 75){
+                    $progressBar =
+                    'from-yellow-400 to-yellow-600';
+                }
+                elseif($achievement >= 50){
+                    $progressBar =
+                    'from-orange-400 to-orange-600';
+                }
+                else{
+                    $progressBar =
+                    'from-red-500 to-red-700';
+                }
+
+                $quarterColors = [];
+
+                foreach(['Q1','Q2','Q3','Q4'] as $q){
+
+                    $quarter = $quarters->firstWhere('quarter',$q) ?? [];
+
+                    $target = (float)($quarter['quarter_target'] ?? 0);
+                    $actual = (float)($quarter['quarter_actual'] ?? 0);
+
+                    $score =
+                        $target > 0
+                        ? ($actual / $target) * 100
+                        : 0;
+
+                    if($score >= 90){
+
+                        $quarterColors[$q] =
+                        'bg-green-500 text-white';
+
+                    }
+                    elseif($score >= 75){
+
+                        $quarterColors[$q] =
+                        'bg-yellow-500 text-white';
+
+                    }
+                    elseif($score >= 50){
+
+                        $quarterColors[$q] =
+                        'bg-orange-500 text-white';
+
+                    }
+                    elseif($score > 0){
+
+                        $quarterColors[$q] =
+                        'bg-red-500 text-white';
+
+                    }
+                    else{
+
+                        $quarterColors[$q] =
+                        'bg-slate-200 text-slate-500';
+                    }
+                }
+            @endphp
+
             <div
                 onclick="openKpiDetail(this)"
-                class="kpi-card cursor-pointer bg-white border border-slate-200 rounded-[22px] p-5 hover:shadow-[0_10px_30px_rgba(15,23,42,.08)] transition-all duration-200"
-
+                class="
+                    kpi-card
+                    cursor-pointer
+                    bg-white
+                    border
+                    border-slate-200
+                    rounded-[24px]
+                    p-6
+                    shadow-sm
+                    hover:shadow-2xl
+                    hover:scale-[1.01]
+                    hover:-translate-y-1
+                    transition-all
+                    duration-300
+                "
                 data-search="{{ strtolower(($kpi['kpi_title'] ?? '') . ' ' . ($kpi['category'] ?? '')) }}"
                 data-category="{{ $kpi['category'] ?? '' }}"
                 data-status="{{ $kpi['status'] ?? '' }}"
@@ -333,7 +550,7 @@
 
                         <div class="flex flex-wrap items-center gap-2 mb-3">
 
-                            <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black">
+                            <span class="px-3 py-1 rounded-full {{ $categoryStyle }} text-[10px] font-black">
                                 {{ $kpi['category'] ?? 'General' }}
                             </span>
 
@@ -341,14 +558,14 @@
                                 {{ $kpi['sub_category'] ?? 'Sub Category' }}
                             </span>
 
-                            <span class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-black">
+                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black">
                                 {{ $kpi['financial_year'] ?? '-' }}
                             </span>
 
                         </div>
 
-                        <h3 class="text-lg font-black text-slate-900 leading-tight">
-                            {{ $kpi['kpi_title'] }}
+                        <h3 class="text-xl font-black text-slate-900">
+                            {{ $kpi['kpi_title'] ?? 'Untitled KPI' }}
                         </h3>
 
                         <p class="text-xs text-slate-500 mt-2 leading-relaxed max-w-3xl">
@@ -365,8 +582,13 @@
                         </p>
 
                         <h2 class="text-2xl font-black {{ $progressText }} mt-1">
-                            {{ number_format($achievement,2) }}%
+                            {{ number_format($achievement,1) }}%
                         </h2>
+
+                        <div
+                            class="mt-2 inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black {{ $achievementBadge }}">
+                            {{ $achievementLabel }}
+                        </div>
 
                     </div>
 
@@ -378,74 +600,125 @@
                     <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
 
                         <div
-                            class="h-2 rounded-full bg-gradient-to-r {{ $progressColor }}"
-                            style="width: {{ min(100,$achievement) }}%">
+                            class="h-2 rounded-full bg-gradient-to-r {{ $progressBar }}"
+                            style="width: {{ max(3,min(100,$achievement)) }}%">
                         </div>
 
                     </div>
 
                 </div>
 
-                <!-- KPI META -->
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+                <div class="flex gap-2 mt-3">
 
-                    <div class="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3">
+                @foreach(['Q1','Q2','Q3','Q4'] as $q)
+
+                    <span class="
+                        w-8
+                        h-8
+                        rounded-lg
+                        text-[10px]
+                        font-black
+                        flex
+                        items-center
+                        justify-center
+                        {{ $quarterColors[$q] }}
+                    ">
+                        {{ $q }}
+                    </span>
+
+                @endforeach
+
+            </div>
+
+                <!-- KPI META -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+
+                    <div class="rounded-2xl bg-slate-50 border-slate-100 border px-4 py-3">
 
                         <p class="text-[10px] uppercase text-slate-400 font-black">
                             Weightage
                         </p>
 
                         <p class="text-sm font-black text-slate-900 mt-1">
-                            {{ $kpi['weightage'] ?? 0 }}%
+                            {{ number_format($kpi['weightage'] ?? 0,0) }}%
                         </p>
 
                     </div>
 
-                    <div class="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3">
+                    @php
+
+                        $actualDisplay = match($kpi['unit'] ?? '') {
+
+                            'currency'
+                                => number_format($latestActual,2),
+
+                            'percentage'
+                                => number_format($latestActual,2).' %',
+
+                            default
+                                => number_format($latestActual,0)
+
+                        };
+
+                    @endphp
+
+                    <div class="rounded-2xl bg-slate-50 border-slate-100 border px-4 py-3">
 
                         <p class="text-[10px] uppercase text-slate-400 font-black">
-                            Base
+                            Actual
                         </p>
 
-                        <p class="text-sm font-black text-slate-900 mt-1">
-                            {{ $kpi['base_target'] ?? 0 }}
-                        </p>
-
-                    </div>
-
-                    <div class="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3">
-
-                        <p class="text-[10px] uppercase text-slate-400 font-black">
-                            Stretch
-                        </p>
-
-                        <p class="text-sm font-black text-indigo-700 mt-1">
-                            {{ $kpi['stretch_target'] ?? 0 }}
+                        <p class="text-lg font-black text-slate-900">
+                            {{ $actualDisplay }}
                         </p>
 
                     </div>
 
-                    <div class="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3">
+                    <button
+                        onclick='
+                            event.stopPropagation();
+                            openEditKpiModal(@json($kpi));
+                        '
+                        class="
+                            px-4
+                            py-3
+                            rounded-2xl
+                            bg-indigo-600
+                            hover:bg-indigo-700
+                            text-white
+                            text-xs
+                            font-black
+                        "
+                    >
+                        Edit KPI
+                    </button>
 
-                        <p class="text-[10px] uppercase text-slate-400 font-black">
-                            Status
-                        </p>
-
-                        <p class="text-sm font-black text-slate-900 mt-1">
-                            {{ str_replace('_',' ', $kpi['status'] ?? '-') }}
-                        </p>
-
-                    </div>
-
-                    <div class="rounded-2xl bg-slate-900 text-white px-4 py-3 flex items-center justify-center">
-
-                        <p class="text-xs font-black">
-                            View Details →
-                        </p>
-
-                    </div>
+                    <button
+                        onclick="
+                            event.stopPropagation();
+                            openDeleteKpiModal(
+                                '{{ $kpi['id'] }}',
+                                '{{ addslashes($kpi['kpi_title']) }}'
+                            );
+                        "
+                        class="
+                            px-4
+                            py-3
+                            rounded-2xl
+                            bg-red-600
+                            hover:bg-red-700
+                            text-white
+                            text-xs
+                            font-black
+                        "
+                    >
+                        Delete KPI
+                    </button>
 
                 </div>
+
+            </div>
+            @endforeach
 
             </div>
 
@@ -461,11 +734,11 @@
                     Start creating KPI for your yearly execution tracking.
                 </p>
 
-            </div>
+                </div>
 
-        @endforelse
+            @endforelse
 
-    </div>
+        </div>
 
         <!-- NO RESULT -->
         <div id="noFilterResult"
@@ -514,7 +787,25 @@
             }
         });
 
-        visibleCount.textContent = count;
+        document
+            .querySelectorAll('.category-group')
+            .forEach(group => {
+
+                const visibleCards =
+                    group.querySelectorAll(
+                        '.kpi-card:not(.hidden)'
+                    );
+
+                if(visibleCards.length === 0){
+
+                    group.classList.add('hidden');
+
+                }else{
+
+                    group.classList.remove('hidden');
+                }
+
+            });
 
         if (cards.length > 0 && count === 0) {
             noFilterResult.classList.remove('hidden');
@@ -579,6 +870,81 @@ function renderKpiDetail(activeQuarter){
 
     const kpi = activeKpi;
 
+    const timeline =
+    kpi.approval_timeline || [];
+
+    let timelineHtml = '';
+
+    timeline.forEach(item => {
+
+        let dotColor = 'bg-yellow-500';
+
+        if(
+            (item.status || '').toLowerCase()
+            === 'approved'
+        ){
+            dotColor = 'bg-emerald-500';
+        }
+
+        if(
+            (item.status || '').toLowerCase()
+            === 'rejected'
+        ){
+            dotColor = 'bg-red-500';
+        }
+
+        timelineHtml += `
+
+            <div class="flex gap-4">
+
+                <div
+                    class="w-3 h-3 rounded-full mt-2 ${dotColor}">
+                </div>
+
+                <div class="flex-1">
+
+                   <div class="font-black">
+                        ${(item.status || '-')
+                            .charAt(0)
+                            .toUpperCase()
+                            +
+                            (item.status || '-')
+                            .slice(1)}
+                    </div>
+
+                    <div class="text-xs text-slate-500">
+
+                        ${item.type || '-'}
+
+                    </div>
+
+                    <div class="text-xs text-slate-500">
+
+                        Requested By:
+                        ${item.by || '-'}
+
+                    </div>
+
+                    <div class="text-xs text-slate-500">
+
+                        Approver:
+                        ${item.approver || '-'}
+
+                    </div>
+
+                    <div class="text-xs text-slate-400">
+
+                        ${item.date || '-'}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        `;
+    });
+
     if(!kpi || !content) return;
 
     const quarters = kpi.quarters || [];
@@ -587,6 +953,31 @@ function renderKpiDetail(activeQuarter){
         quarters.find(
             q => q.quarter === activeQuarter
         ) || {};
+
+    const today =
+        new Date();
+
+    const startDate =
+        new Date(
+            quarter.start_date
+        );
+
+    const endDate =
+        new Date(
+            quarter.end_date
+        );
+
+    const beforeQuarter =
+        today < startDate;
+
+    const afterQuarter =
+        today > endDate;
+
+    const completed =
+        quarter.status === 'completed';
+
+    const reasonRequired =
+        afterQuarter || completed;
 
     const target = parseFloat(
         quarter.quarter_target || 0
@@ -598,35 +989,91 @@ function renderKpiDetail(activeQuarter){
 
     const score =
         target > 0
-        ? ((actual / target) * 100).toFixed(1)
+        ? Number(((actual / target) * 100).toFixed(1))
         : 0;
+
+    let scoreColor = 'text-red-600';
+    let progressBar = 'from-red-500 to-red-700';
+
+    if(score >= 90){
+
+        scoreColor = 'text-emerald-600';
+        progressBar = 'from-emerald-500 to-green-600';
+
+    }
+    else if(score >= 75){
+
+        scoreColor = 'text-yellow-600';
+        progressBar = 'from-yellow-400 to-yellow-600';
+
+    }
+    else if(score >= 50){
+
+        scoreColor = 'text-orange-600';
+        progressBar = 'from-orange-400 to-orange-600';
+
+    }
+
+    let categoryClass = 'bg-slate-700 text-white';
+    let categoryLight = 'bg-slate-100 text-slate-700';
+    let categoryGradient = 'from-slate-500 to-slate-700';
+    let categoryButton = 'bg-slate-700 hover:bg-slate-800';
+    let ownerCardGradient = 'from-slate-700 via-slate-800 to-slate-900';
+
+    if(kpi.category === 'Financial'){
+        categoryClass = 'bg-emerald-700 text-white';
+        categoryLight = 'bg-emerald-100 text-emerald-700';
+        categoryGradient = 'from-emerald-500 to-emerald-700';
+        categoryButton = 'bg-emerald-600 hover:bg-emerald-700';
+        ownerCardGradient = 'from-emerald-700 via-emerald-800 to-green-900';
+    }
+    else if(kpi.category === 'Growth & Customer'){
+        categoryClass = 'bg-indigo-700 text-white';
+        categoryLight = 'bg-indigo-100 text-indigo-700';
+        categoryGradient = 'from-indigo-500 to-indigo-700';
+        categoryButton = 'bg-indigo-600 hover:bg-indigo-700';
+        ownerCardGradient = 'from-indigo-700 via-indigo-800 to-blue-900';
+    }
+    else if(kpi.category === 'Initiatives'){
+        categoryClass = 'bg-amber-600 text-white';
+        categoryLight = 'bg-amber-100 text-amber-700';
+        categoryGradient = 'from-amber-500 to-amber-700';
+        categoryButton = 'bg-amber-600 hover:bg-amber-700';
+        ownerCardGradient = 'from-amber-600 via-amber-700 to-orange-900';
+    }
+    else if(kpi.category === 'People'){
+        categoryClass = 'bg-pink-700 text-white';
+        categoryLight = 'bg-pink-100 text-pink-700';
+        categoryGradient = 'from-pink-500 to-pink-700';
+        categoryButton = 'bg-pink-600 hover:bg-pink-700';
+        ownerCardGradient = 'from-pink-700 via-pink-800 to-rose-900';
+    }
 
     let tabs = '';
 
-    ['Q1','Q2','Q3','Q4'].forEach(function(tab){
+    ['Q1','Q2','Q3','Q4'].forEach(q => {
+
+        const active =
+            q === activeQuarter;
 
         tabs += `
-
-        <button
-            onclick="renderKpiDetail('${tab}')"
-            class="
-                h-[42px]
-                px-5
-                rounded-2xl
-                text-sm
-                font-black
-                transition-all
-                duration-200
-                ${
-                    activeQuarter === tab
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-white border border-slate-200 text-slate-600'
-                }
-            ">
-
-            ${tab}
-
-        </button>
+            <button
+                onclick="renderKpiDetail('${q}')"
+                class="
+                    quarter-tab
+                    px-4
+                    py-3
+                    rounded-2xl
+                    font-black
+                    text-sm
+                    ${
+                        active
+                        ? 'bg-slate-900 text-white'
+                        : 'bg-white border border-slate-200 text-slate-600'
+                    }
+                ">
+                ${q}
+            </button>
         `;
     });
 
@@ -643,15 +1090,15 @@ function renderKpiDetail(activeQuarter){
 
                     <div class="flex flex-wrap items-center gap-2 mb-3">
 
-                        <div class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black">
+                        <div class="px-3 py-1 rounded-full text-[10px] font-black ${categoryClass}">
                             ${kpi.category || 'General'}
                         </div>
 
-                        <div class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-[10px] font-black">
+                        <div class="px-3 py-1 rounded-full text-[10px] font-black bg-slate-100 text-slate-600">
                             ${kpi.sub_category || '-'}
                         </div>
 
-                        <div class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-black">
+                        <div class="px-3 py-1 rounded-full text-[10px] font-black bg-slate-100 text-slate-600">
                             ${kpi.financial_year || '-'}
                         </div>
 
@@ -680,10 +1127,23 @@ function renderKpiDetail(activeQuarter){
         </div>
 
         <!-- BODY -->
-        <div class="p-6 grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <div
+            class="
+            p-6
+            flex
+            gap-6
+            items-start
+            "
+        >
 
             <!-- LEFT -->
-            <div class="xl:col-span-8 space-y-5">
+            <div
+                class="
+                flex-1
+                min-w-0
+                space-y-5
+                "
+            >
 
                 <!-- QUARTER TABS -->
                 <div class="flex flex-wrap gap-3">
@@ -701,7 +1161,7 @@ function renderKpiDetail(activeQuarter){
 
                             <div class="flex items-center gap-3">
 
-                                <div class="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg font-black">
+                                <div class="w-14 h-14 rounded-2xl ${categoryLight} flex items-center justify-center text-lg font-black">
                                     ${activeQuarter}
                                 </div>
 
@@ -727,7 +1187,7 @@ function renderKpiDetail(activeQuarter){
                                 Achievement
                             </p>
 
-                            <h2 class="text-4xl font-black text-indigo-700 mt-1">
+                            <h2 class="text-4xl font-black ${scoreColor} mt-1">
                                 ${score}%
                             </h2>
 
@@ -741,8 +1201,8 @@ function renderKpiDetail(activeQuarter){
                         <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
 
                             <div
-                                class="h-3 rounded-full bg-gradient-to-r from-indigo-500 to-blue-600"
-                                style="width:${Math.min(score,100)}%">
+                                class="h-3 rounded-full bg-gradient-to-r ${progressBar}"
+                                style="width:${Math.max(3,Math.min(score,100))}%">
                             </div>
 
                         </div>
@@ -759,7 +1219,7 @@ function renderKpiDetail(activeQuarter){
                             </p>
 
                             <h3 class="text-2xl font-black text-slate-900 mt-2">
-                                ${target}
+                                ${Number(target).toLocaleString()}
                             </h3>
 
                         </div>
@@ -770,8 +1230,8 @@ function renderKpiDetail(activeQuarter){
                                 Actual
                             </p>
 
-                            <h3 class="text-2xl font-black text-emerald-600 mt-2">
-                                ${actual}
+                            <h3 class="text-2xl font-black text-slate-900 mt-2">
+                                ${Number(actual).toLocaleString()}
                             </h3>
 
                         </div>
@@ -805,54 +1265,220 @@ function renderKpiDetail(activeQuarter){
                     <!-- UPDATE FLOW -->
                     <div class="grid grid-cols-1 gap-4 mt-6">
 
+                        <!-- STATUS -->
+
                         <div>
 
                             <label class="text-[10px] uppercase text-slate-400 font-black">
-                                Quarter Actual
+
+                                Status
+
                             </label>
 
-                            <input
-                                id="actual-${kpi.id}-${activeQuarter}"
-                                type="number"
-                                value="${actual}"
-                                class="w-full mt-2 h-[48px] rounded-2xl border border-slate-200 px-4 text-sm font-bold"
+                            <select
+                                id="status-${quarter.id}"
+                                class="
+                                    w-full
+                                    mt-2
+                                    h-[48px]
+                                    rounded-2xl
+                                    border
+                                    border-slate-200
+                                    px-4
+                                "
                             >
 
-                        </div>
+                                <option
+                                    value="not_started"
+                                    ${(quarter.status === 'not_started')
+                                        ? 'selected'
+                                        : ''}
+                                >
+                                    Not Started
+                                </option>
 
-                        <div>
+                                <option
+                                    value="on_track"
+                                    ${(quarter.status === 'on_track')
+                                        ? 'selected'
+                                        : ''}
+                                >
+                                    On Track
+                                </option>
 
-                            <label class="text-[10px] uppercase text-slate-400 font-black">
-                                Remark
-                            </label>
+                                <option
+                                    value="at_risk"
+                                    ${(quarter.status === 'at_risk')
+                                        ? 'selected'
+                                        : ''}
+                                >
+                                    At Risk
+                                </option>
 
-                            <textarea
-                                id="remark-${kpi.id}-${activeQuarter}"
-                                rows="5"
-                                class="w-full mt-2 rounded-2xl border border-slate-200 p-4 text-sm"
-                            >${quarter.remark || ''}</textarea>
+                                <option
+                                    value="in_trouble"
+                                    ${(quarter.status === 'in_trouble')
+                                        ? 'selected'
+                                        : ''}
+                                >
+                                    In Trouble
+                                </option>
+
+                                <option
+                                    value="completed"
+                                    ${(quarter.status === 'completed')
+                                        ? 'selected'
+                                        : ''}
+                                >
+                                    Completed
+                                </option>
+
+                            </select>
 
                         </div>
 
                         <button
-                            onclick="updateQuarter('${kpi.id}','${activeQuarter}')"
-                            class="h-[50px] rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black">
+                            onclick="saveQuarterStatus('${quarter.id}')"
+                            class="
+                                h-[50px]
+                                rounded-2xl
+                                bg-slate-800
+                                text-white
+                                font-black
+                            "
+                        >
 
-                            Update Quarter
+                            Save Status
 
                         </button>
 
-                    </div>
+                        <hr class="my-5">
+
+                            ${!beforeQuarter ? `
+
+                                <button
+                                    onclick="
+                                        toggleActualUpdate(
+                                            '${quarter.id}'
+                                        )
+                                    "
+                                    class="
+                                        h-[50px]
+                                        rounded-2xl
+                                        bg-amber-600
+                                        text-white
+                                        font-black
+                                    "
+                                >
+                                    Update Actual
+                                </button>
+
+                                ` : ''}
+
+                            <div
+                                id="actual-update-${quarter.id}"
+                                class="hidden space-y-4"
+                            >
+
+                                <div>
+
+                                    <label>
+
+                                        New Actual
+
+                                    </label>
+
+                                    <input
+                                        id="newActual-${quarter.id}"
+                                        type="number"
+                                        min="0"
+                                        class="
+                                            w-full
+                                            mt-2
+                                            h-[48px]
+                                            rounded-2xl
+                                            border
+                                            border-slate-200
+                                            px-4
+                                        "
+                                    >
+
+                                </div>
+
+                                ${reasonRequired
+                                    ? `
+                                    <div>
+
+                                        <label>
+
+                                            Reason
+                                            <span class="text-red-500">*</span>
+
+                                        </label>
+
+                                        <textarea
+                                            id="reason-${quarter.id}"
+                                            rows="4"
+                                            class="
+                                                w-full
+                                                mt-2
+                                                rounded-2xl
+                                                border
+                                                border-slate-200
+                                                p-4
+                                            "
+                                        ></textarea>
+
+                                    </div>
+                                    `
+                                    : ''
+                                    }
+                                <button
+                                    onclick="
+                                        submitActualUpdateRequest(
+                                            '${kpi.id}',
+                                            '${quarter.id}'
+                                        )
+                                    "
+                                    class="
+                                        h-[50px]
+                                        rounded-2xl
+                                        ${categoryButton}
+                                        text-white
+                                        font-black
+                                    "
+                                >
+
+                                    Submit Actual Update Request
+
+                                </button>
+
+                            </div>
+
+                        </div>
 
                 </div>
 
             </div>
 
             <!-- RIGHT -->
-            <div class="xl:col-span-4 space-y-5">
+            <div
+                class="
+                w-[360px]
+                shrink-0
+                "
+            >
+
+                <div
+                    class="
+                    sticky
+                    top-6
+                    space-y-5
+                    "
+                >
 
                 <!-- OWNER -->
-                <div class="rounded-3xl overflow-hidden bg-gradient-to-br from-[#06142f] via-blue-900 to-indigo-900 text-white p-6">
+                <div class="rounded-3xl overflow-hidden bg-gradient-to-br ${ownerCardGradient} text-white p-6">
 
                     <p class="text-xs uppercase text-blue-200 font-black">
                         KPI Owner
@@ -883,7 +1509,7 @@ function renderKpiDetail(activeQuarter){
                             </p>
 
                             <h3 class="text-sm font-black mt-3">
-                                ${(kpi.status || '-').replaceAll('_',' ')}
+                                ${(quarter.status || '-').replaceAll('_',' ')}
                             </h3>
 
                         </div>
@@ -901,7 +1527,7 @@ function renderKpiDetail(activeQuarter){
 
                     <div class="space-y-4">
 
-                        <div class="border-l-2 border-indigo-500 pl-4">
+                        <div class="border-l-2 border-slate-300 pl-4">
 
                             <p class="text-xs font-black text-slate-900">
                                 Quarter Updated
@@ -917,12 +1543,83 @@ function renderKpiDetail(activeQuarter){
 
                 </div>
 
+                <div class="bg-white rounded-3xl border border-slate-200 p-5">
+
+                    <h3 class="text-sm font-black text-slate-900 mb-5">
+                        Approval Timeline
+                    </h3>
+
+                    ${timelineHtml || `
+                        <div class="text-xs text-slate-500">
+                            No approval history
+                        </div>
+                    `}
+
+                </div>
+
+                    </div>
+                </div>
+
             </div>
 
         </div>
 
     </div>
     `;
+}
+
+async function saveQuarterStatus(
+    quarterId
+){
+
+    const status =
+        document.getElementById(
+            'status-' + quarterId
+        ).value;
+
+    const response =
+        await fetch(
+
+            '/kpi/quarter/' +
+            quarterId +
+            '/status',
+
+            {
+
+                method : 'POST',
+
+                headers : {
+
+                    'Content-Type'
+                        : 'application/json',
+
+                    'X-CSRF-TOKEN'
+                        : '{{ csrf_token() }}'
+
+                },
+
+                body : JSON.stringify({
+
+                    status : status
+
+                })
+
+            }
+
+        );
+
+    const result =
+        await response.json();
+
+    alert(
+        result.message
+    );
+
+    if(result.success){
+
+        window.location.reload(true);
+
+    }
 }
 
 function closeKpiDetail(){
@@ -940,271 +1637,120 @@ function closeKpiDetail(){
     );
 }
 
-    function switchQuarterTab(quarter){
+    async function submitActualUpdateRequest(
+        kpiId,
+        quarterId
+    ){
 
-        document.querySelectorAll('.quarter-tab')
-        .forEach(function(tab){
+        const actual =
+            document.getElementById(
+                'newActual-' + quarterId
+            ).value;
 
-            tab.classList.remove(
-                'bg-slate-900',
-                'text-white'
+        if(!actual){
+
+            alert(
+                'New Actual required'
             );
 
-            tab.classList.add(
-                'bg-white',
-                'border',
-                'border-slate-200',
-                'text-slate-600'
-            );
-
-        });
-
-        const activeTab = document.getElementById(
-            'tab-' + quarter
-        );
-
-        if(activeTab){
-
-            activeTab.classList.remove(
-                'bg-white',
-                'border',
-                'border-slate-200',
-                'text-slate-600'
-            );
-
-            activeTab.classList.add(
-                'bg-slate-900',
-                'text-white'
-            );
+            return;
         }
 
-        const kpi = JSON.parse(
-            document.querySelector('.kpi-card[data-kpi]')
-            .dataset.kpi
-        );
+        const reasonField =
+            document.getElementById(
+                'reason-' + quarterId
+            );
 
-        const quarters = kpi.quarters || [];
+        const reason =
+            reasonField
+                ? reasonField.value.trim()
+                : '';
 
-        document.getElementById('quarterContent')
-        .innerHTML = renderQuarter(quarter);
-    }
+        const quarter =
+            activeKpi.quarters.find(
+                q => q.id == quarterId
+            ) || {};
 
-    async function updateQuarter(kpiId, quarter){
+        const today =
+            new Date();
 
-        const button = event.target;
+        const startDate =
+            new Date(
+                quarter.start_date
+            );
 
-        const originalText = button.innerText;
+        const endDate =
+            new Date(
+                quarter.end_date
+            );
 
-        button.disabled = true;
+        const reasonRequired =
+            (
+                today > endDate
+            )
+            ||
+            (
+                quarter.status ===
+                'completed'
+            );
 
-        button.innerText = 'Processing...';
+        if(
+            reasonRequired &&
+            reason.length < 20
+        ){
 
-        const actualInput = document.getElementById(
-            `actual-${kpiId}-${quarter}`
-        );
+            alert(
+                'Reason minimum 20 characters'
+            );
 
-        const remarkInput = document.getElementById(
-            `remark-${kpiId}-${quarter}`
-        );
+            return;
+        }
 
-        const actual = actualInput
-            ? actualInput.value
-            : '';
+        const response = await fetch(
 
-        const remark = remarkInput
-            ? remarkInput.value
-            : '';
+            '/kpi/' +
+            kpiId +
+            '/quarter/' +
+            quarterId +
+            '/actual-request',
 
-        try{
+            {
 
-            /*
-            |--------------------------------------------------------------------------
-            | TRY DIRECT UPDATE FIRST
-            |--------------------------------------------------------------------------
-            */
+                method : 'POST',
 
-            let response = await fetch('/kpi/update-quarter', {
+                headers : {
 
-                method: 'POST',
+                    'Content-Type'
+                        : 'application/json',
 
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN'
+                        : '{{ csrf_token() }}'
                 },
 
-                body: JSON.stringify({
+                body : JSON.stringify({
 
-                    kpi_id: kpiId,
+                    requested_actual:
+                        actual,
 
-                    quarter: quarter,
-
-                    actual: actual,
-
-                    remark: remark
+                    reason:
+                        reason
 
                 })
-            });
 
-            let result = await response.json();
-
-            /*
-            |--------------------------------------------------------------------------
-            | SUCCESS DIRECT UPDATE
-            |--------------------------------------------------------------------------
-            */
-
-            if(result.success){
-
-                alert('Quarter updated successfully.');
-
-                location.reload();
-
-                return;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | LOCKED QUARTER -> REQUEST APPROVAL
-            |--------------------------------------------------------------------------
-            */
-
-            if(
-                result.message &&
-                result.message.includes('Approval required')
-            ){
-
-                let approvalResponse = await fetch(
-
-                    '/kpi/request-quarter-approval',
-
-                    {
-
-                        method: 'POST',
-
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-
-                        body: JSON.stringify({
-
-                            kpi_id: kpiId,
-
-                            quarter: quarter,
-
-                            actual: actual,
-
-                            remark: remark
-
-                        })
-                    }
-                );
-
-                let approvalResult =
-                    await approvalResponse.json();
-
-                if(approvalResult.success){
-
-                    alert(
-                        'Quarter locked. Approval request submitted.'
-                    );
-
-                    location.reload();
-
-                    return;
-                }
-
-                alert(
-                    approvalResult.message
-                    || 'Approval request failed.'
-                );
-
-                return;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | OTHER ERROR
-            |--------------------------------------------------------------------------
-            */
-
-            alert(result.message || 'Update failed.');
-
-        }
-        catch(error){
-
-            console.error(error);
-
-            alert('System error.');
-        }
-        finally{
-
-            button.disabled = false;
-
-            button.innerText = originalText;
-        }
-    }
-
-    async function requestApproval(kpiId, quarter){
-
-        const actualInput = document.getElementById(
-            `actual-${kpiId}-${quarter}`
         );
 
-        const remarkInput = document.getElementById(
-            `remark-${kpiId}-${quarter}`
+        const result =
+            await response.json();
+
+        alert(
+            result.message
         );
 
-        const actual = actualInput
-            ? actualInput.value
-            : '';
+        if(result.success){
 
-        const remark = remarkInput
-            ? remarkInput.value
-            : '';
-
-        try{
-
-            const response = await fetch(
-                '/kpi/request-quarter-approval',
-                {
-
-                    method: 'POST',
-
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-
-                    body: JSON.stringify({
-                        kpi_id: kpiId,
-                        quarter: quarter,
-                        actual: actual,
-                        remark: remark
-                    })
-                }
-            );
-
-            const result = await response.json();
-
-            if(result.success){
-
-                alert('Approval request submitted.');
-
-                location.reload();
-
-            }
-            else{
-
-                alert(result.message || 'Request failed.');
-            }
-
-        }
-        catch(error){
-
-            console.error(error);
-
-            alert('System error.');
+            location.reload();
         }
     }
 
@@ -1238,6 +1784,300 @@ function closeKpiDetail(){
         document.body.classList.remove('overflow-hidden');
     }
 
+    let currentKpi = null;
+
+    function openEditKpiModal(kpi){
+
+        currentKpi = kpi;
+
+        currentKpi.original_base =
+            Number(kpi.base_target || 0);
+
+        currentKpi.original_stretch =
+            Number(kpi.stretch_target || 0);
+
+        const modal =
+            document.getElementById(
+                'editKpiModal'
+            );
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        document
+            .getElementById('edit_kpi_title')
+            .value =
+            kpi.kpi_title || '';
+
+        document
+            .getElementById('edit_kpi_description')
+            .value =
+            kpi.kpi_description || '';
+
+        document
+            .getElementById('edit_status')
+            .value =
+            kpi.status || '';
+
+        document
+            .getElementById('edit_base_target')
+            .value =
+            kpi.base_target || 0;
+
+        document
+            .getElementById('edit_stretch_target')
+            .value =
+            kpi.stretch_target || 0;
+
+        document
+            .getElementById(
+                'targetReasonBox'
+            )
+            .classList
+            .add('hidden');
+
+        document
+            .getElementById(
+                'target_change_reason'
+            )
+            .value = '';
+
+    }
+
+    function closeEditKpiModal(){
+
+        const modal =
+            document.getElementById(
+                'editKpiModal'
+            );
+
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+
+    }
+
+    document
+        .getElementById('edit_base_target')
+        .addEventListener('input', checkTargetChanged);
+
+    document
+        .getElementById('edit_stretch_target')
+        .addEventListener('input', checkTargetChanged);
+
+    function checkTargetChanged(){
+
+        const base =
+            Number(
+                document.getElementById(
+                    'edit_base_target'
+                ).value || 0
+            );
+
+        const stretch =
+            Number(
+                document.getElementById(
+                    'edit_stretch_target'
+                ).value || 0
+            );
+
+        const changed =
+            base !== currentKpi.original_base
+            ||
+            stretch !== currentKpi.original_stretch;
+
+        document
+            .getElementById(
+                'targetReasonBox'
+            )
+            .classList[
+                changed
+                    ? 'remove'
+                    : 'add'
+            ]('hidden');
+    }
+
+    async function submitKpiEdit(){
+
+        const title =
+            document.getElementById(
+                'edit_kpi_title'
+            ).value;
+
+        const description =
+            document.getElementById(
+                'edit_kpi_description'
+            ).value;
+
+        const status =
+            document.getElementById(
+                'edit_status'
+            ).value;
+
+        const base =
+            Number(
+                document.getElementById(
+                    'edit_base_target'
+                ).value
+            );
+
+        const stretch =
+            Number(
+                document.getElementById(
+                    'edit_stretch_target'
+                ).value
+            );
+
+        const targetChanged =
+
+            base !== currentKpi.original_base
+
+            ||
+
+            stretch !== currentKpi.original_stretch;
+
+        /*
+        |--------------------------------------------------------------------------
+        | TARGET CHANGE REQUEST
+        |--------------------------------------------------------------------------
+        */
+
+        if(targetChanged){
+
+            const reason =
+                document.getElementById(
+                    'target_change_reason'
+                ).value;
+
+            if(reason.trim().length < 30){
+
+                alert(
+                    'Reason minimum 30 characters'
+                );
+
+                return;
+            }
+
+            const response =
+                await fetch(
+
+                    `/kpi/${currentKpi.id}/request-target-change`,
+
+                    {
+
+                        method : 'POST',
+
+                        headers : {
+
+                            'Content-Type'
+                                : 'application/json',
+
+                            'X-CSRF-TOKEN'
+                                : '{{ csrf_token() }}'
+
+                        },
+
+                        body : JSON.stringify({
+
+                            new_base_target:
+                                base,
+
+                            new_stretch_target:
+                                stretch,
+
+                            reason:
+                                reason
+
+                        })
+
+                    }
+
+                );
+
+            const result =
+                await response.json();
+
+            alert(
+                result.message
+            );
+
+            if(result.success){
+
+                location.reload();
+
+            }
+
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | NORMAL KPI UPDATE
+        |--------------------------------------------------------------------------
+        */
+
+        const response =
+            await fetch(
+
+                `/kpi/${currentKpi.id}`,
+
+                {
+
+                    method : 'PUT',
+
+                    headers : {
+
+                        'Content-Type'
+                            : 'application/json',
+
+                        'X-CSRF-TOKEN'
+                            : '{{ csrf_token() }}'
+
+                    },
+
+                    body : JSON.stringify({
+
+                        category:
+                            currentKpi.category,
+
+                        sub_category:
+                            currentKpi.sub_category,
+
+                        unit:
+                            currentKpi.unit,
+
+                        actual_value:
+                            currentKpi.actual_value,
+
+                        kpi_title:
+                            title,
+
+                        kpi_description:
+                            description,
+
+                        status:
+                            status
+
+                    })
+
+                }
+
+            );
+
+        const result =
+            await response.json();
+
+        alert(
+            result.message ??
+            'Updated'
+        );
+
+        if(response.ok){
+
+            location.reload();
+
+        }
+
+    }
     async function submitEditTargetRequest(){
 
         const kpiId = document.getElementById('editKpiId').value;
@@ -1312,26 +2152,73 @@ function closeKpiDetail(){
         title
     ){
 
-        document.getElementById('deleteKpiId').value = kpiId;
+        document.getElementById(
+            'deleteKpiId'
+        ).value = kpiId;
 
-        document.getElementById('deleteKpiTitle').innerText = title;
+        document.getElementById(
+            'deleteKpiTitle'
+        ).innerText = title;
 
-        document.getElementById('deleteReason').value = '';
+        document.getElementById(
+            'deleteReason'
+        ).value = '';
 
-        document
-            .getElementById('deleteKpiModal')
-            .classList.remove('hidden');
+        const modal =
+            document.getElementById(
+                'deleteKpiModal'
+            );
 
-        document.body.classList.add('overflow-hidden');
+        modal.classList.remove(
+            'hidden'
+        );
+
+        modal.classList.add(
+            'flex'
+        );
+
+        document.body.classList.add(
+            'overflow-hidden'
+        );
     }
 
     function closeDeleteKpiModal(){
 
-        document
-            .getElementById('deleteKpiModal')
-            .classList.add('hidden');
+        const modal =
+            document.getElementById(
+                'deleteKpiModal'
+            );
 
-        document.body.classList.remove('overflow-hidden');
+        modal.classList.add(
+            'hidden'
+        );
+
+        modal.classList.remove(
+            'flex'
+        );
+
+        document.body.classList.remove(
+            'overflow-hidden'
+        );
+    }
+
+    function toggleActualUpdate(
+        quarterId
+    ){
+
+        const panel =
+            document.getElementById(
+                'actual-update-' +
+                quarterId
+            );
+
+        if(!panel){
+            return;
+        }
+
+        panel.classList.toggle(
+            'hidden'
+        );
     }
 
     async function submitDeleteRequest(){
@@ -1340,9 +2227,11 @@ function closeKpiDetail(){
 
         const reason = document.getElementById('deleteReason').value;
 
-        if(reason.trim() === ''){
+        if(reason.trim().length < 30){
 
-            alert('Reason is required.');
+            alert(
+                'Reason minimum 30 characters'
+            );
 
             return;
         }
@@ -1420,6 +2309,365 @@ function closeKpiDetail(){
                 </div>
 
             </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- KPI EDIT MODAL -->
+
+<div
+    id="editKpiModal"
+    class="fixed inset-0 z-[9999] hidden items-center justify-center modal-bg p-6"
+>
+
+    <div
+    class=" bg-white rounded-[28px] w-full max-w-3xl max-h-[90vh] overflow-y-auto p-5">
+
+        <div class="flex justify-between items-center">
+
+            <h2 class="text-xl font-black">
+                Edit KPI
+            </h2>
+
+            <button
+                onclick="closeEditKpiModal()"
+                class="text-slate-500"
+            >
+                ✕
+            </button>
+
+        </div>
+
+        <form
+            id="editKpiForm"
+            method="POST"
+            action=""
+            class="space-y-5 mt-6"
+        >
+
+            @csrf
+
+            <!-- TITLE -->
+
+            <div>
+
+                <label class="text-xs font-black uppercase">
+                    KPI Title
+                </label>
+
+                <input
+                    id="edit_kpi_title"
+                    name="kpi_title"
+                    class="w-full border rounded-xl px-3 py-2 mt-1 text-sm"
+                >
+
+            </div>
+
+            <!-- DESCRIPTION -->
+
+            <div>
+
+                <label class="text-xs font-black uppercase">
+                    Description
+                </label>
+
+                <textarea
+                    id="edit_kpi_description"
+                    name="kpi_description"
+                    rows="4"
+                    class="w-full border rounded-xl px-3 py-2 mt-1 text-sm"
+                ></textarea>
+
+            </div>
+
+            <!-- STATUS -->
+
+            <div>
+
+                <label class="text-xs font-black uppercase">
+                    Status
+                </label>
+
+                <select
+                    id="edit_status"
+                    name="status"
+                    class="w-full border rounded-xl px-3 py-2 mt-1 text-sm"
+                >
+                    <option value="not_started">Not Started</option>
+                    <option value="on_track">On Track</option>
+                    <option value="at_risk">At Risk</option>
+                    <option value="in_trouble">In Trouble</option>
+                    <option value="completed">Completed</option>
+                </select>
+
+            </div>
+
+            <!-- TARGET -->
+
+            <div class="grid grid-cols-2 gap-4">
+
+                <div>
+
+                    <label class="text-xs font-black uppercase">
+                        Base Target
+                    </label>
+
+                    <input
+                        id="edit_base_target"
+                        type="number"
+                        oninput="checkTargetChanged()"
+                        step="0.01"
+                        class="w-full border rounded-xl px-3 py-2 mt-1 text-sm"
+                    >
+
+                </div>
+
+                <div>
+
+                    <label class="text-xs font-black uppercase">
+                        Stretch Target
+                    </label>
+
+                    <input
+                        id="edit_stretch_target"
+                        type="number"
+                        oninput="checkTargetChanged()"
+                        step="0.01"
+                        class="w-full border rounded-xl px-3 py-2 mt-1 text-sm"
+                    >
+
+                </div>
+
+            </div>
+
+            <!-- TARGET APPROVAL NOTICE -->
+            <div
+                class="
+                    rounded-xl
+                    bg-amber-50
+                    border
+                    border-amber-200
+                    p-3
+                    text-xs
+                    text-amber-800
+                "
+            >
+
+                Any change to Base Target or Stretch Target
+                requires approval before it is updated.
+
+                KPI Title, Description and Status
+                will be updated immediately.
+
+            </div>
+
+            <!-- REASON -->
+
+            <div id="targetReasonBox" class="hidden">
+
+                <label
+                    class="
+                        text-xs
+                        font-black
+                        uppercase
+                        text-red-600
+                    "
+                >
+                    Reason For Target Change
+                </label>
+
+                <textarea
+                    id="target_change_reason"
+                    rows="3"
+                    class="
+                        w-full
+                        border
+                        border-red-300
+                        rounded-xl
+                        px-4
+                        py-3
+                        mt-2
+                    "
+                    placeholder="
+            Explain why target needs to change.
+            This will be reviewed by approver.
+                    "
+                ></textarea>
+
+            </div>
+            <div
+                class="
+                    sticky
+                    bottom-0
+                    bg-white
+                    pt-4
+                    flex
+                    justify-end
+                "
+            >
+
+                <button
+                    type="button"
+                    onclick="submitKpiEdit()"
+                    class="bg-indigo-600 text-white px-5 py-3 rounded-xl font-black"
+                >
+                    Save Changes
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- DELETE KPI MODAL -->
+
+<div
+    id="deleteKpiModal"
+    class="
+        fixed
+        inset-0
+        z-[99999]
+        hidden
+        flex
+        items-center
+        justify-center
+        modal-bg
+        p-6
+    "
+>
+
+    <div
+        class="
+            bg-white
+            rounded-[28px]
+            w-full
+            max-w-lg
+            p-6
+        "
+    >
+
+        <input
+            type="hidden"
+            id="deleteKpiId"
+        >
+
+        <div class="flex justify-between items-center">
+
+            <h2 class="text-xl font-black text-red-700">
+                Request KPI Deletion
+            </h2>
+
+            <button
+                onclick="closeDeleteKpiModal()"
+                class="text-slate-500"
+            >
+                ✕
+            </button>
+
+        </div>
+
+        <div
+            class="
+                mt-5
+                rounded-xl
+                bg-red-50
+                border
+                border-red-200
+                p-4
+            "
+        >
+
+            <div class="text-xs text-red-500 uppercase font-black">
+                KPI
+            </div>
+
+            <div
+                id="deleteKpiTitle"
+                class="
+                    mt-2
+                    text-sm
+                    font-black
+                    text-slate-900
+                "
+            ></div>
+
+        </div>
+
+        <div class="mt-5">
+
+            <label
+                class="
+                    text-xs
+                    font-black
+                    uppercase
+                    text-red-600
+                "
+            >
+                Reason For Deletion
+            </label>
+
+            <textarea
+                id="deleteReason"
+                rows="4"
+                class="
+                    w-full
+                    border
+                    border-red-300
+                    rounded-xl
+                    px-4
+                    py-3
+                    mt-2
+                "
+                placeholder="
+Explain why KPI should be deleted.
+Minimum 30 characters.
+                "
+            ></textarea>
+
+        </div>
+
+        <div
+            class="
+                flex
+                justify-end
+                gap-3
+                mt-6
+            "
+        >
+
+            <button
+                onclick="closeDeleteKpiModal()"
+                class="
+                    px-5
+                    py-3
+                    rounded-xl
+                    border
+                    border-slate-300
+                "
+            >
+                Cancel
+            </button>
+
+            <button
+                onclick="submitDeleteRequest()"
+                class="
+                    px-5
+                    py-3
+                    rounded-xl
+                    bg-red-600
+                    hover:bg-red-700
+                    text-white
+                    font-black
+                "
+            >
+                Submit Delete Request
+            </button>
 
         </div>
 

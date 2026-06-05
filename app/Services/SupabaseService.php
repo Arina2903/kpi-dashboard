@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use App\Services\ApprovalActionService;
 
 class SupabaseService
 {
@@ -90,6 +91,7 @@ class SupabaseService
         string $table,
         array $query = []
     ){
+        $query['limit'] = 1;
 
         $result = $this->get(
             $table,
@@ -234,5 +236,99 @@ class SupabaseService
             ->throw()
 
             ->json();
+    }
+
+        /*
+    |--------------------------------------------------------------------------
+    | SAFE PATCH
+    |--------------------------------------------------------------------------
+    */
+
+    public function safePatch(
+        string $table,
+        array $filters,
+        array $data
+    ): bool
+    {
+        try {
+
+            $this->patch(
+                $table,
+                $filters,
+                $data
+            );
+
+            return true;
+
+        } catch (\Throwable $e) {
+
+            dd([
+                'TABLE'   => $table,
+                'FILTERS' => $filters,
+                'DATA'    => $data,
+                'ERROR'   => $e->getMessage(),
+            ]);
+
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SAFE INSERT
+    |--------------------------------------------------------------------------
+    */
+
+    public function safeInsert(
+        string $table,
+        array $data
+    ): bool
+    {
+        try {
+
+            $this->insert(
+                $table,
+                $data
+            );
+
+            return true;
+
+        } catch (\Throwable $e) {
+            dd([
+                'TABLE' => $table,
+                'DATA' => $data,
+                'ERROR' => $e->getMessage(),
+                'LINE' => $e->getLine(),
+                'FILE' => $e->getFile(),
+            ]);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SAFE DELETE
+    |--------------------------------------------------------------------------
+    */
+
+    public function safeDelete(
+        string $table,
+        array $filters
+    ): bool
+    {
+        try {
+            $this->delete(
+                $table,
+                $filters
+            );
+            return true;
+
+        } catch (\Throwable $e) {
+            dd([
+                'TABLE' => $table,
+                'FILTERS' => $filters,
+                'ERROR' => $e->getMessage(),
+                'LINE' => $e->getLine(),
+                'FILE' => $e->getFile(),
+            ]);
+        }
     }
 }

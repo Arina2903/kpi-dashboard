@@ -5,6 +5,111 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
+        .category-card{
+            position:relative;
+
+            min-height:72px;
+
+            display:flex;
+            align-items:center;
+            justify-content:center;
+
+            border:1px solid #e5e7eb;
+            border-radius:14px;
+
+            background:#ffffff;
+
+            font-size:14px;
+            font-weight:700;
+
+            color:#334155;
+
+            transition:.15s ease;
+        }
+
+        .category-radio:checked + .category-card::after{
+            content:'✓';
+            position:absolute;
+            top:8px;
+            right:8px;
+            width:14px;
+            height:14px;
+            border-radius:999px;
+            background:#2563eb;
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:8px;
+            font-weight:700;
+        }
+
+        .category-card:hover{
+            border-color:#94a3b8;
+        }
+
+        .category-radio:checked + .category-card{
+            background:#eff6ff;
+            border-color:#2563eb;
+            color:#1e40af;
+        }
+
+        .category-title{
+            font-size:12px;
+            font-weight:800;
+        }
+
+        .category-desc{
+            font-size:10px;
+            margin-top:2px;
+            opacity:.8;
+        }
+
+        .sub-card{
+            min-height:42px;
+            padding:0 16px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            border:1px solid #e5e7eb;
+            border-radius:999px;
+            background:white;
+            font-size:13px;
+            font-weight:600;
+            color:#475569;
+            transition:.15s ease;
+            position:relative;
+        }
+
+        .sub-card:hover{
+            transform:translateY(-1px);
+            box-shadow: 0 8px 20px rgba(15,23,42,.06);
+        }
+
+        .sub-radio:checked + .sub-card{
+            background:#f8fafc;
+            border-color:#06142f;
+            color:#06142f;
+            box-shadow:
+                inset 0 0 0 1px #2563eb;
+        }
+
+        .sub-radio:checked + .sub-card::after{
+            content:'✓';
+            position:absolute;
+            top:8px;
+            right:8px;
+            width:14px;
+            height:14px;
+            border-radius:999px;
+            background:#06b6d4;
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:8px;
+        }
+
         :root{
             --navy:#06142f;
             --navy-soft:#0b1f46;
@@ -69,18 +174,11 @@
 
         .section-card{
             position:relative;
+            background:#ffffff;
+            border:1px solid #e5e7eb;
+            border-radius:16px;
+            box-shadow:0 1px 3px rgba(15,23,42,.05);
             overflow:hidden;
-
-            background:rgba(255,255,255,.92);
-
-            border:1px solid rgba(226,232,240,.9);
-
-            backdrop-filter:blur(14px);
-
-            box-shadow:
-                0 12px 28px rgba(15,23,42,.05);
-
-            border-radius:32px;
         }
 
         .section-card::before{
@@ -117,54 +215,36 @@
         }
 
         .step-bubble{
-            width:58px;
-            height:58px;
-
-            border-radius:22px;
+            width:32px;
+            height:32px;
+            border-radius:10px;
 
             display:flex;
             align-items:center;
             justify-content:center;
 
-            font-weight:900;
-            font-size:18px;
-
+            background:#06142f;
             color:white;
 
-            background:
-                linear-gradient(
-                    135deg,
-                    #06142f 0%,
-                    #2563eb 55%,
-                    #06b6d4 100%
-                );
+            font-size:13px;
+            font-weight:700;
 
-            box-shadow:
-                0 12px 25px rgba(37,99,235,.22);
-
-            flex-shrink:0;
-
-            border:1px solid rgba(255,255,255,.15);
+            box-shadow:none;
         }
 
         .field{
             width:100%;
+            min-height:48px;
+            border:1px solid #d1d5db;
+            background:white;
+            color:#111827;
+            transition:.15s ease;
+            box-shadow:none;
+        }
 
-            border:1px solid #dbe5f0;
-
-            background:
-                linear-gradient(
-                    180deg,
-                    rgba(255,255,255,.98),
-                    rgba(248,250,252,.98)
-                );
-
-            color:#0f172a;
-
-            transition:.18s ease;
-
-            box-shadow:
-                inset 0 1px 0 rgba(255,255,255,.7);
+        textarea.field{
+            min-height:110px;
+            height:auto;
         }
 
         .field:hover{
@@ -174,41 +254,26 @@
 
         .field:focus{
             outline:none;
-
             border-color:#2563eb;
-
-            background:white;
-
             box-shadow:
-                0 0 0 4px rgba(37,99,235,.10),
-                0 10px 20px rgba(37,99,235,.06);
+                0 0 0 3px rgba(37,99,235,.12);
+            background:white;
         }
 
         .quarter-card{
-            background:
-                linear-gradient(
-                    180deg,
-                    rgba(255,255,255,.98),
-                    rgba(248,250,252,.98)
-                );
-
-            border:1px solid #e2e8f0;
-
-            border-radius:28px;
-
-            transition:.18s ease;
-
-            box-shadow:
-                0 8px 24px rgba(15,23,42,.04);
+            background:#ffffff;
+            border:1px solid #e9d5ff;
+            border-radius:24px;
+            transition:.15s ease;
         }
 
         .quarter-card:hover{
-            transform:translateY(-2px);
+            border-color:#a855f7;
+            box-shadow:0 10px 25px rgba(124,58,237,.08);
+        }
 
-            border-color:#bfdbfe;
-
-            box-shadow:
-                0 18px 35px rgba(15,23,42,.07);
+        .quarter-card:hover{
+            border-color:#cbd5e1;
         }
 
         .quarter-dot{
@@ -224,19 +289,19 @@
             font-weight:900;
             font-size:13px;
 
-            color:#06142f;
+            color:#6d28d9;
 
             background:
                 linear-gradient(
                     135deg,
-                    #eff6ff 0%,
+                    #f5f3ff 0%,
                     #ffffff 100%
                 );
 
-            border:1px solid #dbeafe;
+            border:1px solid #ddd6fe;
 
             box-shadow:
-                0 8px 20px rgba(37,99,235,.12);
+                0 8px 20px rgba(124,58,237,.12);
         }
 
         .summary-card{
@@ -318,9 +383,9 @@
         }
 
         .status-on-track{
-            background:#eff6ff;
-            color:#1d4ed8;
-            border-color:#bfdbfe;
+            background:#f8fafc;
+            border-color:#06142f;
+            color:#06142f;
         }
 
         .status-risk{
@@ -374,8 +439,8 @@
         }
 
         .outline-btn:hover{
-            background:#eff6ff;
-            border-color:#93c5fd;
+            background:#f8fafc;
+            border-color:#06142f;
         }
 
         .info-card{
@@ -498,8 +563,8 @@
             font-size:11px;
             font-weight:800;
 
-            background:#eff6ff;
-            color:#1d4ed8;
+            background:#f8fafc;
+            color:#06142f;
 
             border:1px solid #dbeafe;
         }
@@ -566,18 +631,18 @@
             </p>
         </div>
 
-        <div class="mt-5 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-            <div class="bg-white/10 border border-white/15 rounded-3xl p-4">
+        <div class="mt-4 flex flex-wrap gap-3 text-sm">
+            <div class="bg-white/10 border border-white/15 rounded-xl px-3 py-2">
                 <p class="text-blue-100 text-xs">Owner</p>
                 <p class="font-black text-lg">{{ $user['short_name'] ?? '-' }}</p>
             </div>
 
-            <div class="bg-white/10 border border-white/15 rounded-3xl p-4">
+            <div class="bg-white/10 border border-white/15 rounded-xl px-3 py-2">
                 <p class="text-blue-100 text-xs">Role</p>
                 <p class="font-black text-lg">{{ $user['role'] ?? '-' }}</p>
             </div>
 
-            <div class="bg-white/10 border border-white/15 rounded-3xl p-4">
+            <div class="bg-white/10 border border-white/15 rounded-xl px-3 py-2">
                 <p class="text-blue-100 text-xs">Department</p>
                 <p class="font-black text-lg">{{ $user['department_code'] ?? '-' }}</p>
             </div>
@@ -598,11 +663,14 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-            <div class="lg:col-span-8 space-y-5">
+            <div class="lg:col-span-8">
 
-                <!-- 1. KPI OWNERSHIP -->
-                <section class="rounded-[2rem] border border-slate-200/70 bg-white/90 backdrop-blur-xl shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
-                    <!-- DECOR -->
+                    <!-- KPI OWNERSHIP & ASSIGNMENT -->
+
+                    <section
+                        id="section1"
+                        class="section-card p-6 scroll-mt-24">
+
                     <div class="absolute top-0 right-0 w-40 h-40 bg-cyan-200/20 blur-3xl rounded-full"></div>
 
                     <div class="relative flex gap-4">
@@ -611,103 +679,145 @@
 
                         <div class="flex-1">
 
+                            <!-- HEADER -->
                             <div class="flex items-center gap-4">
 
-                                <div class="w-14 h-14 rounded-3xl bg-gradient-to-br from-indigo-600 to-cyan-500 text-white flex items-center justify-center font-black text-xl shadow-xl shadow-indigo-300/40">
+                                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-cyan-500 text-white flex items-center justify-center font-black shadow-lg">
                                     1
                                 </div>
 
                                 <div>
-                                    <h2 class="font-black text-slate-900 text-xl">
+                                    <h3 class="font-black text-slate-900 text-lg">
                                         KPI Ownership & Assignment
-                                    </h2>
+                                    </h3>
+
+                                    <p class="text-sm text-slate-500">
+                                        Tentukan siapa pemilik KPI dan siapa yang bertanggungjawab melaksanakan KPI ini.
+                                    </p>
                                 </div>
 
                             </div>
 
-                            <!-- OWNER CARD -->
-                            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <!-- CONTENT -->
+                            <div class="grid grid-cols-1 xl:grid-cols-5 gap-5 mt-6">
 
                                 <!-- OWNER -->
-                                <div class="rounded-[2rem] border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm">
+                                <div class="xl:col-span-2">
 
-                                    <div class="flex items-center gap-4">
+                                    <div class="rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 h-full">
 
-                                        <div class="w-14 h-14 rounded-2xl bg-[#06142f] text-white flex items-center justify-center font-black text-lg shadow-lg shadow-slate-900/20">
-                                            O
+                                        <div class="flex items-center gap-4">
+
+                                            <div>
+
+                                                <p class="text-[11px] uppercase tracking-wider text-slate-400 font-black">
+                                                    KPI OWNER
+                                                </p>
+
+                                                <h3 class="font-black text-slate-900 text-2xl mt-1">
+                                                    {{ $user['short_name'] }}
+                                                </h3>
+
+                                                <p class="text-sm text-slate-500">
+                                                    {{ $user['role'] }}
+                                                </p>
+
+                                                <p class="text-xs text-slate-400 mt-1">
+                                                    {{ $user['department_code'] }}
+                                                </p>
+
+                                            </div>
+
                                         </div>
 
-                                        <div>
-                                            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-black">
-                                                KPI OWNER
-                                            </p>
+                                        <div class="mt-5 grid grid-cols-2 gap-3">
 
-                                            <h3 class="font-black text-slate-900 text-xl">
-                                                {{ $user['short_name'] }}
-                                            </h3>
+                                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
 
-                                            <p class="text-xs text-slate-500 mt-1">
-                                                {{ $user['role'] }} · {{ $user['department_code'] }}
-                                            </p>
+                                                <p class="text-[10px] uppercase text-slate-400 font-bold">
+                                                    Role
+                                                </p>
+
+                                                <p class="font-bold text-slate-800 mt-1">
+                                                    {{ $user['role'] }}
+                                                </p>
+
+                                            </div>
+
+                                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
+
+                                                <p class="text-[10px] uppercase text-slate-400 font-bold">
+                                                    Department
+                                                </p>
+
+                                                <p class="font-bold text-slate-800 mt-1">
+                                                    {{ $user['department_code'] }}
+                                                </p>
+
+                                            </div>
+
                                         </div>
 
                                     </div>
 
                                 </div>
 
-                                <!-- ASSIGN -->
-                                <div class="rounded-[2rem] border border-blue-100 bg-[#f8fbff] p-5 shadow-sm shadow-blue-100/30">
+                                <!-- ASSIGNMENT -->
+                                <div class="xl:col-span-3">
 
-                                    <div class="flex items-center gap-4">
+                                    <div class="rounded-[24px] border border-blue-100 bg-[#f8fbff] p-5 h-full">
 
-                                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 text-white flex items-center justify-center font-black text-lg shadow-lg shadow-cyan-200">
-                                            A
+                                        <div class="flex items-center gap-4">
+
+                                            <div>
+
+                                                <p class="text-[11px] uppercase tracking-wider text-blue-500 font-black">
+                                                    EXECUTION OWNER
+                                                </p>
+
+                                                <h3 class="font-black text-slate-900 text-2xl mt-1">
+                                                    KPI Assignment
+                                                </h3>
+
+                                                <p class="text-sm text-slate-500">
+                                                    Orang yang akan melaksanakan KPI ini setiap hari.
+                                                </p>
+
+                                            </div>
+
                                         </div>
 
-                                        <div>
-                                            <p class="text-[11px] uppercase tracking-wider text-blue-500 font-black">
-                                                KPI ASSIGNMENT
-                                            </p>
+                                        <div class="mt-6">
 
-                                            <h3 class="font-black text-slate-900 text-xl">
-                                                Execution Owner
-                                            </h3>
-                                        </div>
+                                            <label class="text-sm font-bold text-slate-700">
+                                                Assign To
+                                            </label>
 
-                                    </div>
+                                            <select
+                                                name="assigned_employee_id"
+                                                id="assignedEmployee"
+                                                class="w-full mt-2 rounded-2xl border border-blue-200 bg-white px-4 py-4 font-semibold text-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
 
-                                    <div class="mt-5">
-
-                                        <label class="text-sm font-bold text-slate-700">
-                                            Assign To
-                                        </label>
-
-                                        <select
-                                            name="assigned_employee_id"
-                                            id="assignedEmployee"
-                                            class="w-full mt-2 rounded-2xl border border-blue-200 bg-white px-4 py-3 font-semibold text-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                                        >
-
-                                            <option value="">
-                                                No Assignment
-                                            </option>
-
-                                            <option value="{{ $user['id'] }}">
-                                                Myself - {{ $user['short_name'] }}
-                                            </option>
-
-                                            @foreach($reportingStaff as $staff)
-
-                                                <option value="{{ $staff['id'] }}">
-
-                                                    {{ $staff['short_name'] }}
-                                                    ({{ $staff['role'] }})
-
+                                                <option value="">
+                                                    No Assignment
                                                 </option>
 
-                                            @endforeach
+                                                <option value="{{ $user['id'] }}">
+                                                    Myself - {{ $user['short_name'] }}
+                                                </option>
 
-                                        </select>
+                                                @foreach($reportingStaff as $staff)
+
+                                                    <option value="{{ $staff['id'] }}">
+                                                        {{ $staff['short_name'] }}
+                                                        ({{ $staff['role'] }})
+                                                    </option>
+
+                                                @endforeach
+
+                                            </select>
+
+                                        </div>
 
                                     </div>
 
@@ -722,90 +832,170 @@
                 </section>
 
                 <!-- 2. KPI CATEGORY -->
-                <section class="rounded-[2rem] border border-slate-200/70 bg-white/90 backdrop-blur-xl shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
+                <section
+                    id="section2"
+                    class="section-card p-6 scroll-mt-24">
                     <div class="absolute top-0 right-0 w-40 h-40 bg-emerald-200/20 blur-3xl rounded-full"></div>
 
                     <div class="relative flex gap-4">
 
-                        <div class="w-2 rounded-full bg-gradient-to-b from-[#06142f] to-slate-500"></div>
+                        <div class="w-2 rounded-full bg-gradient-to-b from-emerald-600 to-teal-500"></div>
 
                         <div class="flex-1">
 
+                            <!-- HEADER -->
                             <div class="flex items-center gap-4">
 
-                                <div class="w-14 h-14 rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-500 text-white flex items-center justify-center font-black text-xl shadow-xl shadow-emerald-300/40">
+                                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-500 text-white flex items-center justify-center font-black shadow-lg">
                                     2
                                 </div>
 
                                 <div>
-                                    <h2 class="font-black text-slate-900 text-xl">
-                                        KPI Category
-                                    </h2>
 
-                                    <p class="text-sm text-slate-600 mt-1">
-                                        Pilih jenis KPI berdasarkan focus business area.
+                                    <h3 class="font-black text-slate-900 text-lg">
+                                        KPI Category & Classification
+                                    </h3>
+
+                                    <p class="text-sm text-slate-500">
+                                        Pilih kategori KPI dan klasifikasi yang paling tepat.
                                     </p>
+
                                 </div>
 
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                            <!-- CONTENT -->
+                            <div class="grid grid-cols-1 xl:grid-cols-5 gap-5 mt-6">
 
-                                <div>
+                                <!-- CATEGORY -->
+                                <div class="xl:col-span-2">
 
-                                    <label class="text-sm font-bold text-slate-700">
-                                        Category
-                                    </label>
+                                    <div class="rounded-[24px] border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-5 h-full">
 
-                                    <select
-                                        name="category"
-                                        id="category"
-                                        class="field w-full mt-2 rounded-2xl p-3 border-slate-200 bg-slate-50"
-                                        required
-                                    >
+                                        <div class="flex items-center gap-4">
 
-                                        <option value="">
-                                            Select Category
-                                        </option>
+                                            <div>
 
-                                        <option value="Financial">
-                                            Financial
-                                        </option>
+                                                <p class="text-[11px] uppercase tracking-wider text-emerald-600 font-black">
+                                                    KPI CATEGORY
+                                                </p>
 
-                                        <option value="Growth & Customer">
-                                            Growth & Customer
-                                        </option>
+                                                <h3 class="font-black text-slate-900 text-2xl mt-1">
+                                                    Main Category
+                                                </h3>
 
-                                        <option value="Initiatives">
-                                            Initiatives
-                                        </option>
+                                                <p class="text-sm text-slate-500">
+                                                    Pilih kategori KPI utama.
+                                                </p>
 
-                                        <option value="People">
-                                            People
-                                        </option>
+                                            </div>
 
-                                    </select>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-3 mt-6">
+
+                                            <label class="cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    hidden
+                                                    class="category-radio"
+                                                    name="category"
+                                                    value="Financial"
+                                                    {{ old('category') == 'Financial' ? 'checked' : '' }}
+                                                    required>
+
+                                                <div class="category-card">
+                                                    Financial
+                                                </div>
+                                            </label>
+
+                                            <label class="cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    hidden
+                                                    class="category-radio"
+                                                    name="category"
+                                                    value="Growth & Customer"
+                                                    {{ old('category') == 'Growth & Customer' ? 'checked' : '' }}
+                                                    required>
+
+                                                <div class="category-card">
+                                                    Growth
+                                                </div>
+                                            </label>
+
+                                            <label class="cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    hidden
+                                                    class="category-radio"
+                                                    name="category"
+                                                    value="Initiatives"
+                                                    {{ old('category') == 'Initiatives' ? 'checked' : '' }}
+                                                    required>
+
+                                                <div class="category-card">
+                                                    Initiatives
+                                                </div>
+                                            </label>
+
+                                            <label class="cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    hidden
+                                                    class="category-radio"
+                                                    name="category"
+                                                    value="People"
+                                                    {{ old('category') == 'People' ? 'checked' : '' }}
+                                                    required>
+
+                                                <div class="category-card">
+                                                    People
+                                                </div>
+                                            </label>
+
+                                        </div>
+
+                                    </div>
 
                                 </div>
 
-                                <div>
+                                <!-- SUB CATEGORY -->
+                                <div class="xl:col-span-3">
 
-                                    <label class="text-sm font-bold text-slate-700">
-                                        Sub Category
-                                    </label>
+                                    <div class="rounded-[24px] border border-cyan-100 bg-[#f8fbff] p-5 h-full">
 
-                                    <select
-                                        name="sub_category"
-                                        id="subCategory"
-                                        class="field w-full mt-2 rounded-2xl p-3 border-teal-200 bg-teal-50/40"
-                                        required
-                                    >
+                                        <div class="flex items-center gap-4">
 
-                                        <option value="">
-                                            Select Category first
-                                        </option>
+                                            <div>
 
-                                    </select>
+                                                <p class="text-[11px] uppercase tracking-wider text-cyan-600 font-black">
+                                                    KPI SUB CATEGORY
+                                                </p>
+
+                                                <h3 class="font-black text-slate-900 text-2xl mt-1">
+                                                    Classification
+                                                </h3>
+
+                                                <p class="text-sm text-slate-500">
+                                                    Pilih sub category selepas category dipilih.
+                                                </p>
+
+                                            </div>
+
+                                        </div>
+
+                                        <div
+                                            id="subCategoryContainer"
+                                            class="grid grid-cols-2 gap-3 mt-6">
+
+                                            <div class="col-span-2 text-sm text-slate-400">
+                                                Choose a category first
+                                            </div>
+
+                                        </div>
+
+                                    </div>
 
                                 </div>
 
@@ -818,173 +1008,511 @@
                 </section>
 
                 <!-- 3. KPI DETAILS -->
-                <section class="rounded-[2rem] border border-slate-200/70 bg-white/90 backdrop-blur-xl shadow-[0_10px_30px_rgba(15,23,42,0.05)] overflow-hidden relative p-5">
-                    <div class="flex gap-4">
-                        <div class="w-1 rounded-full bg-gradient-to-b from-[#06142f] to-indigo-500"></div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3">
-                                <div class="step-bubble">3</div>
-                                <div>
-                                    <h2 class="font-black text-slate-900">KPI Details</h2>
-                                    <p class="text-xs text-slate-500 mt-1">Tulis KPI yang jelas dan boleh diukur.</p>
-                                </div>
+                <section
+                    id="section3"
+                    class="section-card p-6 scroll-mt-24">
+
+                <div class="absolute top-0 right-0 w-40 h-40 bg-indigo-200/20 blur-3xl rounded-full"></div>
+
+                <div class="relative flex gap-4">
+
+                    <div class="w-2 rounded-full bg-gradient-to-b from-[#06142f] to-indigo-500"></div>
+
+                    <div class="flex-1">
+
+                        <!-- HEADER -->
+                        <div class="flex items-center gap-4">
+
+                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-500 text-white flex items-center justify-center font-black shadow-lg">
+                                3
                             </div>
 
-                            <div class="space-y-4 mt-5">
-                                <div>
-                                    <label class="text-sm font-bold text-slate-700">KPI Title</label>
-                                    <input
-                                        name="kpi_title"
-                                        id="kpiTitle"
-                                        value="{{ old('kpi_title') }}"
-                                        class="field w-full mt-2 rounded-2xl p-3"
-                                        placeholder="Example: Complete AI automation system for internal process"
-                                        required
-                                    >
-                                </div>
+                            <div>
 
-                                <div>
-                                    <label class="text-sm font-bold text-slate-700">Description</label>
-                                    <textarea
-                                        name="kpi_description"
-                                        id="kpiDescription"
-                                        rows="3"
-                                        class="field w-full mt-2 rounded-2xl p-3"
-                                        placeholder="Explain what this KPI is trying to achieve."
-                                    >{{ old('kpi_description') }}</textarea>
-                                </div>
+                                <h3 class="font-black text-slate-900 text-lg">
+                                    KPI Details
+                                </h3>
+
+                                <p class="text-sm text-slate-500">
+                                    Tetapkan KPI yang jelas, spesifik dan mudah difahami.
+                                </p>
+
                             </div>
+
                         </div>
+
+                        <!-- CONTENT -->
+                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-5 mt-6">
+
+                            <!-- KPI TITLE -->
+                            <div class="xl:col-span-2">
+
+                                <div class="rounded-[24px] border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-5 h-full">
+
+                                    <div class="flex items-center gap-4">
+
+                                        <div>
+
+                                            <p class="text-[11px] uppercase tracking-wider text-indigo-600 font-black">
+                                                KPI TITLE
+                                            </p>
+
+                                            <h3 class="font-black text-slate-900 text-2xl mt-1">
+                                                KPI Name
+                                            </h3>
+
+                                            <p class="text-sm text-slate-500">
+                                                Nama KPI yang akan diukur.
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="mt-6">
+
+                                        <label class="text-sm font-bold text-slate-700">
+                                            KPI Title
+                                        </label>
+
+                                        <input
+                                            name="kpi_title"
+                                            id="kpiTitle"
+                                            value="{{ old('kpi_title') }}"
+                                            class="field w-full mt-2 rounded-2xl p-4"
+                                            placeholder="Example: Increase Monthly Revenue by 20%"
+                                            required>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <!-- KPI DESCRIPTION -->
+                            <div class="xl:col-span-3">
+
+                                <div class="rounded-[24px] border border-blue-100 bg-[#f8fbff] p-5 h-full">
+
+                                    <div class="flex items-center gap-4">
+
+                                        <div>
+
+                                            <p class="text-[11px] uppercase tracking-wider text-blue-500 font-black">
+                                                KPI DESCRIPTION
+                                            </p>
+
+                                            <h3 class="font-black text-slate-900 text-2xl mt-1">
+                                                KPI Explanation
+                                            </h3>
+
+                                            <p class="text-sm text-slate-500">
+                                                Terangkan objektif KPI ini dan bagaimana ia diukur.
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="mt-6">
+
+                                        <label class="text-sm font-bold text-slate-700">
+                                            Description
+                                        </label>
+
+                                        <textarea
+                                            name="kpi_description"
+                                            id="kpiDescription"
+                                            rows="6"
+                                            class="field w-full mt-2 rounded-2xl p-4"
+                                            placeholder="Explain what success looks like, how this KPI will be measured and why it is important."
+                                        >{{ old('kpi_description') }}</textarea>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
                     </div>
+
+                </div>
+
                 </section>
 
 
+                <!-- 4. FULL YEAR TARGET -->
 
-                <!-- 4. TARGET -->
-                <section class="rounded-[2rem] p-5 border border-slate-200/70 bg-white/90 backdrop-blur-xl shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
-                    <div class="flex gap-4">
-                        <div class="w-1 rounded-full bg-gradient-to-b from-[#06142f] to-sky-500"></div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3">
-                                <div class="step-bubble">4</div>
-                                <div>
-                                    <h2 class="font-black text-slate-900">Full-Year Target</h2>
-                                    <p class="text-xs text-slate-500 mt-1">Target tahunan dahulu. Quarter ialah pecahan target ini.</p>
-                                </div>
+                <section
+                    id="section4"
+                    class="section-card p-6 scroll-mt-24">
+                <div class="absolute top-0 right-0 w-40 h-40 bg-sky-200/20 blur-3xl rounded-full"></div>
+
+                <div class="relative flex gap-4">
+
+                    <div class="w-2 rounded-full bg-gradient-to-b from-[#06142f] to-sky-500"></div>
+
+                    <div class="flex-1">
+
+                        <!-- HEADER -->
+                        <div class="flex items-center gap-4">
+
+                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-600 to-blue-500 text-white flex items-center justify-center font-black shadow-lg">
+                                4
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
-                                <div>
-                                    <label class="text-sm font-bold text-slate-700">Unit</label>
-                                    <select name="unit" id="unit" class="field w-full mt-2 rounded-2xl p-3" required>
-                                        <option value="number" {{ old('unit') === 'number' ? 'selected' : '' }}>Number</option>
-                                        <option value="currency" {{ old('unit') === 'currency' ? 'selected' : '' }}>Currency / RM</option>
-                                        <option value="percentage" {{ old('unit') === 'percentage' ? 'selected' : '' }}>Percentage / %</option>
-                                    </select>
-                                </div>
+                            <div>
 
-                                <div>
-                                    <label class="text-sm font-bold text-slate-700">Base Target</label>
-                                    <input name="base_target" id="baseTarget" type="number" step="0.01" value="{{ old('base_target') }}" class="field w-full mt-2 rounded-2xl p-3" required>
-                                </div>
+                                <h3 class="font-black text-slate-900 text-lg">
+                                    Full-Year Target
+                                </h3>
 
-                                <div>
-                                    <label class="text-sm font-bold text-slate-700">Stretch Target</label>
-                                    <input name="stretch_target" id="stretchTarget" type="number" step="0.01" value="{{ old('stretch_target') }}" class="field w-full mt-2 rounded-2xl p-3" required>
-                                </div>
+                                <p class="text-sm text-slate-500">
+                                    Tetapkan sasaran tahunan yang ingin dicapai.
+                                </p>
+
                             </div>
+
                         </div>
+
+                        <!-- CONTENT -->
+                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-5 mt-6">
+
+                            <!-- UNIT -->
+                            <div class="xl:col-span-2">
+
+                                <div class="rounded-[24px] border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-5 h-full">
+
+                                    <div class="flex items-center gap-4">
+
+                                        <div>
+
+                                            <p class="text-[11px] uppercase tracking-wider text-sky-600 font-black">
+                                                KPI UNIT
+                                            </p>
+
+                                            <h3 class="font-black text-slate-900 text-2xl mt-1">
+                                                Measurement
+                                            </h3>
+
+                                            <p class="text-sm text-slate-500">
+                                                Pilih unit pengukuran KPI.
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="mt-6">
+
+                                        <label class="text-sm font-bold text-slate-700">
+                                            Unit
+                                        </label>
+
+                                        <select
+                                            name="unit"
+                                            id="unit"
+                                            class="field w-full mt-2 rounded-2xl p-4"
+                                            required>
+
+                                            <option value="number"
+                                                {{ old('unit') === 'number' ? 'selected' : '' }}>
+                                                Number
+                                            </option>
+
+                                            <option value="currency"
+                                                {{ old('unit') === 'currency' ? 'selected' : '' }}>
+                                                Currency / RM
+                                            </option>
+
+                                            <option value="percentage"
+                                                {{ old('unit') === 'percentage' ? 'selected' : '' }}>
+                                                Percentage / %
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <!-- TARGET -->
+                            <div class="xl:col-span-3">
+
+                                <div class="rounded-[24px] border border-blue-100 bg-[#f8fbff] p-5 h-full">
+
+                                    <div class="flex items-center gap-4">
+
+                                        <div>
+
+                                            <p class="text-[11px] uppercase tracking-wider text-blue-500 font-black">
+                                                TARGET SETTING
+                                            </p>
+
+                                            <h3 class="font-black text-slate-900 text-2xl mt-1">
+                                                Annual Target
+                                            </h3>
+
+                                            <p class="text-sm text-slate-500">
+                                                Tetapkan Base dan Stretch Target KPI.
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="grid md:grid-cols-2 gap-4 mt-6">
+
+                                        <div>
+
+                                            <label class="text-sm font-bold text-slate-700">
+                                                Base Target
+                                            </label>
+
+                                            <input
+                                                name="base_target"
+                                                id="baseTarget"
+                                                type="number"
+                                                step="0.01"
+                                                value="{{ old('base_target') }}"
+                                                class="field w-full mt-2 rounded-2xl p-4"
+                                                required>
+
+                                        </div>
+
+                                        <div>
+
+                                            <label class="text-sm font-bold text-slate-700">
+                                                Stretch Target
+                                            </label>
+
+                                            <input
+                                                name="stretch_target"
+                                                id="stretchTarget"
+                                                type="number"
+                                                step="0.01"
+                                                value="{{ old('stretch_target') }}"
+                                                class="field w-full mt-2 rounded-2xl p-4"
+                                                required>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="mt-4 rounded-xl bg-blue-50 border border-blue-100 p-3">
+
+                                        <p class="text-xs text-blue-700">
+                                            Base Target ialah sasaran minimum yang wajib dicapai. Stretch Target ialah sasaran lebih tinggi yang menunjukkan prestasi cemerlang.
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
                     </div>
+
+                </div>
+
                 </section>
 
-                <!-- 5. STATUS -->
-                <section class="rounded-[2rem] p-5 border border-slate-200/70 bg-white/90 backdrop-blur-xl shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
-                    <div class="flex gap-4">
-                        <div class="w-1 rounded-full bg-gradient-to-b from-amber-500 to-red-500"></div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3">
-                                <div class="step-bubble">5</div>
-                                <div>
-                                    <h2 class="font-black text-slate-900">Current Status & Remark</h2>
-                                    <p class="text-xs text-slate-500 mt-1">Letak status keseluruhan KPI sekarang.</p>
-                                </div>
+
+                <!-- 5. CURRENT STATUS -->
+                <section
+                    id="section5"
+                    class="section-card p-6 scroll-mt-24">
+
+                <div class="absolute top-0 right-0 w-40 h-40 bg-amber-200/20 blur-3xl rounded-full"></div>
+
+                <div class="relative flex gap-4">
+
+                    <div class="w-2 rounded-full bg-gradient-to-b from-amber-500 to-red-500"></div>
+
+                    <div class="flex-1">
+
+                        <!-- HEADER -->
+                        <div class="flex items-center gap-4">
+
+                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-red-500 text-white flex items-center justify-center font-black shadow-lg">
+                                5
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
-                                <div>
-                                    <label class="text-sm font-bold text-slate-700">Status</label>
-                                    <select
-                                        name="status"
-                                        id="status"
-                                        class="w-full mt-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-bold transition-all duration-200"
-                                        required
-                                    >
+                            <div>
 
-                                        <option value="not_started"
-                                            {{ old('status', 'not_started') === 'not_started' ? 'selected' : '' }}>
-                                            Not Started
-                                        </option>
+                                <h3 class="font-black text-slate-900 text-lg">
+                                    Current Status & Remark
+                                </h3>
 
-                                        <option value="on_track"
-                                            {{ old('status') === 'on_track' ? 'selected' : '' }}>
-                                            On Track
-                                        </option>
+                                <p class="text-sm text-slate-500">
+                                    Nyatakan status KPI semasa dan sebarang maklumat tambahan yang berkaitan.
+                                </p>
 
-                                        <option value="at_risk"
-                                            {{ old('status') === 'at_risk' ? 'selected' : '' }}>
-                                            At Risk
-                                        </option>
-
-                                        <option value="in_trouble"
-                                            {{ old('status') === 'in_trouble' ? 'selected' : '' }}>
-                                            In Trouble
-                                        </option>
-
-                                        <option value="completed"
-                                            {{ old('status') === 'completed' ? 'selected' : '' }}>
-                                            Completed
-                                        </option>
-
-                                    </select>
-                                </div>
-
-                                <div class="md:col-span-2">
-                                    <label class="text-sm font-bold text-slate-700">Remark</label>
-                                    <textarea name="remark" id="remark" rows="2" class="field w-full mt-2 rounded-2xl p-3" placeholder="Optional note">{{ old('remark') }}</textarea>
-                                </div>
                             </div>
+
                         </div>
+
+                        <!-- CONTENT -->
+                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-5 mt-6">
+
+                            <!-- STATUS -->
+                            <div class="xl:col-span-2">
+
+                                <div class="rounded-[24px] border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-5 h-full">
+
+                                    <div class="flex items-center gap-4">
+
+                                        <div>
+
+                                            <p class="text-[11px] uppercase tracking-wider text-amber-600 font-black">
+                                                KPI STATUS
+                                            </p>
+
+                                            <h3 class="font-black text-slate-900 text-2xl mt-1">
+                                                Current Status
+                                            </h3>
+
+                                            <p class="text-sm text-slate-500">
+                                                Pilih keadaan KPI pada masa ini.
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="mt-6">
+
+                                        <label class="text-sm font-bold text-slate-700">
+                                            Status
+                                        </label>
+
+                                        <select
+                                            name="status"
+                                            id="status"
+                                            class="w-full mt-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 font-bold transition-all duration-200"
+                                            required>
+
+                                            <option value="not_started"
+                                                {{ old('status', 'not_started') === 'not_started' ? 'selected' : '' }}>
+                                                Not Started
+                                            </option>
+
+                                            <option value="on_track"
+                                                {{ old('status') === 'on_track' ? 'selected' : '' }}>
+                                                On Track
+                                            </option>
+
+                                            <option value="at_risk"
+                                                {{ old('status') === 'at_risk' ? 'selected' : '' }}>
+                                                At Risk
+                                            </option>
+
+                                            <option value="in_trouble"
+                                                {{ old('status') === 'in_trouble' ? 'selected' : '' }}>
+                                                In Trouble
+                                            </option>
+
+                                            <option value="completed"
+                                                {{ old('status') === 'completed' ? 'selected' : '' }}>
+                                                Completed
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <!-- REMARK -->
+                            <div class="xl:col-span-3">
+
+                                <div class="rounded-[24px] border border-red-100 bg-[#fffaf8] p-5 h-full">
+
+                                    <div class="flex items-center gap-4">
+
+                                        <div>
+
+                                            <p class="text-[11px] uppercase tracking-wider text-red-500 font-black">
+                                                KPI REMARK
+                                            </p>
+
+                                            <h3 class="font-black text-slate-900 text-2xl mt-1">
+                                                Additional Context
+                                            </h3>
+
+                                            <p class="text-sm text-slate-500">
+                                                Catatan tambahan berkaitan KPI ini.
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="mt-6">
+
+                                        <label class="text-sm font-bold text-slate-700">
+                                            Remark
+                                        </label>
+
+                                        <textarea
+                                            name="remark"
+                                            id="remark"
+                                            rows="6"
+                                            class="field w-full mt-2 rounded-2xl p-4"
+                                            placeholder="Optional note, context, challenge, assumption or additional information."
+                                        >{{ old('remark') }}</textarea>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
                     </div>
+
+                </div>
+
                 </section>
 
-                <!-- 5. QUARTERS -->
-                <section class="section-card p-6">
 
-                    <div class="floating-glow floating-blue"></div>
-                    <div class="floating-glow floating-cyan"></div>
+                <!-- 6. QUARTERS -->
+                <section
+                    id="section6"
+                    class="section-card p-6 scroll-mt-24">
+
+                    <div class="absolute top-0 right-0 w-40 h-40 bg-purple-200/20 blur-3xl rounded-full"></div>
 
                     <div class="relative flex gap-4">
 
-                        <div class="section-line"></div>
+                        <div class="w-2 rounded-full bg-gradient-to-b from-purple-500 to-indigo-600"></div>
 
                         <div class="flex-1">
 
-                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <!-- HEADER -->
+                            <div class="flex items-center justify-between gap-4">
 
                                 <div class="flex items-center gap-4">
 
-                                    <div class="step-bubble">
+                                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center font-black shadow-lg">
                                         6
                                     </div>
 
                                     <div>
-                                        <h2 class="font-black text-slate-900 text-xl">
-                                            Quarter Breakdown
-                                        </h2>
 
-                                        <p class="helper mt-1">
-                                            Breakdown target tahunan kepada execution plan setiap quarter.
-                                        </p>
+                                        <h3 class="font-black text-slate-900 text-lg">
+                                            Quarter Breakdown
+                                        </h3>
+
                                     </div>
 
                                 </div>
@@ -992,20 +1520,19 @@
                                 <button
                                     type="button"
                                     onclick="autoDivideQuarter()"
-                                    class="outline-btn px-5 py-3 rounded-2xl text-sm font-black"
-                                >
+                                    class="outline-btn px-5 py-3 rounded-2xl text-sm font-black">
                                     Auto Divide Base
                                 </button>
 
                             </div>
 
-                            <div class="divider-soft my-6"></div>
+                            <div class="mt-6 space-y-5">
 
                             <div class="space-y-5">
 
                                 @foreach(['Q1','Q2','Q3','Q4'] as $quarter)
 
-                                    <div class="quarter-card p-5">
+                                    <div class="rounded-[24px] border border-purple-100 bg-gradient-to-br from-purple-50 to-white p-5">
 
                                         <div class="flex items-center justify-between gap-4 mb-5">
 
@@ -1131,36 +1658,91 @@
 
                                             </div>
 
-                                            <!-- TIMELINE -->
-                                            <div class="md:col-span-2">
+                                            <!-- TIMELINE (AUTO LOCKED) -->
+                                            @php
 
-                                                <label class="label">
-                                                    Timeline
-                                                </label>
+                                                $year =
+                                                    str_replace(
+                                                        'FY',
+                                                        '',
+                                                        $fy ?? ('FY'.now()->year)
+                                                    );
 
-                                                <div class="grid grid-cols-2 gap-3 mt-2">
+                                                $quarterDates = [
 
-                                                    <div>
-                                                        <input
-                                                            type="date"
-                                                            name="quarters[{{ $quarter }}][start_date]"
-                                                            value="{{ old("quarters.$quarter.start_date") }}"
-                                                            class="field rounded-2xl px-4 py-3 text-sm"
-                                                        >
+                                                    'Q1'=>[
+                                                        'start'=>$year.'-01-01',
+                                                        'end'=>$year.'-03-31'
+                                                    ],
+
+                                                    'Q2'=>[
+                                                        'start'=>$year.'-04-01',
+                                                        'end'=>$year.'-06-30'
+                                                    ],
+
+                                                    'Q3'=>[
+                                                        'start'=>$year.'-07-01',
+                                                        'end'=>$year.'-09-30'
+                                                    ],
+
+                                                    'Q4'=>[
+                                                        'start'=>$year.'-10-01',
+                                                        'end'=>$year.'-12-31'
+                                                    ]
+
+                                                ];
+
+                                                $timeline =
+                                                    $quarterDates[$quarter];
+
+                                                @endphp
+
+                                                <div class="md:col-span-2">
+
+                                                    <label class="label">
+                                                        Timeline
+                                                    </label>
+
+                                                    <div class="grid grid-cols-2 gap-3 mt-2">
+
+                                                        <div>
+
+                                                            <input
+                                                                type="date"
+                                                                name="quarters[{{ $quarter }}][start_date]"
+                                                                value="{{ old("quarters.$quarter.start_date",$timeline['start']) }}"
+                                                                min="{{ $timeline['start'] }}"
+                                                                max="{{ $timeline['end'] }}"
+                                                                class="field rounded-2xl px-4 py-3 text-sm"
+                                                            >
+
+                                                        </div>
+
+                                                        <div>
+
+                                                            <input
+                                                                type="date"
+                                                                name="quarters[{{ $quarter }}][end_date]"
+                                                                value="{{ old("quarters.$quarter.end_date",$timeline['end']) }}"
+                                                                min="{{ $timeline['start'] }}"
+                                                                max="{{ $timeline['end'] }}"
+                                                                class="field rounded-2xl px-4 py-3 text-sm"
+                                                            >
+
+                                                        </div>
+
                                                     </div>
 
-                                                    <div>
-                                                        <input
-                                                            type="date"
-                                                            name="quarters[{{ $quarter }}][end_date]"
-                                                            value="{{ old("quarters.$quarter.end_date") }}"
-                                                            class="field rounded-2xl px-4 py-3 text-sm"
-                                                        >
-                                                    </div>
+                                                    <p class="text-xs text-purple-600 mt-2">
+
+                                                        Allowed Range:
+                                                        {{ \Carbon\Carbon::parse($timeline['start'])->format('d/m/Y') }}
+                                                        →
+                                                        {{ \Carbon\Carbon::parse($timeline['end'])->format('d/m/Y') }}
+
+                                                    </p>
 
                                                 </div>
-
-                                            </div>
 
                                             <!-- REMARK -->
                                             <div class="md:col-span-2">
@@ -1196,7 +1778,7 @@
                                     </p>
 
                                     <p
-                                        id="quarterTargetTotal"
+                                        id="summaryQuarterTargetTotal"
                                         class="text-2xl font-black text-[#06142f] mt-2"
                                     >
                                         0.00
@@ -1205,7 +1787,7 @@
                                 </div>
 
                                 <div
-                                    id="quarterStatusBox"
+                                    id="summaryQuarterStatusBox"
                                     class="metric-card metric-blue p-5"
                                 >
 
@@ -1214,7 +1796,7 @@
                                     </p>
 
                                     <p
-                                        id="quarterMatchStatus"
+                                        id="summaryQuarterMatchStatus"
                                         class="text-sm font-black text-blue-700 mt-2"
                                     >
                                         Optional
@@ -1232,68 +1814,257 @@
 
             </div>
 
-            <!-- SUMMARY -->
+            <!-- KPI SUMMARY -->
             <aside class="lg:col-span-4">
-                <div class="sticky top-5 space-y-4">
-                    <div class="rounded-[2rem] p-5 border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
-                        <div class="flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-full bg-[#06142f] text-white flex items-center justify-center shadow-lg shadow-blue-900/20 font-black">
-                                ✓
-                            </div>
-                            <div>
-                                <h2 class="font-black text-slate-900">KPI Summary</h2>
-                                <p class="text-xs text-slate-500 mt-1">Semak sebelum submit.</p>
-                            </div>
+
+                <div
+                    class="sticky top-4
+                        max-h-[calc(100vh-2rem)]
+                        overflow-y-auto
+                        rounded-[28px]
+                        border border-slate-200
+                        bg-white
+                        p-6
+                        shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+
+                    <!-- HEADER -->
+                    <div class="flex items-center gap-4">
+
+                        <div
+                            class="w-12 h-12
+                                rounded-2xl
+                                bg-[#06142f]
+                                text-white
+                                flex
+                                items-center
+                                justify-center
+                                font-black
+                                shadow-lg">
+                            ✓
                         </div>
 
-                        <div class="space-y-4 mt-5 text-sm">
-                            <div class="rounded-3xl bg-slate-50 border border-slate-100 p-4">
-                                <p class="text-xs text-slate-400">Owner</p>
-                                <p class="font-black text-[#06142f]">{{ $user['short_name'] ?? '-' }}</p>
-                            </div>
+                        <div>
+                            <h2 class="font-black text-lg text-slate-900">
+                                KPI Summary
+                            </h2>
 
-                            <div>
-                                <p class="text-xs text-slate-400">Title</p>
-                                <p id="summaryTitle" class="font-black text-slate-900">Not entered yet</p>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="rounded-2xl bg-blue-50 border border-blue-100 p-3">
-                                    <p class="text-xs text-blue-500">Category</p>
-                                    <p id="summaryCategory" class="font-bold text-[#06142f]">-</p>
-                                </div>
-
-                                <div class="rounded-2xl bg-cyan-50 border border-cyan-100 p-3">
-                                    <p class="text-xs text-cyan-600">Sub Category</p>
-                                    <p id="summarySubCategory" class="font-bold text-[#06142f]">-</p>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-3 gap-2">
-                                <div class="bg-white rounded-2xl p-3 border border-blue-100 shadow-sm">
-                                    <p class="text-xs text-slate-400">Base</p>
-                                    <p id="summaryBase" class="font-black text-[#06142f]">0</p>
-                                </div>
-
-                                <div class="bg-white rounded-2xl p-3 border border-purple-100 shadow-sm">
-                                    <p class="text-xs text-slate-400">Stretch</p>
-                                    <p id="summaryStretch" class="font-black text-[#06142f]">0</p>
-                                </div>
-                            </div>
-
-                            <div>
-                                <p class="text-xs text-slate-400">Status</p>
-                                <span id="summaryStatus" class="inline-flex mt-1 px-3 py-1 rounded-full text-xs font-black bg-slate-100 text-slate-700">
-                                    Not Started
-                                </span>
-                            </div>
+                            <p class="text-xs text-slate-500">
+                                Semak sebelum submit.
+                            </p>
                         </div>
+
                     </div>
 
-                    <button type="submit" class="w-full bg-[#06142f] hover:bg-[#0b1f46] text-white font-black p-4 rounded-3xl shadow-xl shadow-blue-900/20 transition">
-                        Create My KPI
-                    </button>
+                    <!-- DIVIDER -->
+                    <div class="h-px bg-slate-200 my-5"></div>
+
+                    <!-- OWNER -->
+                    <div
+                        class="rounded-2xl
+                            bg-slate-50
+                            border
+                            border-slate-200
+                            p-4">
+
+                        <p class="text-xs text-slate-400">
+                            Owner
+                        </p>
+
+                        <p class="font-black text-[#06142f] mt-1">
+                            {{ $user['short_name'] ?? '-' }}
+                        </p>
+
+                    </div>
+
+                    <!-- TITLE -->
+                    <div class="mt-4">
+
+                        <p class="text-xs text-slate-400">
+                            KPI Title
+                        </p>
+
+                        <p
+                            id="summaryTitle"
+                            class="font-black text-slate-900 mt-1">
+                            Not entered yet
+                        </p>
+
+                    </div>
+
+                    <!-- CATEGORY -->
+                    <div class="grid grid-cols-2 gap-3 mt-4">
+
+                        <div
+                            class="rounded-2xl
+                                bg-blue-50
+                                border
+                                border-blue-100
+                                p-3">
+
+                            <p class="text-xs text-blue-500">
+                                Category
+                            </p>
+
+                            <p
+                                id="summaryCategory"
+                                class="font-bold text-[#06142f] mt-1">
+                                -
+                            </p>
+
+                        </div>
+
+                        <div
+                            class="rounded-2xl
+                                bg-cyan-50
+                                border
+                                border-cyan-100
+                                p-3">
+
+                            <p class="text-xs text-cyan-600">
+                                Sub Category
+                            </p>
+
+                            <p
+                                id="summarySubCategory"
+                                class="font-bold text-[#06142f] mt-1">
+                                -
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <!-- TARGET -->
+                    <div class="grid grid-cols-2 gap-3 mt-4">
+
+                        <div
+                            class="rounded-2xl
+                                border
+                                border-blue-100
+                                bg-white
+                                p-4">
+
+                            <p class="text-xs text-slate-400">
+                                Base Target
+                            </p>
+
+                            <p
+                                id="summaryBase"
+                                class="font-black text-lg text-[#06142f] mt-1">
+                                0.00
+                            </p>
+
+                        </div>
+
+                        <div
+                            class="rounded-2xl
+                                border
+                                border-purple-100
+                                bg-white
+                                p-4">
+
+                            <p class="text-xs text-slate-400">
+                                Stretch Target
+                            </p>
+
+                            <p
+                                id="summaryStretch"
+                                class="font-black text-lg text-[#06142f] mt-1">
+                                0.00
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <!-- STATUS -->
+                    <div class="rounded-[20px] border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-4 mt-4">
+
+                        <p class="text-[11px] uppercase tracking-wider text-amber-600 font-black">
+                            CURRENT STATUS
+                        </p>
+
+                        <div class="mt-2">
+
+                            <p
+                                id="summaryStatus"
+                                class="font-black">
+
+                                <span class="text-slate-500">
+                                    Not Started
+                                </span>
+
+                            </p>
+
+                        </div>
+
+                    </div>
+                    <!-- QUARTER TOTAL -->
+                    <div
+                        class="mt-4
+                            rounded-2xl
+                            bg-blue-50
+                            border
+                            border-blue-100
+                            p-4">
+
+                        <p class="text-xs text-blue-500">
+                            Quarter Target Total
+                        </p>
+
+                        <p
+                            id="summaryQuarterTargetTotal"
+                            class="text-xl font-black text-[#06142f] mt-1">
+                            0.00
+                        </p>
+
+                    </div>
+
+                    <!-- QUARTER STATUS -->
+                    <div
+                        id="summaryQuarterStatusBox"
+                        class="mt-4
+                            rounded-2xl
+                            bg-slate-50
+                            border
+                            border-slate-200
+                            p-4">
+
+                        <p class="text-xs text-slate-500">
+                            Quarter vs Base
+                        </p>
+
+                        <p
+                            id="summaryQuarterMatchStatus"
+                            class="font-black text-slate-900 mt-1">
+                            Optional
+                        </p>
+
+                    </div>
+
+                    <!-- SUBMIT -->
+                    <div class="mt-6">
+
+                        <button
+                            type="submit"
+                            class="w-full
+                                bg-[#06142f]
+                                hover:bg-[#0b1f46]
+                                text-white
+                                font-black
+                                py-4
+                                rounded-2xl
+                                transition
+                                shadow-lg">
+
+                            Create My KPI
+
+                        </button>
+
+                    </div>
+
                 </div>
+
             </aside>
 
         </div>
@@ -1340,8 +2111,8 @@
 
     const form = document.getElementById('createKpiForm');
 
-    const categoryInput = document.getElementById('category');
-    const subCategoryInput = document.getElementById('subCategory');
+    const categoryInputs = document.querySelectorAll('input[name="category"]');
+    const subCategoryContainer = document.getElementById('subCategoryContainer');
 
     const unitInput = document.getElementById('unit');
 
@@ -1360,45 +2131,55 @@
     |--------------------------------------------------------------------------
     */
 
-    function updateSubCategories() {
-
-        const selectedCategory = categoryInput.value;
+    function updateSubCategories(){
+        const selectedCategory = document.querySelector('input[name="category"]:checked')?.value || '';
         const oldSubCategory = @json(old('sub_category'));
 
-        subCategoryInput.innerHTML = '';
+        subCategoryContainer.innerHTML='';
 
-        if (
-            !selectedCategory ||
-            !subCategories[selectedCategory]
-        ) {
-
-            subCategoryInput.innerHTML =
-                '<option value="">Select Category first</option>';
-
+        if(
+            !selectedCategory || !subCategories[selectedCategory]
+        ){
+            subCategoryContainer.innerHTML= `<div class="text-xs text-slate-400">Choose a category</div>`;
             updateSummary();
-
             return;
         }
 
-        subCategoryInput.innerHTML =
-            '<option value="">Select Sub Category</option>';
+        subCategories[selectedCategory]
+        .forEach(subCategory=>{
 
-        subCategories[selectedCategory].forEach(subCategory => {
+            subCategoryContainer.innerHTML +=
+            `<label class="cursor-pointer">
+                <input type="radio"hidden class="sub-radio"name="sub_category"
+                    value="${subCategory}"
+                    ${
+                        oldSubCategory === subCategory
+                        ? 'checked'
+                        : ''
+                    }
+                >
 
-            const option = document.createElement('option');
-
-            option.value = subCategory;
-            option.textContent = subCategory;
-
-            if (oldSubCategory === subCategory) {
-                option.selected = true;
-            }
-
-            subCategoryInput.appendChild(option);
-
+                <div class="sub-card">
+                    <div class="font-semibold text-sm text-slate-800">
+                        ${subCategory}
+                    </div>
+                </div>
+            </label>
+            `;
         });
 
+        bindSubCategoryEvents();
         updateSummary();
+    }
+
+    function bindSubCategoryEvents(){
+        document .querySelectorAll('input[name="sub_category"]')
+        .forEach(input=>{
+            input.addEventListener(
+                'change',
+                updateSummary
+            );
+        });
     }
 
     /*
@@ -1446,19 +2227,35 @@
             targetTotal += Number(input.value || 0);
         });
 
-        document.getElementById('quarterTargetTotal')
-            .textContent = formatValue(targetTotal);
+        document.getElementById(
+            'summaryQuarterTargetTotal'
+        ).textContent =
+            formatValue(targetTotal);
 
         const base = Number(baseTarget.value || 0);
 
         const statusText =
-            document.getElementById('quarterMatchStatus');
+            document.getElementById(
+                'summaryQuarterMatchStatus'
+            );
 
         const statusBox =
-            document.getElementById('quarterStatusBox');
+            document.getElementById(
+                'summaryQuarterStatusBox'
+            );
 
-        statusBox.className =
-            'metric-card p-5';
+        const summaryStatusText =
+            document.getElementById(
+                'summaryQuarterMatchStatus'
+            );
+
+        const summaryStatusBox =
+            document.getElementById(
+                'summaryQuarterStatusBox'
+            );
+
+        summaryStatusBox.className =
+            'mt-4 rounded-2xl border p-4';
 
         /*
         |--------------------------------------------------------------------------
@@ -1469,6 +2266,9 @@
         if (targetTotal <= 0) {
 
             statusText.textContent = 'Optional';
+
+            summaryStatusText.textContent =
+                statusText.textContent;
 
             statusText.className =
                 'text-sm font-black text-blue-700';
@@ -1564,63 +2364,53 @@
     |--------------------------------------------------------------------------
     */
 
-    function updateStatusBadge() {
-
-        const badge =
-            document.getElementById('summaryStatus');
-
-        const status = statusInput.value;
-
-        const labelMap = {
-            not_started: 'Not Started',
-            on_track: 'On Track',
-            at_risk: 'At Risk',
-            in_trouble: 'In Trouble',
-            completed: 'Completed'
-        };
-
-        badge.textContent =
-            labelMap[status] || '-';
-
-        badge.className =
-            'inline-flex mt-1 px-3 py-1 rounded-full text-xs font-black';
-
-        if (status === 'not_started') {
-            badge.classList.add(
-                'bg-slate-100',
-                'text-slate-700'
+    function updateStatusBadge()
+    {
+        const indicator =
+            document.getElementById(
+                'summaryStatus'
             );
+
+        if(!indicator){
+            return;
         }
 
-        if (status === 'on_track') {
-            badge.classList.add(
-                'bg-blue-100',
-                'text-blue-700'
-            );
-        }
+        switch(statusInput.value)
+        {
+            case 'on_track':
 
-        if (status === 'at_risk') {
-            badge.classList.add(
-                'bg-amber-100',
-                'text-amber-700'
-            );
-        }
+                indicator.innerHTML =
+                    '<span class="text-blue-600">On Track</span>';
 
-        if (status === 'in_trouble') {
-            badge.classList.add(
-                'bg-red-100',
-                'text-red-700'
-            );
-        }
+                break;
 
-        if (status === 'completed') {
-            badge.classList.add(
-                'bg-emerald-100',
-                'text-emerald-700'
-            );
+            case 'at_risk':
+
+                indicator.innerHTML =
+                    '<span class="text-orange-500">At Risk</span>';
+
+                break;
+
+            case 'in_trouble':
+
+                indicator.innerHTML =
+                    '<span class="text-red-600">In Trouble</span>';
+
+                break;
+
+            case 'completed':
+
+                indicator.innerHTML =
+                    '<span class="text-emerald-600">Completed</span>';
+
+                break;
+
+            default:
+
+                indicator.innerHTML =
+                    '<span class="text-slate-500">Not Started</span>';
         }
     }
-
     /*
     |--------------------------------------------------------------------------
     | SUMMARY
@@ -1633,13 +2423,18 @@
             .textContent =
                 kpiTitle.value || 'Not entered yet';
 
-        document.getElementById('summaryCategory')
-            .textContent =
-                categoryInput.value || '-';
+        const selectedCategory =
+            document.querySelector(
+                'input[name="category"]:checked'
+            )?.value || '-';
 
-        document.getElementById('summarySubCategory')
-            .textContent =
-                subCategoryInput.value || '-';
+            document.getElementById(
+                'summaryCategory'
+            ).textContent =
+            selectedCategory;
+
+        document.getElementById('summarySubCategory').textContent =
+        document.querySelector('input[name="sub_category"]:checked')?.value || '-';
 
         document.getElementById('summaryBase')
             .textContent =
@@ -1652,6 +2447,7 @@
         updateQuarterTotals();
         updateStatusBadge();
         updateStatusTheme();
+        updateCompletion();
     }
 
     /*
@@ -1711,49 +2507,6 @@
 
         /*
         |--------------------------------------------------------------------------
-        | QUARTER DATE VALIDATION
-        |--------------------------------------------------------------------------
-        */
-
-        let invalidDate = false;
-
-        ['Q1','Q2','Q3','Q4'].forEach(q => {
-
-            const start =
-                document.querySelector(
-                    `[name="quarters[${q}][start_date]"]`
-                ).value;
-
-            const end =
-                document.querySelector(
-                    `[name="quarters[${q}][end_date]"]`
-                ).value;
-
-            if (
-                start &&
-                end &&
-                end < start
-            ) {
-
-                invalidDate = true;
-
-            }
-
-        });
-
-        if (invalidDate) {
-
-            event.preventDefault();
-
-            alert(
-                'Quarter end date cannot be earlier than start date.'
-            );
-
-            return;
-        }
-
-        /*
-        |--------------------------------------------------------------------------
         | PREVENT DOUBLE SUBMIT
         |--------------------------------------------------------------------------
         */
@@ -1774,15 +2527,14 @@
     |--------------------------------------------------------------------------
     */
 
-    categoryInput.addEventListener(
-        'change',
-        updateSubCategories
-    );
+    categoryInputs.forEach(input => {
 
-    subCategoryInput.addEventListener(
-        'change',
-        updateSummary
-    );
+        input.addEventListener(
+            'change',
+            updateSubCategories
+        );
+
+    });
 
     unitInput.addEventListener(
         'change',
@@ -1876,126 +2628,174 @@
 
     }
 
-    updateSubCategories();
-    updateSummary();
-
-document.addEventListener('DOMContentLoaded', () => {
-
-    const currentYear = new Date().getFullYear();
-
     const quarterRanges = {
 
-        Q1: {
-            start: `${currentYear}-01-01`,
-            end: `${currentYear}-03-31`
+        Q1:{
+            start:'{{ str_replace("FY","",$fy ?? "FY".now()->year) }}-01-01',
+            end:'{{ str_replace("FY","",$fy ?? "FY".now()->year) }}-03-31'
         },
 
-        Q2: {
-            start: `${currentYear}-04-01`,
-            end: `${currentYear}-06-30`
+        Q2:{
+            start:'{{ str_replace("FY","",$fy ?? "FY".now()->year) }}-04-01',
+            end:'{{ str_replace("FY","",$fy ?? "FY".now()->year) }}-06-30'
         },
 
-        Q3: {
-            start: `${currentYear}-07-01`,
-            end: `${currentYear}-09-30`
+        Q3:{
+            start:'{{ str_replace("FY","",$fy ?? "FY".now()->year) }}-07-01',
+            end:'{{ str_replace("FY","",$fy ?? "FY".now()->year) }}-09-30'
         },
 
-        Q4: {
-            start: `${currentYear}-10-01`,
-            end: `${currentYear}-12-31`
+        Q4:{
+            start:'{{ str_replace("FY","",$fy ?? "FY".now()->year) }}-10-01',
+            end:'{{ str_replace("FY","",$fy ?? "FY".now()->year) }}-12-31'
         }
 
     };
 
-    ['Q1','Q2','Q3','Q4'].forEach((quarter) => {
+    ['Q1','Q2','Q3','Q4'].forEach(q=>{
 
-        const startInput = document.querySelector(
-            `input[name="quarters[${quarter}][start_date]"]`
-        );
+        const start =
+            document.querySelector(
+                `[name="quarters[${q}][start_date]"]`
+            ).value;
 
-        const endInput = document.querySelector(
-            `input[name="quarters[${quarter}][end_date]"]`
-        );
+        const end =
+            document.querySelector(
+                `[name="quarters[${q}][end_date]"]`
+            ).value;
 
-        if(startInput){
-
-            /*
-            |--------------------------------------------------------------------------
-            | AUTO SET DEFAULT DATE
-            |--------------------------------------------------------------------------
-            */
-
-            if(!startInput.value){
-
-                startInput.value =
-                    quarterRanges[quarter].start;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | LIMIT RANGE
-            |--------------------------------------------------------------------------
-            */
-
-            startInput.min =
-                quarterRanges[quarter].start;
-
-            startInput.max =
-                quarterRanges[quarter].end;
-
-            /*
-            |--------------------------------------------------------------------------
-            | WHEN START CHANGE
-            |--------------------------------------------------------------------------
-            */
-
-            startInput.addEventListener('change', () => {
-
-                if(endInput){
-
-                    endInput.min = startInput.value;
-
-                    if(endInput.value < startInput.value){
-
-                        endInput.value = startInput.value;
-                    }
-                }
-
-            });
-
+        if(
+            start < quarterRanges[q].start
+            ||
+            start > quarterRanges[q].end
+        ){
+            throw new Error(
+                `${q} start date outside quarter`
+            );
         }
 
-        if(endInput){
-
-            /*
-            |--------------------------------------------------------------------------
-            | AUTO SET DEFAULT DATE
-            |--------------------------------------------------------------------------
-            */
-
-            if(!endInput.value){
-
-                endInput.value =
-                    quarterRanges[quarter].end;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | LIMIT RANGE
-            |--------------------------------------------------------------------------
-            */
-
-            endInput.min =
-                quarterRanges[quarter].start;
-
-            endInput.max =
-                quarterRanges[quarter].end;
-
+        if(
+            end < quarterRanges[q].start
+            ||
+            end > quarterRanges[q].end
+        ){
+            throw new Error(
+                `${q} end date outside quarter`
+            );
         }
 
     });
 
-});
+    updateSubCategories();
+    updateSummary();
+    updateStatusBadge();
+
+function updateCompletion(){
+
+    let total = 6;
+    let completed = 0;
+
+    if(
+        document.querySelector(
+            'input[name="category"]:checked'
+        )
+    ){
+        completed++;
+    }
+
+    if(
+        document.querySelector(
+            'input[name="sub_category"]:checked'
+        )
+    ){
+        completed++;
+    }
+
+    if(kpiTitle.value){
+        completed++;
+    }
+
+    if(baseTarget.value){
+        completed++;
+    }
+
+    if(stretchTarget.value){
+        completed++;
+    }
+
+    if(statusInput.value){
+        completed++;
+    }
+
+    const percent =
+        Math.round(
+            (completed / total) * 100
+        );
+
+    document.getElementById(
+        'completionPercent'
+    ).textContent =
+        percent + '%';
+
+    document.getElementById(
+        'completionBar'
+    ).style.width =
+        percent + '%';
+}
+
+const sections =
+document.querySelectorAll(
+    '[id^="section"]'
+);
+
+const navItems =
+document.querySelectorAll(
+    '.step-nav'
+);
+
+window.addEventListener(
+    'scroll',
+    () => {
+
+        let current = '';
+
+        sections.forEach(section => {
+
+            const top =
+                section.offsetTop - 150;
+
+            if(
+                window.scrollY >= top
+            ){
+                current =
+                    section.id;
+            }
+
+        });
+
+        navItems.forEach(item => {
+
+            item.classList.remove(
+                'text-blue-600',
+                'font-black'
+            );
+
+            const href =
+                item.getAttribute('href');
+
+            if(
+                href === '#' + current
+            ){
+                item.classList.add(
+                    'text-blue-600',
+                    'font-black'
+                );
+            }
+
+        });
+
+    }
+);
 
 </script>
 
