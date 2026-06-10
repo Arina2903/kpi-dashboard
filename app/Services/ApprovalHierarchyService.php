@@ -80,45 +80,10 @@ class ApprovalHierarchyService
 
             /*
             |--------------------------------------------------------------------------
-            | CCO
-            |--------------------------------------------------------------------------
-            */
-            case 'CCO':
-
-                if (
-                    !empty($employee['reports_to_id'])
-                ) {
-                    return $this->employee(
-                        $employee['reports_to_id']
-                    );
-                }
-
-                return null;
-
-            /*
-            |--------------------------------------------------------------------------
-            | CCMO
-            |--------------------------------------------------------------------------
-            */
-            case 'CCMO':
-
-                if (
-                    !empty($employee['reports_to_id'])
-                ) {
-                    return $this->employee(
-                        $employee['reports_to_id']
-                    );
-                }
-
-                return null;
-
-            /*
-            |--------------------------------------------------------------------------
-            | SLT / ADMIN
+            | SLT — top of hierarchy, no approver
             |--------------------------------------------------------------------------
             */
             case 'SLT':
-            case 'ADMIN':
 
                 return null;
 

@@ -30,14 +30,12 @@
         $currentDepartment = $user['department_code'] ?? '-';
         $currentFinancialYear = $currentFinancialYear ?? ('FY' . now()->year);
 
-        $companyRoles = ['SLT', 'CCO', 'CCMO', 'ADMIN'];
-        $vpRoles = ['VP'];
-        $deptRoles = ['MANAGER', 'EXECUTIVE'];
+        $deptRoles = ['VP', 'MANAGER', 'EXECUTIVE'];
 
-        $canViewCompanyDashboard = in_array($role, $companyRoles);
-        $canViewAllDepartmentPerformance = in_array($role, array_merge($companyRoles, $vpRoles));
-        $canViewStaffAction = in_array($role, $companyRoles);
-        $isDepartmentUser = in_array($role, $deptRoles);
+        $canViewCompanyDashboard         = $role === 'SLT';
+        $canViewAllDepartmentPerformance = $role === 'SLT';
+        $canViewStaffAction              = $role === 'SLT';
+        $isDepartmentUser                = in_array($role, $deptRoles);
 
         $kpiCollection = collect($kpis ?? []);
 

@@ -82,9 +82,7 @@ class KpiController extends Controller
 
         $role = strtoupper(trim($user['role'] ?? ''));
 
-        $canSwitchDepartment = in_array($role, [
-            'ADMIN', 'SLT', 'CCO', 'CCMO', 'VP',
-        ]);
+        $canSwitchDepartment = $role === 'SLT';
 
         $selectedDepartmentCode = session('selected_department_code')
             ?? $user['department_code']
@@ -120,7 +118,7 @@ class KpiController extends Controller
         $employees = [];
         $kpis = [];
 
-        if (in_array($role, ['ADMIN', 'SLT', 'CCO', 'CCMO', 'VP'])) {
+        if ($role === 'SLT') {
             $selectedDepartmentCode = session('selected_department_code')
                 ?? $user['department_code'];
 
@@ -138,9 +136,9 @@ class KpiController extends Controller
                 'is_active' => 'eq.true',
                 'select' => 'id,employee_id,short_name,role,department_code',
             ]) ?? [];
-        } elseif ($role === 'MANAGER') {
+        } elseif ($role === 'VP') {
             $kpis = $supabase->get('kpis', [
-                'company_code' => 'eq.' . $user['company_code'],
+                'company_code'  => 'eq.' . $user['company_code'],
                 'department_code' => 'eq.' . $user['department_code'],
                 'financial_year' => 'eq.' . $fy,
                 'select' => '*',
@@ -148,7 +146,56 @@ class KpiController extends Controller
             ]) ?? [];
 
             $employees = $supabase->get('employees', [
+                'company_code'   => 'eq.' . $user['company_code'],
+                'department_code' => 'eq.' . $user['department_code'],
+                'is_active' => 'eq.true',
+                'select' => 'id,employee_id,short_name,role,department_code',
+            ]) ?? [];
+
+            /*
+            |------------------------------------------------------------------
+            | COMPANY-WIDE DEPT SUMMARY (lightweight, no quarters)
+            |------------------------------------------------------------------
+            */
+            $allCompanyKpis = $supabase->get('kpis', [
+                'company_code'   => 'eq.' . $user['company_code'],
+                'financial_year' => 'eq.' . $fy,
+                'select'         => 'department_code,base_target,actual_value',
+            ]) ?? [];
+
+            $deptNameMap = collect($supabase->get('departments', [
                 'company_code' => 'eq.' . $user['company_code'],
+                'select'       => 'code,name',
+            ]) ?? [])->keyBy('code')->map(fn($d) => $d['name'])->toArray();
+
+            $vpDeptSummaries = collect($allCompanyKpis)
+                ->groupBy('department_code')
+                ->map(function ($group, $code) use ($deptNameMap, $user) {
+                    $totalBase   = $group->sum(fn($k) => (float)($k['base_target'] ?? 0));
+                    $totalActual = $group->sum(fn($k) => (float)($k['actual_value'] ?? 0));
+                    return [
+                        'dept_code'   => $code,
+                        'dept_name'   => $deptNameMap[$code] ?? $code,
+                        'kpi_count'   => $group->count(),
+                        'performance' => $totalBase > 0 ? round(($totalActual / $totalBase) * 100, 1) : 0,
+                        'is_own'      => $code === ($user['department_code'] ?? ''),
+                    ];
+                })
+                ->sortByDesc(fn($d) => $d['is_own'] ? 9999 : $d['performance'])
+                ->values()
+                ->toArray();
+
+        } elseif ($role === 'MANAGER') {
+            $kpis = $supabase->get('kpis', [
+                'company_code'  => 'eq.' . $user['company_code'],
+                'department_code' => 'eq.' . $user['department_code'],
+                'financial_year' => 'eq.' . $fy,
+                'select' => '*',
+                'order' => 'created_at.desc',
+            ]) ?? [];
+
+            $employees = $supabase->get('employees', [
+                'company_code'   => 'eq.' . $user['company_code'],
                 'department_code' => 'eq.' . $user['department_code'],
                 'is_active' => 'eq.true',
                 'select' => 'id,employee_id,short_name,role,department_code',
@@ -228,11 +275,17 @@ class KpiController extends Controller
         |--------------------------------------------------------------------------
         */
 
+        $assignmentStatusMap = collect($assignments)
+            ->keyBy('kpi_id')
+            ->map(fn($a) => $a['assignment_status'] ?? 'pending')
+            ->toArray();
+
         $assignedKpis = collect($assignedKpis)
 
-            ->map(function ($kpi) {
+            ->map(function ($kpi) use ($assignmentStatusMap) {
 
                 $kpi['is_assigned_kpi'] = true;
+                $kpi['assignment_status_for_me'] = $assignmentStatusMap[$kpi['id']] ?? 'pending';
 
                 return $kpi;
 
@@ -319,6 +372,58 @@ class KpiController extends Controller
             ]) ?? [];
         }
     }
+
+        /*
+        |--------------------------------------------------------------------------
+        | ASSIGNMENT PROCESSING (ALL ROLES)
+        | For ADMIN/MANAGER the role branch only fetches dept KPIs — assignments
+        | are never marked. Run this for any role where $assignments wasn't set.
+        |--------------------------------------------------------------------------
+        */
+        if (!isset($assignments)) {
+            $assignments = $supabase->get('kpi_assignments', [
+                'assigned_employee_id' => 'eq.' . $user['id'],
+                'select' => '*',
+            ]) ?? [];
+
+            if (!empty($assignments)) {
+                $assignedKpiIds = collect($assignments)
+                    ->pluck('kpi_id')->filter()->unique()->values()->toArray();
+
+                $assignmentStatusMap = collect($assignments)
+                    ->keyBy('kpi_id')
+                    ->map(fn($a) => $a['assignment_status'] ?? 'pending')
+                    ->toArray();
+
+                // Fetch assigned KPIs not already in $kpis (e.g. from another dept)
+                $existingIds = collect($kpis)->pluck('id')->toArray();
+                $missingIds  = array_values(array_diff($assignedKpiIds, $existingIds));
+
+                if (!empty($missingIds)) {
+                    $extraKpis = $supabase->get('kpis', [
+                        'id'             => 'in.(' . implode(',', $missingIds) . ')',
+                        'financial_year' => 'eq.' . $fy,
+                        'select'         => '*',
+                        'order'          => 'created_at.desc',
+                    ]) ?? [];
+                    $kpis = array_merge($kpis, $extraKpis);
+                }
+
+                // Mark is_assigned_kpi on relevant records
+                $kpis = collect($kpis)->map(function ($kpi) use ($assignedKpiIds, $assignmentStatusMap, $user) {
+                    if (
+                        in_array($kpi['id'], $assignedKpiIds)
+                        && ($kpi['employee_id'] ?? '') !== ($user['id'] ?? '')
+                    ) {
+                        $kpi['is_assigned_kpi'] = true;
+                        $kpi['assignment_status_for_me'] = $assignmentStatusMap[$kpi['id']] ?? 'pending';
+                    } else {
+                        $kpi['is_assigned_kpi'] = $kpi['is_assigned_kpi'] ?? false;
+                    }
+                    return $kpi;
+                })->values()->toArray();
+            }
+        }
 
         $employeeMap = collect($employees)->keyBy('id');
 
@@ -723,6 +828,12 @@ class KpiController extends Controller
             return $kpi;
        })->toArray();
 
+        $indexAssignedKpis = collect($kpis)
+            ->filter(fn($k) => ($k['is_assigned_kpi'] ?? false) === true
+                && ($k['employee_id'] ?? '') !== ($user['id'] ?? ''))
+            ->values()
+            ->toArray();
+
         return view('kpi.index', array_merge([
 
             'user' => $user,
@@ -734,6 +845,10 @@ class KpiController extends Controller
             'employees' => $employees,
 
             'kpis' => $kpis,
+
+            'indexAssignedKpis' => $indexAssignedKpis,
+
+            'vpDeptSummaries' => $vpDeptSummaries ?? [],
 
         ], $this->sidebarData($supabase, $user)));
     }
@@ -777,14 +892,296 @@ class KpiController extends Controller
         |--------------------------------------------------------------------------
         */
 
+        /*
+        |--------------------------------------------------------------------------
+        | MY ASSIGNMENTS
+        |--------------------------------------------------------------------------
+        */
+
+        $myAssignments = collect($supabase->get(
+            'kpi_assignments',
+            [
+                'assigned_employee_id'
+                    => 'eq.' . $user['id'],
+
+                'select'
+                    => '*',
+            ]
+        ) ?? [])
+            ->filter(fn($a) => ($a['owner_employee_id'] ?? '') !== ($user['id'] ?? ''))
+            ->values()
+            ->toArray();
+
+        /*
+        |--------------------------------------------------------------------------
+        | OWNER INFO
+        |--------------------------------------------------------------------------
+        */
+
+        $ownerIds = collect($myAssignments)
+            ->pluck('owner_employee_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+        $owners = [];
+
+        if(!empty($ownerIds)){
+            $owners = $supabase->get(
+                'employees',
+                [
+                    'id'
+                        => 'in.('
+                        . implode(',', $ownerIds)
+                        . ')',
+
+                    'select'
+                        => 'id,short_name,role'
+                ]
+            ) ?? [];
+        }
+
+        $ownerMap = collect($owners) ->keyBy('id');
+
+        /*
+        |--------------------------------------------------------------------------
+        | ASSIGNED KPI DETAILS
+        |--------------------------------------------------------------------------
+        */
+
+        $assignedKpiIds = collect($myAssignments)
+            ->pluck('kpi_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+        $assignedKpis = [];
+
+        if(!empty($assignedKpiIds)){
+            $assignedKpis = $supabase->get(
+                'kpis',
+                [
+                    'id'
+                        => 'in.('
+                        . implode(',',$assignedKpiIds)
+                        . ')',
+
+                    'financial_year'
+                        => 'eq.' . $fy,
+
+                    'select'
+                        => '*'
+                ]
+            ) ?? [];
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | ENRICH ASSIGNMENTS
+        |--------------------------------------------------------------------------
+        */
+
+        $myAssignments = collect($myAssignments)
+            ->map(function($assignment) use ($ownerMap){
+                $owner =
+                    $ownerMap->get(
+                        $assignment['owner_employee_id']
+                    );
+
+                $assignment['owner_name']
+                    = $owner['short_name']
+                    ?? 'Unknown';
+
+                $assignment['owner_role']
+                    = $owner['role']
+                    ?? '-';
+
+                return $assignment;
+
+            })
+
+            ->toArray();
+
+        /*
+        |--------------------------------------------------------------------------
+        | ASSIGNMENT CARDS
+        |--------------------------------------------------------------------------
+        */
+
+        $assignmentCards = [];
+
+        foreach($myAssignments as $assignment){
+
+            $kpi = collect($assignedKpis)
+                ->firstWhere(
+                    'id',
+                    $assignment['kpi_id']
+                );
+
+            if(!$kpi){
+                continue;
+            }
+
+            $owner =
+                $ownerMap->get(
+                    $assignment['owner_employee_id']
+                );
+
+            /*
+            |--------------------------------------------------------------------------
+            | LOAD QUARTERS
+            |--------------------------------------------------------------------------
+            */
+
+            $quarters = $supabase->get(
+                'kpi_quarters',
+                [
+                    'kpi_id'
+                        => 'eq.' . $kpi['id'],
+
+                    'select'
+                        => '*',
+
+                    'order'
+                        => 'quarter.asc',
+                ]
+            ) ?? [];
+
+            $assignmentCards[] = [
+
+                'assignment_id'
+                    => $assignment['id'],
+
+                'owner_id'
+                    => $assignment['owner_employee_id'],
+
+                'owner_name'
+                    => $owner['short_name'] ?? '-',
+
+                'owner_role'
+                    => $owner['role'] ?? '-',
+
+                'status'
+                    => $assignment['assignment_status']
+                    ?? 'pending',
+
+                'kpi_id'
+                    => $kpi['id'],
+
+                'category'
+                    => $kpi['category']
+                    ?? '-',
+
+                'sub_category'
+                    => $kpi['sub_category']
+                    ?? '-',
+
+                'kpi_title'
+                    => $kpi['kpi_title']
+                    ?? '-',
+
+                'kpi_description'
+                    => $kpi['kpi_description']
+                    ?? '-',
+
+                'unit'
+                    => $kpi['unit']
+                    ?? '-',
+
+                'base_target'
+                    => $kpi['base_target']
+                    ?? 0,
+
+                'stretch_target'
+                    => $kpi['stretch_target']
+                    ?? 0,
+
+                'weightage'
+                    => $kpi['weightage']
+                    ?? 0,
+
+                'actual_value'
+                    => $kpi['actual_value']
+                    ?? 0,
+
+                'remark'
+                    => $kpi['remark']
+                    ?? '-',
+
+                'quarters'
+                    => $quarters,
+
+                'created_at'
+                    => $assignment['created_at']
+                    ?? null,
+
+            ];
+
+        }
+
+        $assignmentCards = collect($assignmentCards)
+            ->sortByDesc('created_at')
+            ->values()
+            ->toArray();
+
+        $assignmentGroups =
+            collect($assignmentCards)
+                ->groupBy('owner_id')
+                ->map(function ($items) {
+                    return [
+                        'owner_id' =>
+                            $items->first()['owner_id'],
+
+                        'owner_name' =>
+                            $items->first()['owner_name'],
+
+                        'owner_role' =>
+                            $items->first()['owner_role'],
+
+                        'kpis' =>
+                            $items
+                                ->sortByDesc('created_at')
+                                ->values()
+                                ->toArray()
+                    ];
+                })
+                ->values()
+                ->toArray();
+
+        $pendingAssignments =
+            collect($myAssignments)
+                ->where(
+                    'assignment_status',
+                    'pending'
+                )
+                ->count();
+
+        $acceptedAssignments =
+            collect($myAssignments)
+                ->where(
+                    'assignment_status',
+                    'accepted'
+                )
+                ->count();
+
+        $rejectedAssignments =
+            collect($myAssignments)
+                ->where(
+                    'assignment_status',
+                    'rejected'
+                )
+                ->count();
+
         return view('kpi.create', array_merge([
-
             'user' => $user,
-
             'fy' => $fy,
-
             'reportingStaff' => $reportingStaff,
-
+            'myAssignments' => $myAssignments,
+            'assignmentCards' => $assignmentCards,
+            'assignmentGroups' => $assignmentGroups,
+            'pendingAssignments' => $pendingAssignments,
+            'acceptedAssignments' => $acceptedAssignments,
+            'rejectedAssignments' => $rejectedAssignments,
         ], $this->sidebarData($supabase, $user)));
     }
 
@@ -910,18 +1307,16 @@ class KpiController extends Controller
             ]) ?? [];
 
             if (empty($existingAssignment)) {
-
-                $supabase->safeInsert('kpi_assignments', [
-
-                    'kpi_id' => $kpiId,
-
-                    'owner_employee_id' => $user['id'],
-
-                    'assigned_employee_id' => $validated['assigned_employee_id'],
-
-                    'created_at' => $this->nowMy(),
-
-                ]);
+                $supabase->safeInsert(
+                    'kpi_assignments',
+                    [
+                        'kpi_id' => $kpiId,
+                        'owner_employee_id' => $user['id'],
+                        'assigned_employee_id' => $validated['assigned_employee_id'],
+                        'assignment_status' => 'pending',
+                        'created_at' => $this->nowMy(),
+                    ]
+                );
 
             }
 
@@ -1004,9 +1399,10 @@ class KpiController extends Controller
         $quarterDateError = $this->validateQuarterDates($validated['quarters'] ?? []);
 
         if ($quarterDateError) {
-            return back()
-                ->withErrors($quarterDateError)
-                ->withInput();
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $quarterDateError], 422);
+            }
+            return back()->withErrors($quarterDateError)->withInput();
         }
 
         $achievement = $this->calculateAchievement(
@@ -1031,31 +1427,20 @@ class KpiController extends Controller
             'weightage' => $validated['weightage'] ?? ($oldKpi['weightage'] ?? 0),
         ];
 
-        if(
-            !$supabase->safePatch(
-                'kpis',
-                [
-                    'id' => 'eq.' . $id,
-                ],
-                $updateData
-            )
-        ){
-            return back()
-                ->withErrors([
-                    'kpi' => 'Failed to update KPI.'
-                ])
-                ->withInput();
+        if (!$supabase->safePatch('kpis', ['id' => 'eq.' . $id], $updateData)) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to update KPI.'], 500);
+            }
+            return back()->withErrors(['kpi' => 'Failed to update KPI.'])->withInput();
         }
 
         $this->upsertQuarters($supabase, $id, $validated['quarters'] ?? []);
 
-        /*
-        |--------------------------------------------------------------------------
-        | KPI ASSIGNMENT
-        |--------------------------------------------------------------------------
-        */
-
         $this->recordKpiHistory($supabase, $oldKpi, $updateData, $id, $user);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'KPI updated successfully.']);
+        }
 
         return redirect()
             ->route('kpi.index')
@@ -1092,7 +1477,7 @@ class KpiController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        if (in_array($role, ['ADMIN', 'SLT'])) {
+        if ($role === 'SLT') {
 
             return ($user['company_code'] ?? null)
                 === ($kpi['company_code'] ?? null);
@@ -1100,23 +1485,11 @@ class KpiController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | CCO / CCMO / VP
+        | VP / MANAGER
         |--------------------------------------------------------------------------
         */
 
-        if (in_array($role, ['CCO', 'CCMO', 'VP'])) {
-
-            return ($user['company_code'] ?? null)
-                === ($kpi['company_code'] ?? null);
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | MANAGER
-        |--------------------------------------------------------------------------
-        */
-
-        if ($role === 'MANAGER') {
+        if (in_array($role, ['VP', 'MANAGER'])) {
 
             return ($user['department_code'] ?? null)
                 === ($kpi['department_code'] ?? null);
@@ -1420,15 +1793,41 @@ class KpiController extends Controller
             ->map(fn($items) => count($items))
             ->toArray();
 
+        $approver = app(\App\Services\ApprovalHierarchyService::class)
+            ->getApprover($user);
+
+        $myKpiIds = collect($kpis)->pluck('id')->filter()->values()->toArray();
+
+        $pendingWeightageRequests = [];
+
+        if(!empty($myKpiIds)){
+            $pendingRows = $supabase->get('kpi_target_change_requests', [
+                'requested_by' => 'eq.' . $user['id'],
+                'status'       => 'eq.pending',
+            ]) ?? [];
+            $pendingWeightageRequests = collect($pendingRows)
+                ->filter(fn($r) => str_starts_with($r['reason'] ?? '', '[[WC]]'))
+                ->map(function($r){
+                    $r['reason']       = substr($r['reason'], 6);
+                    $r['old_weightage'] = $r['old_base_target'] ?? 0;
+                    $r['new_weightage'] = $r['new_base_target'] ?? 0;
+                    return $r;
+                })
+                ->keyBy('kpi_id')
+                ->toArray();
+        }
+
         return view('kpi.weightage', array_merge([
 
-            'user' => $user,
-            'permission' => $permission,
-            'fy' => $fy,
-            'employees' => $employees,
-            'kpis' => $kpis,
-            'kpiCountByUser' => $kpiCountByUser,
-            'kpiCountByDepartment' => $kpiCountByDepartment,
+            'user'                     => $user,
+            'permission'               => $permission,
+            'fy'                       => $fy,
+            'employees'                => $employees,
+            'kpis'                     => $kpis,
+            'kpiCountByUser'           => $kpiCountByUser,
+            'kpiCountByDepartment'     => $kpiCountByDepartment,
+            'approver'                 => $approver,
+            'pendingWeightageRequests' => $pendingWeightageRequests,
 
         ], $this->sidebarData($supabase, $user)));
     }
@@ -2159,104 +2558,215 @@ class KpiController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        public function updateQuarterActual(Request $request)
-        {
-            $user = $this->currentUser($this->supabase);
+    public function updateQuarterActual(
+        Request $request
+    )
+    {
+        $validated = $request->validate([
 
-            $validated = $request->validate([
-                'kpi_id' => 'required|string',
-                'quarter' => 'required|string|in:Q1,Q2,Q3,Q4',
-                'remark' => 'nullable|string',
-            ]);
+            'quarter_id'
+                => 'required|string',
 
-            /*
-            |--------------------------------------------------------------------------
-            | KPI
-            |--------------------------------------------------------------------------
-            */
+            'quarter_actual'
+                => 'required|numeric|min:0',
 
-            $kpi = $this->findKpiOrFail(
-                $this->supabase,
-                $validated['kpi_id']
+        ]);
+
+        $quarterResult =
+            $this->supabase->get(
+
+                'kpi_quarters',
+
+                [
+
+                    'id'
+                        => 'eq.' .
+                        $validated['quarter_id'],
+
+                    'select'
+                        => '*',
+
+                    'limit'
+                        => 1
+
+                ]
+
+            ) ?? [];
+
+        if(empty($quarterResult)){
+
+            return response()->json([
+
+                'success' => false,
+
+                'message' =>
+                    'Quarter not found.'
+
+            ],404);
+        }
+
+        $quarter =
+            $quarterResult[0];
+
+        $today =
+            now('Asia/Kuala_Lumpur')
+            ->startOfDay();
+
+        $startDate =
+            \Carbon\Carbon::parse(
+                $quarter['start_date']
+            )->startOfDay();
+
+        $endDate =
+            \Carbon\Carbon::parse(
+                $quarter['end_date']
+            )->startOfDay();
+
+        /*
+        |--------------------------------------------------------------------------
+        | BEFORE START DATE
+        |--------------------------------------------------------------------------
+        */
+
+        if(
+            $today->lt(
+                $startDate
+            )
+        ){
+
+            return response()->json([
+
+                'success' => false,
+
+                'message' =>
+                    'Quarter has not started yet.'
+
+            ],422);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | AFTER END DATE
+        |--------------------------------------------------------------------------
+        */
+
+        if(
+            $today->gt(
+                $endDate
+            )
+        ){
+
+            return response()->json([
+
+                'success' => false,
+
+                'message' =>
+                    'Quarter already ended. Use approval request.'
+
+            ],422);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DIRECT SAVE
+        |--------------------------------------------------------------------------
+        */
+
+        $success =
+            $this->supabase->safePatch(
+
+                'kpi_quarters',
+
+                [
+                    'id'
+                        => 'eq.' .
+                        $quarter['id']
+                ],
+
+                [
+
+                    'quarter_actual'
+                        => (float)
+                        $validated['quarter_actual'],
+
+                    'updated_at'
+                        => $this->nowMy()
+
+                ]
+
             );
 
             /*
             |--------------------------------------------------------------------------
-            | LOCK EXPIRED QUARTER FOR EVERYONE
-            |--------------------------------------------------------------------------
-            |
-            | Everyone requires approval
-            | after quarter expired.
-            |
-            */
-
-            /*
-            |--------------------------------------------------------------------------
-            | FIND QUARTER
+            | RECALCULATE KPI TOTAL ACTUAL
             |--------------------------------------------------------------------------
             */
 
-            $quarters = $this->supabase->get('kpi_quarters', [
-                'kpi_id' => 'eq.' . $validated['kpi_id'],
-                'quarter' => 'eq.' . $validated['quarter'],
-                'select' => '*',
-                'limit' => 1,
-
-            ]) ?? [];
-
-            if (empty($quarters)) {
-
-                return response()->json([
-
-                    'success' => false,
-
-                    'message' => 'Quarter not found.'
-
-                ], 404);
-            }
-
-            $quarter = $quarters[0];
-
-            /*
-            |--------------------------------------------------------------------------
-            | UPDATE QUARTER
-            |--------------------------------------------------------------------------
-            */
-
-            if(
-                !$this->supabase->safePatch(
+            $allQuarters =
+                $this->supabase->get(
                     'kpi_quarters',
                     [
-                        'id' => 'eq.' . $quarter['id'],
-                    ],
-                    [
-                        'updated_at' => $this->nowMy(),
+                        'kpi_id'
+                            => 'eq.' .
+                            $quarter['kpi_id'],
+
+                        'select'
+                            => '*'
                     ]
-                )
-            ){
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to update quarter.'
-                ],500);
-            }
+                ) ?? [];
 
-            /*
-            |--------------------------------------------------------------------------
-            | RECALCULATE OVERALL ACTUAL
-            |--------------------------------------------------------------------------
-            */
+            $totalActual =
+                collect($allQuarters)
+                ->sum(
+                    fn($q)
+                    =>
+                    (float)
+                    ($q['quarter_actual'] ?? 0)
+                );
 
-            $allQuarters = $this->supabase->get('kpi_quarters', [
-                'kpi_id' => 'eq.' . $validated['kpi_id'],
-                'select' => '*',
-            ]) ?? [];
+            $this->supabase->safePatch(
+
+                'kpis',
+
+                [
+                    'id'
+                        => 'eq.' .
+                        $quarter['kpi_id']
+                ],
+
+                [
+
+                    'actual_value'
+                        => $totalActual,
+
+                    'updated_at'
+                        => $this->nowMy()
+
+                ]
+
+            );
+
+        if(!$success){
 
             return response()->json([
-                'success' => true,
-                'message'
-                    => 'Quarter details updated.'
-            ]);
+
+                'success' => false,
+
+                'message' =>
+                    'Failed to update quarter.'
+
+            ],500);
         }
+
+        return response()->json([
+
+            'success' => true,
+
+            'message' =>
+                'Actual updated successfully.'
+
+        ]);
+    }
 
         /*
         |--------------------------------------------------------------------------
@@ -2388,7 +2898,7 @@ class KpiController extends Controller
                 => 'required|numeric|min:0',
 
             'reason'
-                => 'required|min:20|max:1000',
+                => 'nullable|string|max:1000',
 
         ]);
 
@@ -2428,6 +2938,56 @@ class KpiController extends Controller
                 'success' => false,
                 'message' => 'Quarter not found.'
             ],404);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | REASON REQUIREMENT
+        |--------------------------------------------------------------------------
+        */
+
+        $today =
+            now('Asia/Kuala_Lumpur')
+            ->startOfDay();
+
+        $endDate =
+            Carbon::parse(
+                $quarter['end_date']
+            )->startOfDay();
+
+        $reasonRequired =
+            $today->gt($endDate)
+
+            ||
+
+            (
+                ($quarter['status'] ?? '')
+                === 'completed'
+            );
+
+        if(
+
+            $reasonRequired
+
+            &&
+
+            strlen(
+                trim(
+                    $validated['reason']
+                    ?? ''
+                )
+            ) < 20
+
+        ){
+
+            return response()->json([
+
+                'success' => false,
+
+                'message' =>
+                    'Reason minimum 20 characters.'
+
+            ],422);
         }
 
         $currentActual =
@@ -2913,21 +3473,42 @@ class KpiController extends Controller
         /*
         |--------------------------------------------------------------------------
         | TOTAL VALIDATION
+        | Single-KPI saves (initial allocation from 0%) skip the 100% rule.
+        | Multi-KPI saves (Save All / Equalize) must equal exactly 100%.
         |--------------------------------------------------------------------------
         */
 
-        $total = collect($weightages)
+        if(count($weightages) > 1){
 
-            ->sum(fn($v) => (float)$v);
+            $total = round(
+                collect($weightages)->sum(fn($v) => (float)$v),
+                2
+            );
 
-        $total = round($total, 2);
+            if(abs($total - 100) > 0.01){
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Total weightage must equal 100%'
+                ], 422);
+            }
 
-        if(abs($total - 100) > 0.01)
-        {
-            return response()->json([
-                'success' => false,
-                'message' => 'Total weightage must equal 100%'
-            ],422);
+        } else {
+
+            $singleKpiId = array_key_first($weightages ?? []);
+
+            if($singleKpiId){
+                $existingKpi = $this->supabase->first('kpis', [
+                    'id'          => 'eq.' . $singleKpiId,
+                    'employee_id' => 'eq.' . ($user['id'] ?? ''),
+                ]);
+
+                if((float)($existingKpi['weightage'] ?? 0) > 0){
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Changing an existing weightage requires approval. Use the approval request flow.'
+                    ], 422);
+                }
+            }
         }
 
         /*
@@ -3029,6 +3610,89 @@ class KpiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Weightage updated successfully.'
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACCEPT ASSIGNMENT
+    |--------------------------------------------------------------------------
+    */
+
+    public function acceptAssignment($id, SupabaseService $supabase)
+    {
+        $user = $this->currentUser($supabase);
+
+        $assignment = $supabase->get('kpi_assignments', [
+            'id'                    => 'eq.' . $id,
+            'assigned_employee_id'  => 'eq.' . $user['id'],
+            'assignment_status'     => 'eq.pending',
+            'select'                => '*',
+        ]) ?? [];
+
+        if (empty($assignment)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Assignment not found or already actioned.',
+            ], 404);
+        }
+
+        $supabase->safePatch(
+            'kpi_assignments',
+            ['id' => 'eq.' . $id],
+            [
+                'assignment_status' => 'accepted',
+                'accepted_at'       => $this->nowMy(),
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'KPI accepted successfully.',
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | REJECT ASSIGNMENT
+    |--------------------------------------------------------------------------
+    */
+
+    public function rejectAssignment(Request $request, $id, SupabaseService $supabase)
+    {
+        $user = $this->currentUser($supabase);
+
+        $validated = $request->validate([
+            'reason' => 'required|string|min:30',
+        ]);
+
+        $assignment = $supabase->get('kpi_assignments', [
+            'id'                    => 'eq.' . $id,
+            'assigned_employee_id'  => 'eq.' . $user['id'],
+            'assignment_status'     => 'eq.pending',
+            'select'                => '*',
+        ]) ?? [];
+
+        if (empty($assignment)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Assignment not found or already actioned.',
+            ], 404);
+        }
+
+        $supabase->safePatch(
+            'kpi_assignments',
+            ['id' => 'eq.' . $id],
+            [
+                'assignment_status'  => 'rejected',
+                'rejection_reason'   => $validated['reason'],
+                'rejected_at'        => $this->nowMy(),
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'KPI rejected.',
         ]);
     }
 }

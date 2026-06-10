@@ -261,14 +261,10 @@ class SupabaseService
             return true;
 
         } catch (\Throwable $e) {
-
-            dd([
-                'TABLE'   => $table,
-                'FILTERS' => $filters,
-                'DATA'    => $data,
-                'ERROR'   => $e->getMessage(),
+            \Illuminate\Support\Facades\Log::error('safePatch failed', [
+                'table' => $table, 'filters' => $filters, 'error' => $e->getMessage(),
             ]);
-
+            return false;
         }
     }
 
@@ -293,13 +289,10 @@ class SupabaseService
             return true;
 
         } catch (\Throwable $e) {
-            dd([
-                'TABLE' => $table,
-                'DATA' => $data,
-                'ERROR' => $e->getMessage(),
-                'LINE' => $e->getLine(),
-                'FILE' => $e->getFile(),
+            \Illuminate\Support\Facades\Log::error('safeInsert failed', [
+                'table' => $table, 'error' => $e->getMessage(),
             ]);
+            return false;
         }
     }
 
@@ -322,13 +315,10 @@ class SupabaseService
             return true;
 
         } catch (\Throwable $e) {
-            dd([
-                'TABLE' => $table,
-                'FILTERS' => $filters,
-                'ERROR' => $e->getMessage(),
-                'LINE' => $e->getLine(),
-                'FILE' => $e->getFile(),
+            \Illuminate\Support\Facades\Log::error('safeDelete failed', [
+                'table' => $table, 'filters' => $filters, 'error' => $e->getMessage(),
             ]);
+            return false;
         }
     }
 }

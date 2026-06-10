@@ -84,7 +84,7 @@
     </div>
 
     <!-- SUMMARY CARDS -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
 
         <div class="glass rounded-[20px] p-5 border border-white/70">
 
@@ -118,6 +118,18 @@
 
             <h2 class="text-3xl font-black mt-2 text-red-600">
                 {{ $deleteCount ?? 0 }}
+            </h2>
+
+        </div>
+
+        <div class="glass rounded-[20px] p-5 border border-white/70">
+
+            <p class="text-xs uppercase text-slate-500 font-black">
+                Weightage Requests
+            </p>
+
+            <h2 class="text-3xl font-black mt-2 text-orange-600">
+                {{ $weightageCount ?? 0 }}
             </h2>
 
         </div>
@@ -246,6 +258,10 @@
                         Delete Request
                     </option>
 
+                    <option value="weightage_change">
+                        Weightage Change
+                    </option>
+
                 </select>
 
             </div>
@@ -296,6 +312,9 @@
                         'delete_request'
                             => 'bg-red-50 text-red-700',
 
+                        'weightage_change'
+                            => 'bg-orange-50 text-orange-700',
+
                         default
                             => 'bg-slate-100 text-slate-700'
                     };
@@ -311,6 +330,9 @@
 
                         'delete_request'
                             => 'Delete Request',
+
+                        'weightage_change'
+                            => 'Weightage Change',
 
                         default
                             => 'Approval'
@@ -679,41 +701,49 @@
 
                         </div>
 
+                        @elseif($type === 'weightage_change')
+
+                        <div class="grid grid-cols-2 gap-4 mt-6">
+
+                            <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4">
+                                <p class="text-[10px] uppercase text-slate-400 font-black">Current Weightage</p>
+                                <h3 class="text-2xl font-black mt-2">
+                                    {{ number_format((float)($approval['old_weightage'] ?? 0), 2) }}%
+                                </h3>
+                            </div>
+
+                            <div class="rounded-2xl bg-orange-50 border border-orange-100 p-4">
+                                <p class="text-[10px] uppercase text-orange-500 font-black">Requested Weightage</p>
+                                <h3 class="text-2xl font-black mt-2 text-orange-700">
+                                    {{ number_format((float)($approval['new_weightage'] ?? 0), 2) }}%
+                                </h3>
+                                @php
+                                    $wtDiff = (float)($approval['new_weightage'] ?? 0) - (float)($approval['old_weightage'] ?? 0);
+                                @endphp
+                                <p class="text-[11px] {{ $wtDiff >= 0 ? 'text-emerald-600' : 'text-red-600' }} font-black mt-1">
+                                    {{ $wtDiff >= 0 ? '+' : '' }}{{ number_format($wtDiff, 2) }}%
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="mt-4 rounded-2xl bg-amber-50 border border-amber-100 p-5">
+                            <p class="text-[10px] uppercase text-amber-600 font-black">Reason from Employee</p>
+                            <p class="text-sm text-slate-700 mt-2 leading-relaxed">
+                                {{ $approval['reason'] ?? '-' }}
+                            </p>
+                        </div>
+
                         @else
 
-                        <div
-                            class="
-                                mt-5
-                                rounded-2xl
-                                bg-red-50
-                                border
-                                border-red-100
-                                p-5
-                            "
-                        >
+                        <div class="mt-5 rounded-2xl bg-red-50 border border-red-100 p-5">
 
-                            <p
-                                class="
-                                    text-[10px]
-                                    uppercase
-                                    text-red-500
-                                    font-black
-                                "
-                            >
+                            <p class="text-[10px] uppercase text-red-500 font-black">
                                 Reason For Deletion
                             </p>
 
-                            <p
-                                class="
-                                    text-sm
-                                    text-slate-700
-                                    mt-3
-                                    leading-relaxed
-                                "
-                            >
-
+                            <p class="text-sm text-slate-700 mt-3 leading-relaxed">
                                 {{ $approval['reason'] ?? '-' }}
-
                             </p>
 
                         </div>

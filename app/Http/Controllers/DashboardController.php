@@ -196,7 +196,7 @@ class DashboardController extends Controller
 
     private function canSwitchDepartment(array $user): bool
     {
-        return in_array($user['role'] ?? '', ['Admin', 'SLT', 'VP']);
+        return ($user['role'] ?? '') === 'SLT';
     }
 
     private function getAllDepartments(SupabaseService $supabase, string $companyCode): array
@@ -227,7 +227,7 @@ class DashboardController extends Controller
     ): array {
         $role = $user['role'] ?? '';
 
-        if (in_array($role, ['Admin', 'SLT', 'VP'])) {
+        if ($role === 'SLT') {
             $filters = [
                 'company_code' => 'eq.' . $companyCode,
                 'is_active' => 'eq.true',
@@ -243,7 +243,7 @@ class DashboardController extends Controller
             return collect($employees)->pluck('id')->toArray();
         }
 
-        if (in_array($role, ['Manager', 'Executive'])) {
+        if (in_array($role, ['VP', 'Manager', 'Executive'])) {
             $employees = $supabase->get('employees', [
                 'company_code' => 'eq.' . $companyCode,
                 'department_code' => 'eq.' . $user['department_code'],

@@ -111,6 +111,12 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::delete('/kpi/{id}', [KpiController::class, 'destroy'])
         ->name('kpi.destroy');
 
+    Route::post('/kpi/assignment/{id}/accept', [KpiController::class, 'acceptAssignment'])
+        ->name('kpi.assignment.accept');
+
+    Route::post('/kpi/assignment/{id}/reject', [KpiController::class, 'rejectAssignment'])
+        ->name('kpi.assignment.reject');
+
     /*
     |--------------------------------------------------------------------------
     | KPI QUARTER

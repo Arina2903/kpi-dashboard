@@ -45,7 +45,7 @@ class ApprovalActionService
                 [
                     'kpi_update_approvals',
                     'kpi_target_change_requests',
-                    'kpi_delete_requests'
+                    'kpi_delete_requests',
                 ]
             )
         ){
@@ -698,6 +698,50 @@ class ApprovalActionService
         ]);
     }
 
+    public function approveWeightage(
+        array $request,
+        string $employeeId,
+        string $employeeName
+    )
+    {
+        if(($request['status'] ?? '') !== 'pending'){
+            return response()->json([
+                'success' => false,
+                'message' => 'Already processed'
+            ], 422);
+        }
+
+        $this->supabase->patch(
+            'kpis',
+            ['id' => 'eq.' . $request['kpi_id']],
+            [
+                'weightage'  => round((float)($request['new_weightage'] ?? 0), 2),
+                'updated_at' => now()->toDateTimeString(),
+            ]
+        );
+
+        $this->history(
+            $request['kpi_id'],
+            'weightage_change',
+            $request['old_weightage'] ?? 0,
+            $request['new_weightage'] ?? 0,
+            $employeeId,
+            $employeeName
+        );
+
+        $this->supabase->patch(
+            'kpi_target_change_requests',
+            ['id' => 'eq.' . $request['id']],
+            [
+                'status'      => 'approved',
+                'approved_by' => $employeeId,
+                'approved_at' => now()->toDateTimeString(),
+            ]
+        );
+
+        return response()->json(['success' => true]);
+    }
+
     public function autoApproveQuarter(
         array $approval,
         string $employeeId,
@@ -872,12 +916,7 @@ class ApprovalActionService
     private function fail(
         string $message
     ){
-
-        logger()->error(
-            'ApprovalActionService: ' .
-            $message
-        );
-
-        dd($message);
+        logger()->error('ApprovalActionService: ' . $message);
+        throw new \RuntimeException($message);
     }
 }

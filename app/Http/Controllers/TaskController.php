@@ -38,13 +38,13 @@ class TaskController extends Controller
             'order' => 'created_at.desc'
         ];
 
-        // 🔥 SLT & VP → See ALL
-        if (in_array($user['role'], ['SLT', 'VP'])) {
+        // SLT → See ALL
+        if ($user['role'] === 'SLT') {
             $tasks = $supabase->get('tasks', $query);
         }
 
-        // 🔥 Manager → Only department
-        elseif ($user['role'] === 'Manager') {
+        // VP / Manager → Only own department
+        elseif (in_array($user['role'], ['VP', 'Manager'])) {
             $query['department_code'] = 'eq.' . $user['department_code'];
             $tasks = $supabase->get('tasks', $query);
         }
@@ -103,7 +103,7 @@ class TaskController extends Controller
 
         $kpi = $kpis[0];
 
-        $allowedRoles = ['SLT', 'CCO', 'CCMO', 'VP'];
+        $allowedRoles = ['SLT', 'VP'];
 
         $canDelete =
             in_array($user['role'] ?? '', $allowedRoles)

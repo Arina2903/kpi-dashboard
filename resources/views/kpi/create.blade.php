@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Create KPI</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
@@ -699,71 +700,10 @@
                             </div>
 
                             <!-- CONTENT -->
-                            <div class="grid grid-cols-1 xl:grid-cols-5 gap-5 mt-6">
-
-                                <!-- OWNER -->
-                                <div class="xl:col-span-2">
-
-                                    <div class="rounded-[24px] border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 h-full">
-
-                                        <div class="flex items-center gap-4">
-
-                                            <div>
-
-                                                <p class="text-[11px] uppercase tracking-wider text-slate-400 font-black">
-                                                    KPI OWNER
-                                                </p>
-
-                                                <h3 class="font-black text-slate-900 text-2xl mt-1">
-                                                    {{ $user['short_name'] }}
-                                                </h3>
-
-                                                <p class="text-sm text-slate-500">
-                                                    {{ $user['role'] }}
-                                                </p>
-
-                                                <p class="text-xs text-slate-400 mt-1">
-                                                    {{ $user['department_code'] }}
-                                                </p>
-
-                                            </div>
-
-                                        </div>
-
-                                        <div class="mt-5 grid grid-cols-2 gap-3">
-
-                                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
-
-                                                <p class="text-[10px] uppercase text-slate-400 font-bold">
-                                                    Role
-                                                </p>
-
-                                                <p class="font-bold text-slate-800 mt-1">
-                                                    {{ $user['role'] }}
-                                                </p>
-
-                                            </div>
-
-                                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
-
-                                                <p class="text-[10px] uppercase text-slate-400 font-bold">
-                                                    Department
-                                                </p>
-
-                                                <p class="font-bold text-slate-800 mt-1">
-                                                    {{ $user['department_code'] }}
-                                                </p>
-
-                                            </div>
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
+                            <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 mt-6">
 
                                 <!-- ASSIGNMENT -->
-                                <div class="xl:col-span-3">
+                                <div class="xl:col-span-4">
 
                                     <div class="rounded-[24px] border border-blue-100 bg-[#f8fbff] p-5 h-full">
 
@@ -823,8 +763,61 @@
 
                                 </div>
 
-                            </div>
+                                <div class="xl:col-span-8">
+                                    <div class="rounded-[24px] border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-5 h-full flex flex-col">
 
+                                        <!-- header -->
+                                        <div class="flex items-start justify-between gap-3 mb-4">
+                                            <div>
+                                                <p class="text-[11px] uppercase tracking-wider text-indigo-600 font-black">MY ASSIGNED KPI</p>
+                                                <h3 class="font-black text-slate-900 text-xl mt-0.5">KPI Assigned To Me</h3>
+                                            </div>
+                                            @php $totalAssign = $pendingAssignments + $acceptedAssignments + $rejectedAssignments; @endphp
+                                            <span class="px-3 py-1.5 rounded-xl bg-indigo-100 text-indigo-700 font-black text-xs shrink-0">
+                                                {{ $totalAssign }} KPI
+                                            </span>
+                                        </div>
+
+                                        <!-- inline card list -->
+                                        <div id="assignmentInlineList" class="space-y-2 overflow-y-auto flex-1 min-h-0 max-h-56 pr-1">
+
+                                            @if($totalAssign === 0)
+                                            <div class="flex flex-col items-center justify-center py-8 text-center">
+                                                <div class="text-3xl mb-2">🎉</div>
+                                                <p class="font-bold text-slate-500 text-sm">No KPI assigned to you yet.</p>
+                                                <p class="text-xs text-slate-400 mt-1">Assignments will appear here.</p>
+                                            </div>
+                                            @else
+
+                                            @foreach($assignmentGroups as $group)
+                                                @foreach($group['kpis'] as $row)
+                                                <div class="assignment-card border-l-4 border-l-indigo-300 bg-white hover:bg-indigo-50/50 rounded-2xl p-3 cursor-pointer border border-indigo-100 transition-all hover:shadow-sm select-none"
+                                                    data-status="{{ $row['status'] ?? 'pending' }}"
+                                                    data-kpi='@json($row)'>
+                                                    <div class="flex items-start justify-between gap-2">
+                                                        <div class="flex-1 min-w-0">
+                                                            <p class="font-black text-slate-900 text-sm leading-snug">{{ $row['kpi_title'] }}</p>
+                                                            <p class="text-[11px] text-slate-500 mt-0.5">{{ $row['category'] }} · {{ $row['sub_category'] }}</p>
+                                                            <p class="text-[11px] text-slate-400 mt-1">From: <span class="font-bold text-slate-600">{{ $row['owner_name'] }}</span></p>
+                                                        </div>
+                                                        <span class="text-[9px] text-indigo-500 font-bold uppercase tracking-wider shrink-0 mt-0.5">View detail →</span>
+                                                    </div>
+                                                </div>
+                                                @endforeach
+                                            @endforeach
+
+                                            <div id="assignFilterEmpty" class="hidden py-8 text-center">
+                                                <p class="text-2xl mb-1">🔍</p>
+                                                <p class="text-sm font-bold text-slate-400">No KPIs in this category.</p>
+                                            </div>
+
+                                            @endif
+
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                     </div>
@@ -881,7 +874,7 @@
                                                 </p>
 
                                                 <h3 class="font-black text-slate-900 text-2xl mt-1">
-                                                    Main Category
+                                                    Main Category <span class="text-red-500 text-lg">*</span>
                                                 </h3>
 
                                                 <p class="text-sm text-slate-500">
@@ -974,7 +967,7 @@
                                                 </p>
 
                                                 <h3 class="font-black text-slate-900 text-2xl mt-1">
-                                                    Classification
+                                                    Classification <span class="text-red-500 text-lg">*</span>
                                                 </h3>
 
                                                 <p class="text-sm text-slate-500">
@@ -1072,7 +1065,7 @@
                                     <div class="mt-6">
 
                                         <label class="text-sm font-bold text-slate-700">
-                                            KPI Title
+                                            KPI Title <span class="text-red-500">*</span>
                                         </label>
 
                                         <input
@@ -1117,7 +1110,7 @@
                                     <div class="mt-6">
 
                                         <label class="text-sm font-bold text-slate-700">
-                                            Description
+                                            Description <span class="text-red-500">*</span>
                                         </label>
 
                                         <textarea
@@ -1126,6 +1119,7 @@
                                             rows="6"
                                             class="field w-full mt-2 rounded-2xl p-4"
                                             placeholder="Explain what success looks like, how this KPI will be measured and why it is important."
+                                            required
                                         >{{ old('kpi_description') }}</textarea>
 
                                     </div>
@@ -1208,7 +1202,7 @@
                                     <div class="mt-6">
 
                                         <label class="text-sm font-bold text-slate-700">
-                                            Unit
+                                            Unit <span class="text-red-500">*</span>
                                         </label>
 
                                         <select
@@ -1270,7 +1264,7 @@
                                         <div>
 
                                             <label class="text-sm font-bold text-slate-700">
-                                                Base Target
+                                                Base Target <span class="text-red-500">*</span>
                                             </label>
 
                                             <input
@@ -1287,7 +1281,7 @@
                                         <div>
 
                                             <label class="text-sm font-bold text-slate-700">
-                                                Stretch Target
+                                                Stretch Target <span class="text-red-500">*</span>
                                             </label>
 
                                             <input
@@ -1389,7 +1383,7 @@
                                     <div class="mt-6">
 
                                         <label class="text-sm font-bold text-slate-700">
-                                            Status
+                                            Status <span class="text-red-500">*</span>
                                         </label>
 
                                         <select
@@ -1521,7 +1515,7 @@
                                     type="button"
                                     onclick="autoDivideQuarter()"
                                     class="outline-btn px-5 py-3 rounded-2xl text-sm font-black">
-                                    Auto Divide Base
+                                    Auto Fill Annual
                                 </button>
 
                             </div>
@@ -1572,7 +1566,7 @@
                                             <div>
 
                                                 <label class="label">
-                                                    Quarter Title
+                                                    Quarter Title <span class="text-red-500">*</span>
                                                 </label>
 
                                                 <input
@@ -1580,6 +1574,7 @@
                                                     value="{{ old("quarters.$quarter.quarter_title") }}"
                                                     class="field mt-2 rounded-2xl px-4 py-3 text-sm"
                                                     placeholder="Example: Launch AI KPI dashboard V1"
+                                                    required
                                                 >
 
                                             </div>
@@ -1588,12 +1583,13 @@
                                             <div>
 
                                                 <label class="label">
-                                                    Quarter Status
+                                                    Quarter Status <span class="text-red-500">*</span>
                                                 </label>
 
                                                 <select
                                                     name="quarters[{{ $quarter }}][status]"
                                                     class="field mt-2 rounded-2xl px-4 py-3 text-sm"
+                                                    required
                                                 >
 
                                                     <option value="not_started"
@@ -1629,7 +1625,7 @@
                                             <div class="md:col-span-2">
 
                                                 <label class="label">
-                                                    Quarter Description
+                                                    Quarter Description <span class="text-red-500">*</span>
                                                 </label>
 
                                                 <textarea
@@ -1637,6 +1633,7 @@
                                                     rows="3"
                                                     class="field mt-2 rounded-2xl px-4 py-3 text-sm"
                                                     placeholder="Explain the focus and expected outcome for this quarter."
+                                                    required
                                                 >{{ old("quarters.$quarter.quarter_description") }}</textarea>
 
                                             </div>
@@ -1645,7 +1642,7 @@
                                             <div>
 
                                                 <label class="label">
-                                                    Quarter Target
+                                                    Quarter Target <span class="text-red-500">*</span>
                                                 </label>
 
                                                 <input
@@ -1654,6 +1651,7 @@
                                                     name="quarters[{{ $quarter }}][quarter_target]"
                                                     value="{{ old("quarters.$quarter.quarter_target") }}"
                                                     class="quarter-target field mt-2 rounded-2xl px-4 py-3 text-sm"
+                                                    required
                                                 >
 
                                             </div>
@@ -1700,7 +1698,7 @@
                                                 <div class="md:col-span-2">
 
                                                     <label class="label">
-                                                        Timeline
+                                                        Timeline <span class="text-red-500">*</span>
                                                     </label>
 
                                                     <div class="grid grid-cols-2 gap-3 mt-2">
@@ -1714,6 +1712,7 @@
                                                                 min="{{ $timeline['start'] }}"
                                                                 max="{{ $timeline['end'] }}"
                                                                 class="field rounded-2xl px-4 py-3 text-sm"
+                                                                required
                                                             >
 
                                                         </div>
@@ -1727,6 +1726,7 @@
                                                                 min="{{ $timeline['start'] }}"
                                                                 max="{{ $timeline['end'] }}"
                                                                 class="field rounded-2xl px-4 py-3 text-sm"
+                                                                required
                                                             >
 
                                                         </div>
@@ -1784,25 +1784,10 @@
                                         0.00
                                     </p>
 
-                                </div>
-
-                                <div
-                                    id="summaryQuarterStatusBox"
-                                    class="metric-card metric-blue p-5"
-                                >
-
-                                    <p class="text-xs font-bold text-blue-500 uppercase tracking-wide">
-                                        Quarter vs Base
-                                    </p>
-
-                                    <p
-                                        id="summaryQuarterMatchStatus"
-                                        class="text-sm font-black text-blue-700 mt-2"
-                                    >
-                                        Optional
-                                    </p>
+                                    <p id="quarterTotalHint" class="text-xs font-bold mt-1"></p>
 
                                 </div>
+
 
                             </div>
 
@@ -1915,12 +1900,12 @@
 
                         <div
                             class="rounded-2xl
-                                bg-cyan-50
+                                bg-blue-50
                                 border
-                                border-cyan-100
+                                border-blue-100
                                 p-3">
 
-                            <p class="text-xs text-cyan-600">
+                            <p class="text-xs text-blue-500">
                                 Sub Category
                             </p>
 
@@ -2013,34 +1998,13 @@
                         </p>
 
                         <p
-                            id="summaryQuarterTargetTotal"
+                            id="sidebarQuarterTargetTotal"
                             class="text-xl font-black text-[#06142f] mt-1">
                             0.00
                         </p>
 
                     </div>
 
-                    <!-- QUARTER STATUS -->
-                    <div
-                        id="summaryQuarterStatusBox"
-                        class="mt-4
-                            rounded-2xl
-                            bg-slate-50
-                            border
-                            border-slate-200
-                            p-4">
-
-                        <p class="text-xs text-slate-500">
-                            Quarter vs Base
-                        </p>
-
-                        <p
-                            id="summaryQuarterMatchStatus"
-                            class="font-black text-slate-900 mt-1">
-                            Optional
-                        </p>
-
-                    </div>
 
                     <!-- SUBMIT -->
                     <div class="mt-6">
@@ -2152,6 +2116,7 @@
             `<label class="cursor-pointer">
                 <input type="radio"hidden class="sub-radio"name="sub_category"
                     value="${subCategory}"
+                    required
                     ${
                         oldSubCategory === subCategory
                         ? 'checked'
@@ -2227,134 +2192,38 @@
             targetTotal += Number(input.value || 0);
         });
 
-        document.getElementById(
-            'summaryQuarterTargetTotal'
-        ).textContent =
-            formatValue(targetTotal);
-
         const base = Number(baseTarget.value || 0);
+        const matched = base > 0 && Math.abs(targetTotal - base) < 0.01;
+        const totalText = formatValue(targetTotal);
 
-        const statusText =
-            document.getElementById(
-                'summaryQuarterMatchStatus'
-            );
+        const summaryEl = document.getElementById('summaryQuarterTargetTotal');
+        const sidebarEl = document.getElementById('sidebarQuarterTargetTotal');
 
-        const statusBox =
-            document.getElementById(
-                'summaryQuarterStatusBox'
-            );
-
-        const summaryStatusText =
-            document.getElementById(
-                'summaryQuarterMatchStatus'
-            );
-
-        const summaryStatusBox =
-            document.getElementById(
-                'summaryQuarterStatusBox'
-            );
-
-        summaryStatusBox.className =
-            'mt-4 rounded-2xl border p-4';
-
-        /*
-        |--------------------------------------------------------------------------
-        | STATUS LOGIC
-        |--------------------------------------------------------------------------
-        */
-
-        if (targetTotal <= 0) {
-
-            statusText.textContent = 'Optional';
-
-            summaryStatusText.textContent =
-                statusText.textContent;
-
-            statusText.className =
-                'text-sm font-black text-blue-700';
-
-            statusBox.classList.add(
-                'metric-blue'
-            );
-
-            return;
+        if(summaryEl){
+            summaryEl.textContent = totalText;
+            summaryEl.className = matched
+                ? 'text-2xl font-black mt-2 text-emerald-600'
+                : (targetTotal > 0 ? 'text-2xl font-black mt-2 text-red-500' : 'text-2xl font-black mt-2 text-[#06142f]');
         }
 
-        if (base <= 0) {
-
-            statusText.textContent =
-                'Please fill Base Target first';
-
-            statusText.className =
-                'text-sm font-black text-amber-700';
-
-            statusBox.classList.add(
-                'metric-amber'
-            );
-
-            return;
+        if(sidebarEl){
+            sidebarEl.textContent = totalText;
+            sidebarEl.className = matched
+                ? 'font-black text-emerald-600'
+                : (targetTotal > 0 ? 'font-black text-red-500' : 'font-black');
         }
 
-        const difference =
-            Math.abs(targetTotal - base);
-
-        /*
-        |--------------------------------------------------------------------------
-        | MATCH
-        |--------------------------------------------------------------------------
-        */
-
-        if (difference < 0.01) {
-
-            statusText.textContent =
-                'Quarter total matched with Base Target';
-
-            statusText.className =
-                'text-sm font-black text-emerald-700';
-
-            statusBox.classList.add(
-                'metric-emerald'
-            );
-
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | EXCEED
-        |--------------------------------------------------------------------------
-        */
-
-        else if (targetTotal > base) {
-
-            statusText.textContent =
-                'Quarter target exceeds Base Target';
-
-            statusText.className =
-                'text-sm font-black text-red-700';
-
-            statusBox.classList.add(
-                'metric-red'
-            );
-
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | BELOW
-        |--------------------------------------------------------------------------
-        */
-
-        else {
-
-            statusText.textContent =
-                'Quarter target below Base Target';
-
-            statusText.className =
-                'text-sm font-black text-amber-700';
-
-            statusBox.classList.add(
-                'metric-amber'
-            );
+        const hintEl = document.getElementById('quarterTotalHint');
+        if(hintEl){
+            if(base <= 0){
+                hintEl.textContent = '';
+            } else if(matched){
+                hintEl.textContent = '✓ Matches Base Target';
+                hintEl.className = 'text-xs font-bold text-emerald-600 mt-1';
+            } else {
+                hintEl.textContent = `Must equal Base Target (${formatValue(base)})`;
+                hintEl.className = 'text-xs font-bold text-red-500 mt-1';
+            }
         }
     }
 
@@ -2468,12 +2337,11 @@
             return;
         }
 
-        const quarterValue = base / 4;
+        const perQuarter = (base / 4).toFixed(2);
 
         quarterTargetInputs.forEach(input => {
 
-            input.value =
-                quarterValue.toFixed(2);
+            input.value = perQuarter;
 
         });
 
@@ -2505,6 +2373,20 @@
             return;
         }
 
+        const quarterTotal = Array.from(quarterTargetInputs)
+            .reduce((sum, i) => sum + Number(i.value || 0), 0);
+
+        if (base > 0 && Math.abs(quarterTotal - base) > 0.01) {
+
+            event.preventDefault();
+
+            alert(
+                `Quarter Target total (${quarterTotal.toFixed(2)}) must equal Base Target (${base.toFixed(2)}).\n\nPlease adjust your quarter targets or use Auto Fill Annual.`
+            );
+
+            return;
+        }
+
         /*
         |--------------------------------------------------------------------------
         | PREVENT DOUBLE SUBMIT
@@ -2512,9 +2394,18 @@
         */
 
         const submitButton =
-            form.querySelector('button[type="submit"]');
+            form.querySelector(
+                'button[type="submit"]'
+            );
 
-        submitButton.disabled = true;
+        if(submitButton){
+
+            submitButton.disabled = true;
+
+            submitButton.innerHTML =
+                'Creating KPI...';
+
+        }
 
         submitButton.innerHTML =
             'Creating KPI...';
@@ -2652,43 +2543,59 @@
 
     };
 
-    ['Q1','Q2','Q3','Q4'].forEach(q=>{
+    function validateQuarterRanges(){
 
-        const start =
-            document.querySelector(
-                `[name="quarters[${q}][start_date]"]`
-            ).value;
+        ['Q1','Q2','Q3','Q4'].forEach(q=>{
 
-        const end =
-            document.querySelector(
-                `[name="quarters[${q}][end_date]"]`
-            ).value;
+            const startField =
+                document.querySelector(
+                    `[name="quarters[${q}][start_date]"]`
+                );
 
-        if(
-            start < quarterRanges[q].start
-            ||
-            start > quarterRanges[q].end
-        ){
-            throw new Error(
-                `${q} start date outside quarter`
-            );
-        }
+            const endField =
+                document.querySelector(
+                    `[name="quarters[${q}][end_date]"]`
+                );
 
-        if(
-            end < quarterRanges[q].start
-            ||
-            end > quarterRanges[q].end
-        ){
-            throw new Error(
-                `${q} end date outside quarter`
-            );
-        }
+            if(!startField || !endField){
+                return;
+            }
 
-    });
+            const start = startField.value;
+            const end = endField.value;
+
+            if(
+                start &&
+                (
+                    start < quarterRanges[q].start
+                    ||
+                    start > quarterRanges[q].end
+                )
+            ){
+                startField.value =
+                    quarterRanges[q].start;
+            }
+
+            if(
+                end &&
+                (
+                    end < quarterRanges[q].start
+                    ||
+                    end > quarterRanges[q].end
+                )
+            ){
+                endField.value =
+                    quarterRanges[q].end;
+            }
+
+        });
+
+    }
 
     updateSubCategories();
     updateSummary();
     updateStatusBadge();
+    validateQuarterRanges();
 
 function updateCompletion(){
 
@@ -2732,15 +2639,29 @@ function updateCompletion(){
             (completed / total) * 100
         );
 
-    document.getElementById(
-        'completionPercent'
-    ).textContent =
-        percent + '%';
+    const completionPercent =
+        document.getElementById(
+            'completionPercent'
+        );
 
-    document.getElementById(
-        'completionBar'
-    ).style.width =
-        percent + '%';
+    const completionBar =
+        document.getElementById(
+            'completionBar'
+        );
+
+    if(completionPercent){
+
+        completionPercent.textContent =
+            percent + '%';
+
+    }
+
+    if(completionBar){
+
+        completionBar.style.width =
+            percent + '%';
+
+    }
 }
 
 const sections =
@@ -2797,7 +2718,419 @@ window.addEventListener(
     }
 );
 
+document.addEventListener(
+    'click',
+    function(e){
+
+        if(
+            e.target.id === 'closeDetailModal' ||
+            e.target.closest?.('#closeDetailModal')
+        ){
+            const dModal =
+                document.getElementById(
+                    'assignmentDetailModal'
+                );
+
+            if(dModal){
+                dModal.classList.add('hidden');
+                dModal.classList.remove('flex');
+            }
+        }
+
+    }
+);
+
+function bindAssignmentCards(){
+
+    document
+    .querySelectorAll('.assignment-card')
+    .forEach(card=>{
+
+        card.addEventListener(
+            'click',
+            function(event){
+
+                event.stopPropagation();
+
+                try{
+
+                    const raw =
+                        this.dataset.kpi;
+
+                    if(!raw){
+                        console.error(
+                            'data-kpi missing'
+                        );
+                        return;
+                    }
+
+                    const data =
+                        JSON.parse(raw);
+
+                    const detailModal =
+                        document.getElementById(
+                            'assignmentDetailModal'
+                        );
+
+                    const detailContent =
+                        document.getElementById(
+                            'detailContent'
+                        );
+
+                    if(
+                        !detailModal ||
+                        !detailContent
+                    ){
+                        console.error(
+                            'Detail modal missing'
+                        );
+                        return;
+                    }
+
+                    const statusMap = {
+                        'on_track'   : ['On Track',    'status-on-track'],
+                        'at_risk'    : ['At Risk',     'status-risk'],
+                        'in_trouble' : ['In Trouble',  'status-trouble'],
+                        'completed'  : ['Completed',   'status-completed'],
+                        'not_started': ['Not Started', 'status-not-started'],
+                    };
+
+                    const fmtDate = (d) => {
+                        if(!d) return '-';
+                        const dt = new Date(d);
+                        return isNaN(dt) ? d : dt.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+                    };
+
+                    let quarterHtml = '';
+
+                    if(Array.isArray(data.quarters)){
+                        data.quarters.forEach(q => {
+                            const [statusLabel, statusCls] = statusMap[q.status] ?? ['Not Started', 'status-not-started'];
+                            quarterHtml += `
+                            <div class="rounded-[20px] border border-purple-100 bg-gradient-to-br from-purple-50 to-white p-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="quarter-dot flex-shrink-0">${q.quarter ?? '-'}</div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between gap-2 mb-3">
+                                            <p class="font-black text-slate-900 text-sm truncate">${q.quarter_title ?? '-'}</p>
+                                            <span class="status-pill ${statusCls} flex-shrink-0">${statusLabel}</span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <div class="rounded-xl bg-white border border-purple-100 p-2">
+                                                <p class="text-[9px] text-purple-400 uppercase font-black tracking-wider">Target</p>
+                                                <p class="text-sm font-black text-[#06142f] mt-0.5">${Number(q.quarter_target ?? 0).toLocaleString()}</p>
+                                            </div>
+                                            <div class="rounded-xl bg-white border border-purple-100 p-2">
+                                                <p class="text-[9px] text-purple-400 uppercase font-black tracking-wider">Start</p>
+                                                <p class="text-xs font-bold text-slate-700 mt-0.5">${fmtDate(q.start_date)}</p>
+                                            </div>
+                                            <div class="rounded-xl bg-white border border-purple-100 p-2">
+                                                <p class="text-[9px] text-purple-400 uppercase font-black tracking-wider">End</p>
+                                                <p class="text-xs font-bold text-slate-700 mt-0.5">${fmtDate(q.end_date)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            `;
+                        });
+                    }
+
+                    detailContent.innerHTML = `
+                    <div class="space-y-6">
+
+                        <!-- KPI INFORMATION -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-1 h-5 rounded-full bg-gradient-to-b from-indigo-600 to-cyan-500"></div>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">KPI Information</p>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="rounded-[20px] bg-[#06142f] p-4">
+                                    <p class="text-[9px] uppercase tracking-widest text-blue-300 font-black">KPI Name</p>
+                                    <p class="font-black text-white text-base mt-1 leading-snug">${data.kpi_title ?? '-'}</p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="rounded-2xl bg-blue-50 border border-blue-100 p-3">
+                                        <p class="text-[9px] uppercase tracking-widest text-blue-500 font-black">Category</p>
+                                        <p class="font-bold text-slate-900 mt-1 text-sm">${data.category ?? '-'}</p>
+                                    </div>
+                                    <div class="rounded-2xl bg-blue-50 border border-blue-100 p-3">
+                                        <p class="text-[9px] uppercase tracking-widest text-blue-500 font-black">Sub Category</p>
+                                        <p class="font-bold text-slate-900 mt-1 text-sm">${data.sub_category ?? '-'}</p>
+                                    </div>
+                                </div>
+                                ${data.kpi_description && data.kpi_description !== '-' ? `
+                                <div class="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                                    <p class="text-[9px] uppercase tracking-widest text-slate-500 font-black">Description</p>
+                                    <p class="text-sm text-slate-600 mt-1 leading-relaxed">${data.kpi_description}</p>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <!-- ASSIGNMENT -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-1 h-5 rounded-full bg-gradient-to-b from-emerald-500 to-teal-400"></div>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assignment</p>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-3">
+                                    <p class="text-[9px] uppercase tracking-widest text-emerald-600 font-black">Assigned By</p>
+                                    <p class="font-bold text-slate-900 mt-1 text-sm">${data.owner_name ?? '-'}</p>
+                                </div>
+                                <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-3">
+                                    <p class="text-[9px] uppercase tracking-widest text-emerald-600 font-black">Role</p>
+                                    <p class="font-bold text-slate-900 mt-1 text-sm">${data.owner_role ?? '-'}</p>
+                                </div>
+                                <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-3">
+                                    <p class="text-[9px] uppercase tracking-widest text-emerald-600 font-black">Assigned Date</p>
+                                    <p class="font-bold text-slate-900 mt-1 text-sm">${fmtDate(data.created_at)}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TARGET -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-1 h-5 rounded-full bg-gradient-to-b from-sky-500 to-blue-500"></div>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Target</p>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="rounded-2xl bg-blue-50 border border-blue-100 p-4">
+                                    <p class="text-[9px] uppercase tracking-widest text-blue-500 font-black">Base Target</p>
+                                    <p class="text-xl font-black text-[#06142f] mt-1">${Number(data.base_target ?? 0).toLocaleString()}</p>
+                                    <p class="text-[9px] text-blue-300 mt-1 uppercase font-bold">Annual</p>
+                                </div>
+                                <div class="rounded-2xl bg-purple-50 border border-purple-100 p-4">
+                                    <p class="text-[9px] uppercase tracking-widest text-purple-500 font-black">Stretch Target</p>
+                                    <p class="text-xl font-black text-[#06142f] mt-1">${Number(data.stretch_target ?? 0).toLocaleString()}</p>
+                                    <p class="text-[9px] text-purple-300 mt-1 uppercase font-bold">Annual</p>
+                                </div>
+                                <div class="rounded-2xl bg-amber-50 border border-amber-100 p-4">
+                                    <p class="text-[9px] uppercase tracking-widest text-amber-600 font-black">Weightage</p>
+                                    <p class="text-xl font-black text-[#06142f] mt-1">${data.weightage ?? 0}%</p>
+                                    <p class="text-[9px] text-amber-300 mt-1 uppercase font-bold">Weight</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- QUARTER BREAKDOWN -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-1 h-5 rounded-full bg-gradient-to-b from-purple-500 to-indigo-500"></div>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quarter Breakdown</p>
+                            </div>
+                            <div class="space-y-2">
+                                ${quarterHtml}
+                            </div>
+                        </div>
+
+                    </div>
+                    `;
+
+                    detailModal.classList.remove(
+                        'hidden'
+                    );
+
+                    detailModal.classList.add(
+                        'flex'
+                    );
+
+                }catch(error){
+
+                    console.error(
+                        'Assignment Detail Error:',
+                        error
+                    );
+
+                }
+
+            }
+        );
+
+    });
+
+}
+
+function syncMainStatusFromQuarters(){
+    const quarterStatuses = document.querySelectorAll('select[name*="[status]"]');
+    const anyActive = Array.from(quarterStatuses).some(s => s.value !== 'not_started');
+    const mainStatus = document.getElementById('status');
+    if(!mainStatus) return;
+    if(anyActive && mainStatus.value === 'not_started'){
+        mainStatus.value = 'on_track';
+        mainStatus.dispatchEvent(new Event('change'));
+    } else if(!anyActive){
+        mainStatus.value = 'not_started';
+        mainStatus.dispatchEvent(new Event('change'));
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+
+    bindAssignmentCards();
+
+    document.querySelectorAll('select[name*="[status]"]').forEach(function(sel){
+        sel.addEventListener('change', syncMainStatusFromQuarters);
+    });
+
+    /* --- filter tabs for inline assignment list --- */
+});
+
+const closeDetailBtn =
+    document.getElementById(
+        'closeDetailModal'
+    );
+
+if(closeDetailBtn){
+
+    closeDetailBtn.addEventListener(
+        'click',
+        function(){
+
+            const modal =
+                document.getElementById(
+                    'assignmentDetailModal'
+                );
+
+            if(!modal){
+                return;
+            }
+
+            modal.classList.add(
+                'hidden'
+            );
+
+            modal.classList.remove(
+                'flex'
+            );
+
+        }
+    );
+
+}
+
+const detailModal =
+    document.getElementById(
+        'assignmentDetailModal'
+    );
+
+if(detailModal){
+
+    detailModal.addEventListener(
+        'click',
+        function(e){
+
+            if(
+                e.target === this
+            ){
+
+                this.classList.add(
+                    'hidden'
+                );
+
+                this.classList.remove(
+                    'flex'
+                );
+
+            }
+
+        }
+    );
+
+}
+
+document.addEventListener(
+    'keydown',
+    function(e){
+
+        if(
+            e.key === 'Escape'
+        ){
+
+            const modal =
+                document.getElementById(
+                    'assignmentDetailModal'
+                );
+
+            if(
+                modal &&
+                !modal.classList.contains(
+                    'hidden'
+                )
+            ){
+
+                modal.classList.add(
+                    'hidden'
+                );
+
+                modal.classList.remove(
+                    'flex'
+                );
+
+            }
+
+        }
+
+    }
+);
+
+function toggleOwner(ownerId){
+
+    const section =
+        document.getElementById(
+            'owner-' + ownerId
+        );
+
+    if(!section){
+        return;
+    }
+
+    section.classList.toggle('hidden');
+
+}
+
+ // DOMContentLoaded
+
 </script>
+
+<div
+    id="assignmentDetailModal"
+    class="fixed inset-0 hidden bg-black/60 z-[99999] items-center justify-center p-4">
+
+    <div class="bg-white w-full max-w-xl rounded-[2rem] overflow-hidden shadow-2xl flex flex-col max-h-[88vh]">
+
+        <!-- modal header -->
+        <div class="hero-gradient px-6 py-5 flex items-center justify-between flex-shrink-0">
+            <div>
+                <p class="text-blue-200 text-[10px] font-black uppercase tracking-widest">KPI Assignment</p>
+                <h2 class="font-black text-white text-lg mt-0.5">KPI Detail</h2>
+            </div>
+            <button
+                type="button"
+                id="closeDetailModal"
+                class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white font-black text-sm flex items-center justify-center transition-all">
+                ✕
+            </button>
+        </div>
+
+        <!-- scrollable body -->
+        <div id="detailContent" class="overflow-y-auto p-6 flex-1"></div>
+
+        <!-- view-only footer -->
+        <div class="shrink-0 border-t border-slate-100 px-6 py-4 flex items-center justify-center bg-slate-50">
+            <p class="text-xs text-slate-400 font-bold flex items-center gap-1.5">
+                <span>👁</span> View Only — This KPI has been assigned to you for reference.
+            </p>
+        </div>
+
+    </div>
+
+</div>
+
+
 
 </body>
 </html>

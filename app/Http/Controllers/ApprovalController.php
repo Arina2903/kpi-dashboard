@@ -5,16 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\SupabaseService;
 use App\Services\ApprovalActionService;
+use App\Services\ApprovalHierarchyService;
 
 class ApprovalController extends Controller
 {
     protected ApprovalActionService $approvalActionService;
+    protected ApprovalHierarchyService $hierarchyService;
 
     public function __construct(
-        ApprovalActionService $approvalActionService
+        ApprovalActionService $approvalActionService,
+        ApprovalHierarchyService $hierarchyService
     ){
-        $this->approvalActionService =
-            $approvalActionService;
+        $this->approvalActionService = $approvalActionService;
+        $this->hierarchyService      = $hierarchyService;
     }
 
 
@@ -68,7 +71,7 @@ class ApprovalController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $targetRequests = $supabase->get(
+        $allTargetRows = $supabase->get(
 
             'kpi_target_change_requests',
 
@@ -86,6 +89,12 @@ class ApprovalController extends Controller
             ]
 
         ) ?? [];
+
+        $targetRequests   = array_values(array_filter($allTargetRows,
+            fn($r) => !str_starts_with($r['reason'] ?? '', '[[WC]]')));
+
+        $weightageRequests = array_values(array_filter($allTargetRows,
+            fn($r) => str_starts_with($r['reason'] ?? '', '[[WC]]')));
 
         /*
         |--------------------------------------------------------------------------
@@ -136,6 +145,12 @@ class ApprovalController extends Controller
             $supabase
         );
 
+        $weightageRequests = $this->enrichApprovals(
+            $weightageRequests,
+            'weightage_change',
+            $supabase
+        );
+
         /*
         |--------------------------------------------------------------------------
         | SUMMARY
@@ -172,10 +187,21 @@ class ApprovalController extends Controller
                 )
             );
 
+        $weightageCount =
+            count(
+                array_filter(
+                    $weightageRequests,
+                    fn($x)
+                        => ($x['status'] ?? '')
+                        === 'pending'
+                )
+            );
+
         $totalPending =
             $quarterCount +
             $targetCount +
-            $deleteCount;
+            $deleteCount +
+            $weightageCount;
 
         /*
         |--------------------------------------------------------------------------
@@ -186,7 +212,8 @@ class ApprovalController extends Controller
         $approvals = array_merge(
             $quarterApprovals,
             $targetRequests,
-            $deleteRequests
+            $deleteRequests,
+            $weightageRequests
         );
 
         /*
@@ -207,11 +234,12 @@ class ApprovalController extends Controller
         return view(
             'kpi.approval',
             [
-                'approvals' => $approvals,
-                'quarterCount' => $quarterCount,
-                'targetCount' => $targetCount,
-                'deleteCount' => $deleteCount,
-                'totalPending' => $totalPending,
+                'approvals'      => $approvals,
+                'quarterCount'   => $quarterCount,
+                'targetCount'    => $targetCount,
+                'deleteCount'    => $deleteCount,
+                'weightageCount' => $weightageCount,
+                'totalPending'   => $totalPending,
             ]
         );
     }
@@ -281,16 +309,23 @@ class ApprovalController extends Controller
                 = $kpi['unit']
                 ?? '';
 
-            $item['type'] = $type;
-                if(
-                    empty($item['priority'])
-                ){
-                    $item['priority'] = match($type){
-                        'delete_request' => 'critical',
-                        'target_change' => 'high',
-                        default => 'normal'
-                    };
-                }
+            if(str_starts_with($item['reason'] ?? '', '[[WC]]')){
+                $item['reason']       = substr($item['reason'], 6);
+                $item['type']         = 'weightage_change';
+                $item['old_weightage'] = $item['old_base_target'] ?? 0;
+                $item['new_weightage'] = $item['new_base_target'] ?? 0;
+            } else {
+                $item['type'] = $type;
+            }
+
+            if(empty($item['priority'])){
+                $item['priority'] = match($item['type']){
+                    'delete_request'   => 'critical',
+                    'target_change'    => 'high',
+                    'weightage_change' => 'high',
+                    default            => 'normal'
+                };
+            }
         }
 
         return $items;
@@ -399,19 +434,38 @@ class ApprovalController extends Controller
                     );
             }
 
+            if(
+                $type === 'weightage_change'
+            ){
+
+                return $this
+                    ->approvalActionService
+                    ->approveWeightage(
+
+                        $approval,
+
+                        session(
+                            'employee_uuid'
+                        ),
+
+                        session(
+                            'short_name'
+                        )
+
+                    );
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unknown approval type'
             ],422);
 
         } catch (\Throwable $e) {
-
-            dd([
-                'ERROR' => $e->getMessage(),
-                'LINE'  => $e->getLine(),
-                'FILE'  => $e->getFile(),
-            ]);
-
+            \Illuminate\Support\Facades\Log::error('approve failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -460,9 +514,14 @@ class ApprovalController extends Controller
         );
 
         if($approval){
-
-            $approval['type']
-                = 'target_change';
+            if(str_starts_with($approval['reason'] ?? '', '[[WC]]')){
+                $approval['reason']        = substr($approval['reason'], 6);
+                $approval['type']          = 'weightage_change';
+                $approval['old_weightage'] = $approval['old_base_target'] ?? 0;
+                $approval['new_weightage'] = $approval['new_base_target'] ?? 0;
+            } else {
+                $approval['type'] = 'target_change';
+            }
 
             return $approval;
         }
@@ -650,10 +709,118 @@ class ApprovalController extends Controller
             ]);
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | WEIGHTAGE CHANGE REQUEST
+        |--------------------------------------------------------------------------
+        */
+
         return response()->json([
             'success' => false,
             'message' => 'Approval not found.'
         ],404);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | REQUEST WEIGHTAGE CHANGE
+    |--------------------------------------------------------------------------
+    */
+
+    public function requestWeightageChange(
+        Request $request,
+        string $id,
+        SupabaseService $supabase
+    ){
+        $userId = session('employee_uuid');
+
+        if(!$userId){
+            return response()->json([
+                'success' => false,
+                'message' => 'Not authenticated'
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'old_weightage' => 'required|numeric|min:0|max:100',
+            'new_weightage' => 'required|numeric|min:0|max:100',
+            'reason'        => 'required|string|min:20',
+        ]);
+
+        $kpi = $supabase->first('kpis', [
+            'id'          => 'eq.' . $id,
+            'employee_id' => 'eq.' . $userId,
+        ]);
+
+        if(!$kpi){
+            return response()->json([
+                'success' => false,
+                'message' => 'KPI not found or does not belong to you.'
+            ], 404);
+        }
+
+        $pendingForKpi = $supabase->get('kpi_target_change_requests', [
+            'kpi_id' => 'eq.' . $id,
+            'status' => 'eq.pending',
+        ]) ?? [];
+        $existing = collect($pendingForKpi)->first(
+            fn($r) => str_starts_with($r['reason'] ?? '', '[[WC]]')
+        );
+
+        if($existing){
+            return response()->json([
+                'success' => false,
+                'message' => 'A pending approval request already exists for this KPI. Please wait for it to be processed.'
+            ], 422);
+        }
+
+        $employee = $supabase->first('employees', ['id' => 'eq.' . $userId]);
+
+        $approver = $this->hierarchyService->getApprover($employee ?? []);
+
+        if(!$approver){
+            return response()->json([
+                'success' => false,
+                'message' => 'No approver found for your role. Please contact your administrator.'
+            ], 422);
+        }
+
+        $oldWt = round((float) $validated['old_weightage'], 2);
+        $newWt = round((float) $validated['new_weightage'], 2);
+
+        try {
+            $supabase->insert('kpi_target_change_requests', [
+                'kpi_id'             => $id,
+                'requested_by'       => $userId,
+                'requested_by_name'  => session('short_name') ?? '',
+                'requested_role'     => $employee['role'] ?? '',
+                'approver_id'        => $approver['id'],
+                'approver_name'      => $approver['short_name'] ?? '',
+                'approver_role'      => $approver['role'] ?? '',
+                'field_name'         => 'target_change',
+                'old_value'          => $oldWt,
+                'requested_value'    => $newWt,
+                'old_base_target'    => $oldWt,
+                'new_base_target'    => $newWt,
+                'old_stretch_target' => $oldWt,
+                'new_stretch_target' => $newWt,
+                'reason'             => '[[WC]]' . $validated['reason'],
+                'status'             => 'pending',
+                'created_at'         => now()->toIso8601String(),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('requestWeightageChange insert failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to submit request: ' . $e->getMessage(),
+            ], 500);
+        }
+
+        return response()->json([
+            'success'       => true,
+            'message'       => 'Approval request submitted to ' . $approver['short_name'] . '. They will review your request shortly.',
+            'approver_name' => $approver['short_name'],
+        ]);
     }
 
     /*
