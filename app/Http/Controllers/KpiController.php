@@ -1447,6 +1447,68 @@ class KpiController extends Controller
             ->with('success', 'KPI updated successfully.');
     }
 
+    public function inlineUpdate(Request $request, string $id)
+    {
+        $user = $this->currentUser($this->supabase);
+        $kpi  = $this->findKpiOrFail($this->supabase, $id);
+
+        if (!$this->canEditKpi($user, $kpi)) {
+            return response()->json(['success' => false, 'message' => 'Permission denied.'], 403);
+        }
+
+        $validated = $request->validate([
+            'kpi_title'       => 'nullable|string|max:255',
+            'kpi_description' => 'nullable|string',
+        ]);
+
+        $payload = ['updated_at' => $this->nowMy()];
+        if (isset($validated['kpi_title']))       $payload['kpi_title']       = $validated['kpi_title'];
+        if (array_key_exists('kpi_description', $validated)) $payload['kpi_description'] = $validated['kpi_description'];
+
+        if (!$this->supabase->safePatch('kpis', ['id' => 'eq.' . $id], $payload)) {
+            return response()->json(['success' => false, 'message' => 'Failed to update KPI.'], 500);
+        }
+
+        return response()->json(['success' => true, 'message' => 'KPI updated.']);
+    }
+
+    public function inlineUpdateQuarter(Request $request, string $id)
+    {
+        $user    = $this->currentUser($this->supabase);
+        $quarter = $this->supabase->first('kpi_quarters', ['id' => 'eq.' . $id, 'select' => '*']);
+
+        if (!$quarter) {
+            return response()->json(['success' => false, 'message' => 'Quarter not found.'], 404);
+        }
+
+        $kpi = $this->findKpiOrFail($this->supabase, $quarter['kpi_id']);
+
+        if (!$this->canEditKpi($user, $kpi)) {
+            return response()->json(['success' => false, 'message' => 'Permission denied.'], 403);
+        }
+
+        $validated = $request->validate([
+            'quarter_title'       => 'nullable|string|max:255',
+            'quarter_description' => 'nullable|string',
+            'status'              => 'nullable|in:not_started,on_track,at_risk,in_trouble,completed',
+            'start_date'          => 'nullable|date',
+            'end_date'            => 'nullable|date',
+        ]);
+
+        $payload = ['updated_at' => $this->nowMy()];
+        if (isset($validated['quarter_title']))       $payload['quarter_title']       = $validated['quarter_title'];
+        if (array_key_exists('quarter_description', $validated)) $payload['quarter_description'] = $validated['quarter_description'];
+        if (isset($validated['status']))              $payload['status']              = $this->normalizeStatus($validated['status']);
+        if (isset($validated['start_date']))          $payload['start_date']          = $validated['start_date'];
+        if (isset($validated['end_date']))            $payload['end_date']            = $validated['end_date'];
+
+        if (!$this->supabase->safePatch('kpi_quarters', ['id' => 'eq.' . $id], $payload)) {
+            return response()->json(['success' => false, 'message' => 'Failed to update quarter.'], 500);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Quarter updated.']);
+    }
+
     public function destroy(string $id, SupabaseService $supabase)
     {
         abort(403,

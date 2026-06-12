@@ -9,6 +9,8 @@
         .card-hover:hover { transform: translateY(-2px); box-shadow: 0 18px 35px rgba(15,23,42,.09); }
         input:focus, textarea:focus, select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
         .drawer-slide { transition: transform .3s cubic-bezier(.4,0,.2,1); }
+        .cat-section { animation: fadeIn .2s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
 
@@ -44,9 +46,91 @@
                 </div>
             </div>
         </div>
+
+        {{-- CATEGORY COLOUR LEGEND --}}
+        <div class="flex flex-wrap gap-2 mt-5 pt-4 border-t border-white/10">
+            <span class="text-[9px] text-blue-300 uppercase font-black tracking-widest self-center mr-2">Categories:</span>
+            <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-200 text-[10px] font-black border border-emerald-500/30">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>💰 Financial
+            </span>
+            <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-200 text-[10px] font-black border border-indigo-500/30">
+                <span class="w-2 h-2 rounded-full bg-indigo-400 shrink-0"></span>📈 Growth & Customer
+            </span>
+            <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-200 text-[10px] font-black border border-amber-500/30">
+                <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>🚀 Initiatives
+            </span>
+            <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/20 text-pink-200 text-[10px] font-black border border-pink-500/30">
+                <span class="w-2 h-2 rounded-full bg-pink-400 shrink-0"></span>👥 People
+            </span>
+        </div>
     </div>
 
     @php
+        $categoryOrder = ['Financial', 'Growth & Customer', 'Initiatives', 'People'];
+
+        $catThemes = [
+            'Financial'         => [
+                'icon'       => '💰',
+                'headerBg'   => 'from-emerald-800 to-emerald-600',
+                'headerText' => 'text-emerald-100',
+                'border'     => 'border-l-emerald-500',
+                'sectionBg'  => 'bg-emerald-50/60',
+                'catPill'    => 'bg-emerald-700 text-white',
+                'subPill'    => 'bg-emerald-100 text-emerald-700',
+                'countBadge' => 'bg-emerald-900/40 text-emerald-100',
+                'infoBg'     => 'bg-emerald-50',
+                'divider'    => 'border-emerald-100',
+            ],
+            'Growth & Customer' => [
+                'icon'       => '📈',
+                'headerBg'   => 'from-indigo-800 to-indigo-600',
+                'headerText' => 'text-indigo-100',
+                'border'     => 'border-l-indigo-500',
+                'sectionBg'  => 'bg-indigo-50/60',
+                'catPill'    => 'bg-indigo-700 text-white',
+                'subPill'    => 'bg-indigo-100 text-indigo-700',
+                'countBadge' => 'bg-indigo-900/40 text-indigo-100',
+                'infoBg'     => 'bg-indigo-50',
+                'divider'    => 'border-indigo-100',
+            ],
+            'Initiatives'       => [
+                'icon'       => '🚀',
+                'headerBg'   => 'from-amber-700 to-amber-500',
+                'headerText' => 'text-amber-100',
+                'border'     => 'border-l-amber-500',
+                'sectionBg'  => 'bg-amber-50/60',
+                'catPill'    => 'bg-amber-600 text-white',
+                'subPill'    => 'bg-amber-100 text-amber-700',
+                'countBadge' => 'bg-amber-900/40 text-amber-100',
+                'infoBg'     => 'bg-amber-50',
+                'divider'    => 'border-amber-100',
+            ],
+            'People'            => [
+                'icon'       => '👥',
+                'headerBg'   => 'from-pink-800 to-pink-600',
+                'headerText' => 'text-pink-100',
+                'border'     => 'border-l-pink-500',
+                'sectionBg'  => 'bg-pink-50/60',
+                'catPill'    => 'bg-pink-700 text-white',
+                'subPill'    => 'bg-pink-100 text-pink-700',
+                'countBadge' => 'bg-pink-900/40 text-pink-100',
+                'infoBg'     => 'bg-pink-50',
+                'divider'    => 'border-pink-100',
+            ],
+        ];
+        $catThemeDefault = [
+            'icon'       => '📌',
+            'headerBg'   => 'from-slate-700 to-slate-600',
+            'headerText' => 'text-slate-100',
+            'border'     => 'border-l-slate-400',
+            'sectionBg'  => 'bg-slate-50/60',
+            'catPill'    => 'bg-slate-600 text-white',
+            'subPill'    => 'bg-slate-100 text-slate-600',
+            'countBadge' => 'bg-slate-900/40 text-slate-100',
+            'infoBg'     => 'bg-slate-50',
+            'divider'    => 'border-slate-100',
+        ];
+
         $departmentPerformance = collect($kpis ?? [])->sum(function($item){
             $quarters = collect($item['quarters'] ?? []);
             $target = $quarters->sum(fn($q) => (float)($q['quarter_target'] ?? 0));
@@ -56,10 +140,10 @@
         });
 
         $deptPerfColor = match(true) {
-            $departmentPerformance >= 90 => ['bar' => 'from-emerald-400 to-green-500', 'text' => 'text-emerald-400', 'label' => 'Excellent', 'badge' => 'bg-emerald-500/20 text-emerald-300'],
-            $departmentPerformance >= 75 => ['bar' => 'from-blue-400 to-indigo-500',  'text' => 'text-blue-300',    'label' => 'Good',      'badge' => 'bg-blue-500/20 text-blue-200'],
-            $departmentPerformance >= 50 => ['bar' => 'from-yellow-400 to-amber-500', 'text' => 'text-yellow-300', 'label' => 'Watch',     'badge' => 'bg-yellow-500/20 text-yellow-200'],
-            default                      => ['bar' => 'from-red-400 to-rose-500',     'text' => 'text-red-300',    'label' => 'Critical',  'badge' => 'bg-red-500/20 text-red-300'],
+            $departmentPerformance >= 90 => ['bar' => 'from-emerald-400 to-green-500', 'text' => 'text-emerald-400', 'label' => 'Excellent', 'badge' => 'bg-emerald-100 text-emerald-700'],
+            $departmentPerformance >= 75 => ['bar' => 'from-blue-400 to-indigo-500',  'text' => 'text-blue-300',    'label' => 'Good',      'badge' => 'bg-blue-100 text-blue-700'],
+            $departmentPerformance >= 50 => ['bar' => 'from-yellow-400 to-amber-500', 'text' => 'text-yellow-300', 'label' => 'Watch',     'badge' => 'bg-yellow-100 text-yellow-700'],
+            default                      => ['bar' => 'from-red-400 to-rose-500',     'text' => 'text-red-300',    'label' => 'Critical',  'badge' => 'bg-red-100 text-red-700'],
         };
 
         $statusCounts = collect($kpis ?? [])->countBy(fn($k) => $k['status'] ?? 'not_started');
@@ -77,6 +161,14 @@
                 }
                 return $perf;
             });
+
+        $statusDef = [
+            'completed'   => ['label' => 'Completed',  'color' => 'bg-emerald-100 text-emerald-700', 'dot' => 'bg-emerald-500'],
+            'on_track'    => ['label' => 'On Track',   'color' => 'bg-blue-100 text-blue-700',       'dot' => 'bg-blue-500'],
+            'at_risk'     => ['label' => 'At Risk',    'color' => 'bg-yellow-100 text-yellow-700',   'dot' => 'bg-yellow-500'],
+            'in_trouble'  => ['label' => 'In Trouble', 'color' => 'bg-red-100 text-red-700',         'dot' => 'bg-red-500'],
+            'not_started' => ['label' => 'Not Started','color' => 'bg-slate-100 text-slate-500',     'dot' => 'bg-slate-400'],
+        ];
     @endphp
 
     {{-- DEPT PERFORMANCE + LEGEND --}}
@@ -87,10 +179,7 @@
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Department Performance</p>
             <div class="flex items-end justify-between mt-3 gap-3">
                 <h2 class="text-5xl font-black text-slate-900">{{ number_format($departmentPerformance, 1) }}<span class="text-2xl text-slate-400">%</span></h2>
-                <span class="text-xs font-black px-3 py-1.5 rounded-xl
-                    {{ $departmentPerformance >= 90 ? 'bg-emerald-100 text-emerald-700' : ($departmentPerformance >= 75 ? 'bg-blue-100 text-blue-700' : ($departmentPerformance >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700')) }}">
-                    {{ $deptPerfColor['label'] }}
-                </span>
+                <span class="text-xs font-black px-3 py-1.5 rounded-xl {{ $deptPerfColor['badge'] }}">{{ $deptPerfColor['label'] }}</span>
             </div>
             <div class="mt-4 h-3 bg-slate-100 rounded-full overflow-hidden">
                 <div class="h-3 rounded-full bg-gradient-to-r {{ $deptPerfColor['bar'] }}" style="width: {{ min(100, max(2, $departmentPerformance)) }}%"></div>
@@ -102,18 +191,8 @@
         <div class="glass rounded-[20px] border border-white/70 p-6 shadow-sm">
             <div class="flex items-center gap-2 mb-4">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">KPI Status Breakdown</p>
-                <span class="text-[9px] text-slate-400 font-medium">— set by each staff</span>
             </div>
             <div class="grid grid-cols-2 gap-2">
-                @php
-                    $statusDef = [
-                        'completed'   => ['label' => 'Completed',   'color' => 'bg-emerald-100 text-emerald-700', 'dot' => 'bg-emerald-500'],
-                        'on_track'    => ['label' => 'On Track',     'color' => 'bg-blue-100 text-blue-700',      'dot' => 'bg-blue-500'],
-                        'at_risk'     => ['label' => 'At Risk',      'color' => 'bg-yellow-100 text-yellow-700',  'dot' => 'bg-yellow-500'],
-                        'in_trouble'  => ['label' => 'In Trouble',   'color' => 'bg-red-100 text-red-700',        'dot' => 'bg-red-500'],
-                        'not_started' => ['label' => 'Not Started',  'color' => 'bg-slate-100 text-slate-500',    'dot' => 'bg-slate-400'],
-                    ];
-                @endphp
                 @foreach($statusDef as $key => $def)
                 <div class="flex items-center gap-2 px-3 py-2 rounded-xl {{ $def['color'] }}">
                     <span class="w-2 h-2 rounded-full {{ $def['dot'] }} shrink-0"></span>
@@ -124,32 +203,29 @@
             </div>
         </div>
 
-        {{-- PERFORMANCE ACHIEVEMENT GUIDE --}}
+        {{-- PERFORMANCE GUIDE --}}
         <div class="glass rounded-[20px] border border-white/70 p-6 shadow-sm">
             <div class="flex items-center gap-2 mb-4">
                 <div class="w-6 h-6 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
                     <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
-                <div>
-                    <p class="text-[10px] font-black text-slate-700 uppercase tracking-widest">Performance Achievement Guide</p>
-                    <p class="text-[9px] text-slate-400 mt-0.5">Actual ÷ Target × 100% — how much of the KPI target is met</p>
-                </div>
+                <p class="text-[10px] font-black text-slate-700 uppercase tracking-widest">Performance Achievement Guide</p>
             </div>
             <div class="space-y-2">
                 <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-100">
-                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500 shrink-0"></span><span class="text-[11px] font-black text-emerald-700">Excellent</span></div>
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span class="text-[11px] font-black text-emerald-700">Excellent</span></div>
                     <span class="text-[11px] font-black text-emerald-600">≥ 90%</span>
                 </div>
                 <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-blue-50 border border-blue-100">
-                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-blue-500 shrink-0"></span><span class="text-[11px] font-black text-blue-700">Good</span></div>
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-blue-500"></span><span class="text-[11px] font-black text-blue-700">Good</span></div>
                     <span class="text-[11px] font-black text-blue-600">75 – 89%</span>
                 </div>
                 <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-yellow-50 border border-yellow-100">
-                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-yellow-500 shrink-0"></span><span class="text-[11px] font-black text-yellow-700">Watch</span></div>
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-yellow-500"></span><span class="text-[11px] font-black text-yellow-700">Watch</span></div>
                     <span class="text-[11px] font-black text-yellow-600">50 – 74%</span>
                 </div>
                 <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-red-50 border border-red-100">
-                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-500 shrink-0"></span><span class="text-[11px] font-black text-red-700">Critical</span></div>
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-500"></span><span class="text-[11px] font-black text-red-700">Critical</span></div>
                     <span class="text-[11px] font-black text-red-600">< 50%</span>
                 </div>
             </div>
@@ -162,17 +238,17 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
                 <label class="text-xs font-bold text-slate-500 uppercase">Search</label>
-                <input id="searchInput" type="text" placeholder="Name, KPI title, category..."
+                <input id="searchInput" type="text" placeholder="Name, KPI title, sub-category..."
                        class="w-full mt-2 border border-slate-200 bg-white rounded-xl px-4 py-2.5 text-xs">
             </div>
             <div>
                 <label class="text-xs font-bold text-slate-500 uppercase">Category</label>
                 <select id="categoryFilter" class="w-full mt-2 border border-slate-200 bg-white rounded-xl px-4 py-2.5 text-xs">
                     <option value="">All Categories</option>
-                    <option value="Financial">Financial</option>
-                    <option value="Growth & Customer">Growth & Customer</option>
-                    <option value="Initiatives">Initiatives</option>
-                    <option value="People">People</option>
+                    <option value="Financial">💰 Financial</option>
+                    <option value="Growth & Customer">📈 Growth & Customer</option>
+                    <option value="Initiatives">🚀 Initiatives</option>
+                    <option value="People">👥 People</option>
                 </select>
             </div>
             <div>
@@ -194,30 +270,25 @@
     </div>
 
     {{-- STAFF LIST --}}
-    <div class="space-y-3">
+    <div class="space-y-4">
 
         @foreach($staffGroupedKpis as $staffName => $staffKpis)
 
         @php
             $staffPerformance = 0;
-            $excellentCount = 0;
-            $goodCount = 0;
-            $watchCount = 0;
-            $criticalCount = 0;
-
+            $excellentCount = 0; $goodCount = 0; $watchCount = 0; $criticalCount = 0;
             $staffStatusCounts = [];
+
             foreach($staffKpis as $sk){
                 $q = collect($sk['quarters'] ?? []);
                 $t = $q->sum(fn($x) => (float)($x['quarter_target'] ?? 0));
                 $a = $q->sum(fn($x) => (float)($x['quarter_actual'] ?? 0));
                 $score = $t > 0 ? (($a / $t) * 100) : 0;
                 $staffPerformance += ($score * (float)($sk['weightage'] ?? 0)) / 100;
-
-                if($score >= 90)      $excellentCount++;
-                elseif($score >= 75)  $goodCount++;
-                elseif($score >= 50)  $watchCount++;
-                else                  $criticalCount++;
-
+                if($score >= 90)     $excellentCount++;
+                elseif($score >= 75) $goodCount++;
+                elseif($score >= 50) $watchCount++;
+                else                 $criticalCount++;
                 $st = $sk['status'] ?? 'not_started';
                 $staffStatusCounts[$st] = ($staffStatusCounts[$st] ?? 0) + 1;
             }
@@ -229,51 +300,63 @@
                 default                 => ['bar' => 'from-red-400 to-rose-500',     'text' => 'text-red-700',    'label' => 'Critical',  'badge' => 'bg-red-100 text-red-700'],
             };
 
-            $staffRole = collect($staffKpis)->first()['employee_role'] ?? '';
-            $initials  = collect(explode(' ', strtoupper($staffName)))->filter()->map(fn($p)=>$p[0])->take(2)->join('');
+            $staffRole     = collect($staffKpis)->first()['employee_role'] ?? '';
+            $initials      = collect(explode(' ', strtoupper($staffName)))->filter()->map(fn($p)=>$p[0])->take(2)->join('');
+            $staffSlug     = Str::slug($staffName);
+
+            // Group by category in defined order
+            $byCategory = collect($staffKpis)->groupBy('category');
+            $orderedCats = [];
+            foreach($categoryOrder as $co){
+                if($byCategory->has($co)) $orderedCats[$co] = $byCategory[$co];
+            }
+            // Any remaining categories not in order
+            foreach($byCategory as $catKey => $catItems){
+                if(!isset($orderedCats[$catKey])) $orderedCats[$catKey] = $catItems;
+            }
+
+            // Category weightage totals
+            $catWeightages = [];
+            foreach($orderedCats as $catKey => $catKpis){
+                $catWeightages[$catKey] = collect($catKpis)->sum(fn($k) => (float)($k['weightage'] ?? 0));
+            }
         @endphp
 
         <div class="glass rounded-[20px] border border-white/70 overflow-hidden shadow-sm staff-block"
              data-staff="{{ strtolower($staffName) }}">
 
             {{-- STAFF HEADER --}}
-            <button onclick="toggleStaff('{{ Str::slug($staffName) }}')"
-                    class="w-full p-5 text-left hover:bg-slate-50/80 transition">
-
+            <button onclick="toggleStaff('{{ $staffSlug }}')"
+                    class="w-full p-5 text-left hover:bg-slate-50/80 transition group">
                 <div class="flex flex-col xl:flex-row xl:items-center gap-4">
 
                     {{-- AVATAR + INFO --}}
                     <div class="flex items-center gap-4 flex-1 min-w-0">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#06142f] to-blue-700 flex items-center justify-center text-white font-black text-lg shrink-0">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#06142f] to-blue-700 flex items-center justify-center text-white font-black text-lg shrink-0 group-hover:scale-105 transition">
                             {{ $initials ?: '?' }}
                         </div>
-                        <div class="min-w-0">
+                        <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <h2 class="text-lg font-black text-slate-900">{{ strtoupper($staffName) }}</h2>
                                 @if($staffRole)
                                 <span class="text-[9px] font-black px-2 py-0.5 rounded-lg bg-slate-100 text-slate-500 uppercase">{{ $staffRole }}</span>
                                 @endif
+                                <span class="text-[9px] font-black px-2 py-0.5 rounded-lg bg-slate-900 text-white">{{ count($staffKpis) }} KPIs</span>
                             </div>
-                            {{-- KPI STATUS ROW --}}
+                            {{-- CATEGORY PILLS --}}
                             <div class="flex flex-wrap gap-1.5 mt-2">
-                                <span class="text-[9px] font-black text-slate-400 uppercase self-center mr-1">Status:</span>
-                                @foreach($statusDef as $sKey => $sDef)
-                                @if(($staffStatusCounts[$sKey] ?? 0) > 0)
-                                <span class="flex items-center gap-1 px-2 py-0.5 rounded-lg {{ $sDef['color'] }} text-[10px] font-black">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $sDef['dot'] }}"></span>
-                                    {{ $sDef['label'] }} {{ $staffStatusCounts[$sKey] }}
+                                @foreach($orderedCats as $catKey => $catKpis)
+                                @php $ct = $catThemes[$catKey] ?? $catThemeDefault; @endphp
+                                <span class="flex items-center gap-1 px-2.5 py-0.5 rounded-full {{ $ct['catPill'] }} text-[9px] font-black opacity-90">
+                                    {{ $ct['icon'] }} {{ $catKey }} <span class="opacity-70 ml-0.5">({{ count($catKpis) }})</span>
                                 </span>
-                                @endif
                                 @endforeach
-                                <span class="text-[9px] text-slate-300 self-center">·</span>
-                                <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-500 text-[10px] font-black">{{ count($staffKpis) }} KPIs</span>
                             </div>
                         </div>
                     </div>
 
                     {{-- ACHIEVEMENT BREAKDOWN --}}
-                    <div class="flex flex-wrap gap-1.5 xl:w-[320px]">
-                        <span class="text-[9px] font-black text-slate-400 uppercase self-center w-full xl:w-auto xl:mr-1">Achievement:</span>
+                    <div class="flex flex-wrap gap-1.5 xl:w-[280px]">
                         @if($excellentCount > 0)
                         <span class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 text-[10px] font-black border border-emerald-100">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>Excellent {{ $excellentCount }}
@@ -299,7 +382,7 @@
                     {{-- PERFORMANCE SCORE --}}
                     <div class="xl:w-[200px] shrink-0">
                         <div class="flex items-center justify-between mb-1.5">
-                            <p class="text-[9px] uppercase font-black text-slate-400 tracking-wider">Performance Achievement</p>
+                            <p class="text-[9px] uppercase font-black text-slate-400 tracking-wider">Performance</p>
                             <span class="text-xs font-black px-2 py-0.5 rounded-lg {{ $spColor['badge'] }}">{{ $spColor['label'] }}</span>
                         </div>
                         <div class="flex items-center gap-3">
@@ -310,88 +393,147 @@
                         </div>
                     </div>
 
+                    {{-- EXPAND ICON --}}
+                    <div class="shrink-0">
+                        <div id="arrow-{{ $staffSlug }}" class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-transform">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </div>
+
                 </div>
             </button>
 
-            {{-- STAFF KPI CARDS --}}
-            <div id="staff-{{ Str::slug($staffName) }}"
-                 class="hidden border-t border-slate-100 bg-slate-50/60 p-4 space-y-3">
+            {{-- CATEGORY SECTIONS (hidden by default) --}}
+            <div id="staff-{{ $staffSlug }}" class="hidden border-t border-slate-100">
 
-                @foreach($staffKpis as $kpi)
+                @foreach($orderedCats as $catKey => $catKpis)
                 @php
-                    $kq = collect($kpi['quarters'] ?? []);
-                    $kt = $kq->sum(fn($q) => (float)($q['quarter_target'] ?? 0));
-                    $ka = $kq->sum(fn($q) => (float)($q['quarter_actual'] ?? 0));
-                    $kachv = $kt > 0 ? (($ka / $kt) * 100) : 0;
+                    $ct         = $catThemes[$catKey] ?? $catThemeDefault;
+                    $catSlug    = $staffSlug . '-' . Str::slug($catKey);
+                    $catWt      = round($catWeightages[$catKey] ?? 0, 1);
 
-                    $kColor = match(true) {
-                        $kachv >= 90 => ['bar' => 'from-emerald-400 to-green-500', 'text' => 'text-emerald-700', 'label' => 'Excellent', 'badge' => 'bg-emerald-100 text-emerald-700', 'border' => 'border-l-emerald-400'],
-                        $kachv >= 75 => ['bar' => 'from-blue-400 to-indigo-500',  'text' => 'text-blue-700',    'label' => 'Good',      'badge' => 'bg-blue-100 text-blue-700',       'border' => 'border-l-blue-400'],
-                        $kachv >= 50 => ['bar' => 'from-yellow-400 to-amber-500', 'text' => 'text-yellow-700', 'label' => 'Watch',     'badge' => 'bg-yellow-100 text-yellow-700',   'border' => 'border-l-yellow-400'],
-                        default      => ['bar' => 'from-red-400 to-rose-500',     'text' => 'text-red-700',    'label' => 'Critical',  'badge' => 'bg-red-100 text-red-700',         'border' => 'border-l-red-500'],
+                    // Category performance
+                    $catPerf = 0;
+                    $catKpiCount = count($catKpis);
+                    foreach($catKpis as $ck){
+                        $cq = collect($ck['quarters'] ?? []);
+                        $ct_ = $cq->sum(fn($q) => (float)($q['quarter_target'] ?? 0));
+                        $ca_ = $cq->sum(fn($q) => (float)($q['quarter_actual'] ?? 0));
+                        $cs = $ct_ > 0 ? ($ca_ / $ct_) * 100 : 0;
+                        $catPerf += ($cs * (float)($ck['weightage'] ?? 0)) / 100;
+                    }
+                    $catPerfColor = match(true) {
+                        $catPerf >= 90 => 'text-emerald-400',
+                        $catPerf >= 75 => 'text-blue-300',
+                        $catPerf >= 50 => 'text-yellow-300',
+                        default        => 'text-red-300',
                     };
-
-                    $kStatus     = $kpi['status'] ?? 'not_started';
-                    $kStatusDef  = $statusDef[$kStatus] ?? $statusDef['not_started'];
                 @endphp
 
-                <div onclick="openKpiDrawer(this)"
-                     class="kpi-card cursor-pointer bg-white border border-slate-200 border-l-4 {{ $kColor['border'] }} rounded-[16px] p-5 hover:shadow-md transition"
-                     data-search="{{ strtolower(($kpi['kpi_title'] ?? '') . ' ' . ($staffName ?? '') . ' ' . ($kpi['category'] ?? '')) }}"
-                     data-category="{{ $kpi['category'] ?? '' }}"
-                     data-status="{{ $kStatus }}"
-                     data-kpi='@json($kpi)'>
+                <div class="cat-section" data-category-section="{{ $catKey }}">
 
-                    <div class="flex flex-col xl:flex-row xl:items-center gap-4">
-
-                        {{-- LEFT --}}
-                        <div class="flex-1 min-w-0">
-                            <div class="flex flex-wrap gap-2 mb-2">
-                                <span class="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black">{{ $kpi['category'] ?? '-' }}</span>
-                                <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black">{{ $kpi['sub_category'] ?? '-' }}</span>
-                                {{-- STATUS BADGE --}}
-                                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-full {{ $kStatusDef['color'] }} text-[10px] font-black">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $kStatusDef['dot'] }}"></span>
-                                    {{ $kStatusDef['label'] }}
-                                </span>
+                    {{-- CATEGORY HEADER --}}
+                    <button onclick="toggleCategory('{{ $catSlug }}')"
+                            class="w-full text-left px-6 py-3.5 bg-gradient-to-r {{ $ct['headerBg'] }} flex items-center justify-between group hover:opacity-95 transition">
+                        <div class="flex items-center gap-3">
+                            <span class="text-base">{{ $ct['icon'] }}</span>
+                            <div>
+                                <span class="text-sm font-black text-white tracking-wide">{{ $catKey }}</span>
+                                <span class="ml-2 text-[10px] font-black px-2 py-0.5 rounded-full {{ $ct['countBadge'] }}">{{ $catKpiCount }} KPI{{ $catKpiCount > 1 ? 's' : '' }}</span>
+                                <span class="ml-1.5 text-[10px] {{ $ct['headerText'] }} opacity-70">· {{ $catWt }}% weightage</span>
                             </div>
-                            <h3 class="text-sm font-black text-slate-900 leading-snug">{{ $kpi['kpi_title'] ?? '-' }}</h3>
-                            <p class="text-xs text-slate-400 mt-1 line-clamp-1">{{ $kpi['kpi_description'] ?? '-' }}</p>
                         </div>
-
-                        {{-- QUARTER DOTS --}}
-                        <div class="flex gap-1.5 xl:w-auto shrink-0">
-                            @foreach(['Q1','Q2','Q3','Q4'] as $qn)
-                            @php
-                                $qd  = $kq->firstWhere('quarter', $qn) ?? [];
-                                $qkt = (float)($qd['quarter_target'] ?? 0);
-                                $qka = (float)($qd['quarter_actual'] ?? 0);
-                                $qks = $qkt > 0 ? ($qka / $qkt) * 100 : 0;
-                                $qDot = match(true) {
-                                    $qks >= 90 => 'bg-emerald-500 text-white',
-                                    $qks >= 75 => 'bg-blue-500 text-white',
-                                    $qks >= 50 => 'bg-yellow-400 text-white',
-                                    $qks > 0   => 'bg-red-500 text-white',
-                                    default    => 'bg-slate-200 text-slate-400',
-                                };
-                            @endphp
-                            <div class="w-8 h-8 rounded-xl {{ $qDot }} flex items-center justify-center text-[9px] font-black">{{ $qn }}</div>
-                            @endforeach
-                        </div>
-
-                        {{-- ACHIEVEMENT --}}
-                        <div class="xl:w-[180px] shrink-0">
-                            <div class="flex items-center justify-between mb-1">
-                                <p class="text-[9px] uppercase font-black text-slate-400">Achievement</p>
-                                <span class="text-[10px] font-black px-2 py-0.5 rounded-lg {{ $kColor['badge'] }}">{{ $kColor['label'] }}</span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg font-black {{ $catPerfColor }}">{{ number_format($catPerf, 1) }}%</span>
+                            <div id="cat-arrow-{{ $catSlug }}" class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-white transition-transform">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                    <div class="h-2 rounded-full bg-gradient-to-r {{ $kColor['bar'] }}" style="width: {{ min(100, max(2, $kachv)) }}%"></div>
+                        </div>
+                    </button>
+
+                    {{-- KPI CARDS FOR THIS CATEGORY --}}
+                    <div id="cat-{{ $catSlug }}" class="{{ $ct['sectionBg'] }} border-b {{ $ct['divider'] }} p-4 space-y-2.5">
+
+                        @foreach($catKpis as $kpi)
+                        @php
+                            $kq    = collect($kpi['quarters'] ?? []);
+                            $kt    = $kq->sum(fn($q) => (float)($q['quarter_target'] ?? 0));
+                            $ka    = $kq->sum(fn($q) => (float)($q['quarter_actual'] ?? 0));
+                            $kachv = $kt > 0 ? (($ka / $kt) * 100) : 0;
+
+                            $kColor = match(true) {
+                                $kachv >= 90 => ['bar' => 'from-emerald-400 to-green-500', 'text' => 'text-emerald-700', 'label' => 'Excellent', 'badge' => 'bg-emerald-100 text-emerald-700'],
+                                $kachv >= 75 => ['bar' => 'from-blue-400 to-indigo-500',  'text' => 'text-blue-700',    'label' => 'Good',      'badge' => 'bg-blue-100 text-blue-700'],
+                                $kachv >= 50 => ['bar' => 'from-yellow-400 to-amber-500', 'text' => 'text-yellow-700', 'label' => 'Watch',     'badge' => 'bg-yellow-100 text-yellow-700'],
+                                default      => ['bar' => 'from-red-400 to-rose-500',     'text' => 'text-red-700',    'label' => 'Critical',  'badge' => 'bg-red-100 text-red-700'],
+                            };
+
+                            $kStatus    = $kpi['status'] ?? 'not_started';
+                            $kStatusDef = $statusDef[$kStatus] ?? $statusDef['not_started'];
+                        @endphp
+
+                        <div onclick="openKpiDrawer(this)"
+                             class="kpi-card cursor-pointer bg-white border border-l-4 {{ $ct['border'] }} rounded-[14px] p-4 hover:shadow-md transition-all hover:-translate-y-0.5"
+                             data-search="{{ strtolower(($kpi['kpi_title'] ?? '') . ' ' . ($staffName ?? '') . ' ' . ($kpi['category'] ?? '') . ' ' . ($kpi['sub_category'] ?? '')) }}"
+                             data-category="{{ $kpi['category'] ?? '' }}"
+                             data-status="{{ $kStatus }}"
+                             data-kpi='@json($kpi)'>
+
+                            <div class="flex flex-col xl:flex-row xl:items-center gap-3">
+
+                                {{-- LEFT: TITLE + BADGES --}}
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex flex-wrap gap-1.5 mb-2">
+                                        <span class="px-2.5 py-1 rounded-full {{ $ct['catPill'] }} text-[9px] font-black">{{ $ct['icon'] }} {{ $kpi['category'] ?? '-' }}</span>
+                                        @if($kpi['sub_category'] ?? '')
+                                        <span class="px-2.5 py-1 rounded-full {{ $ct['subPill'] }} text-[9px] font-black">{{ $kpi['sub_category'] }}</span>
+                                        @endif
+                                        <span class="flex items-center gap-1 px-2.5 py-1 rounded-full {{ $kStatusDef['color'] }} text-[9px] font-black">
+                                            <span class="w-1.5 h-1.5 rounded-full {{ $kStatusDef['dot'] }}"></span>{{ $kStatusDef['label'] }}
+                                        </span>
+                                        <span class="px-2 py-1 rounded-full bg-slate-100 text-slate-500 text-[9px] font-black">{{ $kpi['weightage'] ?? 0 }}%</span>
+                                    </div>
+                                    <h3 class="text-sm font-black text-slate-900 leading-snug">{{ $kpi['kpi_title'] ?? '-' }}</h3>
+                                    <p class="text-xs text-slate-400 mt-1 line-clamp-1">{{ $kpi['kpi_description'] ?? '-' }}</p>
                                 </div>
-                                <span class="text-xs font-black {{ $kColor['text'] }} shrink-0">{{ number_format($kachv, 1) }}%</span>
+
+                                {{-- QUARTER DOTS --}}
+                                <div class="flex gap-1.5 shrink-0">
+                                    @foreach(['Q1','Q2','Q3','Q4'] as $qn)
+                                    @php
+                                        $qd  = $kq->firstWhere('quarter', $qn) ?? [];
+                                        $qkt = (float)($qd['quarter_target'] ?? 0);
+                                        $qka = (float)($qd['quarter_actual'] ?? 0);
+                                        $qks = $qkt > 0 ? ($qka / $qkt) * 100 : 0;
+                                        $qDot = match(true) {
+                                            $qks >= 90 => 'bg-emerald-500 text-white',
+                                            $qks >= 75 => 'bg-blue-500 text-white',
+                                            $qks >= 50 => 'bg-yellow-400 text-white',
+                                            $qks > 0   => 'bg-red-500 text-white',
+                                            default    => 'bg-slate-200 text-slate-400',
+                                        };
+                                    @endphp
+                                    <div class="w-8 h-8 rounded-xl {{ $qDot }} flex items-center justify-center text-[9px] font-black">{{ $qn }}</div>
+                                    @endforeach
+                                </div>
+
+                                {{-- ACHIEVEMENT --}}
+                                <div class="xl:w-[170px] shrink-0">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <p class="text-[9px] uppercase font-black text-slate-400">Achievement</p>
+                                        <span class="text-[9px] font-black px-2 py-0.5 rounded-lg {{ $kColor['badge'] }}">{{ $kColor['label'] }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                            <div class="h-2 rounded-full bg-gradient-to-r {{ $kColor['bar'] }}" style="width: {{ min(100, max(2, $kachv)) }}%"></div>
+                                        </div>
+                                        <span class="text-xs font-black {{ $kColor['text'] }} shrink-0 w-12 text-right">{{ number_format($kachv, 1) }}%</span>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
+                        @endforeach
 
                     </div>
                 </div>
@@ -416,6 +558,12 @@
 </div>
 
 <script>
+const categoryColors = {
+    'Financial':         { catPill: 'bg-emerald-700 text-white', subPill: 'bg-emerald-100 text-emerald-700', icon: '💰', headerGrad: 'linear-gradient(to right,#065f46,#059669)' },
+    'Growth & Customer': { catPill: 'bg-indigo-700 text-white',  subPill: 'bg-indigo-100 text-indigo-700',   icon: '📈', headerGrad: 'linear-gradient(to right,#3730a3,#4f46e5)' },
+    'Initiatives':       { catPill: 'bg-amber-600 text-white',   subPill: 'bg-amber-100 text-amber-700',     icon: '🚀', headerGrad: 'linear-gradient(to right,#92400e,#f59e0b)' },
+    'People':            { catPill: 'bg-pink-700 text-white',    subPill: 'bg-pink-100 text-pink-700',       icon: '👥', headerGrad: 'linear-gradient(to right,#9d174d,#db2777)' },
+};
 
 const statusLabels = {
     'completed':   { label: 'Completed',  color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
@@ -433,14 +581,25 @@ function achvBadge(score){
 }
 
 function toggleStaff(id){
-    const el = document.getElementById('staff-' + id);
-    if(el) el.classList.toggle('hidden');
+    const el    = document.getElementById('staff-' + id);
+    const arrow = document.getElementById('arrow-' + id);
+    if(!el) return;
+    const isHidden = el.classList.toggle('hidden');
+    if(arrow) arrow.classList.toggle('rotate-180', !isHidden);
 }
 
-const searchInput   = document.getElementById('searchInput');
+function toggleCategory(id){
+    const el    = document.getElementById('cat-' + id);
+    const arrow = document.getElementById('cat-arrow-' + id);
+    if(!el) return;
+    const isHidden = el.classList.toggle('hidden');
+    if(arrow) arrow.classList.toggle('rotate-180', !isHidden);
+}
+
+const searchInput    = document.getElementById('searchInput');
 const categoryFilter = document.getElementById('categoryFilter');
-const statusFilter  = document.getElementById('statusFilter');
-const visibleCount  = document.getElementById('visibleCount');
+const statusFilter   = document.getElementById('statusFilter');
+const visibleCount   = document.getElementById('visibleCount');
 
 function filterRows(){
     const search   = searchInput.value.toLowerCase();
@@ -456,6 +615,26 @@ function filterRows(){
         if(ok) visible++;
     });
     visibleCount.innerText = visible;
+
+    // Auto-expand staff + category sections that have visible KPIs
+    document.querySelectorAll('.staff-block').forEach(block => {
+        const slug = block.querySelector('[id^="staff-"]')?.id?.replace('staff-', '');
+        if(!slug) return;
+        const staffSection = document.getElementById('staff-' + slug);
+        const hasVisible   = [...block.querySelectorAll('.kpi-card')].some(c => !c.classList.contains('hidden'));
+        if(hasVisible && staffSection && staffSection.classList.contains('hidden')){
+            toggleStaff(slug);
+        }
+    });
+
+    // Auto-expand category sections with visible cards when filtering
+    if(category || status || search){
+        document.querySelectorAll('[id^="cat-"]').forEach(sec => {
+            if(!sec.id.startsWith('cat-')) return;
+            const hasVis = [...sec.querySelectorAll('.kpi-card')].some(c => !c.classList.contains('hidden'));
+            if(hasVis) sec.classList.remove('hidden');
+        });
+    }
 }
 
 searchInput.addEventListener('input', filterRows);
@@ -471,6 +650,7 @@ function openKpiDrawer(card){
     const quarters = kpi.quarters || [];
     const kStatus  = kpi.status || 'not_started';
     const sDef     = statusLabels[kStatus] || statusLabels['not_started'];
+    const catColor = categoryColors[kpi.category] || { catPill:'bg-slate-600 text-white', subPill:'bg-slate-100 text-slate-600', icon:'📌', headerGrad:'linear-gradient(to right,#475569,#64748b)' };
 
     let totalTarget = 0, totalActual = 0;
     quarters.forEach(q => {
@@ -507,14 +687,8 @@ function openKpiDrawer(card){
                 <div class="h-2 rounded-full bg-gradient-to-r ${qb.bar}" style="width:${Math.min(100,Math.max(2,score))}%"></div>
             </div>
             <div class="grid grid-cols-2 gap-3">
-                <div class="bg-slate-50 rounded-xl p-4">
-                    <p class="text-[9px] uppercase text-slate-400 font-black">Target</p>
-                    <h3 class="text-xl font-black text-slate-900 mt-1">${target.toLocaleString()}</h3>
-                </div>
-                <div class="bg-emerald-50 rounded-xl p-4">
-                    <p class="text-[9px] uppercase text-emerald-600 font-black">Actual</p>
-                    <h3 class="text-xl font-black text-emerald-700 mt-1">${actual.toLocaleString()}</h3>
-                </div>
+                <div class="bg-slate-50 rounded-xl p-4"><p class="text-[9px] uppercase text-slate-400 font-black">Target</p><h3 class="text-xl font-black text-slate-900 mt-1">${target.toLocaleString()}</h3></div>
+                <div class="bg-emerald-50 rounded-xl p-4"><p class="text-[9px] uppercase text-emerald-600 font-black">Actual</p><h3 class="text-xl font-black text-emerald-700 mt-1">${actual.toLocaleString()}</h3></div>
             </div>
         </div>`;
     });
@@ -525,10 +699,10 @@ function openKpiDrawer(card){
             <div class="flex items-start justify-between gap-5">
                 <div class="flex-1 min-w-0">
                     <div class="flex flex-wrap gap-2 mb-3">
-                        <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black">${kpi.category || '-'}</span>
-                        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black">${kpi.sub_category || '-'}</span>
+                        <span class="px-3 py-1 rounded-full ${catColor.catPill} text-[10px] font-black">${catColor.icon} ${kpi.category || '-'}</span>
+                        <span class="px-3 py-1 rounded-full ${catColor.subPill} text-[10px] font-black">${kpi.sub_category || '-'}</span>
                         <span class="flex items-center gap-1.5 px-3 py-1 rounded-full ${sDef.color} text-[10px] font-black">
-                            <span class="w-1.5 h-1.5 rounded-full ${sDef.dot}"></span>KPI Status: ${sDef.label}
+                            <span class="w-1.5 h-1.5 rounded-full ${sDef.dot}"></span>Status: ${sDef.label}
                         </span>
                         <span class="px-3 py-1 rounded-full ${aBadge.color} text-[10px] font-black">Achievement: ${aBadge.label} (${overallScore.toFixed(1)}%)</span>
                     </div>
@@ -545,16 +719,16 @@ function openKpiDrawer(card){
         <div class="p-6 grid grid-cols-1 xl:grid-cols-12 gap-5">
             <div class="xl:col-span-8 space-y-4">${quarterHtml}</div>
             <div class="xl:col-span-4 space-y-4">
-                <div class="rounded-[20px] overflow-hidden bg-gradient-to-br from-[#06142f] via-blue-900 to-indigo-900 text-white shadow-xl p-5">
-                    <p class="text-[9px] uppercase text-blue-200 font-black tracking-widest">KPI Owner</p>
+                <div class="rounded-[20px] overflow-hidden text-white shadow-xl p-5" style="background:${catColor.headerGrad}">
+                    <p class="text-[9px] uppercase opacity-70 font-black tracking-widest">KPI Owner</p>
                     <h2 class="text-xl font-black mt-2">${kpi.employee_name || '-'}</h2>
                     <div class="grid grid-cols-2 gap-3 mt-5">
                         <div class="bg-white/10 rounded-xl p-4">
-                            <p class="text-[9px] uppercase text-blue-200 font-black">Weightage</p>
+                            <p class="text-[9px] uppercase opacity-70 font-black">Weightage</p>
                             <h3 class="text-2xl font-black mt-1">${kpi.weightage || 0}%</h3>
                         </div>
                         <div class="bg-white/10 rounded-xl p-4">
-                            <p class="text-[9px] uppercase text-blue-200 font-black">KPI Status</p>
+                            <p class="text-[9px] uppercase opacity-70 font-black">KPI Status</p>
                             <span class="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-lg ${sDef.color} text-xs font-black">
                                 <span class="w-1.5 h-1.5 rounded-full ${sDef.dot}"></span>${sDef.label}
                             </span>
@@ -596,11 +770,9 @@ function openKpiDrawer(card){
 }
 
 function closeKpiDrawer(){
-    const drawer = document.getElementById('kpiDrawer');
-    if(drawer) drawer.classList.add('hidden');
+    document.getElementById('kpiDrawer')?.classList.add('hidden');
     document.body.classList.remove('overflow-hidden');
 }
-
 </script>
 
 </body>

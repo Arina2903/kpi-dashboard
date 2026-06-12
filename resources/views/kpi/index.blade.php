@@ -78,32 +78,30 @@
 
     @php
         /*
-            Individual Performance Formula:
-            1. Calculate each KPI score = total actual / total target * 100.
-            2. Calculate each KPI weighted score = KPI score * weightage / 100.
-            3. Individual performance = total weighted score from current user's own KPI only.
+            KPI Score Formula:
+            1. KPI Score = Σ per quarter (quarter_actual / base_target × 100).
+            2. Weighted KPI Score = KPI Score × weightage / 100.
+            3. Individual KPI Score = sum of weighted KPI scores for current user's own KPIs.
         */
         $currentUserId = (string) ($user['id'] ?? '');
         $currentEmployeeId = (string) ($user['id'] ?? '');
         $currentUserName = strtolower(trim($user['short_name'] ?? $user['full_name'] ?? $user['name'] ?? ''));
 
         $calculateDashboardKpiScore = function ($item) {
-            $quarters = collect($item['quarters'] ?? $item['quarter_plans'] ?? []);
-            $baseTotal = 0;
+            $quarters    = collect($item['quarters'] ?? $item['quarter_plans'] ?? []);
+            $baseTarget  = max(0, (float) ($item['base_target'] ?? 0));
             $actualTotal = 0;
 
+            // Only count quarters that have a target configured (target = 0 means not set up)
             foreach (['Q1', 'Q2', 'Q3', 'Q4'] as $quarterName) {
                 $quarter = $quarters->firstWhere('quarter', $quarterName) ?? [];
-                $baseTotal += max(0, (float) ($quarter['quarter_target'] ?? 0));
-                $actualTotal += max(0, (float) ($quarter['quarter_actual'] ?? 0));
+                if ((float)($quarter['quarter_target'] ?? 0) > 0) {
+                    $actualTotal += max(0, (float) ($quarter['quarter_actual'] ?? 0));
+                }
             }
 
-            if ($baseTotal <= 0) {
-                $baseTotal = max(0, (float) ($item['base_target'] ?? 0));
-                $actualTotal = max(0, (float) ($item['actual_value'] ?? 0));
-            }
-
-            return $baseTotal > 0 ? round(($actualTotal / $baseTotal) * 100, 2) : 0;
+            // KPI Score per quarter = Actual / base_target × 100, summed across quarters
+            return $baseTarget > 0 ? round(($actualTotal / $baseTarget) * 100, 2) : 0;
         };
 
         $isCurrentUserKpi = function ($item) use ($currentUserId, $currentEmployeeId, $currentUserName) {
@@ -146,30 +144,25 @@
             )
         );
 
-        if ($individualPerformance <= 25) {
-            $individualPerformanceBar = 'bg-red-600';
+        if ($individualPerformance < 50) {
+            $individualPerformanceBar = 'bg-gradient-to-r from-red-500 to-red-600';
             $individualPerformanceText = 'text-red-700';
             $individualPerformanceLabel = 'Critical';
             $individualPerformanceBadge = 'bg-red-50 text-red-700 border-red-100';
-        } elseif ($individualPerformance <= 50) {
-            $individualPerformanceBar = 'bg-gradient-to-r from-red-600 to-orange-500';
-            $individualPerformanceText = 'text-orange-700';
-            $individualPerformanceLabel = 'Risk';
-            $individualPerformanceBadge = 'bg-orange-50 text-orange-700 border-orange-100';
-        } elseif ($individualPerformance <= 75) {
-            $individualPerformanceBar = 'bg-gradient-to-r from-orange-500 to-yellow-400';
+        } elseif ($individualPerformance < 75) {
+            $individualPerformanceBar = 'bg-gradient-to-r from-orange-400 to-yellow-400';
             $individualPerformanceText = 'text-yellow-700';
             $individualPerformanceLabel = 'Watch';
             $individualPerformanceBadge = 'bg-yellow-50 text-yellow-700 border-yellow-100';
-        } elseif ($individualPerformance <= 100) {
-            $individualPerformanceBar = 'bg-gradient-to-r from-yellow-400 to-green-500';
-            $individualPerformanceText = 'text-green-700';
+        } elseif ($individualPerformance < 90) {
+            $individualPerformanceBar = 'bg-gradient-to-r from-blue-400 to-indigo-500';
+            $individualPerformanceText = 'text-indigo-700';
             $individualPerformanceLabel = 'Good';
-            $individualPerformanceBadge = 'bg-green-50 text-green-700 border-green-100';
+            $individualPerformanceBadge = 'bg-indigo-50 text-indigo-700 border-indigo-100';
         } else {
-            $individualPerformanceBar = 'bg-green-600';
-            $individualPerformanceText = 'text-green-700';
-            $individualPerformanceLabel = 'Exceeded';
+            $individualPerformanceBar = 'bg-gradient-to-r from-emerald-400 to-green-500';
+            $individualPerformanceText = 'text-emerald-700';
+            $individualPerformanceLabel = 'Excellent';
             $individualPerformanceBadge = 'bg-emerald-50 text-emerald-700 border-emerald-100';
         }
     @endphp
@@ -181,7 +174,7 @@
         <div class="glass card-hover p-4 rounded-[18px] border border-indigo-100 bg-gradient-to-br from-white via-indigo-50 to-blue-50 shadow-sm md:col-span-2 xl:col-span-1">
             <div class="flex items-start justify-between gap-3">
                 <div>
-                    <p class="text-slate-500 text-xs font-semibold uppercase">Individual Performance</p>
+                    <p class="text-slate-500 text-xs font-semibold uppercase">KPI Score</p>
                     <h3
                         id="individualPerformanceText"
                         class="text-3xl font-black {{ $individualPerformanceText }} mt-1">
@@ -450,11 +443,22 @@
 
         @foreach($assignedCatKpis as $akpi)
         @php
-            $aqtrs    = collect($akpi['quarters'] ?? []);
-            $aActual  = $aqtrs->sum(fn($q) => (float)($q['quarter_actual'] ?? 0));
-            if ($aActual <= 0) $aActual = (float)($akpi['actual_value'] ?? 0);
-            $aBase    = (float)($akpi['base_target'] ?? 0);
-            $aAchv    = $aBase > 0 ? round(($aActual / $aBase) * 100, 1) : 0;
+            $aqtrs      = collect($akpi['quarters'] ?? []);
+            $aBase      = (float)($akpi['base_target'] ?? 0);
+            $aWeightage = (float)($akpi['weightage'] ?? 0);
+
+            // Only count quarters that have a target set
+            $aActual = 0;
+            foreach (['Q1','Q2','Q3','Q4'] as $_aq) {
+                $_aqd = $aqtrs->firstWhere('quarter', $_aq) ?? [];
+                if ((float)($_aqd['quarter_target'] ?? 0) > 0) {
+                    $aActual += max(0, (float)($_aqd['quarter_actual'] ?? 0));
+                }
+            }
+
+            // KPI Score = (Σ quarter_actual / base_target × 100) × weightage / 100
+            $aRawScore = $aBase > 0 ? round(($aActual / $aBase) * 100, 1) : 0;
+            $aAchv     = round(($aRawScore * $aWeightage) / 100, 2);
 
             $aProgressBar = match(true) {
                 $aAchv >= 90 => 'from-emerald-400 to-green-500',
@@ -490,8 +494,8 @@
         <div
             onclick="openAssignedKpiDetail(this)"
             class="assigned-kpi-card cursor-pointer bg-yellow-50 border-l-4 {{ $ot['border'] }} border border-yellow-200 rounded-[24px] p-6 shadow-sm hover:shadow-xl hover:scale-[1.01] hover:-translate-y-1 transition-all duration-300 mb-3"
+            data-kpi='@json($akpi)'
         >
-            <div data-kpi='@json($akpi)' class="contents"></div>
 
             <!-- TOP ROW -->
             <div class="flex items-start justify-between gap-5">
@@ -515,7 +519,7 @@
                     </div>
                 </div>
                 <div class="text-right shrink-0">
-                    <p class="text-[10px] uppercase text-slate-400 font-black">Performance</p>
+                    <p class="text-[10px] uppercase text-slate-400 font-black">KPI Score</p>
                     <h2 class="text-2xl font-black {{ $aProgressText }} mt-1">{{ number_format($aAchv, 1) }}%</h2>
                     <p class="text-[10px] {{ $ot['infoText'] }} font-black mt-2 uppercase tracking-wider">Tap to view →</p>
                 </div>
@@ -565,22 +569,34 @@
 
         @php
             $quarters     = collect($kpi['quarters'] ?? []);
-            $latestActual = $quarters->sum(fn($q) => (float)($q['quarter_actual'] ?? 0));
-            if ($latestActual <= 0) $latestActual = (float)($kpi['actual_value'] ?? 0);
             $baseTotal    = (float)($kpi['base_target'] ?? 0);
-            $achievement  = $baseTotal > 0 ? round(($latestActual / $baseTotal) * 100, 2) : 0;
+            $kpiWeightage = (float)($kpi['weightage'] ?? 0);
+
+            // Only count quarters that have a target set (target = 0 means not yet configured)
+            $latestActual = 0;
+            foreach (['Q1','Q2','Q3','Q4'] as $_q) {
+                $_qd = $quarters->firstWhere('quarter', $_q) ?? [];
+                if ((float)($_qd['quarter_target'] ?? 0) > 0) {
+                    $latestActual += max(0, (float)($_qd['quarter_actual'] ?? 0));
+                }
+            }
+
+            // KPI Score per quarter = Actual / base_target × 100  →  sum across quarters
+            $rawScore   = $baseTotal > 0 ? round(($latestActual / $baseTotal) * 100, 2) : 0;
+            // Performance Score = (KPI Score × weightage) / 100
+            $achievement = round(($rawScore * $kpiWeightage) / 100, 2);
 
             $progressText = match(true) {
                 $achievement >= 90 => 'text-emerald-600',
-                $achievement >= 75 => 'text-yellow-600',
-                $achievement >= 50 => 'text-orange-600',
+                $achievement >= 75 => 'text-indigo-600',
+                $achievement >= 50 => 'text-yellow-600',
                 default            => 'text-red-600',
             };
             [$achievementBadge, $achievementLabel] = match(true) {
                 $achievement >= 90 => ['bg-emerald-100 text-emerald-700', 'Excellent'],
-                $achievement >= 75 => ['bg-yellow-100 text-yellow-700', 'Watch'],
-                $achievement >= 50 => ['bg-orange-100 text-orange-700', 'Risk'],
-                default            => ['bg-red-100 text-red-700', 'Critical'],
+                $achievement >= 75 => ['bg-indigo-100 text-indigo-700',   'Good'],
+                $achievement >= 50 => ['bg-yellow-100 text-yellow-700',   'Watch'],
+                default            => ['bg-red-100 text-red-700',         'Critical'],
             };
             $progressBar = match(true) {
                 $achievement >= 90 => 'from-emerald-500 to-green-600',
@@ -630,7 +646,7 @@
                     <p class="text-xs text-slate-500 mt-2 leading-relaxed max-w-3xl">{{ $kpi['kpi_description'] ?? 'No description available.' }}</p>
                 </div>
                 <div class="text-right shrink-0">
-                    <p class="text-[10px] uppercase text-slate-400 font-black">Performance</p>
+                    <p class="text-[10px] uppercase text-slate-400 font-black">KPI Score</p>
                     <h2 class="text-2xl font-black {{ $progressText }} mt-1">{{ number_format($achievement, 1) }}%</h2>
                     <div class="mt-2 inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black {{ $achievementBadge }}">{{ $achievementLabel }}</div>
                 </div>
@@ -1791,71 +1807,91 @@ function closeKpiDetail(){
     function openEditKpiModal(kpi){
 
         currentKpi = kpi;
+        currentKpi.original_base    = Number(kpi.base_target    || 0);
+        currentKpi.original_stretch = Number(kpi.stretch_target || 0);
 
-        currentKpi.original_base =
-            Number(kpi.base_target || 0);
+        // ── CATEGORY THEME ─────────────────────────────────────────
+        const catThemes = {
+            'Financial':         { grad: 'linear-gradient(to right,#065f46,#059669)', icon: '💰', accent: '#059669', btnGrad: 'linear-gradient(to right,#059669,#047857)' },
+            'Growth & Customer': { grad: 'linear-gradient(to right,#3730a3,#4f46e5)', icon: '📈', accent: '#4f46e5', btnGrad: 'linear-gradient(to right,#4f46e5,#4338ca)' },
+            'Initiatives':       { grad: 'linear-gradient(to right,#92400e,#f59e0b)', icon: '🚀', accent: '#f59e0b', btnGrad: 'linear-gradient(to right,#d97706,#b45309)' },
+            'People':            { grad: 'linear-gradient(to right,#9d174d,#db2777)', icon: '👥', accent: '#db2777', btnGrad: 'linear-gradient(to right,#db2777,#be185d)' },
+        };
+        const theme = catThemes[kpi.category] || { grad: 'linear-gradient(to right,#1e3a5f,#1e40af)', icon: '📌', accent: '#3b82f6', btnGrad: 'linear-gradient(to right,#2563eb,#1d4ed8)' };
 
-        currentKpi.original_stretch =
-            Number(kpi.stretch_target || 0);
+        // ── HEADER GRADIENT ─────────────────────────────────────────
+        document.getElementById('editModalHeader').style.background = theme.grad;
+        document.getElementById('editSaveBtn').style.background     = theme.btnGrad;
+        document.getElementById('editAccentBar').style.background   = theme.accent;
 
-        const modal =
-            document.getElementById(
-                'editKpiModal'
-            );
+        // ── HEADER INFO ─────────────────────────────────────────────
+        document.getElementById('editModalCatIcon').textContent  = theme.icon;
+        document.getElementById('editModalCatPill').textContent  = kpi.category      || '-';
+        document.getElementById('editModalSubPill').textContent  = kpi.sub_category  || '-';
+        document.getElementById('editModalFy').textContent       = kpi.financial_year || '-';
+        document.getElementById('editModalOwner').textContent    = '✍ ' + (kpi.employee_name || '-');
+        document.getElementById('editModalKpiTitle').textContent = kpi.kpi_title      || 'Untitled KPI';
+        document.getElementById('editModalKpiDesc').textContent  = kpi.kpi_description || 'No description.';
 
+        // ── STATS ───────────────────────────────────────────────────
+        document.getElementById('editModalWeightage').textContent = (kpi.weightage    || 0) + '%';
+        document.getElementById('editModalBase').textContent      = Number(kpi.base_target    || 0).toLocaleString();
+        document.getElementById('editModalStretch').textContent   = Number(kpi.stretch_target || 0).toLocaleString();
+
+        // ── KPI SCORE ───────────────────────────────────────────────
+        const quarters   = kpi.quarters || [];
+        const base       = parseFloat(kpi.base_target    || 0);
+        const weightage  = parseFloat(kpi.weightage      || 0);
+        let   actualSum  = 0;
+        quarters.forEach(q => {
+            if (parseFloat(q.quarter_target || 0) > 0) {
+                actualSum += parseFloat(q.quarter_actual || 0);
+            }
+        });
+        const rawScore  = base > 0 ? (actualSum / base) * 100 : 0;
+        const kpiScore  = (rawScore * weightage) / 100;
+        document.getElementById('editModalScore').textContent = kpiScore.toFixed(1) + '%';
+
+        const scoreBadge = kpiScore >= 90 ? 'Excellent' : kpiScore >= 75 ? 'Good' : kpiScore >= 50 ? 'Watch' : 'Critical';
+        document.getElementById('editModalScoreBadge').textContent = scoreBadge;
+
+        // ── QUARTER DOTS ────────────────────────────────────────────
+        ['Q1','Q2','Q3','Q4'].forEach(qn => {
+            const qd  = quarters.find(q => q.quarter === qn) || {};
+            const qt  = parseFloat(qd.quarter_target || 0);
+            const qa  = parseFloat(qd.quarter_actual  || 0);
+            const qs  = qt > 0 ? (qa / qt) * 100 : 0;
+            const el  = document.getElementById('edit' + qn);
+            if (!el) return;
+            el.className = 'w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-black ';
+            if (qt <= 0)    el.className += 'bg-white/15 text-white/60';
+            else if (qs >= 90) el.className += 'bg-emerald-500 text-white';
+            else if (qs >= 75) el.className += 'bg-yellow-400 text-slate-900';
+            else if (qs >= 50) el.className += 'bg-orange-500 text-white';
+            else               el.className += 'bg-red-500 text-white';
+        });
+
+        // ── FORM FIELDS ─────────────────────────────────────────────
+        document.getElementById('edit_kpi_title').value       = kpi.kpi_title       || '';
+        document.getElementById('edit_kpi_description').value = kpi.kpi_description || '';
+        document.getElementById('edit_status').value          = kpi.status           || 'not_started';
+        document.getElementById('edit_base_target').value     = kpi.base_target      || 0;
+        document.getElementById('edit_stretch_target').value  = kpi.stretch_target   || 0;
+        document.getElementById('targetReasonBox').classList.add('hidden');
+        document.getElementById('target_change_reason').value = '';
+
+        // ── OPEN ─────────────────────────────────────────────────────
+        const modal = document.getElementById('editKpiModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-
-        document
-            .getElementById('edit_kpi_title')
-            .value =
-            kpi.kpi_title || '';
-
-        document
-            .getElementById('edit_kpi_description')
-            .value =
-            kpi.kpi_description || '';
-
-        document
-            .getElementById('edit_status')
-            .value =
-            kpi.status || '';
-
-        document
-            .getElementById('edit_base_target')
-            .value =
-            kpi.base_target || 0;
-
-        document
-            .getElementById('edit_stretch_target')
-            .value =
-            kpi.stretch_target || 0;
-
-        document
-            .getElementById(
-                'targetReasonBox'
-            )
-            .classList
-            .add('hidden');
-
-        document
-            .getElementById(
-                'target_change_reason'
-            )
-            .value = '';
-
+        document.body.classList.add('overflow-hidden');
     }
 
     function closeEditKpiModal(){
-
-        const modal =
-            document.getElementById(
-                'editKpiModal'
-            );
-
+        const modal = document.getElementById('editKpiModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
-
+        document.body.classList.remove('overflow-hidden');
     }
 
     document.addEventListener('DOMContentLoaded', function(){
@@ -2346,6 +2382,543 @@ function closeKpiDetail(){
         }
     }
 
+
+/* ═══════════════════════════════════════════════════════════════
+   REDESIGNED renderKpiDetail — inline-editable, no approval needed
+   ═══════════════════════════════════════════════════════════════ */
+function renderKpiDetail(activeQuarter) {
+    const content = document.getElementById('kpiDetailContent');
+    const kpi = activeKpi;
+    if (!kpi || !content) return;
+
+    const timeline = kpi.approval_timeline || [];
+    const quarters = kpi.quarters || [];
+    const quarter  = quarters.find(q => q.quarter === activeQuarter) || {};
+
+    // ── dates & flags ─────────────────────────────────────────
+    const today         = new Date();
+    const startDate     = new Date(quarter.start_date);
+    const endDate       = new Date(quarter.end_date);
+    const beforeQuarter = today < startDate;
+    const afterQuarter  = today > endDate;
+    const completed     = quarter.status === 'completed';
+    const reasonRequired = afterQuarter || completed;
+
+    // ── score ─────────────────────────────────────────────────
+    const target = parseFloat(quarter.quarter_target || 0);
+    const actual = parseFloat(quarter.quarter_actual || 0);
+    const score  = target > 0 ? Number(((actual / target) * 100).toFixed(1)) : 0;
+    const gap    = target > 0 ? Number((target - actual).toFixed(1)) : 0;
+
+    // ── category theme ────────────────────────────────────────
+    const themes = {
+        'Financial':         { grad:'from-emerald-800 to-emerald-600', light:'bg-emerald-100 text-emerald-800', ringColor:'#10b981', ownerGrad:'from-emerald-900 via-emerald-800 to-teal-900', icon:'💰' },
+        'Growth & Customer': { grad:'from-indigo-800 to-indigo-600',   light:'bg-indigo-100 text-indigo-800',   ringColor:'#6366f1', ownerGrad:'from-indigo-900 via-indigo-800 to-blue-900',   icon:'📈' },
+        'Initiatives':       { grad:'from-amber-700 to-amber-500',     light:'bg-amber-100 text-amber-800',     ringColor:'#f59e0b', ownerGrad:'from-amber-900 via-amber-700 to-orange-900',   icon:'🚀' },
+        'People':            { grad:'from-pink-800 to-pink-600',       light:'bg-pink-100 text-pink-800',       ringColor:'#ec4899', ownerGrad:'from-pink-900 via-pink-800 to-rose-900',       icon:'👥' },
+    };
+    const t = themes[kpi.category] || { grad:'from-slate-800 to-slate-600', light:'bg-slate-100 text-slate-700', ringColor:'#64748b', ownerGrad:'from-slate-900 via-slate-800 to-slate-900', icon:'📌' };
+
+    // ── score colours ─────────────────────────────────────────
+    const scoreColor    = score >= 90 ? '#10b981' : score >= 75 ? '#f59e0b' : score >= 50 ? '#f97316' : '#ef4444';
+    const scoreTextCls  = score >= 90 ? 'text-emerald-600' : score >= 75 ? 'text-amber-500' : score >= 50 ? 'text-orange-500' : 'text-red-500';
+    const scoreBadgeCls = score >= 90 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : score >= 75 ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : score >= 50 ? 'bg-orange-50 text-orange-700 border-orange-200'
+                        :               'bg-red-50 text-red-700 border-red-200';
+    const scoreLabel    = score >= 90 ? 'Excellent' : score >= 75 ? 'Good' : score >= 50 ? 'Watch' : 'Critical';
+
+    // ── SVG donut ─────────────────────────────────────────────
+    const radius = 48;
+    const circ   = 2 * Math.PI * radius;
+    const dashOff = circ - (Math.min(score, 100) / 100) * circ;
+
+    // ── status badge ──────────────────────────────────────────
+    const statusMap = {
+        on_track:    ['On Track',    'bg-emerald-100 text-emerald-700 border-emerald-200', '🟢'],
+        at_risk:     ['At Risk',     'bg-amber-100 text-amber-700 border-amber-200',       '🟡'],
+        in_trouble:  ['In Trouble',  'bg-red-100 text-red-700 border-red-200',             '🔴'],
+        completed:   ['Completed',   'bg-blue-100 text-blue-700 border-blue-200',          '🔵'],
+        not_started: ['Not Started', 'bg-slate-100 text-slate-600 border-slate-200',       '⚪'],
+    };
+    const [sLabel, sCls] = statusMap[quarter.status] ?? ['Not Started', 'bg-slate-100 text-slate-600 border-slate-200'];
+
+    // ── quarter dot helper ────────────────────────────────────
+    const getQInfo = q => {
+        const qd = quarters.find(x => x.quarter === q) || {};
+        const qt = parseFloat(qd.quarter_target || 0);
+        const qa = parseFloat(qd.quarter_actual  || 0);
+        const qs = qt > 0 ? (qa / qt) * 100 : -1;
+        if (qs < 0)  return { dot:'bg-slate-300', text:'text-slate-400', score:null };
+        if (qs >= 90) return { dot:'bg-emerald-500', text:'text-emerald-600', score:qs.toFixed(1) };
+        if (qs >= 75) return { dot:'bg-amber-400',   text:'text-amber-600',   score:qs.toFixed(1) };
+        if (qs >= 50) return { dot:'bg-orange-500',  text:'text-orange-600',  score:qs.toFixed(1) };
+        return { dot:'bg-red-500', text:'text-red-600', score:qs.toFixed(1) };
+    };
+
+    // ── all-quarters sidebar summary ──────────────────────────
+    let quarterSummaryHtml = '';
+    ['Q1','Q2','Q3','Q4'].forEach(q => {
+        const qd  = quarters.find(x => x.quarter === q) || {};
+        const qt  = parseFloat(qd.quarter_target || 0);
+        const qa  = parseFloat(qd.quarter_actual  || 0);
+        const inf = getQInfo(q);
+        const isActive = q === activeQuarter;
+        quarterSummaryHtml += `
+        <div class="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0 ${isActive ? 'font-black' : ''}">
+            <div class="flex items-center gap-2.5">
+                <span class="w-2 h-2 rounded-full ${inf.dot} shrink-0"></span>
+                <span class="text-xs ${isActive ? 'font-black text-slate-900' : 'font-semibold text-slate-600'}">${q}</span>
+                ${qt > 0
+                    ? `<span class="text-[10px] text-slate-400">${Number(qa).toLocaleString()} / ${Number(qt).toLocaleString()}</span>`
+                    : '<span class="text-[10px] text-slate-300 italic">not set</span>'}
+            </div>
+            <span class="text-xs font-black ${inf.text}">${inf.score !== null ? inf.score + '%' : '—'}</span>
+        </div>`;
+    });
+
+    // ── approval timeline ─────────────────────────────────────
+    let timelineHtml = '';
+    timeline.forEach(item => {
+        const s  = (item.status || '').toLowerCase();
+        const dc = s === 'approved' ? 'bg-emerald-500' : s === 'rejected' ? 'bg-red-500' : 'bg-amber-400';
+        const bc = s === 'approved' ? 'bg-emerald-50 border-emerald-100' : s === 'rejected' ? 'bg-red-50 border-red-100' : 'bg-amber-50 border-amber-100';
+        const tc = s === 'approved' ? 'text-emerald-700' : s === 'rejected' ? 'text-red-700' : 'text-amber-700';
+        const lbl = (item.status || '-').charAt(0).toUpperCase() + (item.status || '-').slice(1).replace('_',' ');
+        timelineHtml += `
+        <div class="flex gap-3 mb-3">
+            <div class="flex flex-col items-center shrink-0">
+                <div class="w-3 h-3 rounded-full ${dc} mt-0.5"></div>
+                <div class="w-px flex-1 bg-slate-200 mt-1"></div>
+            </div>
+            <div class="rounded-2xl border ${bc} p-3 flex-1">
+                <p class="text-xs font-black ${tc}">${lbl}</p>
+                ${item.type     ? `<p class="text-[10px] text-slate-500 mt-0.5">${item.type}</p>` : ''}
+                ${item.by       ? `<p class="text-[10px] text-slate-500">By: ${item.by}</p>` : ''}
+                ${item.approver ? `<p class="text-[10px] text-slate-500">Approver: ${item.approver}</p>` : ''}
+                <p class="text-[10px] text-slate-400 mt-1">${item.date || ''}</p>
+            </div>
+        </div>`;
+    });
+
+    // ── quarter tabs ──────────────────────────────────────────
+    let tabs = '';
+    ['Q1','Q2','Q3','Q4'].forEach(q => {
+        const active = q === activeQuarter;
+        const inf    = getQInfo(q);
+        tabs += `
+        <button onclick="renderKpiDetail('${q}')"
+            class="flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-sm transition-all
+            ${active ? 'bg-slate-900 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}">
+            <span class="w-2 h-2 rounded-full ${active ? 'bg-white' : inf.dot}"></span>${q}
+        </button>`;
+    });
+
+    // ── owner avatar ──────────────────────────────────────────
+    const ownerName     = kpi.employee_name || '-';
+    const ownerInitials = ownerName.split(' ').filter(Boolean).slice(0,2).map(p => p[0]).join('').toUpperCase() || '?';
+
+    // ── date formatter ────────────────────────────────────────
+    const fmtDate = d => {
+        if (!d) return '-';
+        const dt = new Date(d);
+        return isNaN(dt) ? d : dt.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+    };
+
+    const gapDisplay = target <= 0 ? '—' : gap <= 0 ? '🎯 On target!' : `${Number(gap).toLocaleString()} to go`;
+    const gapCls     = gap <= 0 && target > 0 ? 'text-emerald-600 font-black' : 'text-amber-600 font-black';
+
+    // ── CSRF token ────────────────────────────────────────────
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+              || '{{ csrf_token() }}';
+
+    content.innerHTML = `
+    <div class="min-h-screen bg-[#f4f7fb]">
+
+        <!-- ══ STICKY GRADIENT HEADER ══ -->
+        <div class="sticky top-0 z-30 bg-gradient-to-r ${t.grad} text-white px-6 py-5 shadow-xl">
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                        <span class="text-lg">${t.icon}</span>
+                        <span class="px-2.5 py-1 rounded-full bg-white/20 text-[10px] font-black">${kpi.category || '-'}</span>
+                        <span class="px-2.5 py-1 rounded-full bg-white/15 text-[10px] font-black text-white/90">${kpi.sub_category || '-'}</span>
+                        <span class="px-2.5 py-1 rounded-full bg-white/10 text-[10px] font-black text-white/70">${kpi.financial_year || '-'}</span>
+                    </div>
+                    <h2 class="text-2xl font-black leading-tight">${kpi.kpi_title || '-'}</h2>
+                    <p class="text-white/65 text-xs mt-1 max-w-2xl leading-relaxed">${kpi.kpi_description || 'No description'}</p>
+                </div>
+                <button onclick="closeKpiDetail()"
+                    class="w-11 h-11 rounded-2xl bg-white/20 hover:bg-white/30 flex items-center justify-center text-xl font-black shrink-0 transition-all">×</button>
+            </div>
+        </div>
+
+        <!-- ══ BODY ══ -->
+        <div class="p-6 grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 items-start">
+
+            <!-- ── LEFT COLUMN ── -->
+            <div class="space-y-5 min-w-0">
+
+                <!-- QUARTER TABS -->
+                <div class="flex flex-wrap gap-2.5">${tabs}</div>
+
+                <!-- ① EDIT KPI INFO CARD -->
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                        <span class="w-1 h-5 rounded-full bg-slate-800 shrink-0"></span>
+                        <p class="text-xs font-black text-slate-700 uppercase tracking-wider">KPI Details — Edit Directly</p>
+                        <span class="ml-auto text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-lg font-bold">No approval needed</span>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">KPI Title</label>
+                            <input id="kpiTitleInput" type="text" value="${(kpi.kpi_title || '').replace(/"/g,'&quot;')}"
+                                class="w-full mt-1.5 h-11 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-900 focus:border-slate-400 transition">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</label>
+                            <textarea id="kpiDescInput" rows="2"
+                                class="w-full mt-1.5 rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 resize-none focus:border-slate-400 transition"
+                            >${kpi.kpi_description || ''}</textarea>
+                        </div>
+                        <button onclick="saveKpiInline('${kpi.id}')"
+                            class="w-full h-11 rounded-2xl bg-slate-900 hover:bg-slate-700 text-white font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20">
+                            💾 Save KPI Details
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ② ACHIEVEMENT HERO CARD -->
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl ${t.light} flex items-center justify-center font-black shrink-0">${activeQuarter}</div>
+                        <div>
+                            <p class="text-xs font-black text-slate-700">${quarter.quarter_title || activeQuarter + ' Quarter'}</p>
+                            <span class="inline-flex items-center gap-1 mt-0.5 px-2.5 py-0.5 rounded-lg border text-[10px] font-black ${sCls}">${sLabel}</span>
+                        </div>
+                        <!-- DONUT -->
+                        <div class="ml-auto shrink-0 flex flex-col items-center">
+                            <div class="relative w-[90px] h-[90px]">
+                                <svg viewBox="0 0 120 120" class="w-full h-full" style="transform:rotate(-90deg)">
+                                    <circle cx="60" cy="60" r="${radius}" fill="none" stroke="#f1f5f9" stroke-width="14"/>
+                                    <circle cx="60" cy="60" r="${radius}" fill="none" stroke="${scoreColor}" stroke-width="14"
+                                        stroke-linecap="round"
+                                        stroke-dasharray="${circ.toFixed(2)}"
+                                        stroke-dashoffset="${dashOff.toFixed(2)}"/>
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-lg font-black ${scoreTextCls}">${score}%</span>
+                                    <span class="text-[8px] text-slate-400 uppercase font-black">Score</span>
+                                </div>
+                            </div>
+                            <span class="mt-1 px-2.5 py-0.5 rounded-xl border text-[9px] font-black ${scoreBadgeCls}">${scoreLabel}</span>
+                        </div>
+                    </div>
+
+                    <!-- PROGRESS BAR -->
+                    <div class="px-6 pt-4">
+                        <div class="flex justify-between text-[9px] text-slate-400 font-black mb-1.5">
+                            <span>0%</span><span>50%</span><span>75%</span><span>90%</span><span>100%</span>
+                        </div>
+                        <div class="relative h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                            <div class="h-3 rounded-full transition-all duration-700"
+                                style="width:${Math.max(2,Math.min(score,100))}%; background:linear-gradient(to right,${scoreColor}99,${scoreColor})"></div>
+                            <div class="absolute top-0 bottom-0 w-px bg-white/70" style="left:50%"></div>
+                            <div class="absolute top-0 bottom-0 w-px bg-white/70" style="left:75%"></div>
+                            <div class="absolute top-0 bottom-0 w-px bg-white/70" style="left:90%"></div>
+                        </div>
+                        <div class="flex items-center justify-between mt-1.5 mb-4">
+                            <span class="text-[10px] text-slate-400">Current: <strong class="${scoreTextCls}">${score}%</strong></span>
+                            <span class="text-[10px] ${gapCls}">${gapDisplay}</span>
+                        </div>
+                    </div>
+
+                    <!-- STAT MINI-CARDS -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 px-6 pb-4">
+                        <div class="rounded-2xl bg-blue-50 border border-blue-100 p-3">
+                            <div class="flex items-center gap-1 mb-1"><span class="text-xs">🎯</span><p class="text-[9px] uppercase text-blue-500 font-black">Target</p></div>
+                            <p class="text-xl font-black text-slate-900">${Number(target).toLocaleString()}</p>
+                        </div>
+                        <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-3">
+                            <div class="flex items-center gap-1 mb-1"><span class="text-xs">✅</span><p class="text-[9px] uppercase text-emerald-600 font-black">Actual</p></div>
+                            <p class="text-xl font-black text-slate-900">${Number(actual).toLocaleString()}</p>
+                        </div>
+                        <div class="rounded-2xl bg-violet-50 border border-violet-100 p-3">
+                            <div class="flex items-center gap-1 mb-1"><span class="text-xs">📅</span><p class="text-[9px] uppercase text-violet-500 font-black">Start</p></div>
+                            <p class="text-sm font-black text-slate-900">${fmtDate(quarter.start_date)}</p>
+                        </div>
+                        <div class="rounded-2xl bg-rose-50 border border-rose-100 p-3">
+                            <div class="flex items-center gap-1 mb-1"><span class="text-xs">🏁</span><p class="text-[9px] uppercase text-rose-500 font-black">End</p></div>
+                            <p class="text-sm font-black text-slate-900">${fmtDate(quarter.end_date)}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ③ EDIT QUARTER CARD -->
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                        <span class="w-1 h-5 rounded-full bg-indigo-500 shrink-0"></span>
+                        <p class="text-xs font-black text-slate-700 uppercase tracking-wider">Edit ${activeQuarter} Quarter Details</p>
+                        <span class="ml-auto text-[10px] bg-indigo-50 text-indigo-600 border border-indigo-100 px-2 py-0.5 rounded-lg font-bold">No approval needed</span>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quarter Title</label>
+                                <input id="qTitleInput" type="text" value="${(quarter.quarter_title || '').replace(/"/g,'&quot;')}"
+                                    class="w-full mt-1.5 h-11 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-900 focus:border-indigo-400 transition">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</label>
+                                <select id="qStatusInput"
+                                    class="w-full mt-1.5 h-11 rounded-2xl border border-slate-200 px-4 text-sm font-medium text-slate-800 bg-white cursor-pointer">
+                                    <option value="not_started" ${quarter.status==='not_started'?'selected':''}>⚪ Not Started</option>
+                                    <option value="on_track"    ${quarter.status==='on_track'   ?'selected':''}>🟢 On Track</option>
+                                    <option value="at_risk"     ${quarter.status==='at_risk'    ?'selected':''}>🟡 At Risk</option>
+                                    <option value="in_trouble"  ${quarter.status==='in_trouble' ?'selected':''}>🔴 In Trouble</option>
+                                    <option value="completed"   ${quarter.status==='completed'  ?'selected':''}>🔵 Completed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quarter Description</label>
+                            <textarea id="qDescInput" rows="2"
+                                class="w-full mt-1.5 rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 resize-none focus:border-indigo-400 transition"
+                            >${quarter.quarter_description || ''}</textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Start Date</label>
+                                <input id="qStartInput" type="date" value="${quarter.start_date || ''}"
+                                    class="w-full mt-1.5 h-11 rounded-2xl border border-slate-200 px-4 text-sm font-medium text-slate-800 focus:border-indigo-400 transition">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">End Date</label>
+                                <input id="qEndInput" type="date" value="${quarter.end_date || ''}"
+                                    class="w-full mt-1.5 h-11 rounded-2xl border border-slate-200 px-4 text-sm font-medium text-slate-800 focus:border-indigo-400 transition">
+                            </div>
+                        </div>
+                        <button onclick="saveQuarterInline('${quarter.id}')"
+                            class="w-full h-11 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+                            💾 Save Quarter Details
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ④ UPDATE ACTUAL CARD -->
+                ${!beforeQuarter ? `
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                        <span class="w-1 h-5 rounded-full bg-amber-500 shrink-0"></span>
+                        <p class="text-xs font-black text-slate-700 uppercase tracking-wider">Update Actual Value</p>
+                        ${reasonRequired ? '<span class="ml-auto text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-lg font-bold">⚠ Requires reason (past/completed)</span>' : ''}
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">New Actual Value</label>
+                            <input id="newActual-${quarter.id}" type="number" min="0"
+                                class="w-full mt-1.5 h-11 rounded-2xl border border-slate-200 px-4 text-sm focus:border-amber-400 transition"
+                                placeholder="Enter new actual value">
+                        </div>
+                        ${reasonRequired ? `
+                        <div>
+                            <label class="text-[10px] font-black text-red-500 uppercase tracking-widest">Reason <span class="text-red-500">*</span> (min 20 chars)</label>
+                            <textarea id="reason-${quarter.id}" rows="3"
+                                class="w-full mt-1.5 rounded-2xl border border-slate-200 px-4 py-3 text-sm resize-none"
+                                placeholder="Explain why you are updating a past/completed quarter…"></textarea>
+                        </div>` : ''}
+                        <button onclick="${reasonRequired ? `submitActualUpdateRequest('${kpi.id}','${quarter.id}')` : `updateQuarterActual('${quarter.id}')`}"
+                            class="w-full h-11 rounded-2xl ${reasonRequired ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-amber-500 to-amber-600'} text-white font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg">
+                            ${reasonRequired ? '📋 Submit Update Request' : '✏️ Save Actual'}
+                        </button>
+                    </div>
+                </div>
+                ` : `
+                <div class="bg-slate-50 rounded-3xl border border-dashed border-slate-300 p-5 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-slate-200 flex items-center justify-center text-xl shrink-0">⏳</div>
+                    <div>
+                        <p class="text-sm font-black text-slate-600">Quarter Not Started Yet</p>
+                        <p class="text-xs text-slate-400 mt-0.5">Actual updates available from ${fmtDate(quarter.start_date)}</p>
+                    </div>
+                </div>`}
+
+            </div>
+
+            <!-- ── RIGHT SIDEBAR ── -->
+            <div class="space-y-5">
+
+                <!-- OWNER CARD -->
+                <div class="rounded-3xl overflow-hidden bg-gradient-to-br ${t.ownerGrad} text-white shadow-xl">
+                    <div class="p-6">
+                        <p class="text-[10px] uppercase text-white/50 font-black tracking-widest mb-4">KPI Owner</p>
+                        <div class="flex items-center gap-3 mb-5">
+                            <div class="w-14 h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-xl font-black shrink-0">${ownerInitials}</div>
+                            <div>
+                                <h2 class="text-xl font-black leading-tight">${ownerName}</h2>
+                                ${kpi.employee_role ? `<p class="text-white/55 text-xs mt-0.5">${kpi.employee_role}</p>` : ''}
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-white/10 rounded-2xl p-4 border border-white/10">
+                                <p class="text-[10px] uppercase text-white/50 font-black">Weightage</p>
+                                <h3 class="text-2xl font-black mt-1">${kpi.weightage || 0}%</h3>
+                            </div>
+                            <div class="bg-white/10 rounded-2xl p-4 border border-white/10">
+                                <p class="text-[10px] uppercase text-white/50 font-black">Base Target</p>
+                                <h3 class="text-lg font-black mt-1">${Number(kpi.base_target || 0).toLocaleString()}</h3>
+                            </div>
+                        </div>
+                        ${kpi.unit ? `
+                        <div class="mt-3 bg-white/10 rounded-2xl px-4 py-3 border border-white/10 flex items-center justify-between">
+                            <p class="text-[10px] uppercase text-white/50 font-black">Unit</p>
+                            <p class="text-sm font-black text-white/85 capitalize">${kpi.unit}</p>
+                        </div>` : ''}
+                    </div>
+                </div>
+
+                <!-- ALL QUARTERS SUMMARY -->
+                <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="w-1 h-4 rounded-full bg-slate-300 shrink-0"></span>
+                        <h3 class="text-xs font-black text-slate-600 uppercase tracking-wider">All Quarters</h3>
+                    </div>
+                    ${quarterSummaryHtml}
+                </div>
+
+                <!-- KPI HISTORY -->
+                <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-1 h-4 rounded-full bg-slate-300 shrink-0"></span>
+                        <h3 class="text-xs font-black text-slate-600 uppercase tracking-wider">KPI History</h3>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex flex-col items-center shrink-0">
+                            <div class="w-3 h-3 rounded-full bg-blue-400 mt-0.5"></div>
+                            <div class="w-px flex-1 bg-slate-100 mt-1"></div>
+                        </div>
+                        <div class="rounded-2xl bg-blue-50 border border-blue-100 p-3 flex-1">
+                            <p class="text-xs font-black text-blue-700">Quarter Updated</p>
+                            <p class="text-[10px] text-slate-500 mt-1">
+                                ${quarter.updated_at
+                                    ? new Date(quarter.updated_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+                                    : 'No update yet'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- APPROVAL TIMELINE -->
+                <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-1 h-4 rounded-full bg-slate-300 shrink-0"></span>
+                        <h3 class="text-xs font-black text-slate-600 uppercase tracking-wider">Approval Timeline</h3>
+                    </div>
+                    ${timelineHtml || `
+                    <div class="rounded-2xl bg-slate-50 border border-dashed border-slate-200 p-4 text-center">
+                        <p class="text-xs text-slate-400 font-medium">No approval history yet</p>
+                    </div>`}
+                </div>
+
+            </div>
+        </div>
+    </div>
+    `;
+}
+
+/* Save KPI title + description inline (no approval) */
+async function saveKpiInline(kpiId) {
+    const title = document.getElementById('kpiTitleInput')?.value?.trim();
+    const desc  = document.getElementById('kpiDescInput')?.value ?? '';
+
+    if (!title) { alert('KPI Title is required.'); return; }
+
+    const btn = event?.currentTarget;
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+    try {
+        const res = await fetch(`/kpi/${kpiId}/inline-update`, {
+            method: 'PUT',
+            headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':'{{ csrf_token() }}', 'Accept':'application/json' },
+            body: JSON.stringify({ kpi_title: title, kpi_description: desc }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            activeKpi.kpi_title       = title;
+            activeKpi.kpi_description = desc;
+            // Refresh header text without full re-render
+            const hdr = document.querySelector('#kpiDetailContent h2');
+            if (hdr) hdr.textContent = title;
+            showToast('KPI details saved ✓', 'emerald');
+        } else {
+            alert(data.message || 'Failed to save.');
+        }
+    } catch(e) {
+        alert('Network error.');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '💾 Save KPI Details'; }
+    }
+}
+
+/* Save quarter title, description, status, start/end dates inline (no approval) */
+async function saveQuarterInline(quarterId) {
+    const title  = document.getElementById('qTitleInput')?.value?.trim()  ?? '';
+    const desc   = document.getElementById('qDescInput')?.value            ?? '';
+    const status = document.getElementById('qStatusInput')?.value          ?? '';
+    const start  = document.getElementById('qStartInput')?.value           ?? '';
+    const end    = document.getElementById('qEndInput')?.value             ?? '';
+
+    if (start && end && start > end) { alert('Start date cannot be after end date.'); return; }
+
+    const btn = event?.currentTarget;
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+    try {
+        const res = await fetch(`/kpi/quarter/${quarterId}/inline-update`, {
+            method: 'PUT',
+            headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':'{{ csrf_token() }}', 'Accept':'application/json' },
+            body: JSON.stringify({ quarter_title: title, quarter_description: desc, status, start_date: start || null, end_date: end || null }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            // patch activeKpi in memory so re-renders use updated data
+            const q = activeKpi.quarters?.find(x => x.id == quarterId);
+            if (q) {
+                q.quarter_title       = title;
+                q.quarter_description = desc;
+                q.status              = status;
+                if (start) q.start_date = start;
+                if (end)   q.end_date   = end;
+                q.updated_at = new Date().toISOString();
+            }
+            showToast('Quarter details saved ✓', 'indigo');
+            // Re-render so status badge & progress bar update
+            const activeQ = document.querySelector('#kpiDetailContent .quarter-tab-active')?.dataset?.q
+                          || activeKpi.quarters?.find(x => x.id == quarterId)?.quarter
+                          || 'Q1';
+            renderKpiDetail(q?.quarter || 'Q1');
+        } else {
+            alert(data.message || 'Failed to save.');
+        }
+    } catch(e) {
+        alert('Network error.');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '💾 Save Quarter Details'; }
+    }
+}
+
+/* Lightweight toast notification */
+function showToast(msg, color = 'emerald') {
+    const colors = {
+        emerald: 'bg-emerald-600',
+        indigo:  'bg-indigo-600',
+        red:     'bg-red-600',
+    };
+    const toast = document.createElement('div');
+    toast.className = `fixed bottom-6 right-6 z-[99999] px-5 py-3 rounded-2xl text-white text-sm font-black shadow-xl ${colors[color] || 'bg-slate-800'} transition-all`;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 2500);
+}
 </script>
 
 <!-- KPI DETAIL MODAL -->
@@ -2385,212 +2958,146 @@ function closeKpiDetail(){
 </div>
 
 <!-- KPI EDIT MODAL -->
+<div id="editKpiModal" class="fixed inset-0 z-[9999] hidden items-center justify-center modal-bg p-4">
+    <div class="bg-white rounded-[28px] w-full max-w-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
 
-<div
-    id="editKpiModal"
-    class="fixed inset-0 z-[9999] hidden items-center justify-center modal-bg p-6"
->
+        {{-- COLOURED HEADER (gradient set dynamically by JS) --}}
+        <div id="editModalHeader" class="rounded-t-[28px] px-6 pt-6 pb-5 text-white shrink-0" style="background: linear-gradient(to right,#1e3a5f,#1e40af)">
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-1.5 mb-3">
+                        <span id="editModalCatIcon" class="text-base">📌</span>
+                        <span id="editModalCatPill" class="px-2.5 py-1 rounded-full bg-white/25 text-[10px] font-black">Category</span>
+                        <span id="editModalSubPill" class="px-2.5 py-1 rounded-full bg-white/15 text-[10px] font-black text-white/90">Sub Category</span>
+                        <span id="editModalFy"      class="px-2.5 py-1 rounded-full bg-white/15 text-[10px] font-black text-white/80">FY</span>
+                        <span id="editModalOwner"   class="px-2.5 py-1 rounded-full bg-white/10 text-[10px] font-black text-white/70">Owner</span>
+                    </div>
+                    <h2 id="editModalKpiTitle" class="text-xl font-black leading-snug">KPI Title</h2>
+                    <p  id="editModalKpiDesc"  class="text-white/65 text-xs mt-1.5 line-clamp-2">Description</p>
+                </div>
+                <button onclick="closeEditKpiModal()"
+                        class="w-9 h-9 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center text-white font-black text-xl shrink-0">×</button>
+            </div>
 
-    <div
-    class=" bg-white rounded-[28px] w-full max-w-3xl max-h-[90vh] overflow-y-auto p-5">
+            {{-- STATS ROW --}}
+            <div class="grid grid-cols-4 gap-2.5 mt-4">
+                <div class="bg-white/12 rounded-2xl px-3 py-2.5">
+                    <p class="text-[9px] uppercase text-white/55 font-black">Weightage</p>
+                    <p id="editModalWeightage" class="text-lg font-black mt-0.5">0%</p>
+                </div>
+                <div class="bg-white/12 rounded-2xl px-3 py-2.5">
+                    <p class="text-[9px] uppercase text-white/55 font-black">Base Target</p>
+                    <p id="editModalBase" class="text-lg font-black mt-0.5">0</p>
+                </div>
+                <div class="bg-white/12 rounded-2xl px-3 py-2.5">
+                    <p class="text-[9px] uppercase text-white/55 font-black">Stretch Target</p>
+                    <p id="editModalStretch" class="text-lg font-black mt-0.5">0</p>
+                </div>
+                <div class="bg-white/12 rounded-2xl px-3 py-2.5">
+                    <p class="text-[9px] uppercase text-white/55 font-black">KPI Score</p>
+                    <p id="editModalScore" class="text-lg font-black mt-0.5">0%</p>
+                </div>
+            </div>
 
-        <div class="flex justify-between items-center">
-
-            <h2 class="text-xl font-black">
-                Edit KPI
-            </h2>
-
-            <button
-                onclick="closeEditKpiModal()"
-                class="text-slate-500"
-            >
-                ✕
-            </button>
-
+            {{-- QUARTER DOTS --}}
+            <div class="flex gap-2 mt-3">
+                <div id="editQ1" class="w-9 h-9 rounded-xl bg-white/15 text-white flex items-center justify-center text-[10px] font-black">Q1</div>
+                <div id="editQ2" class="w-9 h-9 rounded-xl bg-white/15 text-white flex items-center justify-center text-[10px] font-black">Q2</div>
+                <div id="editQ3" class="w-9 h-9 rounded-xl bg-white/15 text-white flex items-center justify-center text-[10px] font-black">Q3</div>
+                <div id="editQ4" class="w-9 h-9 rounded-xl bg-white/15 text-white flex items-center justify-center text-[10px] font-black">Q4</div>
+                <div class="ml-auto self-center">
+                    <span id="editModalScoreBadge" class="px-3 py-1 rounded-xl bg-white/20 text-white text-[10px] font-black">—</span>
+                </div>
+            </div>
         </div>
 
-        <form
-            id="editKpiForm"
-            method="POST"
-            action=""
-            class="space-y-5 mt-6"
-        >
-
+        {{-- SCROLLABLE BODY --}}
+        <div class="overflow-y-auto flex-1 px-6 py-5">
+            <form id="editKpiForm" method="POST" action="" class="space-y-5">
             @csrf
 
-            <!-- TITLE -->
-
-            <div>
-
-                <label class="text-xs font-black uppercase">
-                    KPI Title
-                </label>
-
-                <input
-                    id="edit_kpi_title"
-                    name="kpi_title"
-                    class="w-full border rounded-xl px-3 py-2 mt-1 text-sm"
-                >
-
+            {{-- SECTION: EDIT DETAILS --}}
+            <div class="flex items-center gap-2">
+                <span id="editAccentBar" class="w-1 h-5 rounded-full bg-indigo-500 shrink-0"></span>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Edit KPI Details</p>
             </div>
 
-            <!-- DESCRIPTION -->
-
             <div>
-
-                <label class="text-xs font-black uppercase">
-                    Description
-                </label>
-
-                <textarea
-                    id="edit_kpi_description"
-                    name="kpi_description"
-                    rows="4"
-                    class="w-full border rounded-xl px-3 py-2 mt-1 text-sm"
-                ></textarea>
-
+                <label class="text-xs font-black text-slate-600 uppercase tracking-wide">KPI Title <span class="text-red-500">*</span></label>
+                <input id="edit_kpi_title" name="kpi_title"
+                       class="w-full border border-slate-200 rounded-2xl px-4 py-3 mt-2 text-sm font-medium text-slate-800 focus:border-indigo-400 transition">
             </div>
 
-            <!-- STATUS -->
+            <div>
+                <label class="text-xs font-black text-slate-600 uppercase tracking-wide">Description</label>
+                <textarea id="edit_kpi_description" name="kpi_description" rows="3"
+                          class="w-full border border-slate-200 rounded-2xl px-4 py-3 mt-2 text-sm text-slate-700 resize-none"></textarea>
+            </div>
 
             <div>
-
-                <label class="text-xs font-black uppercase">
-                    Status
-                </label>
-
-                <select
-                    id="edit_status"
-                    name="status"
-                    class="w-full border rounded-xl px-3 py-2 mt-1 text-sm"
-                >
+                <label class="text-xs font-black text-slate-600 uppercase tracking-wide">KPI Status</label>
+                <select id="edit_status" name="status"
+                        class="w-full border border-slate-200 rounded-2xl px-4 py-3 mt-2 text-sm text-slate-800">
                     <option value="not_started">Not Started</option>
                     <option value="on_track">On Track</option>
                     <option value="at_risk">At Risk</option>
                     <option value="in_trouble">In Trouble</option>
                     <option value="completed">Completed</option>
                 </select>
-
             </div>
 
-            <!-- TARGET -->
-
-            <div class="grid grid-cols-2 gap-4">
-
-                <div>
-
-                    <label class="text-xs font-black uppercase">
-                        Base Target
-                    </label>
-
-                    <input
-                        id="edit_base_target"
-                        type="number"
-                        oninput="checkTargetChanged()"
-                        step="0.01"
-                        class="w-full border rounded-xl px-3 py-2 mt-1 text-sm"
-                    >
-
+            {{-- SECTION: TARGETS --}}
+            <div class="border-t border-slate-100 pt-5">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="w-1 h-5 rounded-full bg-amber-500 shrink-0"></span>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Annual Targets</p>
+                    <span class="ml-auto text-[10px] text-amber-700 font-black bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200">⚠ Requires Approval</span>
                 </div>
 
-                <div>
-
-                    <label class="text-xs font-black uppercase">
-                        Stretch Target
-                    </label>
-
-                    <input
-                        id="edit_stretch_target"
-                        type="number"
-                        oninput="checkTargetChanged()"
-                        step="0.01"
-                        class="w-full border rounded-xl px-3 py-2 mt-1 text-sm"
-                    >
-
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-black text-slate-600 uppercase tracking-wide">Base Target</label>
+                        <input id="edit_base_target" type="number" oninput="checkTargetChanged()" step="0.01"
+                               class="w-full border border-slate-200 rounded-2xl px-4 py-3 mt-2 text-sm font-medium text-slate-800">
+                    </div>
+                    <div>
+                        <label class="text-xs font-black text-slate-600 uppercase tracking-wide">Stretch Target</label>
+                        <input id="edit_stretch_target" type="number" oninput="checkTargetChanged()" step="0.01"
+                               class="w-full border border-slate-200 rounded-2xl px-4 py-3 mt-2 text-sm font-medium text-slate-800">
+                    </div>
                 </div>
 
+                <div class="mt-3 rounded-2xl bg-amber-50 border border-amber-200 p-3 flex gap-2 text-xs text-amber-800">
+                    <span class="shrink-0">⚠️</span>
+                    <span>Changes to <strong>Base / Stretch Target</strong> require manager approval before taking effect. Title, Description and Status update immediately.</span>
+                </div>
             </div>
 
-            <!-- TARGET APPROVAL NOTICE -->
-            <div
-                class="
-                    rounded-xl
-                    bg-amber-50
-                    border
-                    border-amber-200
-                    p-3
-                    text-xs
-                    text-amber-800
-                "
-            >
-
-                Any change to Base Target or Stretch Target
-                requires approval before it is updated.
-
-                KPI Title, Description and Status
-                will be updated immediately.
-
-            </div>
-
-            <!-- REASON -->
-
+            {{-- REASON --}}
             <div id="targetReasonBox" class="hidden">
-
-                <label
-                    class="
-                        text-xs
-                        font-black
-                        uppercase
-                        text-red-600
-                    "
-                >
-                    Reason For Target Change
-                </label>
-
-                <textarea
-                    id="target_change_reason"
-                    rows="3"
-                    class="
-                        w-full
-                        border
-                        border-red-300
-                        rounded-xl
-                        px-4
-                        py-3
-                        mt-2
-                    "
-                    placeholder="
-            Explain why target needs to change.
-            This will be reviewed by approver.
-                    "
-                ></textarea>
-
-            </div>
-            <div
-                class="
-                    sticky
-                    bottom-0
-                    bg-white
-                    pt-4
-                    flex
-                    justify-end
-                "
-            >
-
-                <button
-                    type="button"
-                    onclick="submitKpiEdit()"
-                    class="bg-indigo-600 text-white px-5 py-3 rounded-xl font-black"
-                >
-                    Save Changes
-                </button>
-
+                <label class="text-xs font-black text-red-600 uppercase tracking-wide">Reason for Target Change <span class="text-red-500">*</span></label>
+                <textarea id="target_change_reason" rows="3"
+                          class="w-full border border-red-200 rounded-2xl px-4 py-3 mt-2 text-sm resize-none"
+                          placeholder="Explain why the target needs to change. Minimum 30 characters. This will be reviewed by your approver."></textarea>
             </div>
 
-        </form>
+            </form>
+        </div>
+
+        {{-- STICKY FOOTER --}}
+        <div class="shrink-0 px-6 py-4 border-t border-slate-100 bg-white rounded-b-[28px] flex gap-3">
+            <button type="button" onclick="closeEditKpiModal()"
+                    class="flex-1 h-12 rounded-2xl border border-slate-200 text-slate-600 font-black text-sm hover:bg-slate-50 transition">
+                Cancel
+            </button>
+            <button type="button" onclick="submitKpiEdit()" id="editSaveBtn"
+                    class="flex-1 h-12 rounded-2xl text-white font-black text-sm transition"
+                    style="background: linear-gradient(to right,#4f46e5,#6366f1)">
+                Save Changes
+            </button>
+        </div>
 
     </div>
-
 </div>
 
 <!-- DELETE KPI MODAL -->
