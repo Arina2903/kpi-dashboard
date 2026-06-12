@@ -172,6 +172,11 @@ Route::middleware(['kpi.auth'])->group(function () {
         [KpiController::class, 'inlineUpdateQuarter']
     )->name('kpi.quarter.inline-update');
 
+    Route::post(
+        '/kpi/quarter/{id}/complete',
+        [KpiController::class, 'completeQuarter']
+    )->name('kpi.quarter.complete');
+
     /*
     |--------------------------------------------------------------------------
     | KPI GOVERNANCE REQUESTS

@@ -2853,7 +2853,7 @@ function renderKpiDetail(activeQuarter) {
                             </div>
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</label>
-                                <select id="qStatusInput"
+                                <select id="qStatusInput" onchange="toggleCompletionProof(this.value)"
                                     class="w-full mt-1.5 h-11 rounded-2xl border border-slate-200 px-4 text-sm font-medium text-slate-800 bg-white cursor-pointer">
                                     <option value="not_started" ${quarter.status==='not_started'?'selected':''}>⚪ Not Started</option>
                                     <option value="on_track"    ${quarter.status==='on_track'   ?'selected':''}>🟢 On Track</option>
@@ -2881,9 +2881,37 @@ function renderKpiDetail(activeQuarter) {
                                     class="w-full mt-1.5 h-11 rounded-2xl border border-slate-200 px-4 text-sm font-medium text-slate-800 focus:border-indigo-400 transition">
                             </div>
                         </div>
-                        <button onclick="saveQuarterInline('${quarter.id}')"
+
+                        <!-- COMPLETION PROOF — shown only when status = completed -->
+                        <div id="completionProofSection" class="${quarter.status === 'completed' ? '' : 'hidden'}">
+                            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4 space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-base">🏆</span>
+                                    <p class="text-xs font-black text-blue-800 uppercase tracking-wide">Completion Proof Required</p>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                        Completion Review <span class="text-red-500">*</span> <span class="text-slate-400 normal-case font-medium">(min 10 chars)</span>
+                                    </label>
+                                    <textarea id="qCompletionReview" rows="3" placeholder="Describe what was achieved, challenges faced, and outcome..."
+                                        class="w-full mt-1.5 rounded-2xl border border-blue-200 bg-white px-4 py-3 text-sm text-slate-700 resize-none focus:border-blue-500 transition"></textarea>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                        Proof Image / Document <span class="text-slate-400 normal-case font-medium">(optional — JPG, PNG, PDF, max 5 MB)</span>
+                                    </label>
+                                    <input id="qProofImage" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+                                        class="w-full mt-1.5 rounded-2xl border border-blue-200 bg-white px-4 py-2.5 text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer">
+                                    <div id="proofPreview" class="hidden mt-2 rounded-2xl overflow-hidden border border-blue-200 max-h-40">
+                                        <img id="proofPreviewImg" src="" alt="Preview" class="w-full h-full object-contain max-h-40">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="qSaveBtn" onclick="quarterSaveDispatch('${quarter.id}')"
                             class="w-full h-11 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
-                            💾 Save Quarter Details
+                            ${quarter.status === 'completed' ? '🏆 Submit Completion' : '💾 Save Quarter Details'}
                         </button>
                     </div>
                 </div>
@@ -2989,6 +3017,42 @@ function renderKpiDetail(activeQuarter) {
                         </div>
                     </div>
                 </div>
+
+                <!-- COMPLETION PROOF DISPLAY (if quarter already completed with proof) -->
+                ${quarter.status === 'completed' && (quarter.completion_review || quarter.completion_proof_url) ? `
+                <div class="bg-white rounded-3xl border border-blue-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-blue-100 bg-blue-50 flex items-center gap-2">
+                        <span class="text-lg">🏆</span>
+                        <p class="text-xs font-black text-blue-800 uppercase tracking-wider">Completion Evidence</p>
+                        <span class="ml-auto text-[10px] bg-blue-100 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-lg font-bold">Submitted</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        ${quarter.completion_review ? `
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Completion Review</p>
+                            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                                <p class="text-sm text-slate-700 leading-relaxed">${quarter.completion_review.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</p>
+                            </div>
+                        </div>` : ''}
+                        ${quarter.completion_proof_url ? `
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Proof Attachment</p>
+                            ${quarter.completion_proof_url.match(/\.(jpg|jpeg|png|webp|gif)$/i) ? `
+                            <a href="${quarter.completion_proof_url}" target="_blank" class="block rounded-2xl overflow-hidden border border-slate-200 hover:border-blue-300 transition">
+                                <img src="${quarter.completion_proof_url}" alt="Proof" class="w-full max-h-64 object-contain bg-slate-50">
+                            </a>
+                            ` : `
+                            <a href="${quarter.completion_proof_url}" target="_blank"
+                                class="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition text-sm font-bold text-blue-700">
+                                <span class="text-xl">📄</span> View Proof Document
+                            </a>`}
+                        </div>` : ''}
+                        ${quarter.completion_submitted_at ? `
+                        <p class="text-[10px] text-slate-400">Submitted on ${new Date(quarter.completion_submitted_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</p>
+                        ` : ''}
+                    </div>
+                </div>
+                ` : ''}
 
                 <!-- APPROVAL TIMELINE -->
                 <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm">
@@ -3101,6 +3165,94 @@ function showToast(msg, color = 'emerald') {
     toast.textContent = msg;
     document.body.appendChild(toast);
     setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 2500);
+}
+
+/* Show/hide completion proof section when status changes */
+function toggleCompletionProof(status) {
+    const section = document.getElementById('completionProofSection');
+    const btn     = document.getElementById('qSaveBtn');
+    if (!section || !btn) return;
+    if (status === 'completed') {
+        section.classList.remove('hidden');
+        btn.innerHTML = '🏆 Submit Completion';
+        btn.className = btn.className.replace('from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 shadow-indigo-600/20',
+            'from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-blue-600/20');
+    } else {
+        section.classList.add('hidden');
+        btn.innerHTML = '💾 Save Quarter Details';
+        btn.className = btn.className.replace('from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-blue-600/20',
+            'from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 shadow-indigo-600/20');
+    }
+}
+
+/* Image preview when file selected */
+document.addEventListener('change', function(e) {
+    if (e.target.id !== 'qProofImage') return;
+    const file    = e.target.files[0];
+    const preview = document.getElementById('proofPreview');
+    const img     = document.getElementById('proofPreviewImg');
+    if (file && file.type.startsWith('image/') && preview && img) {
+        img.src = URL.createObjectURL(file);
+        preview.classList.remove('hidden');
+    } else if (preview) {
+        preview.classList.add('hidden');
+    }
+});
+
+/* Dispatch to the right save function based on selected status */
+function quarterSaveDispatch(quarterId) {
+    const status = document.getElementById('qStatusInput')?.value;
+    if (status === 'completed') {
+        completeQuarterSubmit(quarterId);
+    } else {
+        saveQuarterInline(quarterId);
+    }
+}
+
+/* Submit completion with proof image (multipart) */
+async function completeQuarterSubmit(quarterId) {
+    const review = document.getElementById('qCompletionReview')?.value?.trim() ?? '';
+    const file   = document.getElementById('qProofImage')?.files?.[0] ?? null;
+    const btn    = document.getElementById('qSaveBtn');
+
+    if (review.length < 10) {
+        alert('Please write a completion review (minimum 10 characters).');
+        return;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+
+    const fd = new FormData();
+    fd.append('_method', 'POST');
+    fd.append('completion_review', review);
+    if (file) fd.append('proof_image', file);
+
+    try {
+        const res = await fetch(`/kpi/quarter/${quarterId}/complete`, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+            body: fd,
+        });
+        const data = await res.json();
+        if (data.success) {
+            // Update in-memory quarter
+            const q = activeKpi.quarters?.find(x => x.id == quarterId);
+            if (q) {
+                q.status                  = 'completed';
+                q.completion_review       = review;
+                q.completion_submitted_at = new Date().toISOString();
+                if (data.proof_url) q.completion_proof_url = data.proof_url;
+            }
+            showToast('Quarter marked as completed ✓', 'emerald');
+            renderKpiDetail(q?.quarter || 'Q1');
+        } else {
+            alert(data.message || 'Failed to submit completion.');
+        }
+    } catch(e) {
+        alert('Network error. Please try again.');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '🏆 Submit Completion'; }
+    }
 }
 
 function toggleScoreGuide() {

@@ -1206,6 +1206,66 @@ class KpiController extends Controller
         return response()->json(['success' => true, 'message' => 'Quarter updated.']);
     }
 
+    public function completeQuarter(Request $request, string $id)
+    {
+        $user    = $this->currentUser($this->supabase);
+        $quarter = $this->supabase->first('kpi_quarters', ['id' => 'eq.' . $id, 'select' => '*']);
+
+        if (!$quarter) {
+            return response()->json(['success' => false, 'message' => 'Quarter not found.'], 404);
+        }
+
+        $kpi = $this->findKpiOrFail($this->supabase, $quarter['kpi_id']);
+
+        if (!$this->canEditKpi($user, $kpi)) {
+            return response()->json(['success' => false, 'message' => 'Permission denied.'], 403);
+        }
+
+        $validated = $request->validate([
+            'completion_review' => 'required|string|min:10|max:2000',
+            'proof_image'       => 'nullable|file|mimes:jpeg,png,webp,gif,pdf|max:5120',
+        ]);
+
+        $proofUrl = null;
+
+        if ($request->hasFile('proof_image')) {
+            $file     = $request->file('proof_image');
+            $ext      = $file->getClientOriginalExtension();
+            $path     = 'quarters/' . $id . '/' . uniqid('proof_', true) . '.' . $ext;
+            $contents = file_get_contents($file->getRealPath());
+            $mime     = $file->getMimeType();
+
+            try {
+                $proofUrl = $this->supabase->uploadToStorage('kpi-proofs', $path, $contents, $mime);
+            } catch (\Throwable $e) {
+                Log::error('completeQuarter: storage upload failed', ['error' => $e->getMessage()]);
+                return response()->json(['success' => false, 'message' => 'Failed to upload proof image.'], 500);
+            }
+        }
+
+        $payload = [
+            'status'                  => 'completed',
+            'completion_review'       => $validated['completion_review'],
+            'completion_submitted_at' => $this->nowMy(),
+            'completion_submitted_by' => $user['id'],
+            'updated_at'              => $this->nowMy(),
+        ];
+
+        if ($proofUrl) {
+            $payload['completion_proof_url'] = $proofUrl;
+        }
+
+        if (!$this->supabase->safePatch('kpi_quarters', ['id' => 'eq.' . $id], $payload)) {
+            return response()->json(['success' => false, 'message' => 'Failed to save completion.'], 500);
+        }
+
+        return response()->json([
+            'success'   => true,
+            'message'   => 'Quarter marked as completed.',
+            'proof_url' => $proofUrl,
+        ]);
+    }
+
     public function destroy(string $id, SupabaseService $supabase)
     {
         abort(403,

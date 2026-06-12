@@ -240,6 +240,30 @@ class SupabaseService
 
         /*
     |--------------------------------------------------------------------------
+    | UPLOAD TO STORAGE
+    |--------------------------------------------------------------------------
+    */
+
+    public function uploadToStorage(string $bucket, string $path, string $contents, string $mimeType): string
+    {
+        $url = $this->url . '/storage/v1/object/' . $bucket . '/' . $path;
+
+        $response = Http::timeout(30)->connectTimeout(10)->withHeaders([
+            'apikey'        => $this->key,
+            'Authorization' => 'Bearer ' . $this->key,
+            'Content-Type'  => $mimeType,
+            'x-upsert'      => 'true',
+        ])->withBody($contents, $mimeType)->post($url);
+
+        if (!$response->successful()) {
+            throw new \RuntimeException('Supabase Storage upload failed: ' . $response->body());
+        }
+
+        return $this->url . '/storage/v1/object/public/' . $bucket . '/' . $path;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | SAFE PATCH
     |--------------------------------------------------------------------------
     */
