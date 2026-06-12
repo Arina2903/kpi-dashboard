@@ -512,117 +512,18 @@ class KpiController extends Controller
         }
         // ─────────────────────────────────────────────────────────────────────
 
-        $kpis = collect($kpis)->map(function ($kpi) use (
-            $employeeMap, $creatorMap,
-            $quartersByKpi, $pendingActualByKpi, $timelineActByKpi,
-            $editReqByKpi, $deleteReqByKpi, $approverMapForKpi
-        ) {
-            $employee = $employeeMap->get($kpi['employee_id']);
-            $creator  = $creatorMap->get($kpi['created_by'] ?? null);
+        $maps = [
+            'employeeMap'       => $employeeMap,
+            'creatorMap'        => $creatorMap,
+            'quartersByKpi'     => $quartersByKpi,
+            'pendingActualByKpi'=> $pendingActualByKpi,
+            'timelineActByKpi'  => $timelineActByKpi,
+            'editReqByKpi'      => $editReqByKpi,
+            'deleteReqByKpi'    => $deleteReqByKpi,
+            'approverMapForKpi' => $approverMapForKpi,
+        ];
 
-            $kpi['employee_name']   = $employee['short_name'] ?? 'Unassigned';
-            $kpi['employee_role']   = $employee['role'] ?? '-';
-            $kpi['employee_code']   = $employee['employee_id'] ?? '-';
-            $kpi['department_code'] = $kpi['department_code'] ?? ($employee['department_code'] ?? '-');
-            $kpi['created_by_name'] = $creator['short_name'] ?? '-';
-            $kpi['created_by_role'] = $creator['role'] ?? '-';
-
-            $quarters = $quartersByKpi->get($kpi['id'], collect([]))->values()->toArray();
-
-            $kpi['quarters']             = $quarters;
-            $kpi['quarter_total_target'] = collect($quarters)->sum(fn($q) => (float)($q['quarter_target'] ?? 0));
-            $quarterTotalActual          = collect($quarters)->sum(fn($q) => (float)($q['quarter_actual'] ?? 0));
-            $kpi['quarter_total_actual'] = $quarterTotalActual;
-            $kpi['actual_value']         = $quarterTotalActual;
-            $kpi['quarter_overall_progress'] = $kpi['quarter_total_target'] > 0
-                ? round(($kpi['quarter_total_actual'] / $kpi['quarter_total_target']) * 100, 2)
-                : 0;
-
-            $today = now('Asia/Kuala_Lumpur')->toDateString();
-            $currentQuarter = collect($quarters)->first(function ($q) use ($today) {
-                return !empty($q['start_date']) && !empty($q['end_date'])
-                    && $q['start_date'] <= $today && $q['end_date'] >= $today;
-            });
-            $kpi['current_quarter']          = $currentQuarter['quarter'] ?? '-';
-            $kpi['current_quarter_end_date'] = $currentQuarter['end_date'] ?? null;
-
-            // Pending actual (from batch)
-            $latestActualRequest = $pendingActualByKpi->get($kpi['id']);
-            $kpi['has_pending_actual_request'] = !empty($latestActualRequest);
-            $kpi['actual_request_status']      = $latestActualRequest['status'] ?? null;
-
-            // Approver (from batch)
-            $approver = null;
-            if (!empty($latestActualRequest['approver_id'])) {
-                $approver = $approverMapForKpi->get($latestActualRequest['approver_id']);
-            }
-            $kpi['approver_name'] = $approver['short_name'] ?? '-';
-            $kpi['approver_role'] = $approver['role'] ?? '-';
-
-            // Build approval timeline from pre-fetched batches
-            $timeline = [];
-
-            foreach ($timelineActByKpi->get($kpi['id'], collect([]))->values() as $row) {
-                $timeline[] = [
-                    'type'     => 'Actual Update',
-                    'status'   => $row['status'] ?? '-',
-                    'by'       => $row['requested_by_name'] ?? '-',
-                    'date'     => $row['created_at'] ?? null,
-                    'approver' => $row['approver_name'] ?? '-',
-                ];
-            }
-
-            foreach ($editReqByKpi->get($kpi['id'], collect([]))->values() as $row) {
-                $timeline[] = [
-                    'type'         => 'Target Change Requested',
-                    'status'       => 'requested',
-                    'date'         => $row['created_at'] ?? null,
-                    'by'           => $row['requested_by_name'] ?? '-',
-                    'base_from'    => ($row['field_name'] ?? null) === 'base_target'    ? ($row['old_value'] ?? 0) : ($row['old_base_target'] ?? 0),
-                    'base_to'      => ($row['field_name'] ?? null) === 'base_target'    ? ($row['requested_value'] ?? 0) : ($row['new_base_target'] ?? 0),
-                    'stretch_from' => ($row['field_name'] ?? null) === 'stretch_target' ? ($row['old_value'] ?? 0) : ($row['old_stretch_target'] ?? 0),
-                    'stretch_to'   => ($row['field_name'] ?? null) === 'stretch_target' ? ($row['requested_value'] ?? 0) : ($row['new_stretch_target'] ?? 0),
-                    'reason'       => $row['reason'] ?? '-',
-                ];
-                if (($row['status'] ?? '') === 'approved') {
-                    $timeline[] = [
-                        'type'     => 'Approved',
-                        'status'   => 'approved',
-                        'date'     => $row['approved_at'] ?? $row['updated_at'] ?? null,
-                        'approver' => $row['approved_by_name'] ?? $row['approver_name'] ?? '-',
-                    ];
-                }
-                if (($row['status'] ?? '') === 'rejected') {
-                    $timeline[] = [
-                        'type'     => 'Rejected',
-                        'status'   => 'rejected',
-                        'date'     => $row['rejected_at'] ?? $row['updated_at'] ?? null,
-                        'approver' => $row['rejected_by_name'] ?? $row['approver_name'] ?? '-',
-                        'reason'   => $row['rejection_reason'] ?? $row['reject_reason'] ?? '-',
-                    ];
-                }
-            }
-
-            foreach ($deleteReqByKpi->get($kpi['id'], collect([]))->values() as $row) {
-                $timeline[] = [
-                    'type'     => 'Delete Request',
-                    'status'   => $row['status'] ?? '-',
-                    'by'       => $row['requested_by_name'] ?? '-',
-                    'date'     => $row['created_at'] ?? null,
-                    'approver' => $row['approver_name'] ?? '-',
-                ];
-            }
-
-            $kpi['approval_timeline'] = collect($timeline)->sortByDesc('date')->values()->toArray();
-
-            $kpi['has_pending_delete_request'] = $deleteReqByKpi->get($kpi['id'], collect([]))
-                ->contains(fn($r) => ($r['status'] ?? '') === 'pending');
-
-            $kpi['has_pending_edit_request'] = $editReqByKpi->get($kpi['id'], collect([]))
-                ->contains(fn($r) => ($r['status'] ?? '') === 'pending');
-
-            return $kpi;
-        })->toArray();
+        $kpis = collect($kpis)->map(fn($kpi) => $this->enrichKpiRecord($kpi, $maps))->toArray();
 
         $indexAssignedKpis = collect($kpis)
             ->filter(fn($k) => ($k['is_assigned_kpi'] ?? false) === true
@@ -1323,6 +1224,121 @@ class KpiController extends Controller
         ]);
 
         return back();
+    }
+
+    private function enrichKpiRecord(array $kpi, array $maps): array
+    {
+        $employeeMap       = $maps['employeeMap'];
+        $creatorMap        = $maps['creatorMap'];
+        $quartersByKpi     = $maps['quartersByKpi'];
+        $pendingActualByKpi= $maps['pendingActualByKpi'];
+        $timelineActByKpi  = $maps['timelineActByKpi'];
+        $editReqByKpi      = $maps['editReqByKpi'];
+        $deleteReqByKpi    = $maps['deleteReqByKpi'];
+        $approverMapForKpi = $maps['approverMapForKpi'];
+
+        $employee = $employeeMap->get($kpi['employee_id']);
+        $creator  = $creatorMap->get($kpi['created_by'] ?? null);
+
+        $kpi['employee_name']   = $employee['short_name'] ?? 'Unassigned';
+        $kpi['employee_role']   = $employee['role'] ?? '-';
+        $kpi['employee_code']   = $employee['employee_id'] ?? '-';
+        $kpi['department_code'] = $kpi['department_code'] ?? ($employee['department_code'] ?? '-');
+        $kpi['created_by_name'] = $creator['short_name'] ?? '-';
+        $kpi['created_by_role'] = $creator['role'] ?? '-';
+
+        $quarters = $quartersByKpi->get($kpi['id'], collect([]))->values()->toArray();
+
+        $kpi['quarters']             = $quarters;
+        $kpi['quarter_total_target'] = collect($quarters)->sum(fn($q) => (float)($q['quarter_target'] ?? 0));
+        $quarterTotalActual          = collect($quarters)->sum(fn($q) => (float)($q['quarter_actual'] ?? 0));
+        $kpi['quarter_total_actual'] = $quarterTotalActual;
+        $kpi['actual_value']         = $quarterTotalActual;
+        $kpi['quarter_overall_progress'] = $kpi['quarter_total_target'] > 0
+            ? round(($kpi['quarter_total_actual'] / $kpi['quarter_total_target']) * 100, 2)
+            : 0;
+
+        $today = now('Asia/Kuala_Lumpur')->toDateString();
+        $currentQuarter = collect($quarters)->first(
+            fn($q) => !empty($q['start_date']) && !empty($q['end_date'])
+                && $q['start_date'] <= $today && $q['end_date'] >= $today
+        );
+        $kpi['current_quarter']          = $currentQuarter['quarter'] ?? '-';
+        $kpi['current_quarter_end_date'] = $currentQuarter['end_date'] ?? null;
+
+        $latestActualRequest = $pendingActualByKpi->get($kpi['id']);
+        $kpi['has_pending_actual_request'] = !empty($latestActualRequest);
+        $kpi['actual_request_status']      = $latestActualRequest['status'] ?? null;
+
+        $approver = null;
+        if (!empty($latestActualRequest['approver_id'])) {
+            $approver = $approverMapForKpi->get($latestActualRequest['approver_id']);
+        }
+        $kpi['approver_name'] = $approver['short_name'] ?? '-';
+        $kpi['approver_role'] = $approver['role'] ?? '-';
+
+        $timeline = [];
+
+        foreach ($timelineActByKpi->get($kpi['id'], collect([]))->values() as $row) {
+            $timeline[] = [
+                'type'     => 'Actual Update',
+                'status'   => $row['status'] ?? '-',
+                'by'       => $row['requested_by_name'] ?? '-',
+                'date'     => $row['created_at'] ?? null,
+                'approver' => $row['approver_name'] ?? '-',
+            ];
+        }
+
+        foreach ($editReqByKpi->get($kpi['id'], collect([]))->values() as $row) {
+            $timeline[] = [
+                'type'         => 'Target Change Requested',
+                'status'       => 'requested',
+                'date'         => $row['created_at'] ?? null,
+                'by'           => $row['requested_by_name'] ?? '-',
+                'base_from'    => ($row['field_name'] ?? null) === 'base_target'    ? ($row['old_value'] ?? 0) : ($row['old_base_target'] ?? 0),
+                'base_to'      => ($row['field_name'] ?? null) === 'base_target'    ? ($row['requested_value'] ?? 0) : ($row['new_base_target'] ?? 0),
+                'stretch_from' => ($row['field_name'] ?? null) === 'stretch_target' ? ($row['old_value'] ?? 0) : ($row['old_stretch_target'] ?? 0),
+                'stretch_to'   => ($row['field_name'] ?? null) === 'stretch_target' ? ($row['requested_value'] ?? 0) : ($row['new_stretch_target'] ?? 0),
+                'reason'       => $row['reason'] ?? '-',
+            ];
+            if (($row['status'] ?? '') === 'approved') {
+                $timeline[] = [
+                    'type'     => 'Approved',
+                    'status'   => 'approved',
+                    'date'     => $row['approved_at'] ?? $row['updated_at'] ?? null,
+                    'approver' => $row['approved_by_name'] ?? $row['approver_name'] ?? '-',
+                ];
+            }
+            if (($row['status'] ?? '') === 'rejected') {
+                $timeline[] = [
+                    'type'     => 'Rejected',
+                    'status'   => 'rejected',
+                    'date'     => $row['rejected_at'] ?? $row['updated_at'] ?? null,
+                    'approver' => $row['rejected_by_name'] ?? $row['approver_name'] ?? '-',
+                    'reason'   => $row['rejection_reason'] ?? $row['reject_reason'] ?? '-',
+                ];
+            }
+        }
+
+        foreach ($deleteReqByKpi->get($kpi['id'], collect([]))->values() as $row) {
+            $timeline[] = [
+                'type'     => 'Delete Request',
+                'status'   => $row['status'] ?? '-',
+                'by'       => $row['requested_by_name'] ?? '-',
+                'date'     => $row['created_at'] ?? null,
+                'approver' => $row['approver_name'] ?? '-',
+            ];
+        }
+
+        $kpi['approval_timeline'] = collect($timeline)->sortByDesc('date')->values()->toArray();
+
+        $kpi['has_pending_delete_request'] = $deleteReqByKpi->get($kpi['id'], collect([]))
+            ->contains(fn($r) => ($r['status'] ?? '') === 'pending');
+
+        $kpi['has_pending_edit_request'] = $editReqByKpi->get($kpi['id'], collect([]))
+            ->contains(fn($r) => ($r['status'] ?? '') === 'pending');
+
+        return $kpi;
     }
 
     private function canEditKpi(array $user, array $kpi): bool
