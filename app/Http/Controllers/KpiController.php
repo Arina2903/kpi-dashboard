@@ -109,6 +109,19 @@ class KpiController extends Controller
 
     public function index(SupabaseService $supabase)
     {
+        try {
+            return $this->indexInternal($supabase);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            \Log::error('KPI index: Supabase connection failed', ['error' => $e->getMessage()]);
+            return response()->view('errors.service', ['message' => 'Cannot connect to database. Please try again in a moment.'], 503);
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            \Log::error('KPI index: Supabase request failed', ['error' => $e->getMessage()]);
+            return response()->view('errors.service', ['message' => 'Database error. Please try again.'], 503);
+        }
+    }
+
+    private function indexInternal(SupabaseService $supabase)
+    {
         $user = $this->currentUser($supabase);
         $permission = $this->permissionForRoleFromDb($supabase, $user['role']);
         $fy = $this->currentFY();
