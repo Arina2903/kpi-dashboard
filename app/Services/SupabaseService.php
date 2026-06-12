@@ -31,7 +31,7 @@ class SupabaseService
 
     private function request()
     {
-        return Http::withHeaders([
+        return Http::timeout(15)->connectTimeout(5)->withHeaders([
 
             'apikey' => $this->key,
 
