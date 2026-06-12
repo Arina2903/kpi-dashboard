@@ -3410,37 +3410,27 @@ class KpiController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | TOTAL VALIDATION
-        | Single-KPI saves (initial allocation from 0%) skip the 100% rule.
-        | Multi-KPI saves (Save All / Equalize) must equal exactly 100%.
+        | NEW-ALLOCATION VALIDATION
+        | bulk-update only accepts KPIs that currently have 0% weightage.
+        | Changing an existing non-zero weightage must go through the approval flow.
         |--------------------------------------------------------------------------
         */
 
-        if(count($weightages) > 1){
+        $kpiIds = array_keys($weightages);
 
-            $total = round(
-                collect($weightages)->sum(fn($v) => (float)$v),
-                2
-            );
+        if(!empty($kpiIds)){
 
-            if(abs($total - 100) > 0.01){
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Total weightage must equal 100%'
-                ], 422);
-            }
+            $existingKpis = $this->supabase->get('kpis', [
+                'id'          => 'in.(' . implode(',', $kpiIds) . ')',
+                'employee_id' => 'eq.' . ($user['id'] ?? ''),
+                'select'      => 'id,weightage',
+            ]) ?? [];
 
-        } else {
+            $existingMap = collect($existingKpis)->keyBy('id');
 
-            $singleKpiId = array_key_first($weightages ?? []);
-
-            if($singleKpiId){
-                $existingKpi = $this->supabase->first('kpis', [
-                    'id'          => 'eq.' . $singleKpiId,
-                    'employee_id' => 'eq.' . ($user['id'] ?? ''),
-                ]);
-
-                if((float)($existingKpi['weightage'] ?? 0) > 0){
+            foreach($kpiIds as $kpiId){
+                $existing = $existingMap->get($kpiId);
+                if($existing && (float)($existing['weightage'] ?? 0) > 0){
                     return response()->json([
                         'success' => false,
                         'message' => 'Changing an existing weightage requires approval. Use the approval request flow.'

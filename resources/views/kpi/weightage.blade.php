@@ -710,9 +710,10 @@ function confirmSaveAll() {
     btn.disabled  = true;
     btn.innerText = 'Saving...';
 
-    var csrf   = '{{ csrf_token() }}';
-    var errors = [];
-    var reason = _approvalItems.length > 0
+    var csrf    = '{{ csrf_token() }}';
+    var errors  = [];
+    var skipped = [];   // already-pending KPIs — soft skip, not a failure
+    var reason  = _approvalItems.length > 0
         ? (document.getElementById('bulkApprovalReason') || {}).value || ''
         : '';
 
@@ -747,9 +748,17 @@ function confirmSaveAll() {
             })
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                if (!data.success) errors.push(escapeHtml(item.title) + ': ' + (data.message || 'Request failed'));
+                if (!data.success) {
+                    var msg = (data.message || '').toLowerCase();
+                    /* Already-pending is a soft skip — the previous request is still active */
+                    if (msg.indexOf('pending') !== -1 || msg.indexOf('already exists') !== -1) {
+                        skipped.push(item.title);
+                    } else {
+                        errors.push(item.title + ': ' + (data.message || 'Request failed'));
+                    }
+                }
             })
-            .catch(function() { errors.push(escapeHtml(item.title) + ': Network error'); });
+            .catch(function() { errors.push(item.title + ': Network error'); });
         });
     });
 
@@ -761,8 +770,12 @@ function confirmSaveAll() {
             btn.innerText = 'Confirm & Save';
         } else {
             closeSaveReviewModal();
-            showToast('All changes saved successfully!');
-            setTimeout(function() { location.reload(); }, 1400);
+            if (skipped.length > 0) {
+                showToast('Saved! Note: ' + skipped.length + ' KPI already had a pending request (skipped).');
+            } else {
+                showToast('All changes saved successfully!');
+            }
+            setTimeout(function() { location.reload(); }, 1800);
         }
     });
 }
