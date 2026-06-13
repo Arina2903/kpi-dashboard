@@ -206,16 +206,19 @@
         $sortedStaff = $staff->sortBy(
             fn($s) => sprintf('%d_%s', $rolePriority($s['role']), strtolower($s['name'] ?? ''))
         )->values();
+        // Average only employees who have KPIs — same logic as ranking chart
+        $withKpis = $staff->filter(fn($s) => $s['kpi_count'] > 0);
+        $kwc = $withKpis->count();
         return [
             'department_code' => $deptCode ?: '-',
             'staff_count'     => $cnt,
             'kpi_count'       => $staff->sum('kpi_count'),
-            'performance'     => round($cnt > 0 ? $staff->avg('performance') : 0, 2),
+            'performance'     => round($kwc > 0 ? $withKpis->avg('performance') : 0, 2),
             'risk_count'      => $staff->sum('risk_count'),
-            'q1'              => round($cnt > 0 ? $staff->avg('q1') : 0, 2),
-            'q2'              => round($cnt > 0 ? $staff->avg('q2') : 0, 2),
-            'q3'              => round($cnt > 0 ? $staff->avg('q3') : 0, 2),
-            'q4'              => round($cnt > 0 ? $staff->avg('q4') : 0, 2),
+            'q1'              => round($kwc > 0 ? $withKpis->avg('q1') : 0, 2),
+            'q2'              => round($kwc > 0 ? $withKpis->avg('q2') : 0, 2),
+            'q3'              => round($kwc > 0 ? $withKpis->avg('q3') : 0, 2),
+            'q4'              => round($kwc > 0 ? $withKpis->avg('q4') : 0, 2),
             'band_counts'     => $bands,
             'staff_list'      => $sortedStaff->toArray(),
         ];
@@ -606,6 +609,9 @@
                                                 <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-100 text-slate-600">{{ number_format($kpiWeightage,0) }}%</span>
                                             @else
                                                 <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-50 text-amber-600 border border-amber-200">No wt</span>
+                                            @endif
+                                            @if(!empty($kpi['unit']))
+                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-sky-50 text-sky-600 border border-sky-100">{{ $kpi['unit'] }}</span>
                                             @endif
                                         </div>
                                         <span class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-black {{ $badgeSt['class'] }}">{{ $badgeSt['label'] }}</span>
