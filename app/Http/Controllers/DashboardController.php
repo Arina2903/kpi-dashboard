@@ -112,7 +112,9 @@ class DashboardController extends Controller
         $summary = $this->calculateSummary($kpis);
         $weightageSummary = $this->calculateWeightageSummary($kpis);
 
-        $companyDeptRanking = $this->getCompanyDeptPerformance($supabase, $companyCode);
+        $rankingResult      = $this->getCompanyDeptPerformance($supabase, $companyCode);
+        $companyDeptRanking = $rankingResult['depts'] ?? [];
+        $companyTotalStaff  = $rankingResult['total_staff'] ?? 0;
 
         return view('dashboard', [
             'user' => $user,
@@ -150,7 +152,8 @@ class DashboardController extends Controller
             'kpiCountByUser' => $kpiCountByUser,
             'kpiCountByDepartment' => $kpiCountByDepartment,
 
-            'companyDeptRanking' => $companyDeptRanking,
+            'companyDeptRanking'  => $companyDeptRanking,
+            'companyTotalStaff'   => $companyTotalStaff,
         ]);
     }
 
@@ -537,7 +540,10 @@ class DashboardController extends Controller
 
         usort($result, fn($a, $b) => $b['score'] <=> $a['score']);
 
-        return $result;
+        return [
+            'depts'       => $result,
+            'total_staff' => count($employees),
+        ];
     }
 
     private function calculateSummary(array $kpis): array

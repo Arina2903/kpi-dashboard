@@ -212,9 +212,7 @@
     $totalKpisVisible   = $kpiCollection->count();
     $totalAtRisk        = $kpiRows->where('_is_risk',true)->count();
     $totalCompleted     = $kpiRows->where('status','completed')->count();
-    // All employees in the company (from company-wide ranking data, not role-filtered)
-    $companyTotalStaff = collect($companyDeptRanking ?? [])->sum('staff');
-    $companyDeptCount  = count($companyDeptRanking ?? []);
+    $companyDeptCount = count($companyDeptRanking ?? []);
 
     // ── COMPANY BAND COUNTS ──────────────────────────────────────────────────
     $compBands = [0,0,0,0];
