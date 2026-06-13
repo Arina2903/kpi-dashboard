@@ -212,6 +212,9 @@
     $totalKpisVisible   = $kpiCollection->count();
     $totalAtRisk        = $kpiRows->where('_is_risk',true)->count();
     $totalCompleted     = $kpiRows->where('status','completed')->count();
+    // All employees in the company (from company-wide ranking data, not role-filtered)
+    $companyTotalStaff = collect($companyDeptRanking ?? [])->sum('staff');
+    $companyDeptCount  = count($companyDeptRanking ?? []);
 
     // ── COMPANY BAND COUNTS ──────────────────────────────────────────────────
     $compBands = [0,0,0,0];
@@ -289,7 +292,7 @@
     @if($isManager)
     <div class="xl:col-span-2 flex flex-col gap-3">
 
-        {{-- Company Achievement donut --}}
+        {{-- Department Achievement donut --}}
         <div class="bg-white rounded-2xl p-3 soft-card border border-slate-100 flex items-center gap-3">
             <div class="relative shrink-0" style="width:88px;height:88px;">
                 <canvas id="chartCompanyDonut" width="88" height="88"></canvas>
@@ -299,7 +302,7 @@
                 </div>
             </div>
             <div class="flex-1 min-w-0">
-                <p class="text-[9px] font-black text-slate-500 uppercase mb-1.5">Company Achievement</p>
+                <p class="text-[9px] font-black text-slate-500 uppercase mb-1.5">Department Achievement</p>
                 @php $blInfo = [['bg-emerald-500','Excellent','≥90%'],['bg-indigo-500','Good','75–89%'],['bg-amber-500','Watch','50–74%'],['bg-red-500','Critical','<50%']]; @endphp
                 <div class="grid grid-cols-2 gap-x-2 gap-y-1">
                     @foreach($blInfo as $bi => $bl)
@@ -312,25 +315,15 @@
             </div>
         </div>
 
-        {{-- 4 compact stat tiles --}}
+        {{-- 2 stat tiles: Total Staff (all company) + Completed KPIs --}}
         <div class="grid grid-cols-2 gap-3">
             <div class="bg-white rounded-xl p-3 soft-card border border-slate-100">
-                <p class="text-[9px] uppercase font-black text-slate-400">Company</p>
-                <p class="text-2xl font-black {{ $companyScoreStyle['text'] }} mt-1">{{ number_format($companyPerformance,1) }}<span class="text-xs">%</span></p>
-                <span class="text-[9px] px-1.5 py-0.5 rounded border font-black {{ $companyScoreStyle['badge'] }}">{{ $companyScoreStyle['label'] }}</span>
-            </div>
-            <div class="bg-white rounded-xl p-3 soft-card border border-slate-100">
                 <p class="text-[9px] uppercase font-black text-slate-400">Total Staff</p>
-                <p class="text-2xl font-black text-slate-900 mt-1">{{ $totalStaffCount }}</p>
-                <p class="text-[9px] text-slate-400">{{ $deptRows->count() }} depts</p>
-            </div>
-            <div class="bg-white rounded-xl p-3 soft-card border border-{{ $totalAtRisk > 0 ? 'red' : 'slate' }}-100">
-                <p class="text-[9px] uppercase font-black {{ $totalAtRisk > 0 ? 'text-red-500' : 'text-slate-400' }}">At Risk</p>
-                <p class="text-2xl font-black {{ $totalAtRisk > 0 ? 'text-red-700' : 'text-slate-400' }} mt-1">{{ $totalAtRisk }}</p>
-                <p class="text-[9px] {{ $totalAtRisk > 0 ? 'text-red-400 font-bold' : 'text-slate-400' }}">{{ $totalAtRisk > 0 ? 'Review needed' : 'All clear' }}</p>
+                <p class="text-2xl font-black text-slate-900 mt-1">{{ $companyTotalStaff ?: $totalStaffCount }}</p>
+                <p class="text-[9px] text-slate-400">{{ $companyDeptCount ?: $deptRows->count() }} depts</p>
             </div>
             <div class="bg-white rounded-xl p-3 soft-card border border-blue-100">
-                <p class="text-[9px] uppercase font-black text-blue-400">Completed</p>
+                <p class="text-[9px] uppercase font-black text-blue-400">Completed KPIs</p>
                 <p class="text-2xl font-black text-blue-700 mt-1">{{ $totalCompleted }}</p>
                 <p class="text-[9px] text-blue-400">of {{ $totalKpisVisible }}</p>
             </div>
