@@ -440,13 +440,13 @@
 
                         {{-- Staff table --}}
                         <div class="xl:col-span-3">
-                            <p class="text-[9px] uppercase font-black text-slate-400 mb-2">All Staff ({{ $dept['staff_count'] }}) — SLT → VP → Manager → Executive</p>
                             <div class="overflow-x-auto thin-scroll">
-                                <table class="w-full min-w-[500px]">
+                                <table class="w-full min-w-[540px]">
                                     <thead>
                                         <tr class="bg-slate-50 text-[9px] uppercase tracking-wider text-slate-500 font-black border-b border-slate-100">
                                             <th class="px-2 py-1.5 text-left">#</th>
                                             <th class="px-2 py-1.5 text-left">Name</th>
+                                            <th class="px-2 py-1.5 text-left">Role</th>
                                             <th class="px-2 py-1.5 text-center">KPIs</th>
                                             <th class="px-2 py-1.5 text-center">Q1</th>
                                             <th class="px-2 py-1.5 text-center">Q2</th>
@@ -458,8 +458,16 @@
                                     <tbody class="divide-y divide-slate-50">
                                         @foreach($dept['staff_list'] as $si => $staff)
                                             @php
-                                                $sstyle = $scoreStyle($staff['performance']);
-                                                $isMe   = strtolower(trim($staff['name']??'')) === strtolower(trim($currentUserName));
+                                                $sstyle   = $scoreStyle($staff['performance']);
+                                                $isMe     = strtolower(trim($staff['name']??'')) === strtolower(trim($currentUserName));
+                                                $roleUpper = strtoupper(trim($staff['role'] ?? '-'));
+                                                $roleColor = match($roleUpper) {
+                                                    'SLT'       => 'bg-purple-100 text-purple-700',
+                                                    'VP'        => 'bg-blue-100 text-blue-700',
+                                                    'MANAGER'   => 'bg-indigo-100 text-indigo-700',
+                                                    'EXECUTIVE' => 'bg-slate-100 text-slate-600',
+                                                    default     => 'bg-slate-100 text-slate-500',
+                                                };
                                             @endphp
                                             <tr class="{{ $isMe ? 'bg-indigo-50/70' : 'hover:bg-slate-50' }} transition">
                                                 <td class="px-2 py-2 text-[9px] text-slate-400 font-bold">{{ $si+1 }}</td>
@@ -470,6 +478,9 @@
                                                         </div>
                                                         <span class="text-[10px] font-black text-slate-900">{{ $staff['name'] ?? 'Unknown' }}@if($isMe)<span class="text-indigo-400 font-normal"> (you)</span>@endif</span>
                                                     </div>
+                                                </td>
+                                                <td class="px-2 py-2">
+                                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-black {{ $roleColor }}">{{ $roleUpper !== '-' ? $roleUpper : '—' }}</span>
                                                 </td>
                                                 <td class="px-2 py-2 text-center text-[9px] font-bold text-slate-600">{{ $staff['kpi_count'] }}</td>
                                                 @foreach(['q1','q2','q3','q4'] as $qk)
