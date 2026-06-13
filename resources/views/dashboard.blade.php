@@ -194,26 +194,29 @@
         };
     @endphp
 
-    <main id="mainContent" class="ml-[230px] min-h-screen transition-all duration-300">
+    <main id="mainContent" class="ml-[230px] min-h-screen transition-all duration-300 bg-[#f4f7fb]">
 
-        {{-- ── TOP BAR ────────────────────────────────────────────────────── --}}
-        <div class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 px-6 py-3 flex items-center justify-between">
+        <div class="p-6 space-y-6">
+
+        {{-- ── PAGE HEADER ─────────────────────────────────────────────────── --}}
+        <div class="rounded-[18px] bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white p-6 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-                <h2 class="text-base font-black text-slate-800">Good morning, {{ $currentUserName }}</h2>
-                <p class="text-xs text-slate-400 mt-0.5">{{ $currentFinancialYear }} &nbsp;·&nbsp; {{ $userPosition }}</p>
+                <h1 class="text-3xl font-bold mt-1">Dashboard</h1>
+                <p class="text-blue-100 text-xs mt-1">
+                    {{ $currentUserName }} · {{ $user['role'] ?? '-' }} · {{ $currentDepartment }} · {{ $currentFinancialYear }}
+                </p>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3">
                 {{-- Department switcher for SLT --}}
                 @if($canViewCompanyDashboard && !empty($departments))
                     <form method="POST" action="{{ route('switch.department') }}" class="flex items-center gap-2">
                         @csrf
-                        <label class="text-[10px] text-slate-400 font-bold uppercase">View</label>
                         <select name="department_code" onchange="this.form.submit()"
-                            class="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                            <option value="ALL" {{ ($selectedDepartmentCode ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Departments</option>
+                            class="text-xs border border-white/20 rounded-xl px-3 py-2 bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur">
+                            <option value="ALL" class="text-slate-900" {{ ($selectedDepartmentCode ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Departments</option>
                             @foreach($departments as $dept)
-                                <option value="{{ $dept['code'] }}" {{ ($selectedDepartmentCode ?? '') === $dept['code'] ? 'selected' : '' }}>
+                                <option value="{{ $dept['code'] }}" class="text-slate-900" {{ ($selectedDepartmentCode ?? '') === $dept['code'] ? 'selected' : '' }}>
                                     {{ $dept['name'] ?? $dept['code'] }}
                                 </option>
                             @endforeach
@@ -221,19 +224,18 @@
                     </form>
                 @endif
 
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-full overflow-hidden bg-slate-200 shrink-0">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($currentUserName) }}&background=0f172a&color=fff" class="w-full h-full object-cover" />
-                    </div>
-                    <div class="leading-tight">
-                        <p class="text-xs font-black text-slate-900">{{ $currentUserName }}</p>
-                        <p class="text-[10px] text-slate-400">{{ $user['role'] ?? '-' }}</p>
-                    </div>
-                </div>
+                <a href="{{ route('kpi.index') }}"
+                   class="bg-white text-blue-900 hover:bg-blue-50 px-5 py-2.5 rounded-2xl shadow font-bold text-sm transition">
+                    My KPIs
+                </a>
+                <a href="{{ route('weightage') }}"
+                   class="bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 rounded-2xl font-bold text-sm transition border border-white/20">
+                    Weightage
+                </a>
             </div>
         </div>
 
-        <div class="p-6 space-y-8 max-w-screen-2xl">
+        <div class="space-y-8">
 
             {{-- Flash messages --}}
             @if(session('success'))
@@ -608,6 +610,7 @@
                 </div>
             @endif
 
+        </div>{{-- /.space-y-8 --}}
         </div>{{-- /.p-6 --}}
     </main>
 
