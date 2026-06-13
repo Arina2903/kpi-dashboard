@@ -385,7 +385,7 @@ class DashboardController extends Controller
 
             $kpi['is_self'] = $isSelf;
             $kpi['owner_name'] = $isSelf ? null : $ownerName;
-            $kpi['owner_role'] = $isSelf ? null : ($owner['role'] ?? '-');
+            $kpi['owner_role'] = $owner['role'] ?? '-';
 
             $kpi['owner_display_name'] = $ownerName;
             $kpi['owner_department_code'] = $owner['department_code'] ?? $kpi['department_code'] ?? null;

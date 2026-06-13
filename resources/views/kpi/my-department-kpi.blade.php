@@ -148,19 +148,19 @@
 
         $statusCounts = collect($kpis ?? [])->countBy(fn($k) => $k['status'] ?? 'not_started');
 
+        $rolePriorityFn = fn($role) => match(strtoupper(trim($role ?? ''))) {
+            'SLT'       => 1,
+            'VP'        => 2,
+            'MANAGER'   => 3,
+            'EXECUTIVE' => 4,
+            default     => 5,
+        };
+
         $staffGroupedKpis = collect($kpis)
             ->groupBy(fn($item) => $item['employee_name'] ?? 'Unknown')
-            ->sortByDesc(function($group){
-                $perf = 0;
-                foreach($group as $item){
-                    $quarters = collect($item['quarters'] ?? []);
-                    $target = $quarters->sum(fn($q) => (float)($q['quarter_target'] ?? 0));
-                    $actual = $quarters->sum(fn($q) => (float)($q['quarter_actual'] ?? 0));
-                    $score = $target > 0 ? (($actual / $target) * 100) : 0;
-                    $perf += ($score * ((float)($item['weightage'] ?? 0))) / 100;
-                }
-                return $perf;
-            });
+            ->sortBy(fn($group) => $rolePriorityFn(
+                collect($group)->first()['employee_role'] ?? collect($group)->first()['owner_role'] ?? ''
+            ));
 
         $statusDef = [
             'completed'   => ['label' => 'Completed',  'color' => 'bg-emerald-100 text-emerald-700', 'dot' => 'bg-emerald-500'],
