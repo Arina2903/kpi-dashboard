@@ -610,8 +610,9 @@
                                             @else
                                                 <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-50 text-amber-600 border border-amber-200">No wt</span>
                                             @endif
-                                            @if(!empty($kpi['unit']))
-                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-sky-50 text-sky-600 border border-sky-100">{{ $kpi['unit'] }}</span>
+                                            @php $unitLabel = match(strtolower($kpi['unit'] ?? '')) { 'number'=>'#', 'currency'=>'RM', 'percentage','percent'=>'%', default=>null }; @endphp
+                                            @if($unitLabel)
+                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-sky-50 text-sky-600 border border-sky-100">{{ $unitLabel }}</span>
                                             @endif
                                         </div>
                                         <span class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-black {{ $badgeSt['class'] }}">{{ $badgeSt['label'] }}</span>
