@@ -264,18 +264,6 @@
         <p class="text-blue-100 text-[11px] mt-0.5">{{ $currentUserName }} · {{ $user['role'] ?? '-' }} · {{ $currentDepartment }} · {{ $currentFinancialYear }}</p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
-        @if($canViewCompanyDashboard && !empty($departments))
-            <form method="POST" action="{{ route('switch.department') }}" class="flex items-center gap-2">
-                @csrf
-                <select name="department_code" onchange="this.form.submit()"
-                    class="text-xs border border-white/20 rounded-xl px-3 py-1.5 bg-white/10 text-white focus:outline-none">
-                    <option value="ALL" class="text-slate-900" {{ ($selectedDepartmentCode??'ALL')==='ALL'?'selected':'' }}>All Departments</option>
-                    @foreach($departments as $dept)
-                        <option value="{{ $dept['code'] }}" class="text-slate-900" {{ ($selectedDepartmentCode??'')===$dept['code']?'selected':'' }}>{{ $dept['name']??$dept['code'] }}</option>
-                    @endforeach
-                </select>
-            </form>
-        @endif
         <a href="{{ route('kpi.index') }}"   class="bg-white text-blue-900 hover:bg-blue-50 px-4 py-2 rounded-xl shadow font-bold text-xs transition">My KPIs</a>
         <a href="{{ route('weightage') }}"   class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20">Weightage</a>
     </div>
