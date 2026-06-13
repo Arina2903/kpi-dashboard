@@ -112,6 +112,8 @@ class DashboardController extends Controller
         $summary = $this->calculateSummary($kpis);
         $weightageSummary = $this->calculateWeightageSummary($kpis);
 
+        $companyDeptRanking = $this->getCompanyDeptPerformance($supabase, $companyCode);
+
         return view('dashboard', [
             'user' => $user,
             'department' => $department,
@@ -147,6 +149,8 @@ class DashboardController extends Controller
 
             'kpiCountByUser' => $kpiCountByUser,
             'kpiCountByDepartment' => $kpiCountByDepartment,
+
+            'companyDeptRanking' => $companyDeptRanking,
         ]);
     }
 
@@ -457,6 +461,75 @@ class DashboardController extends Controller
             'isWeightageExceeded' => $totalWeightage > 100,
             'isWeightageComplete' => round($totalWeightage, 2) == 100,
         ];
+    }
+
+    private function getCompanyDeptPerformance(SupabaseService $supabase, string $companyCode): array
+    {
+        $employees = $supabase->get('employees', [
+            'company_code' => 'eq.' . $companyCode,
+            'is_active'    => 'eq.true',
+            'select'       => 'id,department_code',
+        ]);
+
+        if (empty($employees)) return [];
+
+        $empIds     = collect($employees)->pluck('id')->filter()->values()->toArray();
+        $empDeptMap = collect($employees)->pluck('department_code', 'id');
+
+        $kpis = $supabase->get('kpis', [
+            'company_code'   => 'eq.' . $companyCode,
+            'employee_id'    => 'in.(' . implode(',', $empIds) . ')',
+            'financial_year' => 'eq.' . $this->currentFinancialYear,
+            'select'         => 'id,employee_id,weightage',
+        ]);
+
+        if (empty($kpis)) return [];
+
+        $kpiIds = collect($kpis)->pluck('id')->filter()->values()->toArray();
+
+        $quarters = $supabase->get('kpi_quarters', [
+            'kpi_id' => 'in.(' . implode(',', $kpiIds) . ')',
+            'select' => 'kpi_id,quarter_target,quarter_actual',
+        ]);
+
+        $quarterMap = collect($quarters)->groupBy('kpi_id');
+
+        $empScores = [];
+        foreach ($kpis as $kpi) {
+            $empId  = $kpi['employee_id'];
+            $weight = (float)($kpi['weightage'] ?? 0);
+            if ($weight <= 0) continue;
+
+            $kpiQuarters = $quarterMap->get($kpi['id'], collect());
+            $qTarget = $kpiQuarters->sum(fn($q) => max(0, (float)($q['quarter_target'] ?? 0)));
+            $qActual = $kpiQuarters->sum(fn($q) => max(0, (float)($q['quarter_actual'] ?? 0)));
+
+            $pct = $qTarget > 0 ? ($qActual / $qTarget) * 100 : 0;
+            $empScores[$empId] = ($empScores[$empId] ?? 0) + ($pct * $weight / 100);
+        }
+
+        $deptData = [];
+        foreach ($empScores as $empId => $score) {
+            $deptCode = $empDeptMap->get($empId, '-');
+            if (!isset($deptData[$deptCode])) {
+                $deptData[$deptCode] = ['total' => 0, 'count' => 0];
+            }
+            $deptData[$deptCode]['total'] += $score;
+            $deptData[$deptCode]['count']++;
+        }
+
+        $result = [];
+        foreach ($deptData as $deptCode => $data) {
+            $result[] = [
+                'code'  => $deptCode,
+                'score' => $data['count'] > 0 ? round($data['total'] / $data['count'], 2) : 0,
+                'staff' => $data['count'],
+            ];
+        }
+
+        usort($result, fn($a, $b) => $b['score'] <=> $a['score']);
+
+        return $result;
     }
 
     private function calculateSummary(array $kpis): array

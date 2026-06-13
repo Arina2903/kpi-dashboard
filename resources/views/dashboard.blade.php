@@ -270,17 +270,18 @@
 @if($errors->any())<div class="bg-red-50 text-red-700 px-3 py-2 rounded-xl text-xs border border-red-200">{{ $errors->first() }}</div>@endif
 
 {{-- ═══════ TIER 1: DEPT RANKING — visible to ALL roles ═══════════════════ --}}
-@if($deptRows->count() > 0)
+@php $rankingCount = count($companyDeptRanking ?? []); @endphp
+@if($rankingCount > 0 || $deptRows->count() > 0)
 <div class="grid grid-cols-1 xl:grid-cols-5 gap-3">
 
-    {{-- Department Annual Ranking (always visible) --}}
+    {{-- Department Annual Ranking (always visible, all company depts) --}}
     <div class="{{ $isManager ? 'xl:col-span-3' : 'xl:col-span-5' }} bg-white rounded-2xl p-4 soft-card border border-slate-100">
         <div class="flex items-center justify-between mb-1">
             <h3 class="text-xs font-black text-slate-900">Department Annual Ranking</h3>
             <span class="text-[10px] text-slate-400">{{ $currentFinancialYear }}</span>
         </div>
-        <p class="text-[10px] text-slate-400 mb-3">Sorted by highest achievement · all roles</p>
-        <div style="height:{{ max(100, $deptRows->count() * 34) }}px; position:relative;">
+        <p class="text-[10px] text-slate-400 mb-3">All {{ $rankingCount }} departments · sorted by highest achievement</p>
+        <div style="height:{{ max(100, $rankingCount * 34) }}px; position:relative;">
             <canvas id="chartDeptRanking"></canvas>
         </div>
     </div>
@@ -707,6 +708,7 @@
 <script>
 // ── DATA FROM PHP ───────────────────────────────────────────────────────────
 const deptData = @json($deptChartData);
+const companyRankingData = @json($companyDeptRanking ?? []);
 
 // ── SCORE COLOR HELPER ──────────────────────────────────────────────────────
 function scoreHex(v) {
@@ -721,20 +723,22 @@ function scoreHex(v) {
 const palette = ['#3b82f6','#8b5cf6','#f59e0b','#10b981','#ef4444','#06b6d4','#f97316','#ec4899','#14b8a6','#a855f7'];
 const bandColors = ['#10b981','#6366f1','#f59e0b','#ef4444'];
 
-// ── CHART: DEPT RANKING (horizontal bar) ────────────────────────────────────
+// ── CHART: DEPT RANKING (horizontal bar — all company depts) ────────────────
 (function() {
     const ctx = document.getElementById('chartDeptRanking');
-    if (!ctx || !deptData.length) return;
-    const sorted = [...deptData].sort((a,b) => b.annual - a.annual);
+    if (!ctx) return;
+    const src = companyRankingData.length ? companyRankingData : deptData.map(d=>({code:d.code,score:d.annual,staff:d.staff}));
+    if (!src.length) return;
+    const sorted = [...src].sort((a,b) => b.score - a.score);
     new Chart(ctx, {
         type: 'bar',
         data: {
             labels: sorted.map(d => d.code),
             datasets: [{
                 label: 'Annual Score (%)',
-                data: sorted.map(d => d.annual),
-                backgroundColor: sorted.map(d => scoreHex(d.annual) + 'cc'),
-                borderColor:     sorted.map(d => scoreHex(d.annual)),
+                data: sorted.map(d => d.score),
+                backgroundColor: sorted.map(d => scoreHex(d.score) + 'cc'),
+                borderColor:     sorted.map(d => scoreHex(d.score)),
                 borderWidth: 1.5,
                 borderRadius: 6,
             }]
@@ -747,7 +751,7 @@ const bandColors = ['#10b981','#6366f1','#f59e0b','#ef4444'];
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: ctx => ` ${ctx.parsed.x.toFixed(1)}%  ·  ${deptData.find(d=>d.code===ctx.label)?.staff || 0} staff`
+                        label: c => ` ${c.parsed.x.toFixed(1)}%  ·  ${src.find(d=>d.code===c.label)?.staff || 0} staff`
                     }
                 }
             },
