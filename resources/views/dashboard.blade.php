@@ -411,34 +411,10 @@
 
                 {{-- Dept body — starts CLOSED --}}
                 <div id="dept-body-{{ $safeCode }}" class="dept-body closed border-t border-slate-100">
-                    <div class="p-4 grid grid-cols-1 xl:grid-cols-4 gap-4">
-
-                        {{-- Score donut --}}
-                        <div class="xl:col-span-1 flex flex-col items-center">
-                            <p class="text-[9px] uppercase font-black text-slate-400 mb-2 self-start">Score Distribution</p>
-                            <div class="relative" style="width:120px;height:120px;">
-                                <canvas id="donut-{{ $safeCode }}" width="120" height="120"></canvas>
-                                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                    <p class="text-base font-black {{ $dstyle['text'] }}">{{ number_format($dept['performance'],1) }}%</p>
-                                    <p class="text-[8px] text-slate-400">Annual</p>
-                                </div>
-                            </div>
-                            <div class="mt-3 space-y-1.5 self-start w-full">
-                                @php $bandMeta = [['bg-emerald-500','text-emerald-700','Excellent','≥90%'],['bg-indigo-500','text-indigo-700','Good','75–89%'],['bg-amber-500','text-amber-700','Watch','50–74%'],['bg-red-500','text-red-700','Critical','<50%']]; @endphp
-                                @foreach($bandMeta as $bi => $bm)
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-1.5">
-                                            <div class="w-2 h-2 rounded-full {{ $bm[0] }}"></div>
-                                            <p class="text-[9px] font-black {{ $bm[1] }}">{{ $bm[2] }} <span class="font-normal text-slate-400">{{ $bm[3] }}</span></p>
-                                        </div>
-                                        <span class="text-[9px] font-black text-slate-900">{{ $dept['band_counts'][$bi] }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
+                    <div class="p-4">
 
                         {{-- Staff table --}}
-                        <div class="xl:col-span-3">
+                        <div>
                             <div class="overflow-x-auto thin-scroll">
                                 <table class="w-full min-w-[540px]">
                                     <thead>
@@ -842,30 +818,7 @@ deptData.forEach(function(dept) {
         });
     }
 
-    // Full donut in dept body (120×120)
-    const donutCtx = document.getElementById('donut-' + safe);
-    if (donutCtx) {
-        new Chart(donutCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Excellent ≥90%', 'Good 75–89%', 'Watch 50–74%', 'Critical <50%'],
-                datasets: [{
-                    data: dept.bands,
-                    backgroundColor: bandColors,
-                    borderWidth: 2,
-                    borderColor: '#fff',
-                }]
-            },
-            options: {
-                cutout: '68%',
-                responsive: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed} staff` } }
-                }
-            }
-        });
-    }
+
 });
 
 // ── ACCORDION TOGGLE ────────────────────────────────────────────────────────
