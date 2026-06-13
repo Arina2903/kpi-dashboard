@@ -356,72 +356,7 @@
         </div>
     </div>
 
-    {{-- B3: Department quarterly table --}}
-    <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden soft-card">
-        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-            <div>
-                <h3 class="text-sm font-black text-slate-900">Department Score — Quarter by Quarter</h3>
-                <p class="text-[10px] text-slate-400 mt-0.5">Click a row to expand staff detail below</p>
-            </div>
-        </div>
-        <div class="overflow-x-auto thin-scroll">
-            <table class="w-full text-sm min-w-[750px]">
-                <thead>
-                    <tr class="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 font-black border-b border-slate-100">
-                        <th class="px-5 py-3 text-left">#</th>
-                        <th class="px-5 py-3 text-left">Department</th>
-                        <th class="px-5 py-3 text-center">Staff</th>
-                        <th class="px-5 py-3 text-center">KPIs</th>
-                        <th class="px-5 py-3 text-center">Q1</th>
-                        <th class="px-5 py-3 text-center">Q2</th>
-                        <th class="px-5 py-3 text-center">Q3</th>
-                        <th class="px-5 py-3 text-center">Q4</th>
-                        <th class="px-5 py-3 text-center">Annual</th>
-                        <th class="px-5 py-3 text-center">At Risk</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-                    @foreach($deptRows as $i => $dept)
-                        @php
-                            $dstyle   = $scoreStyle($dept['performance']);
-                            $safeCode = preg_replace('/[^A-Za-z0-9]/', '_', $dept['department_code']);
-                        @endphp
-                        <tr class="hover:bg-indigo-50/40 transition cursor-pointer" onclick="toggleDept('{{ $safeCode }}')">
-                            <td class="px-5 py-3.5 text-xs text-slate-400 font-bold">{{ $i+1 }}</td>
-                            <td class="px-5 py-3.5">
-                                <div class="flex items-center gap-2">
-                                    @if($i===0)<span class="text-[9px] bg-amber-100 text-amber-700 font-black px-1.5 py-0.5 rounded-md">Top</span>@endif
-                                    @if($i === $deptRows->count()-1 && $deptRows->count() > 1)<span class="text-[9px] bg-red-50 text-red-500 font-black px-1.5 py-0.5 rounded-md">Focus</span>@endif
-                                    <span class="text-xs font-black text-slate-900">{{ $dept['department_code'] }}</span>
-                                </div>
-                            </td>
-                            <td class="px-5 py-3.5 text-center text-xs font-bold text-slate-600">{{ $dept['staff_count'] }}</td>
-                            <td class="px-5 py-3.5 text-center text-xs font-bold text-slate-600">{{ $dept['kpi_count'] }}</td>
-                            @foreach(['q1','q2','q3','q4'] as $qk)
-                                @php $qst = $scoreStyle($dept[$qk]); @endphp
-                                <td class="px-5 py-3.5 text-center">
-                                    <span class="text-xs font-black {{ $qst['text'] }}">{{ $dept[$qk] > 0 ? number_format($dept[$qk],1).'%' : '—' }}</span>
-                                </td>
-                            @endforeach
-                            <td class="px-5 py-3.5">
-                                <div class="flex items-center gap-2 justify-center">
-                                    <div class="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                        <div class="h-2 rounded-full {{ $dstyle['bar'] }}" style="width:{{ min($dept['performance'],100) }}%"></div>
-                                    </div>
-                                    <span class="text-xs font-black {{ $dstyle['text'] }}">{{ number_format($dept['performance'],1) }}%</span>
-                                </div>
-                            </td>
-                            <td class="px-5 py-3.5 text-center text-xs font-black {{ $dept['risk_count'] > 0 ? 'text-red-600':'text-slate-300' }}">
-                                {{ $dept['risk_count'] > 0 ? $dept['risk_count'] : '—' }}
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    {{-- B4: Per-department staff breakdown (accordion) --}}
+    {{-- B3: Per-department staff breakdown (accordion) --}}
     <div class="space-y-4">
         <div class="flex items-center justify-between">
             <div>
