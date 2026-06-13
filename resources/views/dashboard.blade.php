@@ -186,10 +186,9 @@
         }
 
         // Sort by role hierarchy, then by name within same role
-        $sortedStaff = $staff->sortBy([
-            [fn($s) => $rolePriority($s['role']), 'asc'],
-            [fn($s) => strtolower($s['name'] ?? ''), 'asc'],
-        ])->values();
+        $sortedStaff = $staff->sortBy(
+            fn($s) => sprintf('%d_%s', $rolePriority($s['role']), strtolower($s['name'] ?? ''))
+        )->values();
 
         return [
             'department_code' => $deptCode ?: '-',
