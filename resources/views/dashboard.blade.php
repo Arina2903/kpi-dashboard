@@ -212,7 +212,7 @@
     $totalKpisVisible   = $kpiCollection->count();
     $totalAtRisk        = $kpiRows->where('_is_risk',true)->count();
     $totalCompleted     = $kpiRows->where('status','completed')->count();
-    $companyDeptCount = count($companyDeptRanking ?? []);
+    $companyDeptCount = $companyTotalDepts ?? count($companyDeptRanking ?? []);
 
     // ── COMPANY BAND COUNTS ──────────────────────────────────────────────────
     $compBands = [0,0,0,0];

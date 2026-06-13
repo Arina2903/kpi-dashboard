@@ -115,6 +115,7 @@ class DashboardController extends Controller
         $rankingResult      = $this->getCompanyDeptPerformance($supabase, $companyCode);
         $companyDeptRanking = $rankingResult['depts'] ?? [];
         $companyTotalStaff  = $rankingResult['total_staff'] ?? 0;
+        $companyTotalDepts  = $rankingResult['total_depts'] ?? 0;
 
         return view('dashboard', [
             'user' => $user,
@@ -154,6 +155,7 @@ class DashboardController extends Controller
 
             'companyDeptRanking'  => $companyDeptRanking,
             'companyTotalStaff'   => $companyTotalStaff,
+            'companyTotalDepts'   => $companyTotalDepts,
         ]);
     }
 
@@ -474,10 +476,17 @@ class DashboardController extends Controller
             'select'       => 'id,department_code',
         ]);
 
-        if (empty($employees)) return [];
+        if (empty($employees)) return ['depts' => [], 'total_staff' => 0, 'total_depts' => 0];
 
         $empIds     = collect($employees)->pluck('id')->filter()->values()->toArray();
         $empDeptMap = collect($employees)->pluck('department_code', 'id');
+
+        // All depts with actual employee counts (includes depts with no KPIs)
+        $allDeptStaff = [];
+        foreach ($employees as $emp) {
+            $d = $emp['department_code'] ?? '-';
+            $allDeptStaff[$d] = ($allDeptStaff[$d] ?? 0) + 1;
+        }
 
         $kpis = $supabase->get('kpis', [
             'company_code'   => 'eq.' . $companyCode,
@@ -486,55 +495,51 @@ class DashboardController extends Controller
             'select'         => 'id,employee_id,weightage,base_target,actual_value',
         ]);
 
-        if (empty($kpis)) return [];
+        // Score accumulator per dept (employees with KPIs only)
+        $deptScores = [];
+        if (!empty($kpis)) {
+            $kpiIds     = collect($kpis)->pluck('id')->filter()->values()->toArray();
+            $quarters   = $supabase->get('kpi_quarters', [
+                'kpi_id' => 'in.(' . implode(',', $kpiIds) . ')',
+                'select' => 'kpi_id,quarter_target,quarter_actual',
+            ]);
+            $quarterMap = collect($quarters ?? [])->groupBy('kpi_id');
 
-        $kpiIds = collect($kpis)->pluck('id')->filter()->values()->toArray();
+            $empScores = [];
+            foreach ($kpis as $kpi) {
+                $empId  = $kpi['employee_id'];
+                $weight = (float)($kpi['weightage'] ?? 0);
+                if ($weight <= 0) continue;
 
-        $quarters = $supabase->get('kpi_quarters', [
-            'kpi_id' => 'in.(' . implode(',', $kpiIds) . ')',
-            'select' => 'kpi_id,quarter_target,quarter_actual',
-        ]);
+                $kpiQuarters = $quarterMap->get($kpi['id'], collect());
+                $qTarget = $kpiQuarters->sum(fn($q) => max(0, (float)($q['quarter_target'] ?? 0)));
+                $qActual = $kpiQuarters->sum(fn($q) => max(0, (float)($q['quarter_actual'] ?? 0)));
 
-        $quarterMap = collect($quarters)->groupBy('kpi_id');
-
-        $empScores = [];
-        foreach ($kpis as $kpi) {
-            $empId  = $kpi['employee_id'];
-            $weight = (float)($kpi['weightage'] ?? 0);
-            if ($weight <= 0) continue;
-
-            $kpiQuarters = $quarterMap->get($kpi['id'], collect());
-            $qTarget = $kpiQuarters->sum(fn($q) => max(0, (float)($q['quarter_target'] ?? 0)));
-            $qActual = $kpiQuarters->sum(fn($q) => max(0, (float)($q['quarter_actual'] ?? 0)));
-
-            if ($qTarget > 0) {
-                $pct = ($qActual / $qTarget) * 100;
-            } else {
-                // Fallback: use annual base_target / actual_value (same logic as blade scoreStyle)
-                $base   = max(0, (float)($kpi['base_target']   ?? 0));
-                $actual = max(0, (float)($kpi['actual_value']   ?? 0));
-                $pct    = $base > 0 ? ($actual / $base) * 100 : 0;
+                if ($qTarget > 0) {
+                    $pct = ($qActual / $qTarget) * 100;
+                } else {
+                    $base   = max(0, (float)($kpi['base_target']   ?? 0));
+                    $actual = max(0, (float)($kpi['actual_value']   ?? 0));
+                    $pct    = $base > 0 ? ($actual / $base) * 100 : 0;
+                }
+                $empScores[$empId] = ($empScores[$empId] ?? 0) + ($pct * $weight / 100);
             }
 
-            $empScores[$empId] = ($empScores[$empId] ?? 0) + ($pct * $weight / 100);
-        }
-
-        $deptData = [];
-        foreach ($empScores as $empId => $score) {
-            $deptCode = $empDeptMap->get($empId, '-');
-            if (!isset($deptData[$deptCode])) {
-                $deptData[$deptCode] = ['total' => 0, 'count' => 0];
+            foreach ($empScores as $empId => $score) {
+                $d = $empDeptMap->get($empId, '-');
+                $deptScores[$d]['total'] = ($deptScores[$d]['total'] ?? 0) + $score;
+                $deptScores[$d]['count'] = ($deptScores[$d]['count'] ?? 0) + 1;
             }
-            $deptData[$deptCode]['total'] += $score;
-            $deptData[$deptCode]['count']++;
         }
 
+        // Build result for ALL departments (score=0 for depts without KPIs)
         $result = [];
-        foreach ($deptData as $deptCode => $data) {
+        foreach ($allDeptStaff as $deptCode => $staffCount) {
+            $s = $deptScores[$deptCode] ?? null;
             $result[] = [
                 'code'  => $deptCode,
-                'score' => $data['count'] > 0 ? round($data['total'] / $data['count'], 2) : 0,
-                'staff' => $data['count'],
+                'score' => $s && $s['count'] > 0 ? round($s['total'] / $s['count'], 2) : 0,
+                'staff' => $staffCount,
             ];
         }
 
@@ -543,6 +548,7 @@ class DashboardController extends Controller
         return [
             'depts'       => $result,
             'total_staff' => count($employees),
+            'total_depts' => count($allDeptStaff),
         ];
     }
 
