@@ -76,7 +76,7 @@
             '_is_risk'         => in_array($status,$riskStatuses),
             '_employee_key'    => (string)($kpi['employee_id'] ?? 'unassigned'),
             '_employee_name'   => $kpi['owner_display_name'] ?? $kpi['employee_name'] ?? $kpi['owner_name'] ?? 'Unassigned',
-            '_department_code' => $kpi['department_code'] ?? '-',
+            '_department_code' => $kpi['owner_department_code'] ?? $kpi['department_code'] ?? '-',
         ]);
     });
 
