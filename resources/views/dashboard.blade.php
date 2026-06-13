@@ -110,13 +110,21 @@
     $cardBorder  = fn($s) => match(strtolower($s??'')) { 'on_track','monitoring'=>'border-l-emerald-400','at_risk','risk'=>'border-l-amber-400','in_trouble','critical'=>'border-l-red-400','completed'=>'border-l-blue-400',default=>'border-l-slate-200' };
 
     // ── STAFF BASE ROWS ──────────────────────────────────────────────────────
-    $staffBaseRows = $kpiRows->groupBy('_employee_key')->map(function($items) {
+    // Use name as fallback key so people with null employee_id don't merge
+    $kpiRowsKeyed = $kpiRows->map(function($kpi) {
+        $empId   = (string)($kpi['employee_id'] ?? '');
+        $empName = $kpi['_employee_name'] ?? '';
+        $safeKey = $empId ?: ($empName ?: 'unassigned');
+        return array_merge($kpi, ['_safe_key' => $safeKey]);
+    });
+
+    $staffBaseRows = $kpiRowsKeyed->groupBy('_safe_key')->map(function($items) {
         $first = $items->first();
         return [
             'employee_id'     => $first['employee_id'] ?? '',
             'name'            => $first['_employee_name'] ?? 'Unknown',
             'department_code' => $first['_department_code'] ?? '-',
-            'role'            => $first['owner_role'] ?? '-',
+            'role'            => $first['owner_role'] ?? $first['employee_role'] ?? $first['position'] ?? '-',
             'kpi_count'       => $items->count(),
             'weightage_total' => round($items->sum('_weightage'),2),
             'performance'     => round($items->sum('_weighted_score'),2),
@@ -154,8 +162,19 @@
         ]);
     })->values()->sortByDesc('performance');
 
+    // ── ROLE HIERARCHY SORT ──────────────────────────────────────────────────
+    $rolePriority = function($role) {
+        return match(strtoupper(trim($role ?? ''))) {
+            'SLT'       => 1,
+            'VP'        => 2,
+            'MANAGER'   => 3,
+            'EXECUTIVE' => 4,
+            default     => 5,
+        };
+    };
+
     // ── DEPARTMENT ROWS (with band counts + staff list) ───────────────────────
-    $deptRows = $staffPerformanceRows->groupBy('department_code')->map(function($staff, $deptCode) {
+    $deptRows = $staffPerformanceRows->groupBy('department_code')->map(function($staff, $deptCode) use($rolePriority) {
         $cnt   = $staff->count();
         $bands = [0,0,0,0]; // Excellent≥90 | Good 75-89 | Watch 50-74 | Critical<50
         foreach ($staff as $s) {
@@ -165,6 +184,13 @@
             elseif ($p >= 50) $bands[2]++;
             else $bands[3]++;
         }
+
+        // Sort by role hierarchy, then by name within same role
+        $sortedStaff = $staff->sortBy([
+            [fn($s) => $rolePriority($s['role']), 'asc'],
+            [fn($s) => strtolower($s['name'] ?? ''), 'asc'],
+        ])->values();
+
         return [
             'department_code' => $deptCode ?: '-',
             'staff_count'     => $cnt,
@@ -176,7 +202,7 @@
             'q3'              => round($cnt > 0 ? $staff->avg('q3') : 0, 2),
             'q4'              => round($cnt > 0 ? $staff->avg('q4') : 0, 2),
             'band_counts'     => $bands,
-            'staff_list'      => $staff->values()->toArray(),
+            'staff_list'      => $sortedStaff->toArray(),
         ];
     })->values()->sortByDesc('performance');
 
