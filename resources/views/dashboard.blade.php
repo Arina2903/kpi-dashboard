@@ -173,23 +173,39 @@
         };
     };
 
-    // ── DEPARTMENT ROWS (with band counts + staff list) ───────────────────────
-    $deptRows = $staffPerformanceRows->groupBy('department_code')->map(function($staff, $deptCode) use($rolePriority) {
+    // ── DEPARTMENT ROWS — all employees, KPI data merged in where available ──
+    $kpiByEmpId = $kpiRows->groupBy(fn($k) => (string)($k['employee_id'] ?? ''));
+
+    $deptRows = collect($allEmployees ?? [])->map(function($emp) use($kpiByEmpId, $empQuarterMap) {
+        $empId   = (string)($emp['id'] ?? '');
+        $empKpis = $kpiByEmpId->get($empId, collect());
+        $q       = $empQuarterMap[$empId] ?? [];
+        return [
+            'employee_id'     => $empId,
+            'name'            => $emp['short_name'] ?? $emp['full_name'] ?? 'Unknown',
+            'department_code' => $emp['department_code'] ?? '-',
+            'role'            => $emp['role'] ?? '-',
+            'kpi_count'       => $empKpis->count(),
+            'performance'     => round($empKpis->sum('_weighted_score'), 2),
+            'risk_count'      => $empKpis->where('_is_risk', true)->count(),
+            'q1'              => round($q['Q1'] ?? 0, 2),
+            'q2'              => round($q['Q2'] ?? 0, 2),
+            'q3'              => round($q['Q3'] ?? 0, 2),
+            'q4'              => round($q['Q4'] ?? 0, 2),
+        ];
+    })->groupBy('department_code')->map(function($staff, $deptCode) use($rolePriority) {
         $cnt   = $staff->count();
-        $bands = [0,0,0,0]; // Excellent≥90 | Good 75-89 | Watch 50-74 | Critical<50
+        $bands = [0,0,0,0];
         foreach ($staff as $s) {
-            $p = (float)($s['performance']);
+            $p = (float)$s['performance'];
             if ($p >= 90) $bands[0]++;
             elseif ($p >= 75) $bands[1]++;
             elseif ($p >= 50) $bands[2]++;
             else $bands[3]++;
         }
-
-        // Sort by role hierarchy, then by name within same role
         $sortedStaff = $staff->sortBy(
             fn($s) => sprintf('%d_%s', $rolePriority($s['role']), strtolower($s['name'] ?? ''))
         )->values();
-
         return [
             'department_code' => $deptCode ?: '-',
             'staff_count'     => $cnt,

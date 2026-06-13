@@ -112,10 +112,11 @@ class DashboardController extends Controller
         $summary = $this->calculateSummary($kpis);
         $weightageSummary = $this->calculateWeightageSummary($kpis);
 
-        $rankingResult      = $this->getCompanyDeptPerformance($supabase, $companyCode);
-        $companyDeptRanking = $rankingResult['depts'] ?? [];
-        $companyTotalStaff  = $rankingResult['total_staff'] ?? 0;
-        $companyTotalDepts  = $rankingResult['total_depts'] ?? 0;
+        $rankingResult       = $this->getCompanyDeptPerformance($supabase, $companyCode);
+        $companyDeptRanking  = $rankingResult['depts'] ?? [];
+        $companyTotalStaff   = $rankingResult['total_staff'] ?? 0;
+        $companyTotalDepts   = $rankingResult['total_depts'] ?? 0;
+        $allCompanyEmployees = $rankingResult['employees'] ?? [];
 
         return view('dashboard', [
             'user' => $user,
@@ -156,6 +157,7 @@ class DashboardController extends Controller
             'companyDeptRanking'  => $companyDeptRanking,
             'companyTotalStaff'   => $companyTotalStaff,
             'companyTotalDepts'   => $companyTotalDepts,
+            'allEmployees'        => $allCompanyEmployees,
         ]);
     }
 
@@ -473,7 +475,7 @@ class DashboardController extends Controller
         $employees = $supabase->get('employees', [
             'company_code' => 'eq.' . $companyCode,
             'is_active'    => 'eq.true',
-            'select'       => 'id,department_code',
+            'select'       => 'id,short_name,full_name,role,department_code',
         ]);
 
         if (empty($employees)) return ['depts' => [], 'total_staff' => 0, 'total_depts' => 0];
@@ -549,6 +551,7 @@ class DashboardController extends Controller
             'depts'       => $result,
             'total_staff' => count($employees),
             'total_depts' => count($allDeptStaff),
+            'employees'   => $employees,
         ];
     }
 
