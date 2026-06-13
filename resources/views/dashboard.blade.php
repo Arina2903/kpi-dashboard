@@ -506,7 +506,24 @@
         <div class="lg:col-span-2 brand-panel rounded-2xl p-4 text-white relative overflow-hidden soft-card">
             <div class="absolute top-0 right-0 w-28 h-28 rounded-full bg-white/5 -translate-y-8 translate-x-8 pointer-events-none"></div>
             <p class="text-[9px] uppercase tracking-widest font-black text-blue-300">My Performance Score</p>
-            @if($individualWeightage > 0)
+
+            @if($individualKpiCount === 0)
+                {{-- No KPIs created yet --}}
+                <div class="mt-4 mb-2">
+                    <p class="text-2xl font-black text-white/30">No KPIs Yet</p>
+                    <p class="text-xs text-blue-200 mt-1.5">You have no KPIs for {{ $currentFinancialYear }}.</p>
+                    <a href="{{ route('kpi.create') }}" class="inline-block mt-3 px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-xl text-xs font-black transition border border-white/20">+ Create First KPI</a>
+                </div>
+            @elseif($individualWeightage <= 0)
+                {{-- Has KPIs but weightage not set --}}
+                <div class="mt-3 flex items-end gap-2">
+                    <span class="text-5xl font-black leading-none text-white/40">—</span>
+                    <span class="text-xl font-black text-white/30 mb-1">%</span>
+                </div>
+                <p class="text-xs text-blue-200 mt-2">{{ $individualKpiCount }} KPI created · weightage not set.</p>
+                <a href="{{ route('weightage') }}" class="inline-block mt-1.5 text-xs font-black text-white underline">Set weightage →</a>
+            @else
+                {{-- Normal: has KPIs + weightage --}}
                 <div class="mt-3 flex items-end gap-2">
                     <span class="text-5xl font-black leading-none {{ $individualScoreStyle['text'] }}">{{ number_format($individualPerformance,1) }}</span>
                     <span class="text-xl font-black text-white/50 mb-1">%</span>
@@ -516,11 +533,8 @@
                     <div class="h-1.5 rounded-full {{ $individualScoreStyle['bar'] }}" style="width:{{ min($individualPerformance,100) }}%"></div>
                 </div>
                 <p class="text-[9px] text-blue-300/80 mt-1.5">{{ $individualKpiCount }} KPI · {{ number_format($individualWeightage,0) }}% weightage set</p>
-            @else
-                <div class="mt-3 text-xl font-black text-white/50">— %</div>
-                <p class="text-xs text-blue-200 mt-1.5">Weightage not set. <a href="{{ route('weightage') }}" class="underline font-bold text-white">Set now →</a></p>
-                <p class="text-[9px] text-blue-300/80 mt-1">{{ $individualKpiCount }} KPI created</p>
             @endif
+
             <div class="mt-3 pt-3 border-t border-white/10 flex gap-2 flex-wrap">
                 <a href="{{ route('kpi.index') }}"  class="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-black transition">My KPIs</a>
                 <a href="{{ route('weightage') }}"  class="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-black transition">Weightage</a>
@@ -529,6 +543,15 @@
         </div>
 
         {{-- Quick stats --}}
+        @if($individualKpiCount === 0)
+        <div class="lg:col-span-3 flex items-center justify-center bg-white rounded-2xl border border-dashed border-slate-200 p-8 soft-card">
+            <div class="text-center">
+                <p class="text-slate-400 text-sm font-bold">No KPI data to display</p>
+                <p class="text-slate-300 text-xs mt-1">Create your KPIs to start tracking performance</p>
+                <a href="{{ route('kpi.create') }}" class="inline-block mt-4 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-700 transition">+ Create KPI</a>
+            </div>
+        </div>
+        @else
         <div class="lg:col-span-3 grid grid-cols-2 sm:grid-cols-4 gap-3 content-start">
             <div class="bg-white rounded-xl border border-slate-200 p-3 soft-card">
                 <p class="text-[9px] uppercase font-black text-slate-400">Total KPIs</p>
@@ -555,6 +578,7 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 
     {{-- My KPI cards --}}
