@@ -58,6 +58,18 @@ Route::post('/logout', [AuthController::class, 'logout'])
 |--------------------------------------------------------------------------
 */
 
+/*
+|--------------------------------------------------------------------------
+| COMPANY SELECTION (no employee session needed yet — set after choosing)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/choose-dashboard', [AuthController::class, 'showChooseDashboard'])
+    ->name('dashboard.choose');
+
+Route::post('/choose-dashboard', [AuthController::class, 'selectDashboard'])
+    ->name('dashboard.select');
+
 Route::middleware(['kpi.auth'])->group(function () {
 
     /*
@@ -65,12 +77,6 @@ Route::middleware(['kpi.auth'])->group(function () {
     | DASHBOARD
     |--------------------------------------------------------------------------
     */
-
-    Route::get('/choose-dashboard', [AuthController::class, 'showChooseDashboard'])
-        ->name('dashboard.choose');
-
-    Route::post('/choose-dashboard', [AuthController::class, 'selectDashboard'])
-        ->name('dashboard.select');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
