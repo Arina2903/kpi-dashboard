@@ -480,7 +480,7 @@ class DashboardController extends Controller
             'company_code'   => 'eq.' . $companyCode,
             'employee_id'    => 'in.(' . implode(',', $empIds) . ')',
             'financial_year' => 'eq.' . $this->currentFinancialYear,
-            'select'         => 'id,employee_id,weightage',
+            'select'         => 'id,employee_id,weightage,base_target,actual_value',
         ]);
 
         if (empty($kpis)) return [];
@@ -504,7 +504,15 @@ class DashboardController extends Controller
             $qTarget = $kpiQuarters->sum(fn($q) => max(0, (float)($q['quarter_target'] ?? 0)));
             $qActual = $kpiQuarters->sum(fn($q) => max(0, (float)($q['quarter_actual'] ?? 0)));
 
-            $pct = $qTarget > 0 ? ($qActual / $qTarget) * 100 : 0;
+            if ($qTarget > 0) {
+                $pct = ($qActual / $qTarget) * 100;
+            } else {
+                // Fallback: use annual base_target / actual_value (same logic as blade scoreStyle)
+                $base   = max(0, (float)($kpi['base_target']   ?? 0));
+                $actual = max(0, (float)($kpi['actual_value']   ?? 0));
+                $pct    = $base > 0 ? ($actual / $base) * 100 : 0;
+            }
+
             $empScores[$empId] = ($empScores[$empId] ?? 0) + ($pct * $weight / 100);
         }
 
