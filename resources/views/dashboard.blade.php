@@ -243,6 +243,12 @@
         else $compBands[3]++;
     }
 
+    // ── MY DEPARTMENT SCORE (for the donut panel) ───────────────────────────
+    $myDeptRow        = $deptRows->firstWhere('department_code', $currentDepartment);
+    $myDeptPerformance = $myDeptRow ? (float)$myDeptRow['performance'] : 0;
+    $myDeptBands      = $myDeptRow ? ($myDeptRow['band_counts'] ?? [0,0,0,0]) : [0,0,0,0];
+    $myDeptScoreStyle = $scoreStyle($myDeptPerformance);
+
     // ── DATA FOR JS CHARTS ───────────────────────────────────────────────────
     $deptChartData = $deptRows->map(fn($d) => [
         'code'    => $d['department_code'],
@@ -297,23 +303,25 @@
     @if($isManager)
     <div class="xl:col-span-2 flex flex-col gap-3">
 
-        {{-- Department Achievement donut --}}
+        {{-- My Department donut --}}
         <div class="bg-white rounded-2xl p-3 soft-card border border-slate-100 flex items-center gap-3">
             <div class="relative shrink-0" style="width:88px;height:88px;">
                 <canvas id="chartCompanyDonut" width="88" height="88"></canvas>
                 <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <p class="text-sm font-black {{ $companyScoreStyle['text'] }}">{{ number_format($companyPerformance,1) }}%</p>
-                    <p class="text-[8px] text-slate-400">Overall</p>
+                    <p class="text-sm font-black {{ $myDeptScoreStyle['text'] }}">{{ number_format($myDeptPerformance,1) }}%</p>
+                    <p class="text-[8px] text-slate-400">{{ $currentDepartment }}</p>
                 </div>
             </div>
             <div class="flex-1 min-w-0">
-                <p class="text-[9px] font-black text-slate-500 uppercase mb-1.5">Department Achievement</p>
-                @php $blInfo = [['bg-emerald-500','Excellent','≥90%'],['bg-indigo-500','Good','75–89%'],['bg-amber-500','Watch','50–74%'],['bg-red-500','Critical','<50%']]; @endphp
+                <p class="text-[9px] font-black text-slate-500 uppercase mb-0.5">{{ $currentDepartment }} Achievement</p>
+                <p class="text-[8px] text-slate-400 mb-1.5">Staff score distribution</p>
+                @php $blInfo = [['bg-emerald-500','text-emerald-700','Excellent','≥90%'],['bg-indigo-500','text-indigo-700','Good','75–89%'],['bg-amber-500','text-amber-700','Watch','50–74%'],['bg-red-500','text-red-700','Critical','<50%']]; @endphp
                 <div class="grid grid-cols-2 gap-x-2 gap-y-1">
                     @foreach($blInfo as $bi => $bl)
                     <div class="flex items-center gap-1">
                         <div class="w-2 h-2 rounded-full {{ $bl[0] }} shrink-0"></div>
-                        <span class="text-[9px] text-slate-600 truncate">{{ $compBands[$bi] }} · {{ $bl[1] }}</span>
+                        <span class="text-[9px] {{ $bl[1] }} font-bold">{{ $myDeptBands[$bi] }} staff</span>
+                        <span class="text-[9px] text-slate-400">· {{ $bl[2] }}</span>
                     </div>
                     @endforeach
                 </div>
@@ -779,7 +787,7 @@ const bandColors = ['#10b981','#6366f1','#f59e0b','#ef4444'];
 (function() {
     const ctx = document.getElementById('chartCompanyDonut');
     if (!ctx) return;
-    const bands = @json($compBands);
+    const bands = @json($myDeptBands);
     new Chart(ctx, {
         type: 'doughnut',
         data: {
