@@ -2945,7 +2945,7 @@ function renderKpiDetail(activeQuarter) {
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                        Proof Image / Document <span class="text-slate-400 normal-case font-medium">(optional — JPG, PNG, PDF, max 5 MB)</span>
+                                        Proof Image / Document <span class="text-red-500">*</span> <span class="text-slate-400 normal-case font-medium">(JPG, PNG, PDF, max 5 MB)</span>
                                     </label>
                                     <input id="qProofImage" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
                                         class="w-full mt-1.5 rounded-2xl border border-blue-200 bg-white px-4 py-2.5 text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer">
@@ -3267,12 +3267,17 @@ async function completeQuarterSubmit(quarterId) {
         return;
     }
 
+    if (!file) {
+        alert('Please upload a proof image or document.');
+        return;
+    }
+
     if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
 
     const fd = new FormData();
     fd.append('_method', 'POST');
     fd.append('completion_review', review);
-    if (file) fd.append('proof_image', file);
+    fd.append('proof_image', file);
 
     try {
         const res = await fetch(`/kpi/quarter/${quarterId}/complete`, {
