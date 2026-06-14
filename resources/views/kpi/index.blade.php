@@ -2617,7 +2617,7 @@ function renderKpiDetail(activeQuarter) {
     const endDate       = new Date(quarter.end_date);
     const beforeQuarter = today < startDate;
     const afterQuarter  = today > endDate;
-    const completed     = quarter.status === 'completed';
+    const completed     = quarter.status === 'completed' || quarter.status === 'pending_completion';
     const reasonRequired = afterQuarter || completed;
 
     // ── score ─────────────────────────────────────────────────
@@ -2651,11 +2651,12 @@ function renderKpiDetail(activeQuarter) {
 
     // ── status badge ──────────────────────────────────────────
     const statusMap = {
-        on_track:    ['On Track',    'bg-emerald-100 text-emerald-700 border-emerald-200', '🟢'],
-        at_risk:     ['At Risk',     'bg-amber-100 text-amber-700 border-amber-200',       '🟡'],
-        in_trouble:  ['In Trouble',  'bg-red-100 text-red-700 border-red-200',             '🔴'],
-        completed:   ['Completed',   'bg-blue-100 text-blue-700 border-blue-200',          '🔵'],
-        not_started: ['Not Started', 'bg-slate-100 text-slate-600 border-slate-200',       '⚪'],
+        on_track:           ['On Track',          'bg-emerald-100 text-emerald-700 border-emerald-200', '🟢'],
+        at_risk:            ['At Risk',            'bg-amber-100 text-amber-700 border-amber-200',       '🟡'],
+        in_trouble:         ['In Trouble',         'bg-red-100 text-red-700 border-red-200',             '🔴'],
+        completed:          ['Completed',          'bg-blue-100 text-blue-700 border-blue-200',          '🔵'],
+        not_started:        ['Not Started',        'bg-slate-100 text-slate-600 border-slate-200',       '⚪'],
+        pending_completion: ['Pending Approval',   'bg-yellow-100 text-yellow-700 border-yellow-200',   '⏳'],
     };
     const [sLabel, sCls] = statusMap[quarter.status] ?? ['Not Started', 'bg-slate-100 text-slate-600 border-slate-200'];
 
@@ -3281,15 +3282,18 @@ async function completeQuarterSubmit(quarterId) {
         });
         const data = await res.json();
         if (data.success) {
-            // Update in-memory quarter
             const q = activeKpi.quarters?.find(x => x.id == quarterId);
             if (q) {
-                q.status                  = 'completed';
+                q.status                  = data.status || 'pending_completion';
                 q.completion_review       = review;
                 q.completion_submitted_at = new Date().toISOString();
                 if (data.proof_url) q.completion_proof_url = data.proof_url;
             }
-            showToast('Quarter marked as completed ✓', 'emerald');
+            if (data.status === 'completed') {
+                showToast('Quarter marked as completed ✓', 'emerald');
+            } else {
+                showToast('Completion submitted — pending approval ⏳', 'indigo');
+            }
             renderKpiDetail(q?.quarter || 'Q1');
         } else {
             alert(data.message || 'Failed to submit completion.');

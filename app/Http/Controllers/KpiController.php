@@ -1243,25 +1243,57 @@ class KpiController extends Controller
             }
         }
 
-        $payload = [
-            'status'                  => 'completed',
+        // Store completion data in quarter, set pending_completion status
+        $quarterPayload = [
+            'status'                  => 'pending_completion',
             'completion_review'       => $validated['completion_review'],
             'completion_submitted_at' => $this->nowMy(),
             'completion_submitted_by' => $user['id'],
             'updated_at'              => $this->nowMy(),
         ];
+        if ($proofUrl) $quarterPayload['completion_proof_url'] = $proofUrl;
 
-        if ($proofUrl) {
-            $payload['completion_proof_url'] = $proofUrl;
-        }
-
-        if (!$this->supabase->safePatch('kpi_quarters', ['id' => 'eq.' . $id], $payload)) {
+        if (!$this->supabase->safePatch('kpi_quarters', ['id' => 'eq.' . $id], $quarterPayload)) {
             return response()->json(['success' => false, 'message' => 'Failed to save completion.'], 500);
         }
 
+        // Find approver — if none, auto-complete without approval
+        $approverId = $this->hierarchyService->getApproverId($user);
+
+        if (!$approverId) {
+            $this->supabase->safePatch('kpi_quarters', ['id' => 'eq.' . $id], [
+                'status'     => 'completed',
+                'updated_at' => $this->nowMy(),
+            ]);
+            return response()->json([
+                'success'   => true,
+                'message'   => 'Quarter marked as completed.',
+                'status'    => 'completed',
+                'proof_url' => $proofUrl,
+            ]);
+        }
+
+        // Create completion approval request
+        $this->supabase->safeInsert('kpi_update_approvals', [
+            'kpi_id'            => $quarter['kpi_id'],
+            'quarter'           => $quarter['quarter'],
+            'quarter_id'        => $id,
+            'requested_actual'  => $quarter['quarter_actual'] ?? 0,
+            'old_actual'        => $quarter['quarter_actual'] ?? 0,
+            'quarter_target'    => $quarter['quarter_target'] ?? 0,
+            'reason'            => '[[COMPLETION]]' . $validated['completion_review'],
+            'attachment_url'    => $proofUrl,
+            'requested_by'      => $user['id'],
+            'requested_by_name' => $user['short_name'] ?? $user['full_name'] ?? 'Unknown',
+            'approver_id'       => $approverId,
+            'status'            => 'pending',
+            'created_at'        => $this->nowMy(),
+        ]);
+
         return response()->json([
             'success'   => true,
-            'message'   => 'Quarter marked as completed.',
+            'message'   => 'Completion submitted for approval.',
+            'status'    => 'pending_completion',
             'proof_url' => $proofUrl,
         ]);
     }

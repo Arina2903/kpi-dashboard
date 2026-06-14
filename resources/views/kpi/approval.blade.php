@@ -84,66 +84,36 @@
     </div>
 
     <!-- SUMMARY CARDS -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
 
         <div class="glass rounded-[20px] p-5 border border-white/70">
-
-            <p class="text-xs uppercase text-slate-500 font-black">
-                Quarter Requests
-            </p>
-
-            <h2 class="text-3xl font-black mt-2 text-blue-700">
-                {{ $quarterCount ?? 0 }}
-            </h2>
-
+            <p class="text-xs uppercase text-slate-500 font-black">Completion</p>
+            <h2 class="text-3xl font-black mt-2 text-emerald-600">{{ $completionCount ?? 0 }}</h2>
         </div>
 
         <div class="glass rounded-[20px] p-5 border border-white/70">
-
-            <p class="text-xs uppercase text-slate-500 font-black">
-                Target Requests
-            </p>
-
-            <h2 class="text-3xl font-black mt-2 text-yellow-600">
-                {{ $targetCount ?? 0 }}
-            </h2>
-
+            <p class="text-xs uppercase text-slate-500 font-black">Quarter Requests</p>
+            <h2 class="text-3xl font-black mt-2 text-blue-700">{{ $quarterCount ?? 0 }}</h2>
         </div>
 
         <div class="glass rounded-[20px] p-5 border border-white/70">
-
-            <p class="text-xs uppercase text-slate-500 font-black">
-                Delete Requests
-            </p>
-
-            <h2 class="text-3xl font-black mt-2 text-red-600">
-                {{ $deleteCount ?? 0 }}
-            </h2>
-
+            <p class="text-xs uppercase text-slate-500 font-black">Target Requests</p>
+            <h2 class="text-3xl font-black mt-2 text-yellow-600">{{ $targetCount ?? 0 }}</h2>
         </div>
 
         <div class="glass rounded-[20px] p-5 border border-white/70">
+            <p class="text-xs uppercase text-slate-500 font-black">Delete Requests</p>
+            <h2 class="text-3xl font-black mt-2 text-red-600">{{ $deleteCount ?? 0 }}</h2>
+        </div>
 
-            <p class="text-xs uppercase text-slate-500 font-black">
-                Weightage Requests
-            </p>
-
-            <h2 class="text-3xl font-black mt-2 text-orange-600">
-                {{ $weightageCount ?? 0 }}
-            </h2>
-
+        <div class="glass rounded-[20px] p-5 border border-white/70">
+            <p class="text-xs uppercase text-slate-500 font-black">Weightage Requests</p>
+            <h2 class="text-3xl font-black mt-2 text-orange-600">{{ $weightageCount ?? 0 }}</h2>
         </div>
 
         <div class="bg-slate-900 text-white rounded-[20px] p-5">
-
-            <p class="text-xs uppercase text-slate-300 font-black">
-                Total Pending
-            </p>
-
-            <h2 class="text-3xl font-black mt-2">
-                {{ $totalPending ?? 0 }}
-            </h2>
-
+            <p class="text-xs uppercase text-slate-300 font-black">Total Pending</p>
+            <h2 class="text-3xl font-black mt-2">{{ $totalPending ?? 0 }}</h2>
         </div>
 
     </div>
@@ -302,40 +272,22 @@
 
                 $badgeColor =
                     match($type){
-
-                        'quarter_update'
-                            => 'bg-blue-50 text-blue-700',
-
-                        'target_change'
-                            => 'bg-yellow-50 text-yellow-700',
-
-                        'delete_request'
-                            => 'bg-red-50 text-red-700',
-
-                        'weightage_change'
-                            => 'bg-orange-50 text-orange-700',
-
-                        default
-                            => 'bg-slate-100 text-slate-700'
+                        'completion'      => 'bg-emerald-50 text-emerald-700',
+                        'quarter_update'  => 'bg-blue-50 text-blue-700',
+                        'target_change'   => 'bg-yellow-50 text-yellow-700',
+                        'delete_request'  => 'bg-red-50 text-red-700',
+                        'weightage_change'=> 'bg-orange-50 text-orange-700',
+                        default           => 'bg-slate-100 text-slate-700'
                     };
 
                 $typeLabel =
                     match($type){
-
-                        'quarter_update'
-                            => 'Quarter Update',
-
-                        'target_change'
-                            => 'Target Change',
-
-                        'delete_request'
-                            => 'Delete Request',
-
-                        'weightage_change'
-                            => 'Weightage Change',
-
-                        default
-                            => 'Approval'
+                        'completion'      => 'Completion Approval',
+                        'quarter_update'  => 'Quarter Update',
+                        'target_change'   => 'Target Change',
+                        'delete_request'  => 'Delete Request',
+                        'weightage_change'=> 'Weightage Change',
+                        default           => 'Approval'
                     };
 
                 $priority =
@@ -536,6 +488,43 @@
 
                             </div>
 
+                        @endif
+
+                        <!-- COMPLETION DETAIL -->
+                        @if($type === 'completion')
+                        <div class="mt-6 space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4">
+                                    <p class="text-[10px] uppercase text-slate-400 font-black">Quarter</p>
+                                    <h3 class="text-xl font-black mt-1">{{ $approval['quarter'] ?? '-' }}</h3>
+                                </div>
+                                <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
+                                    <p class="text-[10px] uppercase text-emerald-500 font-black">Submitted By</p>
+                                    <h3 class="text-base font-black mt-1 text-emerald-700">{{ $approval['requested_by_name'] ?? '-' }}</h3>
+                                </div>
+                            </div>
+                            <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-5">
+                                <p class="text-[10px] uppercase text-emerald-500 font-black mb-2">Completion Review</p>
+                                <p class="text-sm text-slate-700 leading-relaxed">{{ $approval['reason'] ?? '-' }}</p>
+                            </div>
+                            @if(!empty($approval['attachment_url']))
+                            @php $isPdf = str_ends_with(strtolower($approval['attachment_url']), '.pdf'); @endphp
+                            <div class="rounded-2xl bg-sky-50 border border-sky-100 p-5">
+                                <p class="text-[10px] uppercase text-sky-500 font-black mb-3">Proof / Document</p>
+                                @if($isPdf)
+                                    <a href="{{ $approval['attachment_url'] }}" target="_blank"
+                                       class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-xs font-black hover:bg-sky-700">
+                                        📄 View PDF Proof
+                                    </a>
+                                @else
+                                    <a href="{{ $approval['attachment_url'] }}" target="_blank">
+                                        <img src="{{ $approval['attachment_url'] }}" alt="Proof"
+                                             class="max-h-64 rounded-xl border border-sky-200 object-contain cursor-pointer hover:opacity-90">
+                                    </a>
+                                @endif
+                            </div>
+                            @endif
+                        </div>
                         @endif
 
                         <!-- REMARK / DETAILS -->

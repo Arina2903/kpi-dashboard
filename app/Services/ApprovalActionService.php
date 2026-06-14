@@ -742,6 +742,38 @@ class ApprovalActionService
         return response()->json(['success' => true]);
     }
 
+    public function approveCompletion(
+        array $approval,
+        string $employeeId,
+        string $employeeName
+    ) {
+        if (($approval['status'] ?? '') !== 'pending') {
+            return response()->json(['success' => false, 'message' => 'Already processed'], 422);
+        }
+
+        // Mark the quarter as completed
+        if (!empty($approval['quarter_id'])) {
+            $this->supabase->safePatch('kpi_quarters', ['id' => 'eq.' . $approval['quarter_id']], [
+                'status'     => 'completed',
+                'updated_at' => now()->toDateTimeString(),
+            ]);
+        }
+
+        // Mark approval as approved
+        $this->approve('kpi_update_approvals', $approval['id'], $employeeId, $employeeName);
+
+        $this->history(
+            $approval['kpi_id'],
+            'completion_approved',
+            'pending_completion',
+            'completed',
+            $employeeId,
+            $employeeName
+        );
+
+        return response()->json(['success' => true, 'message' => 'Completion approved.']);
+    }
+
     public function autoApproveQuarter(
         array $approval,
         string $employeeId,

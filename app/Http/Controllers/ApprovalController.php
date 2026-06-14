@@ -127,9 +127,21 @@ class ApprovalController extends Controller
         |--------------------------------------------------------------------------
         */
 
+        // Split completion approvals from quarter_update approvals
+        $completionApprovals = array_values(array_filter($quarterApprovals,
+            fn($r) => str_starts_with($r['reason'] ?? '', '[[COMPLETION]]')));
+        $quarterApprovals = array_values(array_filter($quarterApprovals,
+            fn($r) => !str_starts_with($r['reason'] ?? '', '[[COMPLETION]]')));
+
         $quarterApprovals = $this->enrichApprovals(
             $quarterApprovals,
             'quarter_update',
+            $supabase
+        );
+
+        $completionApprovals = $this->enrichApprovals(
+            $completionApprovals,
+            'completion',
             $supabase
         );
 
@@ -197,11 +209,15 @@ class ApprovalController extends Controller
                 )
             );
 
+        $completionCount =
+            count(array_filter($completionApprovals, fn($x) => ($x['status'] ?? '') === 'pending'));
+
         $totalPending =
             $quarterCount +
             $targetCount +
             $deleteCount +
-            $weightageCount;
+            $weightageCount +
+            $completionCount;
 
         /*
         |--------------------------------------------------------------------------
@@ -210,6 +226,7 @@ class ApprovalController extends Controller
         */
 
         $approvals = array_merge(
+            $completionApprovals,
             $quarterApprovals,
             $targetRequests,
             $deleteRequests,
@@ -234,12 +251,13 @@ class ApprovalController extends Controller
         return view(
             'kpi.approval',
             [
-                'approvals'      => $approvals,
-                'quarterCount'   => $quarterCount,
-                'targetCount'    => $targetCount,
-                'deleteCount'    => $deleteCount,
-                'weightageCount' => $weightageCount,
-                'totalPending'   => $totalPending,
+                'approvals'       => $approvals,
+                'quarterCount'    => $quarterCount,
+                'targetCount'     => $targetCount,
+                'deleteCount'     => $deleteCount,
+                'weightageCount'  => $weightageCount,
+                'completionCount' => $completionCount,
+                'totalPending'    => $totalPending,
             ]
         );
     }
@@ -309,9 +327,12 @@ class ApprovalController extends Controller
                 = $kpi['unit']
                 ?? '';
 
-            if(str_starts_with($item['reason'] ?? '', '[[WC]]')){
-                $item['reason']       = substr($item['reason'], 6);
-                $item['type']         = 'weightage_change';
+            if(str_starts_with($item['reason'] ?? '', '[[COMPLETION]]')){
+                $item['reason'] = substr($item['reason'], 14);
+                $item['type']   = 'completion';
+            } elseif(str_starts_with($item['reason'] ?? '', '[[WC]]')){
+                $item['reason']        = substr($item['reason'], 6);
+                $item['type']          = 'weightage_change';
                 $item['old_weightage'] = $item['old_base_target'] ?? 0;
                 $item['new_weightage'] = $item['new_base_target'] ?? 0;
             } else {
@@ -455,6 +476,14 @@ class ApprovalController extends Controller
                     );
             }
 
+            if($type === 'completion'){
+                return $this->approvalActionService->approveCompletion(
+                    $approval,
+                    session('employee_uuid'),
+                    session('short_name')
+                );
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unknown approval type'
@@ -492,10 +521,12 @@ class ApprovalController extends Controller
         );
 
         if($approval){
-
-            $approval['type']
-                = 'quarter_update';
-
+            if(str_starts_with($approval['reason'] ?? '', '[[COMPLETION]]')){
+                $approval['reason'] = substr($approval['reason'], 14);
+                $approval['type']   = 'completion';
+            } else {
+                $approval['type'] = 'quarter_update';
+            }
             return $approval;
         }
 
@@ -591,6 +622,8 @@ class ApprovalController extends Controller
                 ],422);
             }
 
+            $isCompletion = str_starts_with($approval['reason'] ?? '', '[[COMPLETION]]');
+
             $this->approvalActionService->reject(
                 'kpi_update_approvals',
                 $id,
@@ -599,14 +632,26 @@ class ApprovalController extends Controller
                 $reason
             );
 
-            $this->approvalActionService->history(
-                $approval['kpi_id'],
-                'quarter_rejected',
-                $approval['requested_actual'],
-                'REJECTED',
-                session('employee_uuid'),
-                session('short_name')
-            );
+            if ($isCompletion) {
+                // Revert quarter back to on_track when completion is rejected
+                if (!empty($approval['quarter_id'])) {
+                    $supabase->safePatch('kpi_quarters', ['id' => 'eq.' . $approval['quarter_id']], [
+                        'status'     => 'on_track',
+                        'updated_at' => now()->toDateTimeString(),
+                    ]);
+                }
+                $this->approvalActionService->history(
+                    $approval['kpi_id'], 'completion_rejected',
+                    'pending_completion', 'on_track',
+                    session('employee_uuid'), session('short_name')
+                );
+            } else {
+                $this->approvalActionService->history(
+                    $approval['kpi_id'], 'quarter_rejected',
+                    $approval['requested_actual'], 'REJECTED',
+                    session('employee_uuid'), session('short_name')
+                );
+            }
 
             return response()->json([
                 'success' => true
