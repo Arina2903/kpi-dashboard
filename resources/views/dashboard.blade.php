@@ -206,14 +206,11 @@
         $sortedStaff = $staff->sortBy(
             fn($s) => sprintf('%d_%s', $rolePriority($s['role']), strtolower($s['name'] ?? ''))
         )->values();
-        // Average only employees who have KPIs — same logic as ranking chart
-        $withKpis = $staff->filter(fn($s) => $s['kpi_count'] > 0);
-        $kwc = $withKpis->count();
         return [
             'department_code' => $deptCode ?: '-',
             'staff_count'     => $cnt,
             'kpi_count'       => $staff->sum('kpi_count'),
-            'performance'     => round($kwc > 0 ? $withKpis->avg('performance') : 0, 2),
+            'performance'     => round($cnt > 0 ? $staff->avg('performance') : 0, 2),
             'risk_count'      => $staff->sum('risk_count'),
             'q1'              => round($cnt > 0 ? $staff->avg('q1') : 0, 2),
             'q2'              => round($cnt > 0 ? $staff->avg('q2') : 0, 2),
