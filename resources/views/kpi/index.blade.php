@@ -144,6 +144,22 @@
             )
         );
 
+        // Quarter scores: weighted per quarter (same formula as annual but per Q)
+        $quarterScores = ['Q1' => 0.0, 'Q2' => 0.0, 'Q3' => 0.0, 'Q4' => 0.0];
+        foreach ($myKpis as $item) {
+            $qItems = collect($item['quarters'] ?? $item['quarter_plans'] ?? []);
+            $weight = max(0, (float)($item['weightage'] ?? 0));
+            foreach (['Q1','Q2','Q3','Q4'] as $q) {
+                $qRow = $qItems->firstWhere('quarter', $q) ?? [];
+                $qTarget = (float)($qRow['quarter_target'] ?? 0);
+                $qActual = max(0, (float)($qRow['quarter_actual'] ?? 0));
+                if ($qTarget > 0) {
+                    $quarterScores[$q] += ($qActual / $qTarget * 100) * $weight / 100;
+                }
+            }
+        }
+        foreach ($quarterScores as $q => $v) $quarterScores[$q] = round($v, 1);
+
         if ($individualPerformance < 50) {
             $individualPerformanceBar = 'bg-gradient-to-r from-red-500 to-red-600';
             $individualPerformanceText = 'text-red-700';
@@ -247,6 +263,27 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- QUARTERLY SCORES -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        @foreach(['Q1','Q2','Q3','Q4'] as $qi)
+        @php
+            $qv = $quarterScores[$qi];
+            if ($qv <= 0)          { $qtxt = 'text-slate-400'; $qbg = 'from-white via-slate-50 to-slate-100'; $qborder = 'border-slate-100'; $qlabel = '—'; }
+            elseif ($qv < 50)      { $qtxt = 'text-red-600';   $qbg = 'from-white via-red-50 to-rose-50';    $qborder = 'border-red-100';   $qlabel = 'Critical'; }
+            elseif ($qv < 75)      { $qtxt = 'text-amber-600'; $qbg = 'from-white via-amber-50 to-yellow-50';$qborder = 'border-amber-100'; $qlabel = 'Watch'; }
+            elseif ($qv < 90)      { $qtxt = 'text-indigo-600';$qbg = 'from-white via-indigo-50 to-blue-50'; $qborder = 'border-indigo-100';$qlabel = 'Good'; }
+            else                   { $qtxt = 'text-emerald-600';$qbg = 'from-white via-emerald-50 to-green-50';$qborder='border-emerald-100';$qlabel = 'Excellent'; }
+        @endphp
+        <div class="glass card-hover p-4 rounded-[18px] border {{ $qborder }} bg-gradient-to-br {{ $qbg }} shadow-sm">
+            <p class="text-slate-500 text-xs font-semibold uppercase">{{ $qi }} Score</p>
+            <h3 class="text-2xl font-black {{ $qtxt }} mt-1">{{ $qv > 0 ? number_format($qv,1).'%' : '—' }}</h3>
+            @if($qv > 0)
+                <p class="text-[10px] font-bold {{ $qtxt }} mt-1 opacity-70">{{ $qlabel }}</p>
+            @endif
+        </div>
+        @endforeach
     </div>
 
     <!-- ── KPI SCORE GUIDE ──────────────────────────────────────────────────── -->
