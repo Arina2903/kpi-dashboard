@@ -2744,6 +2744,13 @@ function renderKpiDetail(activeQuarter) {
     const gapDisplay = target <= 0 ? '—' : gap <= 0 ? '🎯 On target!' : `${Number(gap).toLocaleString()} to go`;
     const gapCls     = gap <= 0 && target > 0 ? 'text-emerald-600 font-black' : 'text-amber-600 font-black';
 
+    // ── unit formatting ───────────────────────────────────────
+    const unitRaw   = (kpi.unit || '').toLowerCase();
+    const unitLabel = unitRaw === 'currency' ? 'Currency' : (unitRaw === 'percentage' || unitRaw === 'percent') ? 'Percentage' : 'Number';
+    const fmtVal    = v => unitRaw === 'currency' ? 'RM ' + Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})
+                         : (unitRaw === 'percentage' || unitRaw === 'percent') ? Number(v).toLocaleString() + '%'
+                         : Number(v).toLocaleString();
+
     // ── CSRF token ────────────────────────────────────────────
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
               || '{{ csrf_token() }}';
@@ -2806,14 +2813,34 @@ function renderKpiDetail(activeQuarter) {
 
                 <!-- ② ACHIEVEMENT HERO CARD -->
                 <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-2xl ${t.light} flex items-center justify-center font-black shrink-0">${activeQuarter}</div>
-                        <div>
-                            <p class="text-xs font-black text-slate-700">${quarter.quarter_title || activeQuarter + ' Quarter'}</p>
-                            <span class="inline-flex items-center gap-1 mt-0.5 px-2.5 py-0.5 rounded-lg border text-[10px] font-black ${sCls}">${sLabel}</span>
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-4">
+                        <!-- Left: title + status + progress bar -->
+                        <div class="flex items-start gap-3 flex-1 min-w-0">
+                            <div class="w-10 h-10 rounded-2xl ${t.light} flex items-center justify-center font-black shrink-0">${activeQuarter}</div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-black text-slate-700">${quarter.quarter_title || activeQuarter + ' Plan'}</p>
+                                <span class="inline-flex items-center gap-1 mt-0.5 px-2.5 py-0.5 rounded-lg border text-[10px] font-black ${sCls}">${sLabel}</span>
+                                <!-- progress bar -->
+                                <div class="mt-3">
+                                    <div class="flex justify-between text-[9px] text-slate-400 font-black mb-1">
+                                        <span>0%</span><span>50%</span><span>75%</span><span>90%</span><span>100%</span>
+                                    </div>
+                                    <div class="relative h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                                        <div class="h-2.5 rounded-full transition-all duration-700"
+                                            style="width:${Math.max(2,Math.min(score,100))}%; background:linear-gradient(to right,${scoreColor}99,${scoreColor})"></div>
+                                        <div class="absolute top-0 bottom-0 w-px bg-white/70" style="left:50%"></div>
+                                        <div class="absolute top-0 bottom-0 w-px bg-white/70" style="left:75%"></div>
+                                        <div class="absolute top-0 bottom-0 w-px bg-white/70" style="left:90%"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between mt-1">
+                                        <span class="text-[10px] text-slate-400">Current: <strong class="${scoreTextCls}">${score}%</strong></span>
+                                        <span class="text-[10px] ${gapCls}">${gapDisplay}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <!-- DONUT -->
-                        <div class="ml-auto shrink-0 flex flex-col items-center">
+                        <!-- Right: donut ring -->
+                        <div class="shrink-0 flex flex-col items-center">
                             <div class="relative w-[90px] h-[90px]">
                                 <svg viewBox="0 0 120 120" class="w-full h-full" style="transform:rotate(-90deg)">
                                     <circle cx="60" cy="60" r="${radius}" fill="none" stroke="#f1f5f9" stroke-width="14"/>
@@ -2831,33 +2858,19 @@ function renderKpiDetail(activeQuarter) {
                         </div>
                     </div>
 
-                    <!-- PROGRESS BAR -->
-                    <div class="px-6 pt-4">
-                        <div class="flex justify-between text-[9px] text-slate-400 font-black mb-1.5">
-                            <span>0%</span><span>50%</span><span>75%</span><span>90%</span><span>100%</span>
-                        </div>
-                        <div class="relative h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-                            <div class="h-3 rounded-full transition-all duration-700"
-                                style="width:${Math.max(2,Math.min(score,100))}%; background:linear-gradient(to right,${scoreColor}99,${scoreColor})"></div>
-                            <div class="absolute top-0 bottom-0 w-px bg-white/70" style="left:50%"></div>
-                            <div class="absolute top-0 bottom-0 w-px bg-white/70" style="left:75%"></div>
-                            <div class="absolute top-0 bottom-0 w-px bg-white/70" style="left:90%"></div>
-                        </div>
-                        <div class="flex items-center justify-between mt-1.5 mb-4">
-                            <span class="text-[10px] text-slate-400">Current: <strong class="${scoreTextCls}">${score}%</strong></span>
-                            <span class="text-[10px] ${gapCls}">${gapDisplay}</span>
-                        </div>
-                    </div>
-
                     <!-- STAT MINI-CARDS -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 px-6 pb-4">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 px-6 py-4">
+                        <div class="rounded-2xl bg-sky-50 border border-sky-100 p-3">
+                            <div class="flex items-center gap-1 mb-1"><span class="text-xs">📐</span><p class="text-[9px] uppercase text-sky-500 font-black">Unit</p></div>
+                            <p class="text-sm font-black text-slate-700">${unitLabel}</p>
+                        </div>
                         <div class="rounded-2xl bg-blue-50 border border-blue-100 p-3">
                             <div class="flex items-center gap-1 mb-1"><span class="text-xs">🎯</span><p class="text-[9px] uppercase text-blue-500 font-black">Target</p></div>
-                            <p class="text-xl font-black text-slate-900">${Number(target).toLocaleString()}</p>
+                            <p class="text-xl font-black text-slate-900">${fmtVal(target)}</p>
                         </div>
                         <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-3">
                             <div class="flex items-center gap-1 mb-1"><span class="text-xs">✅</span><p class="text-[9px] uppercase text-emerald-600 font-black">Actual</p></div>
-                            <p class="text-xl font-black text-slate-900">${Number(actual).toLocaleString()}</p>
+                            <p class="text-xl font-black text-slate-900">${fmtVal(actual)}</p>
                         </div>
                         <div class="rounded-2xl bg-violet-50 border border-violet-100 p-3">
                             <div class="flex items-center gap-1 mb-1"><span class="text-xs">📅</span><p class="text-[9px] uppercase text-violet-500 font-black">Start</p></div>
