@@ -1223,7 +1223,7 @@ class KpiController extends Controller
 
         $validated = $request->validate([
             'completion_review' => 'required|string|min:10|max:2000',
-            'proof_image'       => 'nullable|file|mimes:jpeg,png,webp,gif,pdf|max:5120',
+            'proof_image'       => 'required|file|mimes:jpeg,png,webp,gif,pdf|max:5120',
         ]);
 
         $proofUrl = null;
