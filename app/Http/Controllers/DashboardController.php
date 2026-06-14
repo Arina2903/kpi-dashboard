@@ -222,7 +222,9 @@ class DashboardController extends Controller
     private function getSelectedDepartmentCode(array $user, bool $canSwitchDepartment): string
     {
         if ($canSwitchDepartment) {
-            return session('selected_department_code') ?? 'ALL';
+            // Dept switcher UI removed — always show all departments, clear any stale session value
+            session()->forget('selected_department_code');
+            return 'ALL';
         }
 
         session()->forget('selected_department_code');
