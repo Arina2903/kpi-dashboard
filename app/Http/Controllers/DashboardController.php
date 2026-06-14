@@ -259,9 +259,8 @@ class DashboardController extends Controller
         if (in_array($role, ['VP', 'MANAGER'])) {
             $employees = $supabase->get('employees', [
                 'company_code' => 'eq.' . $companyCode,
-                'department_code' => 'eq.' . $user['department_code'],
-                'is_active' => 'eq.true',
-                'select' => 'id',
+                'is_active'    => 'eq.true',
+                'select'       => 'id',
             ]);
 
             return collect($employees)->pluck('id')->toArray();
