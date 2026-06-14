@@ -536,13 +536,13 @@ class DashboardController extends Controller
             }
         }
 
-        // Build result for ALL departments (score=0 for depts without KPIs)
+        // Build result for ALL departments — divide by total staff (including those with 0 KPIs)
         $result = [];
         foreach ($allDeptStaff as $deptCode => $staffCount) {
             $s = $deptScores[$deptCode] ?? null;
             $result[] = [
                 'code'  => $deptCode,
-                'score' => $s && $s['count'] > 0 ? round($s['total'] / $s['count'], 2) : 0,
+                'score' => $s && $staffCount > 0 ? round($s['total'] / $staffCount, 2) : 0,
                 'staff' => $staffCount,
             ];
         }
