@@ -184,10 +184,10 @@
     @endphp
 
     <!-- SUMMARY -->
-    <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
 
         <!-- INDIVIDUAL PERFORMANCE SPLASH CARD -->
-        <div class="glass card-hover p-4 rounded-[18px] border border-indigo-100 bg-gradient-to-br from-white via-indigo-50 to-blue-50 shadow-sm col-span-2 xl:col-span-2">
+        <div class="glass card-hover p-4 rounded-[18px] border border-indigo-100 bg-gradient-to-br from-white via-indigo-50 to-blue-50 shadow-sm md:col-span-2 xl:col-span-1">
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <p class="text-slate-500 text-xs font-semibold uppercase">KPI Score</p>
@@ -264,21 +264,22 @@
             </div>
         </div>
 
-        <!-- Q1–Q4 SMALL CARDS -->
-        @foreach(['Q1','Q2','Q3','Q4'] as $qi)
-        @php
-            $qv = $quarterScores[$qi];
-            if ($qv <= 0)      { $qtxt = 'text-slate-400'; $qbg = 'from-white via-slate-50 to-slate-100'; $qborder = 'border-slate-100'; }
-            elseif ($qv < 50)  { $qtxt = 'text-red-600';   $qbg = 'from-white via-red-50 to-rose-50';    $qborder = 'border-red-100'; }
-            elseif ($qv < 75)  { $qtxt = 'text-amber-600'; $qbg = 'from-white via-amber-50 to-yellow-50';$qborder = 'border-amber-100'; }
-            elseif ($qv < 90)  { $qtxt = 'text-indigo-600';$qbg = 'from-white via-indigo-50 to-blue-50'; $qborder = 'border-indigo-100'; }
-            else               { $qtxt = 'text-emerald-600';$qbg = 'from-white via-emerald-50 to-green-50';$qborder='border-emerald-100'; }
-        @endphp
-        <div class="glass card-hover p-3 rounded-[14px] border {{ $qborder }} bg-gradient-to-br {{ $qbg }} shadow-sm">
-            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wide">{{ $qi }}</p>
-            <h3 class="text-lg font-black {{ $qtxt }} mt-0.5">{{ $qv > 0 ? number_format($qv,1).'%' : '—' }}</h3>
+        <!-- QUARTERLY SCORES (single card) -->
+        <div class="glass card-hover p-4 rounded-[18px] border border-sky-100 bg-gradient-to-br from-white via-sky-50 to-cyan-50 shadow-sm">
+            <p class="text-slate-500 text-xs font-semibold uppercase mb-2">Quarter Score</p>
+            <div class="space-y-1.5">
+                @foreach(['Q1','Q2','Q3','Q4'] as $qi)
+                @php
+                    $qv = $quarterScores[$qi];
+                    $qtxt = $qv <= 0 ? 'text-slate-400' : ($qv < 50 ? 'text-red-600' : ($qv < 75 ? 'text-amber-600' : ($qv < 90 ? 'text-indigo-600' : 'text-emerald-600')));
+                @endphp
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-semibold text-slate-400">{{ $qi }}</span>
+                    <span class="text-sm font-black {{ $qtxt }}">{{ $qv > 0 ? number_format($qv,1).'%' : '—' }}</span>
+                </div>
+                @endforeach
+            </div>
         </div>
-        @endforeach
     </div>
 
     <!-- ── KPI SCORE GUIDE ──────────────────────────────────────────────────── -->
