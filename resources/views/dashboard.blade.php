@@ -215,10 +215,10 @@
             'kpi_count'       => $staff->sum('kpi_count'),
             'performance'     => round($kwc > 0 ? $withKpis->avg('performance') : 0, 2),
             'risk_count'      => $staff->sum('risk_count'),
-            'q1'              => round($kwc > 0 ? $withKpis->avg('q1') : 0, 2),
-            'q2'              => round($kwc > 0 ? $withKpis->avg('q2') : 0, 2),
-            'q3'              => round($kwc > 0 ? $withKpis->avg('q3') : 0, 2),
-            'q4'              => round($kwc > 0 ? $withKpis->avg('q4') : 0, 2),
+            'q1'              => round($cnt > 0 ? $staff->avg('q1') : 0, 2),
+            'q2'              => round($cnt > 0 ? $staff->avg('q2') : 0, 2),
+            'q3'              => round($cnt > 0 ? $staff->avg('q3') : 0, 2),
+            'q4'              => round($cnt > 0 ? $staff->avg('q4') : 0, 2),
             'band_counts'     => $bands,
             'staff_list'      => $sortedStaff->toArray(),
         ];
@@ -387,7 +387,7 @@
                         <div class="relative w-10 h-10 shrink-0">
                             <canvas id="ring-{{ $safeCode }}" width="40" height="40"></canvas>
                             <div class="absolute inset-0 flex items-center justify-center">
-                                <span class="text-[8px] font-black {{ $dstyle['text'] }} leading-tight text-center">{{ number_format($dept['performance'],0) }}%</span>
+                                <span class="text-[8px] font-black {{ $dstyle['text'] }} leading-tight text-center">{{ number_format($dept['performance'],1) }}%</span>
                             </div>
                         </div>
                         <div>
