@@ -615,10 +615,6 @@
                                             @else
                                                 <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-50 text-amber-600 border border-amber-200">No wt</span>
                                             @endif
-                                            @php $unitLabel = match(strtolower($kpi['unit'] ?? '')) { 'number'=>'Number', 'currency'=>'Currency', 'percentage','percent'=>'Percentage', default=>null }; @endphp
-                                            @if($unitLabel)
-                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-sky-50 text-sky-600 border border-sky-100">{{ $unitLabel }}</span>
-                                            @endif
                                         </div>
                                         <span class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-black {{ $badgeSt['class'] }}">{{ $badgeSt['label'] }}</span>
                                     </div>
@@ -675,6 +671,9 @@
         $mBase = max(0,(float)($kpi['base_target']??0));
         $mActual = max(0,(float)($kpi['actual_value']??0));
         $mAch = $mBase > 0 ? max(0,round(($mActual/$mBase)*100,2)) : 0;
+        $mUnit = strtolower($kpi['unit'] ?? '');
+        $mUnitLabel = match($mUnit) { 'currency'=>'Currency', 'percentage','percent'=>'Percentage', default=>'Number' };
+        $mFmt = fn($v) => match($mUnit) { 'currency'=>'RM '.number_format($v,2), 'percentage','percent'=>number_format($v,2).'%', default=>number_format($v,2) };
         if      ($mAch <= 25)  $mBarColor = 'bg-red-600';
         elseif  ($mAch <= 50)  $mBarColor = 'bg-gradient-to-r from-red-600 to-orange-500';
         elseif  ($mAch <= 75)  $mBarColor = 'bg-gradient-to-r from-orange-500 to-yellow-400';
@@ -692,9 +691,9 @@
             </div>
             <div class="p-4 space-y-4 max-h-[70vh] overflow-y-auto thin-scroll">
                 <div class="grid grid-cols-3 gap-2">
-                    <div class="rounded-xl bg-slate-50 border border-slate-200 p-2"><p class="text-[9px] text-slate-400 uppercase">Base Target</p><p class="text-xs font-black text-slate-900">{{ number_format($mBase,2) }}</p></div>
-                    <div class="rounded-xl bg-slate-50 border border-slate-200 p-2"><p class="text-[9px] text-slate-400 uppercase">Stretch</p><p class="text-xs font-black text-slate-900">{{ number_format((float)($kpi['stretch_target']??0),2) }}</p></div>
-                    <div class="rounded-xl bg-blue-50 border border-blue-100 p-2"><p class="text-[9px] text-blue-400 uppercase">Actual</p><p class="text-xs font-black text-blue-800">{{ number_format($mActual,2) }}</p></div>
+                    <div class="rounded-xl bg-slate-50 border border-slate-200 p-2"><p class="text-[9px] text-slate-400 uppercase">Base Target</p><p class="text-xs font-black text-slate-900">{{ $mFmt($mBase) }}</p></div>
+                    <div class="rounded-xl bg-slate-50 border border-slate-200 p-2"><p class="text-[9px] text-slate-400 uppercase">Stretch</p><p class="text-xs font-black text-slate-900">{{ $mFmt(max(0,(float)($kpi['stretch_target']??0))) }}</p></div>
+                    <div class="rounded-xl bg-blue-50 border border-blue-100 p-2"><p class="text-[9px] text-blue-400 uppercase">Actual</p><p class="text-xs font-black text-blue-800">{{ $mFmt($mActual) }}</p></div>
                 </div>
                 <div class="rounded-xl border border-slate-200 p-3">
                     <div class="flex items-center justify-between mb-2">
@@ -710,7 +709,7 @@
                 <div class="rounded-xl bg-slate-50 border border-slate-200 p-3"><p class="text-[10px] text-slate-400 uppercase mb-1">Description</p><p class="text-xs text-slate-700 leading-relaxed">{{ $kpi['kpi_description']??'No description.' }}</p></div>
                 <div class="rounded-xl bg-amber-50 border border-amber-100 p-3"><p class="text-[10px] text-amber-500 uppercase mb-1">Remark</p><p class="text-xs text-amber-800 leading-relaxed">{{ $kpi['remark']??'No remark.' }}</p></div>
                 <div class="grid grid-cols-2 gap-2">
-                    <div class="rounded-xl bg-white border border-slate-100 p-3"><p class="text-[10px] text-slate-400 uppercase">Unit</p><p class="font-bold text-slate-800 mt-1 text-xs">{{ match(strtolower($kpi['unit']??'')) { 'currency'=>'RM','percentage'=>'%',default=>'—' } }}</p></div>
+                    <div class="rounded-xl bg-white border border-slate-100 p-3"><p class="text-[10px] text-slate-400 uppercase">Unit</p><p class="font-bold text-slate-800 mt-1 text-xs">{{ $mUnitLabel }}</p></div>
                     <div class="rounded-xl bg-slate-50 border border-slate-200 p-3"><p class="text-[10px] text-slate-400 uppercase">Last Check-In</p><p class="font-bold text-slate-800 mt-1 text-[11px]">{{ isset($kpi['last_activity']) ? \Carbon\Carbon::parse($kpi['last_activity'])->format('d M Y') : '-' }}</p></div>
                 </div>
             </div>
