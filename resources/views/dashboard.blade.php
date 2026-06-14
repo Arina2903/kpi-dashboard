@@ -710,7 +710,15 @@
                 <div class="rounded-xl bg-amber-50 border border-amber-100 p-3"><p class="text-[10px] text-amber-500 uppercase mb-1">Remark</p><p class="text-xs text-amber-800 leading-relaxed">{{ $kpi['remark']??'No remark.' }}</p></div>
                 <div class="grid grid-cols-2 gap-2">
                     <div class="rounded-xl bg-white border border-slate-100 p-3"><p class="text-[10px] text-slate-400 uppercase">Unit</p><p class="font-bold text-slate-800 mt-1 text-xs">{{ $mUnitLabel }}</p></div>
-                    <div class="rounded-xl bg-slate-50 border border-slate-200 p-3"><p class="text-[10px] text-slate-400 uppercase">Last Check-In</p><p class="font-bold text-slate-800 mt-1 text-[11px]">{{ isset($kpi['last_activity']) ? \Carbon\Carbon::parse($kpi['last_activity'])->format('d M Y') : '-' }}</p></div>
+                    @php
+                        $ciRaw = (!empty($kpi['updated_at']) && $kpi['updated_at'] !== ($kpi['created_at'] ?? null))
+                            ? $kpi['updated_at']
+                            : ($kpi['created_at'] ?? null);
+                        $ciDate = $ciRaw
+                            ? \Carbon\Carbon::parse($ciRaw)->timezone('Asia/Kuala_Lumpur')->format('d M Y, h:i A')
+                            : '-';
+                    @endphp
+                    <div class="rounded-xl bg-slate-50 border border-slate-200 p-3"><p class="text-[10px] text-slate-400 uppercase">Last Check-In</p><p class="font-bold text-slate-800 mt-1 text-[11px]">{{ $ciDate }}</p></div>
                 </div>
             </div>
             <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
