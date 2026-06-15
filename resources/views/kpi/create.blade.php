@@ -2009,6 +2009,11 @@
                     </div>
 
 
+                    <!-- LINKED TARGET (shown when sub_category has a linkage) -->
+                    <div id="summaryLinkage"
+                         style="display:none;margin-top:16px;padding:12px 14px;border-radius:16px;border:1.5px solid #fcd34d;background:#fffbeb;">
+                    </div>
+
                     <!-- SUBMIT -->
                     <div class="mt-6">
 
@@ -2114,22 +2119,38 @@
 
         subCategories[selectedCategory]
         .forEach(subCategory=>{
+            const lnk = linkageMap[subCategory];
+            const hasLink = !!lnk;
+            const linkMet = hasLink && lnk.met;
+
+            let linkBadge = '';
+            if (hasLink) {
+                linkBadge = linkMet
+                    ? `<div style="margin-top:6px;font-size:9px;font-weight:800;color:#059669;display:flex;align-items:center;gap:3px;">
+                           <span>🔗</span><span>Target Met ✓</span>
+                       </div>`
+                    : `<div style="margin-top:6px;font-size:9px;font-weight:800;color:#b45309;display:flex;align-items:center;gap:3px;">
+                           <span>🔗</span><span>Gap: ${fmtLinkVal(lnk.gap, lnk.unit)}</span>
+                       </div>`;
+            }
+
+            const extraStyle = hasLink
+                ? (linkMet
+                    ? 'border-color:#6ee7b7 !important; background:linear-gradient(135deg,#f0fdf4,#fff) !important;'
+                    : 'border-color:#fcd34d !important; background:linear-gradient(135deg,#fffbeb,#fff) !important;')
+                : '';
 
             subCategoryContainer.innerHTML +=
             `<label class="cursor-pointer">
-                <input type="radio"hidden class="sub-radio"name="sub_category"
+                <input type="radio" hidden class="sub-radio" name="sub_category"
                     value="${subCategory}"
                     required
-                    ${
-                        oldSubCategory === subCategory
-                        ? 'checked'
-                        : ''
-                    }
+                    ${oldSubCategory === subCategory ? 'checked' : ''}
                 >
-
-                <div class="sub-card">
-                    <div class="font-semibold text-sm text-slate-800">
-                        ${subCategory}
+                <div class="sub-card" style="${extraStyle}">
+                    <div>
+                        <div class="font-semibold text-sm text-slate-800">${subCategory}</div>
+                        ${linkBadge}
                     </div>
                 </div>
             </label>
@@ -2166,28 +2187,102 @@
         const box = document.getElementById('linkageWarning');
         if (!box) return;
         const sub = document.querySelector('input[name="sub_category"]:checked')?.value;
-        if (!sub || !linkageMap[sub]) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+        if (!sub || !linkageMap[sub]) {
+            box.classList.add('hidden');
+            box.innerHTML = '';
+            updateSummaryLinkage(null, null);
+            return;
+        }
         const lnk = linkageMap[sub];
-        const met = lnk.met;
-        box.className = `mt-3 p-3 rounded-xl border text-left ${met ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`;
+        const met  = lnk.met;
+        const pct  = lnk.pct;
+        const barW = Math.min(pct, 100);
+
+        // colour scheme
+        const c = met
+            ? { border:'#6ee7b7', bg:'#f0fdf4', title:'#065f46', sub:'#059669', bar:'#34d399', badge:'background:#d1fae5;color:#065f46;border:1px solid #6ee7b7' }
+            : { border:'#fcd34d', bg:'#fffbeb', title:'#92400e', sub:'#b45309', bar:'#fbbf24', badge:'background:#fef3c7;color:#92400e;border:1px solid #fcd34d' };
+
+        box.className = '';
+        box.style.cssText = `margin-top:16px;border-radius:16px;border:1.5px solid ${c.border};background:${c.bg};overflow:hidden;`;
         box.innerHTML = `
-            <div class="flex items-start gap-2">
-                <span class="text-base leading-none mt-0.5">${met ? '✅' : '⚠️'}</span>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs font-black ${met ? 'text-emerald-800' : 'text-amber-800'}">
-                        Target Linkage: ${sub} — ${fmtLinkVal(lnk.target, lnk.unit)} required
-                        ${met ? '<span class="ml-2 text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200">Met ✓</span>' : '<span class="ml-2 text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">Gap</span>'}
-                    </p>
-                    <p class="text-[11px] ${met ? 'text-emerald-700' : 'text-amber-700'} mt-1">
-                        From: <strong>${lnk.assigner_name ?? '-'}</strong> &nbsp;·&nbsp;
-                        Currently covered by your KPIs: <strong>${fmtLinkVal(lnk.covered, lnk.unit)}</strong>
-                        ${!met ? ` &nbsp;·&nbsp; Gap: <strong>${fmtLinkVal(lnk.gap, lnk.unit)}</strong>` : ''}
-                    </p>
-                    ${!met ? '<p class="text-[10px] text-amber-500 mt-1 italic">You can still create this KPI — it will count toward covering your linked target.</p>' : ''}
+            <div style="padding:14px 16px 0">
+                <div style="display:flex;align-items:flex-start;gap:10px;">
+                    <div style="font-size:22px;line-height:1;margin-top:2px;">${met ? '✅' : '⚠️'}</div>
+                    <div style="flex:1;min-width:0;">
+                        <p style="font-size:13px;font-weight:900;color:${c.title};margin:0 0 2px;">
+                            Cascading Target dari ${lnk.assigner_name ?? 'Ketua Anda'}
+                        </p>
+                        <p style="font-size:11px;color:${c.sub};margin:0;">
+                            ${lnk.category} › <strong>${sub}</strong> &nbsp;—&nbsp;
+                            Annual target: <strong>${fmtLinkVal(lnk.target, lnk.unit)}</strong>
+                        </p>
+                    </div>
+                    <span style="font-size:9px;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap;${c.badge}">
+                        ${met ? 'Met ✓' : 'Belum Cukup'}
+                    </span>
+                </div>
+
+                <!-- Progress bar -->
+                <div style="margin:12px 0 0;">
+                    <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:${c.sub};margin-bottom:4px;">
+                        <span>Coverage Progress</span>
+                        <span>${pct}%</span>
+                    </div>
+                    <div style="height:8px;background:rgba(0,0,0,.07);border-radius:999px;overflow:hidden;">
+                        <div style="height:100%;width:${barW}%;background:${c.bar};border-radius:999px;transition:width .4s;"></div>
+                    </div>
+                </div>
+
+                <!-- Stats row -->
+                <div style="display:grid;grid-template-columns:1fr 1fr ${met ? '' : '1fr'};gap:10px;margin:12px 0 0;padding:10px 0;border-top:1px solid ${c.border};">
+                    <div>
+                        <p style="font-size:9px;font-weight:800;color:${c.sub};text-transform:uppercase;letter-spacing:.05em;margin:0 0 2px;">Target dari Boss</p>
+                        <p style="font-size:15px;font-weight:900;color:${c.title};margin:0;">${fmtLinkVal(lnk.target, lnk.unit)}</p>
+                    </div>
+                    <div>
+                        <p style="font-size:9px;font-weight:800;color:${c.sub};text-transform:uppercase;letter-spacing:.05em;margin:0 0 2px;">Covered by Your KPIs</p>
+                        <p style="font-size:15px;font-weight:900;color:${c.title};margin:0;">${fmtLinkVal(lnk.covered, lnk.unit)}</p>
+                    </div>
+                    ${!met ? `<div>
+                        <p style="font-size:9px;font-weight:800;color:#b45309;text-transform:uppercase;letter-spacing:.05em;margin:0 0 2px;">Masih Kurang</p>
+                        <p style="font-size:15px;font-weight:900;color:#92400e;margin:0;">${fmtLinkVal(lnk.gap, lnk.unit)}</p>
+                    </div>` : ''}
                 </div>
             </div>
+            ${!met ? `<div style="background:#fef3c7;padding:8px 16px;border-top:1px solid #fcd34d;">
+                <p style="font-size:10px;color:#92400e;margin:0;">
+                    💡 KPI ini akan dikira sebagai coverage untuk target yang ditetapkan oleh ${lnk.assigner_name ?? 'ketua anda'}. Anda masih boleh create KPI ini.
+                </p>
+            </div>` : `<div style="background:#d1fae5;padding:8px 16px;border-top:1px solid #6ee7b7;">
+                <p style="font-size:10px;color:#065f46;margin:0;">
+                    ✓ Target telah dipenuhi. KPI ini akan menambah lebih coverage untuk sub-category ini.
+                </p>
+            </div>`}
         `;
         box.classList.remove('hidden');
+        updateSummaryLinkage(sub, lnk);
+    }
+
+    function updateSummaryLinkage(sub, lnk) {
+        let box = document.getElementById('summaryLinkage');
+        if (!box) return;
+        if (!sub || !lnk) { box.style.display = 'none'; return; }
+        const met = lnk.met;
+        box.style.display = '';
+        box.innerHTML = `
+            <p style="font-size:10px;font-weight:800;color:${met ? '#059669' : '#b45309'};text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px;">
+                🔗 Linked Target
+            </p>
+            <p style="font-size:11px;font-weight:700;color:#0f172a;margin:0 0 2px;">${sub} — ${fmtLinkVal(lnk.target, lnk.unit)}</p>
+            <p style="font-size:10px;color:#64748b;margin:0 0 6px;">dari ${lnk.assigner_name ?? '-'}</p>
+            <div style="height:5px;background:#e2e8f0;border-radius:999px;overflow:hidden;">
+                <div style="height:100%;width:${Math.min(lnk.pct,100)}%;background:${met ? '#34d399' : '#fbbf24'};border-radius:999px;"></div>
+            </div>
+            <p style="font-size:10px;font-weight:700;color:${met ? '#059669' : '#b45309'};margin:4px 0 0;text-align:right;">
+                ${lnk.pct}% covered ${met ? '✓' : `· Gap ${fmtLinkVal(lnk.gap, lnk.unit)}`}
+            </p>
+        `;
     }
 
     /*
