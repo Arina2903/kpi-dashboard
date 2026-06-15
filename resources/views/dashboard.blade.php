@@ -606,7 +606,8 @@
                 </div>
                 <div>
                     <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Category</label>
-                    <select name="category" required class="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-indigo-400 focus:outline-none">
+                    <select id="lnkCategory" name="category" required onchange="updateLnkSubCat()"
+                            class="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-indigo-400 focus:outline-none">
                         <option value="Financial">Financial</option>
                         <option value="Growth &amp; Customer">Growth &amp; Customer</option>
                         <option value="Initiatives">Initiatives</option>
@@ -615,11 +616,11 @@
                 </div>
                 <div>
                     <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Sub Category</label>
-                    <input name="sub_category" required placeholder="e.g. Revenue" class="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-indigo-400 focus:outline-none">
-                </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Annual Target</label>
-                    <input name="assigned_target" type="number" step="0.01" min="0" required placeholder="0" class="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-indigo-400 focus:outline-none">
+                    <select id="lnkSubCat" name="sub_category" required
+                            class="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-indigo-400 focus:outline-none">
+                        <option value="Revenue">Revenue</option>
+                        <option value="Operating Cost Optimisation">Operating Cost Optimisation</option>
+                    </select>
                 </div>
                 <div>
                     <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Unit</label>
@@ -628,6 +629,11 @@
                         <option value="currency">Currency (RM)</option>
                         <option value="percentage">Percentage (%)</option>
                     </select>
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Annual Target</label>
+                    <input name="assigned_target" type="number" step="0.01" min="0" required placeholder="0"
+                           class="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-indigo-400 focus:outline-none">
                 </div>
                 <div class="flex gap-1.5">
                     <button type="submit" class="flex-1 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition">Save</button>
@@ -1110,6 +1116,22 @@ deptData.forEach(function(dept) {
 
 
 });
+
+// ── LINKAGE FORM: SUB CATEGORY DROPDOWN ─────────────────────────────────────
+const lnkSubCatMap = {
+    'Financial':         ['Revenue', 'Operating Cost Optimisation'],
+    'Growth & Customer': ['New Customer Acquisition', 'Growth'],
+    'Initiatives':       ['Continuous Improvement & New Business'],
+    'People':            ['Certification of Competence (COC)', 'Staff Development'],
+};
+
+function updateLnkSubCat() {
+    const cat    = document.getElementById('lnkCategory')?.value || 'Financial';
+    const sel    = document.getElementById('lnkSubCat');
+    if (!sel) return;
+    const opts   = lnkSubCatMap[cat] || [];
+    sel.innerHTML = opts.map(o => `<option value="${o}">${o}</option>`).join('');
+}
 
 // ── ACCORDION TOGGLE ────────────────────────────────────────────────────────
 let allOpen = false;
