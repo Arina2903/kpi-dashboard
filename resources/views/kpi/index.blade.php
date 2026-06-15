@@ -42,21 +42,21 @@
 
 <main id="mainContent" class="ml-[230px] min-h-screen transition-all duration-300 bg-[#f4f7fb]">
 
-<div class="p-6 space-y-6">
+<div class="p-4 space-y-4">
 
     <!-- HEADER -->
-    <div class="rounded-[18px] bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white p-6 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="rounded-[18px] bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white px-5 py-3.5 shadow-xl flex flex-row items-center justify-between gap-4">
         <div>
-            <a href="/dashboard" class="text-xs text-blue-100 hover:text-white">← Dashboard</a>
-            <h1 class="text-3xl font-bold mt-3">KPI List</h1>
-            <p class="text-blue-100 text-xs mt-1">
+            <a href="/dashboard" class="text-[10px] text-blue-100 hover:text-white">← Dashboard</a>
+            <h1 class="text-xl font-bold mt-1">KPI List</h1>
+            <p class="text-blue-100 text-[10px] mt-0.5">
                 {{ $user['short_name'] }} · {{ $user['role'] }} · {{ $user['department_code'] }} · {{ $fy }}
             </p>
         </div>
 
         @if($permission['can_create'])
             <a href="{{ route('kpi.create') }}"
-               class="bg-white text-blue-900 hover:bg-blue-50 px-5 py-2.5 rounded-2xl shadow font-bold">
+               class="bg-white text-blue-900 hover:bg-blue-50 px-4 py-2 rounded-2xl shadow font-bold text-sm">
                 + Create KPI
             </a>
         @endif
@@ -184,98 +184,49 @@
     @endphp
 
     <!-- SUMMARY -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
 
         <!-- INDIVIDUAL PERFORMANCE SPLASH CARD -->
-        <div class="glass card-hover p-4 rounded-[18px] border border-indigo-100 bg-gradient-to-br from-white via-indigo-50 to-blue-50 shadow-sm md:col-span-2 xl:col-span-1">
-            <div class="flex items-start justify-between gap-3">
+        <div class="glass card-hover px-4 py-3 rounded-[18px] border border-indigo-100 bg-gradient-to-br from-white via-indigo-50 to-blue-50 shadow-sm md:col-span-2 xl:col-span-1">
+            <div class="flex items-center justify-between gap-3">
                 <div>
-                    <p class="text-slate-500 text-xs font-semibold uppercase">KPI Score</p>
-                    <h3
-                        id="individualPerformanceText"
-                        class="text-3xl font-black {{ $individualPerformanceText }} mt-1">
-
-                        {{ number_format($individualPerformanceDisplay, 1) }}%
-
-                    </h3>
+                    <p class="text-slate-500 text-[10px] font-semibold uppercase">KPI Score</p>
+                    <h3 id="individualPerformanceText" class="text-2xl font-black {{ $individualPerformanceText }} mt-0.5">{{ number_format($individualPerformanceDisplay, 1) }}%</h3>
                 </div>
-
-                <span id="individualPerformanceBadge" class="text-[10px] font-black px-2 py-1 rounded-full border {{ $individualPerformanceBadge }}">
-                    {{ $individualPerformanceLabel }}
-                </span>
+                <span id="individualPerformanceBadge" class="text-[10px] font-black px-2 py-0.5 rounded-full border {{ $individualPerformanceBadge }}">{{ $individualPerformanceLabel }}</span>
             </div>
-
-            <div class="mt-4 h-3 rounded-full bg-white border border-white/80 overflow-hidden">
-                <div id="individualPerformanceBar"
-                     class="h-3 rounded-full transition-all duration-300 {{ $individualPerformanceBar }}"
-                     style="width: {{ $individualPerformanceWidth }}%">
-                </div>
+            <div class="mt-2 h-2 rounded-full bg-white border border-white/80 overflow-hidden">
+                <div id="individualPerformanceBar" class="h-2 rounded-full transition-all duration-300 {{ $individualPerformanceBar }}" style="width: {{ $individualPerformanceWidth }}%"></div>
             </div>
         </div>
 
         <!-- FY -->
-        <div class="glass card-hover p-4 rounded-[18px] border border-emerald-100 bg-gradient-to-br from-white via-emerald-50 to-green-50 shadow-sm">
-
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-slate-500 text-xs font-semibold uppercase">
-                        Financial Year
-                    </p>
-
-                    <h3 class="text-2xl font-black text-emerald-700 mt-1">
-                        {{ $fy }}
-                    </h3>
-                </div>
-            </div>
-
+        <div class="glass card-hover px-4 py-3 rounded-[18px] border border-emerald-100 bg-gradient-to-br from-white via-emerald-50 to-green-50 shadow-sm">
+            <p class="text-slate-500 text-[10px] font-semibold uppercase">Financial Year</p>
+            <h3 class="text-xl font-black text-emerald-700 mt-0.5">{{ $fy }}</h3>
         </div>
 
         <!-- TOTAL KPI -->
-        <div class="glass card-hover p-4 rounded-[18px] border border-violet-100 bg-gradient-to-br from-white via-violet-50 to-purple-50 shadow-sm">
-
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-slate-500 text-xs font-semibold uppercase">
-                        Total KPI
-                    </p>
-
-                    <h3 class="text-2xl font-black text-violet-700 mt-1">
-                        {{ $individualKpiCount }}
-                    </h3>
-                </div>
-            </div>
-
+        <div class="glass card-hover px-4 py-3 rounded-[18px] border border-violet-100 bg-gradient-to-br from-white via-violet-50 to-purple-50 shadow-sm">
+            <p class="text-slate-500 text-[10px] font-semibold uppercase">Total KPI</p>
+            <h3 class="text-xl font-black text-violet-700 mt-0.5">{{ $individualKpiCount }}</h3>
         </div>
 
         <!-- WEIGHTAGE -->
-        <div class="glass card-hover p-4 rounded-[18px] border border-amber-100 bg-gradient-to-br from-white via-amber-50 to-yellow-50 shadow-sm">
-
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-slate-500 text-xs font-semibold uppercase">
-                        Weightage
-                    </p>
-
-                    <h3 class="text-2xl font-black
-                        {{ $individualTotalWeightage == 100 ? 'text-emerald-700' : ($individualTotalWeightage > 100 ? 'text-red-700' : 'text-amber-700') }}">
-                        {{ number_format($individualTotalWeightage,2) }}%
-                    </h3>
-                </div>
-            </div>
+        <div class="glass card-hover px-4 py-3 rounded-[18px] border border-amber-100 bg-gradient-to-br from-white via-amber-50 to-yellow-50 shadow-sm">
+            <p class="text-slate-500 text-[10px] font-semibold uppercase">Weightage</p>
+            <h3 class="text-xl font-black mt-0.5 {{ $individualTotalWeightage == 100 ? 'text-emerald-700' : ($individualTotalWeightage > 100 ? 'text-red-700' : 'text-amber-700') }}">{{ number_format($individualTotalWeightage,2) }}%</h3>
         </div>
 
-        <!-- QUARTERLY SCORES (single card) -->
-        <div class="glass card-hover p-4 rounded-[18px] border border-sky-100 bg-gradient-to-br from-white via-sky-50 to-cyan-50 shadow-sm">
-            <p class="text-slate-500 text-xs font-semibold uppercase mb-2">Quarter Score</p>
-            <div class="space-y-1.5">
+        <!-- QUARTERLY SCORES -->
+        <div class="glass card-hover px-4 py-3 rounded-[18px] border border-sky-100 bg-gradient-to-br from-white via-sky-50 to-cyan-50 shadow-sm">
+            <p class="text-slate-500 text-[10px] font-semibold uppercase mb-1.5">Quarter Score</p>
+            <div class="space-y-1">
                 @foreach(['Q1','Q2','Q3','Q4'] as $qi)
-                @php
-                    $qv = $quarterScores[$qi];
-                    $qtxt = $qv <= 0 ? 'text-slate-400' : ($qv < 50 ? 'text-red-600' : ($qv < 75 ? 'text-amber-600' : ($qv < 90 ? 'text-indigo-600' : 'text-emerald-600')));
-                @endphp
+                @php $qv = $quarterScores[$qi]; $qtxt = $qv <= 0 ? 'text-slate-400' : ($qv < 50 ? 'text-red-600' : ($qv < 75 ? 'text-amber-600' : ($qv < 90 ? 'text-indigo-600' : 'text-emerald-600'))); @endphp
                 <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-semibold text-slate-400">{{ $qi }}</span>
-                    <span class="text-sm font-black {{ $qtxt }}">{{ $qv > 0 ? number_format($qv,1).'%' : '—' }}</span>
+                    <span class="text-[10px] font-semibold text-slate-400">{{ $qi }}</span>
+                    <span class="text-xs font-black {{ $qtxt }}">{{ $qv > 0 ? number_format($qv,1).'%' : '—' }}</span>
                 </div>
                 @endforeach
             </div>
@@ -586,32 +537,27 @@
     @endphp
 
     {{-- COLOUR LEGEND --}}
-    <div class="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4">
-        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Colour Guide — How to read this page</p>
-        <div class="flex flex-wrap gap-6">
-            <div>
-                <p class="text-[10px] text-slate-500 font-bold mb-2 flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-slate-800 inline-block"></span>✍️ My Own KPIs</p>
-                <div class="flex flex-wrap gap-1.5">
-                    <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-black"><span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>Financial</span>
-                    <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-800 text-[10px] font-black"><span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span>Growth</span>
-                    <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-black"><span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>Initiatives</span>
-                    <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-pink-50 border border-pink-200 text-pink-800 text-[10px] font-black"><span class="w-2 h-2 rounded-full bg-pink-500 shrink-0"></span>People</span>
-                </div>
-            </div>
-            <div class="w-px bg-slate-100 self-stretch"></div>
-            <div class="flex items-center gap-2">
-                <span class="w-4 h-4 rounded bg-yellow-100 border border-yellow-300 shrink-0"></span>
-                <p class="text-[10px] text-slate-500 font-bold">📩 Assigned to Me — yellow background</p>
-            </div>
+    <div class="rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-2.5 flex flex-wrap items-center gap-4">
+        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0">Colour Guide</p>
+        <div class="flex flex-wrap gap-1.5">
+            <span class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[9px] font-black"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>Financial</span>
+            <span class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-800 text-[9px] font-black"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>Growth</span>
+            <span class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[9px] font-black"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>Initiatives</span>
+            <span class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-pink-50 border border-pink-200 text-pink-800 text-[9px] font-black"><span class="w-1.5 h-1.5 rounded-full bg-pink-500 shrink-0"></span>People</span>
+        </div>
+        <div class="w-px bg-slate-100 self-stretch hidden md:block"></div>
+        <div class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded bg-yellow-100 border border-yellow-300 shrink-0"></span>
+            <p class="text-[9px] text-slate-500 font-bold">📩 Assigned to Me</p>
         </div>
     </div>
 
-    <div class="space-y-6">
+    <div class="space-y-4">
 
     @if($allCategories->isEmpty())
-        <div class="bg-white border border-dashed border-slate-300 rounded-[24px] p-16 text-center">
-            <h3 class="text-2xl font-black text-slate-900">No KPI Created Yet</h3>
-            <p class="text-sm text-slate-500 mt-3">Start creating KPI for your yearly execution tracking.</p>
+        <div class="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center">
+            <h3 class="text-xl font-black text-slate-900">No KPI Created Yet</h3>
+            <p class="text-sm text-slate-500 mt-2">Start creating KPI for your yearly execution tracking.</p>
         </div>
     @endif
 
@@ -629,20 +575,20 @@
     <div class="category-group">
 
         {{-- UNIFIED CATEGORY HEADER --}}
-        <div class="rounded-[24px] bg-gradient-to-r {{ $ot['headerBg'] }} text-white px-6 py-5 mb-4 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">{{ $ot['icon'] }}</div>
+        <div class="rounded-2xl bg-gradient-to-r {{ $ot['headerBg'] }} text-white px-4 py-3 mb-2 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-base shrink-0">{{ $ot['icon'] }}</div>
                 <div>
-                    <h2 class="text-xl font-black">{{ strtoupper($category) }}</h2>
-                    <p class="text-white/70 text-xs mt-0.5">{{ $ownCount + $assignedCount }} KPI Total</p>
+                    <h2 class="text-base font-black">{{ strtoupper($category) }}</h2>
+                    <p class="text-white/70 text-[10px]">{{ $ownCount + $assignedCount }} KPI Total</p>
                 </div>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-1.5">
                 @if($ownCount > 0)
-                <span class="px-3 py-1.5 rounded-xl bg-white/20 text-white font-black text-xs">✍️ {{ $ownCount }} My KPI</span>
+                <span class="px-2.5 py-1 rounded-xl bg-white/20 text-white font-black text-[10px]">✍️ {{ $ownCount }} My KPI</span>
                 @endif
                 @if($assignedCount > 0)
-                <span class="px-3 py-1.5 rounded-xl bg-black/20 text-white/90 font-black text-xs">📩 {{ $assignedCount }} Assigned</span>
+                <span class="px-2.5 py-1 rounded-xl bg-black/20 text-white/90 font-black text-[10px]">📩 {{ $assignedCount }} Assigned</span>
                 @endif
             </div>
         </div>

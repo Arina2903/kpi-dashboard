@@ -128,28 +128,14 @@ class KpiController extends Controller
 
         $role = strtoupper(trim($user['role'] ?? ''));
 
+        if ($role === 'SLT') {
+            return redirect('/dashboard')->with('info', 'KPI List is for individual KPI management. Use the Dashboard for company-wide overview.');
+        }
+
         $employees = [];
         $kpis = [];
 
-        if ($role === 'SLT') {
-            $selectedDepartmentCode = session('selected_department_code')
-                ?? $user['department_code'];
-
-            $kpis = $supabase->get('kpis', [
-                'company_code' => 'eq.' . $user['company_code'],
-                'department_code' => 'eq.' . $selectedDepartmentCode,
-                'financial_year' => 'eq.' . $fy,
-                'select' => '*',
-                'order' => 'created_at.desc',
-            ]) ?? [];
-
-            $employees = $supabase->get('employees', [
-                'company_code' => 'eq.' . $user['company_code'],
-                'department_code' => 'eq.' . $selectedDepartmentCode,
-                'is_active' => 'eq.true',
-                'select' => 'id,employee_id,short_name,role,department_code',
-            ]) ?? [];
-        } elseif ($role === 'VP') {
+        if ($role === 'VP') {
             $kpis = $supabase->get('kpis', [
                 'company_code'  => 'eq.' . $user['company_code'],
                 'department_code' => 'eq.' . $user['department_code'],
