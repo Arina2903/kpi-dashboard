@@ -87,7 +87,7 @@
     $individualKpiCount    = $individualKpis->count();
     $myOnTrack    = $individualKpis->whereIn('status',['on_track','monitoring'])->count();
     $myAtRisk     = $individualKpis->whereIn('status',['at_risk','risk','in_trouble','critical'])->count();
-    $myCompleted  = $individualKpis->sum(fn($k) => collect($k['quarters'] ?? [])->whereIn('status',['completed','pending_completion'])->count());
+    $myCompleted  = $individualKpis->sum(fn($k) => collect($k['quarters'] ?? [])->filter(fn($q) => ($q['status'] ?? '') === 'completed' && !empty($q['completion_submitted_at']))->count());
     $myTotalQuarters = $individualKpis->sum(fn($k) => count($k['quarters'] ?? []));
     $individualScoreStyle = $scoreStyle($individualPerformance);
 
@@ -130,7 +130,7 @@
             'weightage_total' => round($items->sum('_weightage'),2),
             'performance'     => round($items->sum('_weighted_score'),2),
             'risk_count'      => $items->where('_is_risk',true)->count(),
-            'completed_count' => $items->sum(fn($k) => collect($k['quarters'] ?? [])->whereIn('status',['completed','pending_completion'])->count()),
+            'completed_count' => $items->sum(fn($k) => collect($k['quarters'] ?? [])->filter(fn($q) => ($q['status'] ?? '') === 'completed' && !empty($q['completion_submitted_at']))->count()),
             'on_track_count'  => $items->whereIn('status',['on_track','monitoring'])->count(),
         ];
     })->values();
@@ -228,7 +228,7 @@
     $totalStaffCount    = $staffPerformanceRows->count();
     $totalKpisVisible   = $kpiCollection->count();
     $totalAtRisk        = $kpiRows->where('_is_risk',true)->count();
-    $totalCompleted     = $kpiRows->sum(fn($k) => collect($k['quarters'] ?? [])->whereIn('status',['completed','pending_completion'])->count());
+    $totalCompleted     = $kpiRows->sum(fn($k) => collect($k['quarters'] ?? [])->filter(fn($q) => ($q['status'] ?? '') === 'completed' && !empty($q['completion_submitted_at']))->count());
     $totalQuarters      = $kpiRows->sum(fn($k) => count($k['quarters'] ?? []));
     $companyDeptCount = $companyTotalDepts ?? count($companyDeptRanking ?? []);
 
