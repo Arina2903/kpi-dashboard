@@ -66,9 +66,11 @@ class AiController extends Controller
             'messages.*.content' => 'required|string|max:1000',
         ]);
 
+        $employee = session('employee', []);
+
         try {
 
-            $reply = $this->ai->chat($request->messages);
+            $reply = $this->ai->chat($request->messages, $employee);
 
             return response()->json([
                 'success' => true,

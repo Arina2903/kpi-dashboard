@@ -34,7 +34,7 @@
     id="aiChatBubble"
     onclick="toggleAiChat()"
     class="fixed bottom-6 right-6 z-[9999] w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 shadow-xl flex items-center justify-center transition"
-    title="KPI Assistant"
+    title="ANIRA - KPI AI Assistant"
 >
     <svg id="aiChatIconOpen" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"/>
@@ -59,8 +59,8 @@
             </svg>
         </div>
         <div>
-            <p class="text-white font-black text-sm">KPI Assistant</p>
-            <p class="text-violet-200 text-xs">Ask me anything about the system</p>
+            <p class="text-white font-black text-sm">ANIRA</p>
+            <p class="text-violet-200 text-xs">KPI AI Assistant</p>
         </div>
         <button onclick="toggleAiChat()" class="ml-auto text-white/70 hover:text-white">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -73,15 +73,15 @@
     <div id="aiChatMessages" class="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
         <!-- Initial greeting -->
         <div class="ai-msg-bot text-sm px-4 py-3 max-w-[85%]">
-            Hi! I'm your KPI Assistant. I can help you navigate the system, understand approvals, set targets, and more. What would you like to know?
+            Hi! I'm ANIRA, your KPI coach. I'm here to help you build strong, high-scoring KPIs — not by writing them for you, but by asking the right questions so you can think it through yourself. Want to build a KPI, or do you have a question about the system?
         </div>
 
         <!-- Quick prompts -->
         <div id="aiQuickPrompts" class="flex flex-col gap-2 mt-1">
             <p class="text-xs text-slate-400 font-medium">Quick questions:</p>
-            <button onclick="aiQuickSend('How do I create a KPI?')" class="text-left text-xs px-3 py-2 rounded-xl border border-violet-200 text-violet-700 hover:bg-violet-50 transition">How do I create a KPI?</button>
+            <button onclick="aiQuickSend('Help me build a KPI')" class="text-left text-xs px-3 py-2 rounded-xl border border-violet-200 text-violet-700 hover:bg-violet-50 transition">Help me build a KPI</button>
+            <button onclick="aiQuickSend('How do I score high on my KPI?')" class="text-left text-xs px-3 py-2 rounded-xl border border-violet-200 text-violet-700 hover:bg-violet-50 transition">How do I score high on my KPI?</button>
             <button onclick="aiQuickSend('How does the approval process work?')" class="text-left text-xs px-3 py-2 rounded-xl border border-violet-200 text-violet-700 hover:bg-violet-50 transition">How does the approval process work?</button>
-            <button onclick="aiQuickSend('How is my KPI score calculated?')" class="text-left text-xs px-3 py-2 rounded-xl border border-violet-200 text-violet-700 hover:bg-violet-50 transition">How is my KPI score calculated?</button>
         </div>
     </div>
 
