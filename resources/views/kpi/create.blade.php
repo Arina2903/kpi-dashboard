@@ -1125,6 +1125,26 @@
                                             required
                                         >{{ old('kpi_description') }}</textarea>
 
+                                        <div class="mt-3 flex items-center gap-3 flex-wrap">
+
+                                            <button
+                                                type="button"
+                                                id="aiScoreBtn"
+                                                onclick="aiScoreDescription()"
+                                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold transition"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                                <span id="aiScoreLabel">Score my description</span>
+                                            </button>
+
+                                            <!-- Score badge -->
+                                            <div id="aiScoreBadge" class="hidden items-center gap-2">
+                                                <div id="aiScoreCircle" class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-black"></div>
+                                                <p id="aiScoreFeedback" class="text-xs text-slate-500 max-w-xs leading-snug"></p>
+                                            </div>
+
+                                        </div>
+
                                     </div>
 
                                 </div>
@@ -3232,6 +3252,113 @@ function toggleOwner(ownerId){
 }
 
  // DOMContentLoaded
+
+/*
+|--------------------------------------------------------------------------
+| AI — SCORE KPI DESCRIPTION
+|--------------------------------------------------------------------------
+*/
+
+async function aiScoreDescription() {
+    const title       = document.getElementById('kpiTitle')?.value?.trim();
+    const description = document.getElementById('kpiDescription')?.value?.trim();
+    const btn         = document.getElementById('aiScoreBtn');
+    const label       = document.getElementById('aiScoreLabel');
+    const badge       = document.getElementById('aiScoreBadge');
+    const circle      = document.getElementById('aiScoreCircle');
+    const feedback    = document.getElementById('aiScoreFeedback');
+
+    if (!title || !description) return;
+
+    btn.disabled = true;
+    label.textContent = 'Scoring...';
+    badge.classList.add('hidden');
+    badge.classList.remove('flex');
+
+    try {
+        const res = await fetch('{{ route("ai.score-description") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({ kpi_title: title, kpi_description: description }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            const score = data.score ?? 0;
+            const color = score >= 8 ? '#16a34a'
+                        : score >= 5 ? '#d97706'
+                        : '#dc2626';
+
+            circle.textContent      = score + '/10';
+            circle.style.background = color;
+            feedback.textContent    = data.feedback ?? '';
+
+            badge.classList.remove('hidden');
+            badge.classList.add('flex');
+        }
+    } catch (e) {
+        // silently fail — scoring is non-critical
+    } finally {
+        btn.disabled = false;
+        label.textContent = 'Score my description';
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| AI — SUGGEST KPI DESCRIPTION
+|--------------------------------------------------------------------------
+*/
+
+async function aiSuggestDescription() {
+    const titleInput = document.getElementById('kpiTitle');
+    const descTextarea = document.getElementById('kpiDescription');
+    const btn = document.getElementById('aiSuggestBtn');
+    const label = document.getElementById('aiSuggestLabel');
+    const errorEl = document.getElementById('aiSuggestError');
+
+    const title = titleInput?.value?.trim();
+    if (!title) {
+        titleInput?.focus();
+        return;
+    }
+
+    btn.disabled = true;
+    label.textContent = 'Generating...';
+    errorEl.classList.add('hidden');
+
+    try {
+        const res = await fetch('{{ route("ai.suggest-description") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({ kpi_title: title }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            descTextarea.value = data.description;
+            descTextarea.dispatchEvent(new Event('input'));
+            aiScoreDescription();
+        } else {
+            errorEl.textContent = data.message ?? 'AI suggestion failed.';
+            errorEl.classList.remove('hidden');
+        }
+    } catch (e) {
+        errorEl.textContent = 'Network error. Please try again.';
+        errorEl.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        label.textContent = 'Generate with AI';
+    }
+}
 
 </script>
 

@@ -1,3 +1,5 @@
+@include('partials.ai-chat-widget')
+
 <style>
     #sidebar.collapsed .sidebar-tooltip {
         display: block;
