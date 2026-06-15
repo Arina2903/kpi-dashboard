@@ -843,62 +843,65 @@
 
         <div
             onclick="openKpiDetail(this)"
-            class="kpi-card cursor-pointer bg-white border-l-4 {{ $ot['border'] }} border {{ $ot['cardBorder'] }} rounded-[24px] p-6 shadow-sm hover:shadow-2xl hover:scale-[1.01] hover:-translate-y-1 transition-all duration-300 mb-3"
+            class="kpi-card cursor-pointer bg-white border-l-4 {{ $ot['border'] }} border {{ $ot['cardBorder'] }} rounded-2xl p-4 shadow-sm hover:shadow-xl hover:scale-[1.005] hover:-translate-y-0.5 transition-all duration-200 mb-2"
             data-search="{{ strtolower(($kpi['kpi_title'] ?? '') . ' ' . ($kpi['category'] ?? '')) }}"
             data-category="{{ $kpi['category'] ?? '' }}"
             data-status="{{ $kpi['status'] ?? '' }}"
             data-kpi='@json($kpi)'
         >
-            <!-- TOP -->
-            <div class="flex items-start justify-between gap-5">
-                <div class="flex-1 min-w-0">
-                    <div class="flex flex-wrap items-center gap-2 mb-3">
-                        <span class="px-3 py-1 rounded-full {{ $ot['catPill'] }} text-[10px] font-black">{{ $kpi['category'] ?? 'General' }}</span>
-                        <span class="px-3 py-1 rounded-full {{ $ot['subPill'] }} text-[10px] font-black">{{ $kpi['sub_category'] ?? 'Sub Category' }}</span>
-                        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black">{{ $kpi['financial_year'] ?? '-' }}</span>
-                        <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600 text-[10px] font-black">✍️ My KPI</span>
-                    </div>
-                    <h3 class="text-xl font-black text-slate-900">{{ $kpi['kpi_title'] ?? 'Untitled KPI' }}</h3>
-                    <p class="text-xs text-slate-500 mt-2 leading-relaxed max-w-3xl">{{ $kpi['kpi_description'] ?? 'No description available.' }}</p>
+            <!-- ROW 1: Tags + KPI Score -->
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="px-2.5 py-0.5 rounded-full {{ $ot['catPill'] }} text-[10px] font-black">{{ $kpi['category'] ?? 'General' }}</span>
+                    <span class="px-2.5 py-0.5 rounded-full {{ $ot['subPill'] }} text-[10px] font-black">{{ $kpi['sub_category'] ?? 'Sub Category' }}</span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black">{{ $kpi['financial_year'] ?? '-' }}</span>
+                    <span class="px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600 text-[10px] font-black">✍️ My KPI</span>
                 </div>
                 <div class="text-right shrink-0">
-                    <p class="text-[10px] uppercase text-slate-400 font-black">KPI Score</p>
-                    <h2 class="text-2xl font-black {{ $progressText }} mt-1">{{ number_format($achievement, 1) }}%</h2>
-                    <div class="mt-2 inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black {{ $achievementBadge }}">{{ $achievementLabel }}</div>
+                    <p class="text-[9px] uppercase text-slate-400 font-black leading-none">KPI Score</p>
+                    <span class="text-xl font-black {{ $progressText }}">{{ number_format($achievement, 1) }}%</span>
+                    <span class="ml-1.5 inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black {{ $achievementBadge }}">{{ $achievementLabel }}</span>
                 </div>
             </div>
 
-            <!-- PROGRESS -->
-            <div class="mt-4">
-                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div class="h-2 rounded-full bg-gradient-to-r {{ $progressBar }}" style="width: {{ max(3, min(100, $achievement)) }}%"></div>
+            <!-- ROW 2: Progress bar (between score and title) -->
+            <div class="my-2">
+                <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-1.5 rounded-full bg-gradient-to-r {{ $progressBar }}" style="width: {{ max(3, min(100, $achievement)) }}%"></div>
                 </div>
             </div>
 
-            <div class="flex gap-2 mt-3">
-                @foreach(['Q1','Q2','Q3','Q4'] as $q)
-                <span class="w-8 h-8 rounded-lg text-[10px] font-black flex items-center justify-center {{ $quarterColors[$q] }}">{{ $q }}</span>
-                @endforeach
-            </div>
+            <!-- ROW 3: Title + description -->
+            <h3 class="text-base font-black text-slate-900 leading-snug">{{ $kpi['kpi_title'] ?? 'Untitled KPI' }}</h3>
+            @if(!empty($kpi['kpi_description']))
+            <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed line-clamp-1">{{ $kpi['kpi_description'] }}</p>
+            @endif
 
-            <!-- KPI META -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-                <div class="rounded-2xl {{ $ot['infoBg'] }} border px-4 py-3">
-                    <p class="text-[10px] uppercase {{ $ot['infoText'] }} font-black">Weightage</p>
-                    <p class="text-sm font-black text-slate-900 mt-1">{{ number_format($kpi['weightage'] ?? 0, 0) }}%</p>
+            <!-- ROW 4: Quarter badges + meta -->
+            <div class="flex items-center gap-3 mt-2.5">
+                <div class="flex gap-1.5">
+                    @foreach(['Q1','Q2','Q3','Q4'] as $q)
+                    <span class="w-7 h-7 rounded-lg text-[9px] font-black flex items-center justify-center {{ $quarterColors[$q] }}">{{ $q }}</span>
+                    @endforeach
                 </div>
-                <div class="rounded-2xl {{ $ot['infoBg'] }} border px-4 py-3">
-                    <p class="text-[10px] uppercase {{ $ot['infoText'] }} font-black">Actual</p>
-                    <p class="text-lg font-black text-slate-900">{{ $actualDisplay }}</p>
+                <div class="flex-1 grid grid-cols-4 gap-2">
+                    <div class="rounded-xl {{ $ot['infoBg'] }} border px-3 py-1.5">
+                        <p class="text-[9px] uppercase {{ $ot['infoText'] }} font-black">Weightage</p>
+                        <p class="text-xs font-black text-slate-900">{{ number_format($kpi['weightage'] ?? 0, 0) }}%</p>
+                    </div>
+                    <div class="rounded-xl {{ $ot['infoBg'] }} border px-3 py-1.5">
+                        <p class="text-[9px] uppercase {{ $ot['infoText'] }} font-black">Actual</p>
+                        <p class="text-xs font-black text-slate-900">{{ $actualDisplay }}</p>
+                    </div>
+                    <button
+                        onclick="event.stopPropagation(); openEditKpiModal(@json($kpi));"
+                        class="px-3 py-1.5 rounded-xl bg-gradient-to-r {{ $ot['btnGrad'] }} hover:opacity-90 text-white text-[10px] font-black"
+                    >Edit KPI</button>
+                    <button
+                        onclick="event.stopPropagation(); openDeleteKpiModal('{{ $kpi['id'] }}', '{{ addslashes($kpi['kpi_title']) }}');"
+                        class="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-[10px] font-black"
+                    >Delete KPI</button>
                 </div>
-                <button
-                    onclick="event.stopPropagation(); openEditKpiModal(@json($kpi));"
-                    class="px-4 py-3 rounded-2xl bg-gradient-to-r {{ $ot['btnGrad'] }} hover:opacity-90 text-white text-xs font-black"
-                >Edit KPI</button>
-                <button
-                    onclick="event.stopPropagation(); openDeleteKpiModal('{{ $kpi['id'] }}', '{{ addslashes($kpi['kpi_title']) }}');"
-                    class="px-4 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-xs font-black"
-                >Delete KPI</button>
             </div>
         </div>
 
