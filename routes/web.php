@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KpiController;
 use App\Http\Controllers\ApprovalController;
+use App\Http\Controllers\ActivityLogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -282,9 +283,7 @@ Route::middleware(['kpi.auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/activity-log', function () {
-        return view('kpi.activity-log');
-    });
+    Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log');
 
     /*
     |--------------------------------------------------------------------------
