@@ -87,7 +87,8 @@
     $individualKpiCount    = $individualKpis->count();
     $myOnTrack    = $individualKpis->whereIn('status',['on_track','monitoring'])->count();
     $myAtRisk     = $individualKpis->whereIn('status',['at_risk','risk','in_trouble','critical'])->count();
-    $myCompleted  = $individualKpis->where('status','completed')->count();
+    $myCompleted  = $individualKpis->sum(fn($k) => collect($k['quarters'] ?? [])->whereIn('status',['completed','pending_completion'])->count());
+    $myTotalQuarters = $individualKpis->sum(fn($k) => count($k['quarters'] ?? []));
     $individualScoreStyle = $scoreStyle($individualPerformance);
 
     // ── CATEGORY GROUPS ─────────────────────────────────────────────────────
@@ -129,7 +130,7 @@
             'weightage_total' => round($items->sum('_weightage'),2),
             'performance'     => round($items->sum('_weighted_score'),2),
             'risk_count'      => $items->where('_is_risk',true)->count(),
-            'completed_count' => $items->where('status','completed')->count(),
+            'completed_count' => $items->sum(fn($k) => collect($k['quarters'] ?? [])->whereIn('status',['completed','pending_completion'])->count()),
             'on_track_count'  => $items->whereIn('status',['on_track','monitoring'])->count(),
         ];
     })->values();
@@ -227,7 +228,8 @@
     $totalStaffCount    = $staffPerformanceRows->count();
     $totalKpisVisible   = $kpiCollection->count();
     $totalAtRisk        = $kpiRows->where('_is_risk',true)->count();
-    $totalCompleted     = $kpiRows->where('status','completed')->count();
+    $totalCompleted     = $kpiRows->sum(fn($k) => collect($k['quarters'] ?? [])->whereIn('status',['completed','pending_completion'])->count());
+    $totalQuarters      = $kpiRows->sum(fn($k) => count($k['quarters'] ?? []));
     $companyDeptCount = $companyTotalDepts ?? count($companyDeptRanking ?? []);
 
     // ── COMPANY BAND COUNTS ──────────────────────────────────────────────────
@@ -333,9 +335,9 @@
                 <p class="text-[9px] text-slate-400">{{ $companyDeptCount ?: $deptRows->count() }} depts</p>
             </div>
             <div class="bg-white rounded-xl p-3 soft-card border border-blue-100">
-                <p class="text-[9px] uppercase font-black text-blue-400">Completed KPIs</p>
+                <p class="text-[9px] uppercase font-black text-blue-400">Completed Quarters</p>
                 <p class="text-2xl font-black text-blue-700 mt-1">{{ $totalCompleted }}</p>
-                <p class="text-[9px] text-blue-400">of {{ $totalKpisVisible }}</p>
+                <p class="text-[9px] text-blue-400">of {{ $totalQuarters }} quarters</p>
             </div>
         </div>
     </div>
@@ -567,10 +569,11 @@
                 <p class="text-[9px] mt-0.5 {{ $myAtRisk > 0 ? 'text-red-400 font-bold' : 'text-slate-400' }}">{{ $myAtRisk > 0 ? 'Review required' : 'All clear' }}</p>
             </div>
             <div class="bg-white rounded-xl border border-blue-100 p-3 soft-card">
-                <p class="text-[9px] uppercase font-black text-blue-400">Completed</p>
+                <p class="text-[9px] uppercase font-black text-blue-400">Completed Quarters</p>
                 <p class="text-3xl font-black text-blue-700 mt-1">{{ $myCompleted }}</p>
-                <div class="mt-1.5 h-1 bg-blue-50 rounded-full overflow-hidden">
-                    <div class="h-1 bg-blue-400 rounded-full" style="width:{{ $individualKpiCount > 0 ? round(($myCompleted/$individualKpiCount)*100) : 0 }}%"></div>
+                <p class="text-[9px] text-blue-300 mt-0.5">of {{ $myTotalQuarters }}</p>
+                <div class="mt-1 h-1 bg-blue-50 rounded-full overflow-hidden">
+                    <div class="h-1 bg-blue-400 rounded-full" style="width:{{ $myTotalQuarters > 0 ? round(($myCompleted/$myTotalQuarters)*100) : 0 }}%"></div>
                 </div>
             </div>
         </div>
