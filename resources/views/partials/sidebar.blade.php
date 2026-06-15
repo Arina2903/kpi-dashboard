@@ -49,11 +49,28 @@
         aria-label="Open Sidebar"
     >
         <div class="w-10 h-10 flex items-center justify-center shrink-0">
+            @php
+                $sidebarLogo = session('company_logo');
+                if (!$sidebarLogo) {
+                    $logoMap = ['RCG'=>'images/RCG-Logo.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png'];
+                    $sidebarLogo = $logoMap[session('company_code')] ?? null;
+                }
+            @endphp
+            @if($sidebarLogo)
             <img
-                src="{{ asset(ltrim(session('company_logo') ?: 'images/default-logo.png', '/')) }}"
-                alt="{{ session('company_display_name') ?: 'Company Logo' }}"
+                src="{{ asset(ltrim($sidebarLogo, '/')) }}"
+                alt="{{ session('company_display_name') ?: 'Company' }}"
                 class="w-9 h-9 object-contain sidebar-logo bg-transparent"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
             />
+            <span class="sidebar-logo w-9 h-9 rounded-full bg-blue-600 text-white font-bold text-base items-center justify-center" style="display:none">
+                {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
+            </span>
+            @else
+            <span class="sidebar-logo w-9 h-9 rounded-full bg-blue-600 text-white font-bold text-base flex items-center justify-center">
+                {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
+            </span>
+            @endif
             <span class="sidebar-icon-only hidden text-white font-bold text-lg">
                 ☰
             </span>

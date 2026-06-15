@@ -24,7 +24,7 @@ class DashboardController extends Controller
 
         if ($company) {
             session([
-                'company_logo' => $company['logo_path'] ?: 'images/default-logo.jpg',
+                'company_logo' => $company['logo_path'] ?: null,
                 'company_display_name' => $company['display_name'] ?: $company['name'],
             ]);
         }
