@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KpiController;
 use App\Http\Controllers\ApprovalController;
+use App\Http\Controllers\AiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -305,5 +306,23 @@ Route::middleware(['kpi.auth'])->group(function () {
 
     Route::post('/linkages', [\App\Http\Controllers\LinkageController::class, 'store'])->name('linkage.store');
     Route::delete('/linkages/{id}', [\App\Http\Controllers\LinkageController::class, 'destroy'])->name('linkage.destroy');
+
+    /*
+    |--------------------------------------------------------------------------
+    | AI
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post('/ai/chat', [AiController::class, 'chat'])
+        ->name('ai.chat');
+
+    Route::post('/ai/suggest-description', [AiController::class, 'suggestDescription'])
+        ->name('ai.suggest-description');
+
+    Route::post('/ai/score-description', [AiController::class, 'scoreDescription'])
+        ->name('ai.score-description');
+
+    Route::post('/ai/suggest-targets', [AiController::class, 'suggestTargets'])
+        ->name('ai.suggest-targets');
 
 });
