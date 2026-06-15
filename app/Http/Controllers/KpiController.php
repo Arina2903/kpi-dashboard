@@ -517,6 +517,36 @@ class KpiController extends Controller
             ->values()
             ->toArray();
 
+        // ── LINKAGE DATA FOR INDEX PAGE ──────────────────────────────────────
+        $idxIncoming = collect($supabase->get('kpi_linkages', [
+            'assignee_id'    => 'eq.' . $user['id'],
+            'financial_year' => 'eq.' . $fy,
+            'company_code'   => 'eq.' . $user['company_code'],
+            'select'         => '*',
+        ]) ?? []);
+
+        $myKpiSubSums = collect($kpis)
+            ->where('employee_id', $user['id'])
+            ->groupBy('sub_category')
+            ->map(fn($g) => $g->sum(fn($k) => (float)($k['base_target'] ?? 0)));
+
+        $idxLinkageMap = [];
+        foreach ($idxIncoming as $lnk) {
+            $sub     = $lnk['sub_category'];
+            $target  = (float)($lnk['assigned_target'] ?? 0);
+            $covered = (float)($myKpiSubSums->get($sub, 0));
+            $idxLinkageMap[$sub] = [
+                'target'        => $target,
+                'covered'       => $covered,
+                'gap'           => max(0, $target - $covered),
+                'pct'           => $target > 0 ? min(100, round($covered / $target * 100)) : 100,
+                'unit'          => $lnk['unit'] ?? 'number',
+                'category'      => $lnk['category'] ?? '',
+                'assigner_name' => $lnk['assigner_name'] ?? '-',
+                'met'           => $covered >= $target,
+            ];
+        }
+
         return view('kpi.index', array_merge([
 
             'user' => $user,
@@ -532,6 +562,8 @@ class KpiController extends Controller
             'indexAssignedKpis' => $indexAssignedKpis,
 
             'vpDeptSummaries' => $vpDeptSummaries ?? [],
+
+            'linkageMap' => $idxLinkageMap,
 
         ], $this->sidebarData($supabase, $user)));
     }
@@ -855,16 +887,66 @@ class KpiController extends Controller
                 )
                 ->count();
 
+        // ── LINKAGE DATA ─────────────────────────────────────────────────────
+        // What targets have been assigned TO me by my superior
+        $incomingLinkages = collect($supabase->get('kpi_linkages', [
+            'assignee_id'    => 'eq.' . $user['id'],
+            'financial_year' => 'eq.' . $fy,
+            'company_code'   => 'eq.' . $user['company_code'],
+            'select'         => '*',
+        ]) ?? []);
+
+        // My existing KPIs this FY — to compute sub-category coverage
+        $myExistingKpis = collect($supabase->get('kpis', [
+            'employee_id'    => 'eq.' . $user['id'],
+            'financial_year' => 'eq.' . $fy,
+            'company_code'   => 'eq.' . $user['company_code'],
+            'select'         => 'sub_category,base_target',
+        ]) ?? []);
+
+        $mySubCatSums = $myExistingKpis->groupBy('sub_category')->map(
+            fn($g) => $g->sum(fn($k) => (float)($k['base_target'] ?? 0))
+        );
+
+        // Build linkage warning map: sub_category => [target, covered, gap, unit, assigner_name]
+        $linkageMap = [];
+        foreach ($incomingLinkages as $lnk) {
+            $sub = $lnk['sub_category'];
+            $covered = (float)($mySubCatSums->get($sub, 0));
+            $target  = (float)($lnk['assigned_target'] ?? 0);
+            $linkageMap[$sub] = [
+                'target'        => $target,
+                'covered'       => $covered,
+                'gap'           => max(0, $target - $covered),
+                'pct'           => $target > 0 ? min(100, round($covered / $target * 100)) : 100,
+                'unit'          => $lnk['unit'] ?? 'number',
+                'category'      => $lnk['category'] ?? '',
+                'assigner_name' => $lnk['assigner_name'] ?? '-',
+                'met'           => $covered >= $target,
+            ];
+        }
+
+        // Targets I've assigned to my direct reports (for dashboard assign panel)
+        $outgoingLinkages = collect($supabase->get('kpi_linkages', [
+            'assigner_id'    => 'eq.' . $user['id'],
+            'financial_year' => 'eq.' . $fy,
+            'company_code'   => 'eq.' . $user['company_code'],
+            'select'         => '*',
+        ]) ?? []);
+
         return view('kpi.create', array_merge([
-            'user' => $user,
-            'fy' => $fy,
-            'reportingStaff' => $reportingStaff,
-            'myAssignments' => $myAssignments,
-            'assignmentCards' => $assignmentCards,
-            'assignmentGroups' => $assignmentGroups,
-            'pendingAssignments' => $pendingAssignments,
+            'user'                => $user,
+            'fy'                  => $fy,
+            'reportingStaff'      => $reportingStaff,
+            'myAssignments'       => $myAssignments,
+            'assignmentCards'     => $assignmentCards,
+            'assignmentGroups'    => $assignmentGroups,
+            'pendingAssignments'  => $pendingAssignments,
             'acceptedAssignments' => $acceptedAssignments,
             'rejectedAssignments' => $rejectedAssignments,
+            'linkageMap'          => $linkageMap,
+            'outgoingLinkages'    => $outgoingLinkages,
+            'incomingLinkages'    => $incomingLinkages,
         ], $this->sidebarData($supabase, $user)));
     }
 

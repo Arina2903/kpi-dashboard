@@ -552,6 +552,61 @@
         </div>
     </div>
 
+    {{-- ── LINKAGE WARNINGS ─────────────────────────────────────────────── --}}
+    @php
+        $lnkMap       = $linkageMap ?? [];
+        $lnkUnmet     = array_filter($lnkMap, fn($l) => !$l['met']);
+        $lnkMet       = array_filter($lnkMap, fn($l) => $l['met']);
+        $fmtLnkVal    = function($v, $u) {
+            $n = (float)$v;
+            if ($u === 'currency')   return 'RM ' . number_format($n, 0);
+            if ($u === 'percentage') return number_format($n, 1) . '%';
+            return number_format($n, 0);
+        };
+    @endphp
+    @if(!empty($lnkMap))
+    <div class="rounded-2xl border overflow-hidden {{ count($lnkUnmet) > 0 ? 'border-amber-200' : 'border-emerald-200' }}">
+        <div class="flex items-center justify-between px-4 py-2.5 {{ count($lnkUnmet) > 0 ? 'bg-amber-50' : 'bg-emerald-50' }}">
+            <div class="flex items-center gap-2">
+                <span class="text-sm">{{ count($lnkUnmet) > 0 ? '⚠️' : '✅' }}</span>
+                <p class="text-xs font-black {{ count($lnkUnmet) > 0 ? 'text-amber-800' : 'text-emerald-800' }}">
+                    Linked Targets &nbsp;·&nbsp;
+                    {{ count($lnkMet) }}/{{ count($lnkMap) }} met
+                    @if(count($lnkUnmet) > 0)
+                    &nbsp;·&nbsp; <span class="text-amber-600">{{ count($lnkUnmet) }} need attention</span>
+                    @endif
+                </p>
+            </div>
+            <a href="{{ route('dashboard') }}" class="text-[10px] font-black text-slate-400 hover:text-slate-700 transition">Manage on Dashboard →</a>
+        </div>
+        <div class="divide-y {{ count($lnkUnmet) > 0 ? 'divide-amber-100' : 'divide-emerald-100' }}">
+            @foreach($lnkMap as $sub => $lnk)
+            <div class="flex items-center gap-3 px-4 py-2 {{ $lnk['met'] ? 'bg-white' : 'bg-amber-50/60' }}">
+                <div class="w-1 h-6 rounded-full shrink-0 {{ $lnk['met'] ? 'bg-emerald-400' : 'bg-amber-400' }}"></div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-xs font-black text-slate-800">{{ $sub }}</span>
+                        <span class="text-[9px] text-slate-400">{{ $lnk['category'] }} · from {{ $lnk['assigner_name'] }}</span>
+                        @if(!$lnk['met'])
+                        <span class="text-[9px] font-black bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">Gap {{ $fmtLnkVal($lnk['gap'], $lnk['unit']) }}</span>
+                        @else
+                        <span class="text-[9px] font-black bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200">Met ✓</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-1.5 rounded-full {{ $lnk['met'] ? 'bg-emerald-400' : 'bg-amber-400' }}" style="width:{{ $lnk['pct'] }}%"></div>
+                    </div>
+                    <span class="text-[9px] font-black {{ $lnk['met'] ? 'text-emerald-700' : 'text-amber-700' }} w-7 text-right">{{ $lnk['pct'] }}%</span>
+                    <span class="text-[9px] text-slate-400 w-28 text-right">{{ $fmtLnkVal($lnk['covered'], $lnk['unit']) }} / {{ $fmtLnkVal($lnk['target'], $lnk['unit']) }}</span>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     <div class="space-y-4">
 
     @if($allCategories->isEmpty())

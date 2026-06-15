@@ -988,6 +988,9 @@
 
                                         </div>
 
+                                        {{-- Linkage warning banner --}}
+                                        <div id="linkageWarning" class="hidden mt-3"></div>
+
                                     </div>
 
                                 </div>
@@ -2138,13 +2141,53 @@
     }
 
     function bindSubCategoryEvents(){
-        document .querySelectorAll('input[name="sub_category"]')
+        document.querySelectorAll('input[name="sub_category"]')
         .forEach(input=>{
-            input.addEventListener(
-                'change',
-                updateSummary
-            );
+            input.addEventListener('change', () => { updateSummary(); updateLinkageWarning(); });
         });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | LINKAGE WARNING
+    |--------------------------------------------------------------------------
+    */
+
+    const linkageMap = @json($linkageMap ?? []);
+
+    function fmtLinkVal(v, u) {
+        const n = Number(v) || 0;
+        if (u === 'currency')   return 'RM ' + n.toLocaleString('en-MY', {maximumFractionDigits:0});
+        if (u === 'percentage') return n.toFixed(1) + '%';
+        return n.toLocaleString('en-MY', {maximumFractionDigits:0});
+    }
+
+    function updateLinkageWarning() {
+        const box = document.getElementById('linkageWarning');
+        if (!box) return;
+        const sub = document.querySelector('input[name="sub_category"]:checked')?.value;
+        if (!sub || !linkageMap[sub]) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+        const lnk = linkageMap[sub];
+        const met = lnk.met;
+        box.className = `mt-3 p-3 rounded-xl border text-left ${met ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`;
+        box.innerHTML = `
+            <div class="flex items-start gap-2">
+                <span class="text-base leading-none mt-0.5">${met ? '✅' : '⚠️'}</span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-black ${met ? 'text-emerald-800' : 'text-amber-800'}">
+                        Target Linkage: ${sub} — ${fmtLinkVal(lnk.target, lnk.unit)} required
+                        ${met ? '<span class="ml-2 text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200">Met ✓</span>' : '<span class="ml-2 text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">Gap</span>'}
+                    </p>
+                    <p class="text-[11px] ${met ? 'text-emerald-700' : 'text-amber-700'} mt-1">
+                        From: <strong>${lnk.assigner_name ?? '-'}</strong> &nbsp;·&nbsp;
+                        Currently covered by your KPIs: <strong>${fmtLinkVal(lnk.covered, lnk.unit)}</strong>
+                        ${!met ? ` &nbsp;·&nbsp; Gap: <strong>${fmtLinkVal(lnk.gap, lnk.unit)}</strong>` : ''}
+                    </p>
+                    ${!met ? '<p class="text-[10px] text-amber-500 mt-1 italic">You can still create this KPI — it will count toward covering your linked target.</p>' : ''}
+                </div>
+            </div>
+        `;
+        box.classList.remove('hidden');
     }
 
     /*
@@ -2593,6 +2636,7 @@
     }
 
     updateSubCategories();
+    updateLinkageWarning();
     updateSummary();
     updateStatusBadge();
     validateQuarterRanges();

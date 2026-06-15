@@ -297,4 +297,13 @@ Route::middleware(['kpi.auth'])->group(function () {
         [KpiController::class, 'myDepartmentKpi']
     )->name('kpi.my-department-kpi');
 
+    /*
+    |--------------------------------------------------------------------------
+    | KPI LINKAGES (cascading targets)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post('/linkages', [\App\Http\Controllers\LinkageController::class, 'store'])->name('linkage.store');
+    Route::delete('/linkages/{id}', [\App\Http\Controllers\LinkageController::class, 'destroy'])->name('linkage.destroy');
+
 });
