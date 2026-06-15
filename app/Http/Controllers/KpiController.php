@@ -525,22 +525,25 @@ class KpiController extends Controller
             'select'         => '*',
         ]) ?? []);
 
+        // Key: "sub_category|unit" — never mix RM totals with % or number totals
         $myKpiSubSums = collect($kpis)
             ->where('employee_id', $user['id'])
-            ->groupBy('sub_category')
+            ->groupBy(fn($k) => ($k['sub_category'] ?? '') . '|' . ($k['unit'] ?? 'number'))
             ->map(fn($g) => $g->sum(fn($k) => (float)($k['base_target'] ?? 0)));
 
         $idxLinkageMap = [];
         foreach ($idxIncoming as $lnk) {
             $sub     = $lnk['sub_category'];
+            $lnkUnit = $lnk['unit'] ?? 'number';
+            $key     = $sub . '|' . $lnkUnit;
             $target  = (float)($lnk['assigned_target'] ?? 0);
-            $covered = (float)($myKpiSubSums->get($sub, 0));
+            $covered = (float)($myKpiSubSums->get($key, 0));
             $idxLinkageMap[$sub] = [
                 'target'        => $target,
                 'covered'       => $covered,
                 'gap'           => max(0, $target - $covered),
                 'pct'           => $target > 0 ? min(100, round($covered / $target * 100)) : 100,
-                'unit'          => $lnk['unit'] ?? 'number',
+                'unit'          => $lnkUnit,
                 'category'      => $lnk['category'] ?? '',
                 'assigner_name' => $lnk['assigner_name'] ?? '-',
                 'met'           => $covered >= $target,
@@ -904,22 +907,25 @@ class KpiController extends Controller
             'select'         => 'sub_category,base_target',
         ]) ?? []);
 
-        $mySubCatSums = $myExistingKpis->groupBy('sub_category')->map(
-            fn($g) => $g->sum(fn($k) => (float)($k['base_target'] ?? 0))
-        );
+        // Key: "sub_category|unit" — never mix RM totals with % or number totals
+        $mySubCatSums = $myExistingKpis
+            ->groupBy(fn($k) => ($k['sub_category'] ?? '') . '|' . ($k['unit'] ?? 'number'))
+            ->map(fn($g) => $g->sum(fn($k) => (float)($k['base_target'] ?? 0)));
 
         // Build linkage warning map: sub_category => [target, covered, gap, unit, assigner_name]
         $linkageMap = [];
         foreach ($incomingLinkages as $lnk) {
-            $sub = $lnk['sub_category'];
-            $covered = (float)($mySubCatSums->get($sub, 0));
+            $sub     = $lnk['sub_category'];
+            $lnkUnit = $lnk['unit'] ?? 'number';
+            $key     = $sub . '|' . $lnkUnit;
+            $covered = (float)($mySubCatSums->get($key, 0));
             $target  = (float)($lnk['assigned_target'] ?? 0);
             $linkageMap[$sub] = [
                 'target'        => $target,
                 'covered'       => $covered,
                 'gap'           => max(0, $target - $covered),
                 'pct'           => $target > 0 ? min(100, round($covered / $target * 100)) : 100,
-                'unit'          => $lnk['unit'] ?? 'number',
+                'unit'          => $lnkUnit,
                 'category'      => $lnk['category'] ?? '',
                 'assigner_name' => $lnk['assigner_name'] ?? '-',
                 'met'           => $covered >= $target,

@@ -303,13 +303,15 @@
         return number_format($n, 0);
     };
 
-    $mySubCatSums = $individualKpis->groupBy('sub_category')->map(
-        fn($g) => $g->sum(fn($k) => (float)($k['base_target'] ?? 0))
-    );
+    // Key: "sub_category|unit" so RM totals never mix with % or number totals
+    $mySubCatSums = $individualKpis
+        ->groupBy(fn($k) => ($k['sub_category'] ?? '') . '|' . ($k['unit'] ?? 'number'))
+        ->map(fn($g) => $g->sum(fn($k) => (float)($k['base_target'] ?? 0)));
 
     $myLinkageMap = $incomingLinkages->map(function($lnk) use($mySubCatSums) {
         $target  = (float)($lnk['assigned_target'] ?? 0);
-        $covered = (float)($mySubCatSums->get($lnk['sub_category'], 0));
+        $key     = ($lnk['sub_category'] ?? '') . '|' . ($lnk['unit'] ?? 'number');
+        $covered = (float)($mySubCatSums->get($key, 0));
         $gap     = max(0, $target - $covered);
         $pct     = $target > 0 ? min(100, round($covered / $target * 100)) : 100;
         return array_merge($lnk, ['covered'=>$covered,'gap'=>$gap,'pct'=>$pct,'met'=>$covered>=$target]);
@@ -318,8 +320,11 @@
     $allKpisByEmployee = $kpiRows->groupBy('employee_id');
     $outgoingWithCoverage = $outgoingLinkages->map(function($lnk) use($allKpisByEmployee) {
         $assigneeKpis = $allKpisByEmployee->get($lnk['assignee_id'], collect());
+        $lnkUnit = $lnk['unit'] ?? 'number';
         $target  = (float)($lnk['assigned_target'] ?? 0);
-        $covered = $assigneeKpis->where('sub_category', $lnk['sub_category'])
+        $covered = $assigneeKpis
+            ->where('sub_category', $lnk['sub_category'])
+            ->filter(fn($k) => ($k['unit'] ?? 'number') === $lnkUnit)
             ->sum(fn($k) => (float)($k['base_target'] ?? 0));
         $gap  = max(0, $target - $covered);
         $pct  = $target > 0 ? min(100, round($covered / $target * 100)) : 100;
