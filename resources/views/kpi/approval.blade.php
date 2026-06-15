@@ -507,21 +507,58 @@
                                 <p class="text-[10px] uppercase text-emerald-500 font-black mb-2">Completion Review</p>
                                 <p class="text-sm text-slate-700 leading-relaxed">{{ $approval['reason'] ?? '-' }}</p>
                             </div>
-                            @if(!empty($approval['attachment_url']))
-                            @php $isPdf = str_ends_with(strtolower($approval['attachment_url']), '.pdf'); @endphp
+                            @php
+                                // Build unified file list: prefer attachment_urls (multi), fallback to single attachment_url
+                                $proofFiles = [];
+                                $rawUrls = $approval['attachment_urls'] ?? null;
+                                if ($rawUrls) {
+                                    $decoded = is_array($rawUrls) ? $rawUrls : json_decode($rawUrls, true);
+                                    if (is_array($decoded)) $proofFiles = $decoded;
+                                }
+                                if (empty($proofFiles) && !empty($approval['attachment_url'])) {
+                                    $su = $approval['attachment_url'];
+                                    $isImg = preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $su);
+                                    $proofFiles = [['url'=>$su,'name'=>basename($su),'type'=> $isImg ? 'image/jpeg' : 'application/pdf']];
+                                }
+                            @endphp
+                            @if(!empty($proofFiles))
                             <div class="rounded-2xl bg-sky-50 border border-sky-100 p-5">
-                                <p class="text-[10px] uppercase text-sky-500 font-black mb-3">Proof / Document</p>
-                                @if($isPdf)
-                                    <a href="{{ $approval['attachment_url'] }}" target="_blank"
-                                       class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-xs font-black hover:bg-sky-700">
-                                        📄 View PDF Proof
-                                    </a>
-                                @else
-                                    <a href="{{ $approval['attachment_url'] }}" target="_blank">
-                                        <img src="{{ $approval['attachment_url'] }}" alt="Proof"
-                                             class="max-h-64 rounded-xl border border-sky-200 object-contain cursor-pointer hover:opacity-90">
-                                    </a>
-                                @endif
+                                <p class="text-[10px] uppercase text-sky-500 font-black mb-3">
+                                    Proof / Document
+                                    <span class="normal-case font-medium text-sky-400 ml-1">({{ count($proofFiles) }} file{{ count($proofFiles) > 1 ? 's' : '' }})</span>
+                                </p>
+                                <div class="space-y-2">
+                                    @foreach($proofFiles as $pf)
+                                    @php
+                                        $pfUrl  = $pf['url'] ?? '';
+                                        $pfName = $pf['name'] ?? basename($pfUrl);
+                                        $pfIsImg = str_starts_with($pf['type'] ?? '', 'image/') || preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $pfUrl);
+                                    @endphp
+                                    @if($pfIsImg)
+                                        <a href="{{ $pfUrl }}" target="_blank" class="block group">
+                                            <div class="rounded-2xl overflow-hidden border-2 border-sky-200 group-hover:border-blue-400 transition bg-white">
+                                                <img src="{{ $pfUrl }}" alt="{{ $pfName }}"
+                                                     class="w-full max-h-64 object-contain">
+                                                <div class="px-3 py-2 border-t border-sky-100 flex items-center gap-2 bg-sky-50">
+                                                    <span class="text-base">🖼️</span>
+                                                    <span class="text-xs font-bold text-sky-700 truncate flex-1">{{ $pfName }}</span>
+                                                    <span class="text-[10px] text-blue-500 font-black shrink-0">Open ↗</span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    @else
+                                        <a href="{{ $pfUrl }}" target="_blank"
+                                           class="flex items-center gap-3 p-3 rounded-2xl border-2 border-sky-200 hover:border-blue-400 hover:bg-blue-50 transition group">
+                                            <div class="w-10 h-10 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-xl shrink-0">📄</div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-black text-slate-700 truncate">{{ $pfName }}</p>
+                                                <p class="text-[10px] text-slate-400">PDF Document</p>
+                                            </div>
+                                            <span class="text-xs font-black text-blue-500 shrink-0 group-hover:text-blue-700">Open ↗</span>
+                                        </a>
+                                    @endif
+                                    @endforeach
+                                </div>
                             </div>
                             @endif
                         </div>

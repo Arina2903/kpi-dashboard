@@ -2963,13 +2963,11 @@ function renderKpiDetail(activeQuarter) {
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                        Proof Image / Document <span class="text-red-500">*</span> <span class="text-slate-400 normal-case font-medium">(JPG, PNG, PDF, max 5 MB)</span>
+                                        Proof Files <span class="text-red-500">*</span> <span class="text-slate-400 normal-case font-medium">(JPG, PNG, PDF · max 5 MB each · up to 5 files)</span>
                                     </label>
-                                    <input id="qProofImage" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+                                    <input id="qProofImage" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
                                         class="w-full mt-1.5 rounded-2xl border border-blue-200 bg-white px-4 py-2.5 text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer">
-                                    <div id="proofPreview" class="hidden mt-2 rounded-2xl overflow-hidden border border-blue-200 max-h-40">
-                                        <img id="proofPreviewImg" src="" alt="Preview" class="w-full h-full object-contain max-h-40">
-                                    </div>
+                                    <div id="proofPreviewList" class="hidden mt-2 space-y-1.5"></div>
                                 </div>
                             </div>
                         </div>
@@ -3083,13 +3081,15 @@ function renderKpiDetail(activeQuarter) {
                     </div>
                 </div>
 
-                <!-- COMPLETION PROOF DISPLAY (if quarter already completed with proof) -->
-                ${quarter.status === 'completed' && (quarter.completion_review || quarter.completion_proof_url) ? `
+                <!-- COMPLETION PROOF DISPLAY (if quarter already completed/pending with proof) -->
+                ${(quarter.status === 'completed' || quarter.status === 'pending_completion') && (quarter.completion_review || quarter.completion_proof_url || quarter.completion_proof_urls?.length) ? `
                 <div class="bg-white rounded-3xl border border-blue-200 shadow-sm overflow-hidden">
                     <div class="px-6 py-4 border-b border-blue-100 bg-blue-50 flex items-center gap-2">
                         <span class="text-lg">🏆</span>
                         <p class="text-xs font-black text-blue-800 uppercase tracking-wider">Completion Evidence</p>
-                        <span class="ml-auto text-[10px] bg-blue-100 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-lg font-bold">Submitted</span>
+                        <span class="ml-auto text-[10px] ${quarter.status === 'completed' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200'} border px-2 py-0.5 rounded-lg font-bold">
+                            ${quarter.status === 'completed' ? 'Approved ✓' : 'Pending Approval'}
+                        </span>
                     </div>
                     <div class="p-5 space-y-4">
                         ${quarter.completion_review ? `
@@ -3099,19 +3099,7 @@ function renderKpiDetail(activeQuarter) {
                                 <p class="text-sm text-slate-700 leading-relaxed">${quarter.completion_review.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</p>
                             </div>
                         </div>` : ''}
-                        ${quarter.completion_proof_url ? `
-                        <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Proof Attachment</p>
-                            ${quarter.completion_proof_url.match(/\.(jpg|jpeg|png|webp|gif)$/i) ? `
-                            <a href="${quarter.completion_proof_url}" target="_blank" class="block rounded-2xl overflow-hidden border border-slate-200 hover:border-blue-300 transition">
-                                <img src="${quarter.completion_proof_url}" alt="Proof" class="w-full max-h-64 object-contain bg-slate-50">
-                            </a>
-                            ` : `
-                            <a href="${quarter.completion_proof_url}" target="_blank"
-                                class="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition text-sm font-bold text-blue-700">
-                                <span class="text-xl">📄</span> View Proof Document
-                            </a>`}
-                        </div>` : ''}
+                        ${renderProofFiles(quarter)}
                         ${quarter.completion_submitted_at ? `
                         <p class="text-[10px] text-slate-400">Submitted on ${new Date(quarter.completion_submitted_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</p>
                         ` : ''}
@@ -3250,18 +3238,90 @@ function toggleCompletionProof(status) {
     }
 }
 
-/* Image preview when file selected */
+/* Render proof files list (multi-file support, backward-compat with single URL) */
+function renderProofFiles(quarter) {
+    // Build unified files array: prefer completion_proof_urls, fallback to single URL
+    let files = [];
+    if (quarter.completion_proof_urls) {
+        // Could be a JSON string (from DB) or already an array (from JS state)
+        const raw = quarter.completion_proof_urls;
+        files = Array.isArray(raw) ? raw : (typeof raw === 'string' ? (() => { try { return JSON.parse(raw); } catch(e) { return []; } })() : []);
+    }
+    // Backward-compat: if no multi-file list but single URL exists, wrap it
+    if (!files.length && quarter.completion_proof_url) {
+        const url = quarter.completion_proof_url;
+        const isImg = /\.(jpg|jpeg|png|webp|gif)$/i.test(url);
+        files = [{ url, name: url.split('/').pop() || 'Proof', type: isImg ? 'image/jpeg' : 'application/pdf' }];
+    }
+    if (!files.length) return '';
+
+    const fileCards = files.map((f, i) => {
+        const isImg = f.type?.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif)$/i.test(f.url || '');
+        const name  = f.name || ('File ' + (i+1));
+        if (isImg) {
+            return `<a href="${f.url}" target="_blank" class="block group">
+                <div class="rounded-2xl overflow-hidden border-2 border-slate-200 group-hover:border-blue-400 transition bg-slate-50">
+                    <img src="${f.url}" alt="${name}" class="w-full max-h-52 object-contain">
+                    <div class="px-3 py-2 border-t border-slate-100 flex items-center gap-2">
+                        <span class="text-base">🖼️</span>
+                        <span class="text-xs font-bold text-slate-600 truncate flex-1">${name}</span>
+                        <span class="text-[10px] text-blue-500 font-black shrink-0">Open ↗</span>
+                    </div>
+                </div>
+            </a>`;
+        } else {
+            return `<a href="${f.url}" target="_blank"
+                class="flex items-center gap-3 p-3 rounded-2xl border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 transition group">
+                <div class="w-10 h-10 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-xl shrink-0">📄</div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-black text-slate-700 truncate">${name}</p>
+                    <p class="text-[10px] text-slate-400">PDF Document</p>
+                </div>
+                <span class="text-xs font-black text-blue-500 shrink-0 group-hover:text-blue-700">Open ↗</span>
+            </a>`;
+        }
+    }).join('');
+
+    return `<div>
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+            Proof Files <span class="normal-case font-medium text-slate-300">(${files.length} file${files.length > 1 ? 's' : ''})</span>
+        </p>
+        <div class="space-y-2">${fileCards}</div>
+    </div>`;
+}
+
+/* File list preview when files selected */
 document.addEventListener('change', function(e) {
     if (e.target.id !== 'qProofImage') return;
-    const file    = e.target.files[0];
-    const preview = document.getElementById('proofPreview');
-    const img     = document.getElementById('proofPreviewImg');
-    if (file && file.type.startsWith('image/') && preview && img) {
-        img.src = URL.createObjectURL(file);
-        preview.classList.remove('hidden');
-    } else if (preview) {
-        preview.classList.add('hidden');
-    }
+    const files  = Array.from(e.target.files);
+    const list   = document.getElementById('proofPreviewList');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!files.length) { list.classList.add('hidden'); return; }
+    list.classList.remove('hidden');
+    files.forEach(file => {
+        const isImg = file.type.startsWith('image/');
+        const sizeMb = (file.size / 1024 / 1024).toFixed(1);
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 p-2 rounded-xl border border-blue-100 bg-blue-50';
+        if (isImg) {
+            const objUrl = URL.createObjectURL(file);
+            row.innerHTML = `
+                <img src="${objUrl}" class="w-10 h-10 rounded-lg object-cover border border-blue-200 shrink-0">
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-black text-slate-700 truncate">${file.name}</p>
+                    <p class="text-[10px] text-slate-400">${sizeMb} MB · Image</p>
+                </div>`;
+        } else {
+            row.innerHTML = `
+                <div class="w-10 h-10 rounded-lg bg-red-100 border border-red-200 flex items-center justify-center text-xl shrink-0">📄</div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-black text-slate-700 truncate">${file.name}</p>
+                    <p class="text-[10px] text-slate-400">${sizeMb} MB · PDF</p>
+                </div>`;
+        }
+        list.appendChild(row);
+    });
 });
 
 /* Dispatch to the right save function based on selected status */
@@ -3274,28 +3334,31 @@ function quarterSaveDispatch(quarterId) {
     }
 }
 
-/* Submit completion with proof image (multipart) */
+/* Submit completion with multiple proof files (multipart) */
 async function completeQuarterSubmit(quarterId) {
     const review = document.getElementById('qCompletionReview')?.value?.trim() ?? '';
-    const file   = document.getElementById('qProofImage')?.files?.[0] ?? null;
+    const files  = Array.from(document.getElementById('qProofImage')?.files ?? []);
     const btn    = document.getElementById('qSaveBtn');
 
     if (review.length < 10) {
         alert('Please write a completion review (minimum 10 characters).');
         return;
     }
-
-    if (!file) {
-        alert('Please upload a proof image or document.');
+    if (!files.length) {
+        alert('Please upload at least one proof file.');
+        return;
+    }
+    if (files.length > 5) {
+        alert('Maximum 5 files allowed.');
         return;
     }
 
-    if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Uploading…'; }
 
     const fd = new FormData();
     fd.append('_method', 'POST');
     fd.append('completion_review', review);
-    fd.append('proof_image', file);
+    files.forEach(f => fd.append('proof_files[]', f));
 
     try {
         const res = await fetch(`/kpi/quarter/${quarterId}/complete`, {
@@ -3307,10 +3370,11 @@ async function completeQuarterSubmit(quarterId) {
         if (data.success) {
             const q = activeKpi.quarters?.find(x => x.id == quarterId);
             if (q) {
-                q.status                  = data.status || 'pending_completion';
-                q.completion_review       = review;
-                q.completion_submitted_at = new Date().toISOString();
-                if (data.proof_url) q.completion_proof_url = data.proof_url;
+                q.status                    = data.status || 'pending_completion';
+                q.completion_review         = review;
+                q.completion_submitted_at   = new Date().toISOString();
+                if (data.proof_url)   q.completion_proof_url  = data.proof_url;
+                if (data.proof_files) q.completion_proof_urls = data.proof_files;
             }
             if (data.status === 'completed') {
                 showToast('Quarter marked as completed ✓', 'emerald');

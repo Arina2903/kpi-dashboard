@@ -1291,33 +1291,39 @@ class KpiController extends Controller
 
         $validated = $request->validate([
             'completion_review' => 'required|string|min:10|max:2000',
-            'proof_image'       => 'required|file|mimes:jpeg,png,webp,gif,pdf|max:5120',
+            'proof_files'       => 'required|array|min:1|max:5',
+            'proof_files.*'     => 'file|mimes:jpeg,png,webp,gif,pdf|max:5120',
         ]);
 
-        $proofUrl = null;
+        $proofFiles = []; // [{url, name, type}, …]
+        $proofUrl   = null;
 
-        if ($request->hasFile('proof_image')) {
-            $file     = $request->file('proof_image');
+        foreach ($request->file('proof_files', []) as $file) {
+            $origName = $file->getClientOriginalName();
             $ext      = $file->getClientOriginalExtension();
+            $mime     = $file->getMimeType();
             $path     = 'quarters/' . $id . '/' . uniqid('proof_', true) . '.' . $ext;
             $contents = file_get_contents($file->getRealPath());
-            $mime     = $file->getMimeType();
 
             try {
-                $proofUrl = $this->supabase->uploadToStorage('kpi-proofs', $path, $contents, $mime);
+                $url = $this->supabase->uploadToStorage('kpi-proofs', $path, $contents, $mime);
             } catch (\Throwable $e) {
                 Log::error('completeQuarter: storage upload failed', ['error' => $e->getMessage()]);
-                return response()->json(['success' => false, 'message' => 'Failed to upload proof image.'], 500);
+                return response()->json(['success' => false, 'message' => 'Failed to upload ' . $origName . '.'], 500);
             }
+
+            $proofFiles[] = ['url' => $url, 'name' => $origName, 'type' => $mime];
+            if (!$proofUrl) $proofUrl = $url; // first file kept for legacy field
         }
 
         // Store completion data in quarter, set pending_completion status
         $quarterPayload = [
-            'status'                  => 'pending_completion',
-            'completion_review'       => $validated['completion_review'],
-            'completion_submitted_at' => $this->nowMy(),
-            'completion_submitted_by' => $user['id'],
-            'updated_at'              => $this->nowMy(),
+            'status'                   => 'pending_completion',
+            'completion_review'        => $validated['completion_review'],
+            'completion_submitted_at'  => $this->nowMy(),
+            'completion_submitted_by'  => $user['id'],
+            'completion_proof_urls'    => json_encode($proofFiles),
+            'updated_at'               => $this->nowMy(),
         ];
         if ($proofUrl) $quarterPayload['completion_proof_url'] = $proofUrl;
 
@@ -1334,10 +1340,11 @@ class KpiController extends Controller
                 'updated_at' => $this->nowMy(),
             ]);
             return response()->json([
-                'success'   => true,
-                'message'   => 'Quarter marked as completed.',
-                'status'    => 'completed',
-                'proof_url' => $proofUrl,
+                'success'      => true,
+                'message'      => 'Quarter marked as completed.',
+                'status'       => 'completed',
+                'proof_url'    => $proofUrl,
+                'proof_files'  => $proofFiles,
             ]);
         }
 
@@ -1351,6 +1358,7 @@ class KpiController extends Controller
             'quarter_target'    => $quarter['quarter_target'] ?? 0,
             'reason'            => '[[COMPLETION]]' . $validated['completion_review'],
             'attachment_url'    => $proofUrl,
+            'attachment_urls'   => json_encode($proofFiles),
             'requested_by'      => $user['id'],
             'requested_by_name' => $user['short_name'] ?? $user['full_name'] ?? 'Unknown',
             'approver_id'       => $approverId,
@@ -1359,10 +1367,11 @@ class KpiController extends Controller
         ]);
 
         return response()->json([
-            'success'   => true,
-            'message'   => 'Completion submitted for approval.',
-            'status'    => 'pending_completion',
-            'proof_url' => $proofUrl,
+            'success'     => true,
+            'message'     => 'Completion submitted for approval.',
+            'status'      => 'pending_completion',
+            'proof_url'   => $proofUrl,
+            'proof_files' => $proofFiles,
         ]);
     }
 
