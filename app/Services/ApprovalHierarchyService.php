@@ -29,51 +29,47 @@ class ApprovalHierarchyService
 
             /*
             |--------------------------------------------------------------------------
-            | EXECUTIVE -> MANAGER
+            | EXECUTIVE -> MANAGER (fallback to VP if no direct manager)
             |--------------------------------------------------------------------------
             */
             case 'EXECUTIVE':
 
-                if (
-                    !empty($employee['manager_id'])
-                ) {
-                    return $this->employee(
-                        $employee['manager_id']
-                    );
+                if (!empty($employee['manager_id'])) {
+                    return $this->employee($employee['manager_id']);
+                }
+
+                if (!empty($employee['vp_id'])) {
+                    return $this->employee($employee['vp_id']);
                 }
 
                 return null;
 
             /*
             |--------------------------------------------------------------------------
-            | MANAGER -> VP
+            | MANAGER -> VP (fallback to reports_to_id if no VP)
             |--------------------------------------------------------------------------
             */
             case 'MANAGER':
 
-                if (
-                    !empty($employee['vp_id'])
-                ) {
-                    return $this->employee(
-                        $employee['vp_id']
-                    );
+                if (!empty($employee['vp_id'])) {
+                    return $this->employee($employee['vp_id']);
+                }
+
+                if (!empty($employee['reports_to_id'])) {
+                    return $this->employee($employee['reports_to_id']);
                 }
 
                 return null;
 
             /*
             |--------------------------------------------------------------------------
-            | VP -> REPORTS TO
+            | VP -> SLT (via reports_to_id)
             |--------------------------------------------------------------------------
             */
             case 'VP':
 
-                if (
-                    !empty($employee['reports_to_id'])
-                ) {
-                    return $this->employee(
-                        $employee['reports_to_id']
-                    );
+                if (!empty($employee['reports_to_id'])) {
+                    return $this->employee($employee['reports_to_id']);
                 }
 
                 return null;
