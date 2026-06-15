@@ -2695,6 +2695,19 @@ function renderKpiDetail(activeQuarter) {
     });
 
     // ── approval timeline ─────────────────────────────────────
+    const fmtMY = d => {
+        if (!d) return '-';
+        const str = String(d).replace('T', ' ');
+        const [datePart, timePart = '00:00:00'] = str.split(' ');
+        const [y, mo, day] = datePart.split('-');
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const [h, min] = timePart.split(':');
+        const hour = parseInt(h, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const h12  = String(hour % 12 || 12).padStart(2, '0');
+        return `${parseInt(day, 10)} ${months[parseInt(mo, 10) - 1]} ${y}, ${h12}:${min} ${ampm}`;
+    };
+
     let timelineHtml = '';
     timeline.forEach(item => {
         const s  = (item.status || '').toLowerCase();
@@ -2702,6 +2715,7 @@ function renderKpiDetail(activeQuarter) {
         const bc = s === 'approved' ? 'bg-emerald-50 border-emerald-100' : s === 'rejected' ? 'bg-red-50 border-red-100' : 'bg-amber-50 border-amber-100';
         const tc = s === 'approved' ? 'text-emerald-700' : s === 'rejected' ? 'text-red-700' : 'text-amber-700';
         const lbl = (item.status || '-').charAt(0).toUpperCase() + (item.status || '-').slice(1).replace('_',' ');
+        const showApprover = item.approver && item.approver !== '-';
         timelineHtml += `
         <div class="flex gap-3 mb-3">
             <div class="flex flex-col items-center shrink-0">
@@ -2710,10 +2724,10 @@ function renderKpiDetail(activeQuarter) {
             </div>
             <div class="rounded-2xl border ${bc} p-3 flex-1">
                 <p class="text-xs font-black ${tc}">${lbl}</p>
-                ${item.type     ? `<p class="text-[10px] text-slate-500 mt-0.5">${item.type}</p>` : ''}
-                ${item.by       ? `<p class="text-[10px] text-slate-500">By: ${item.by}</p>` : ''}
-                ${item.approver ? `<p class="text-[10px] text-slate-500">Approver: ${item.approver}</p>` : ''}
-                <p class="text-[10px] text-slate-400 mt-1">${item.date || ''}</p>
+                ${item.type         ? `<p class="text-[10px] text-slate-500 mt-0.5">${item.type}</p>` : ''}
+                ${item.by           ? `<p class="text-[10px] text-slate-500">By: ${item.by}</p>` : ''}
+                ${showApprover      ? `<p class="text-[10px] text-slate-500">Approver: ${item.approver}</p>` : ''}
+                <p class="text-[10px] text-slate-400 mt-1">${fmtMY(item.date)}</p>
             </div>
         </div>`;
     });

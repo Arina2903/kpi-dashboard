@@ -1372,12 +1372,16 @@ class KpiController extends Controller
         $timeline = [];
 
         foreach ($timelineActByKpi->get($kpi['id'], collect([]))->values() as $row) {
+            $status = $row['status'] ?? 'pending';
+            $approver = $status === 'approved'
+                ? ($row['approved_by_name'] ?? $row['approver_name'] ?? null)
+                : ($row['approver_name'] ?? null);
             $timeline[] = [
                 'type'     => 'Actual Update',
-                'status'   => $row['status'] ?? '-',
-                'by'       => $row['requested_by_name'] ?? '-',
+                'status'   => $status,
+                'by'       => $row['requested_by_name'] ?? null,
                 'date'     => $row['created_at'] ?? null,
-                'approver' => $row['approver_name'] ?? '-',
+                'approver' => $approver,
             ];
         }
 
@@ -1386,19 +1390,20 @@ class KpiController extends Controller
                 'type'         => 'Target Change Requested',
                 'status'       => 'requested',
                 'date'         => $row['created_at'] ?? null,
-                'by'           => $row['requested_by_name'] ?? '-',
+                'by'           => $row['requested_by_name'] ?? null,
                 'base_from'    => ($row['field_name'] ?? null) === 'base_target'    ? ($row['old_value'] ?? 0) : ($row['old_base_target'] ?? 0),
                 'base_to'      => ($row['field_name'] ?? null) === 'base_target'    ? ($row['requested_value'] ?? 0) : ($row['new_base_target'] ?? 0),
                 'stretch_from' => ($row['field_name'] ?? null) === 'stretch_target' ? ($row['old_value'] ?? 0) : ($row['old_stretch_target'] ?? 0),
                 'stretch_to'   => ($row['field_name'] ?? null) === 'stretch_target' ? ($row['requested_value'] ?? 0) : ($row['new_stretch_target'] ?? 0),
-                'reason'       => $row['reason'] ?? '-',
+                'reason'       => $row['reason'] ?? null,
+                'approver'     => $row['approver_name'] ?? null,
             ];
             if (($row['status'] ?? '') === 'approved') {
                 $timeline[] = [
                     'type'     => 'Approved',
                     'status'   => 'approved',
                     'date'     => $row['approved_at'] ?? $row['updated_at'] ?? null,
-                    'approver' => $row['approved_by_name'] ?? $row['approver_name'] ?? '-',
+                    'approver' => $row['approved_by_name'] ?? $row['approver_name'] ?? null,
                 ];
             }
             if (($row['status'] ?? '') === 'rejected') {
@@ -1406,8 +1411,8 @@ class KpiController extends Controller
                     'type'     => 'Rejected',
                     'status'   => 'rejected',
                     'date'     => $row['rejected_at'] ?? $row['updated_at'] ?? null,
-                    'approver' => $row['rejected_by_name'] ?? $row['approver_name'] ?? '-',
-                    'reason'   => $row['rejection_reason'] ?? $row['reject_reason'] ?? '-',
+                    'approver' => $row['rejected_by_name'] ?? $row['approver_name'] ?? null,
+                    'reason'   => $row['rejection_reason'] ?? $row['reject_reason'] ?? null,
                 ];
             }
         }
@@ -1415,10 +1420,10 @@ class KpiController extends Controller
         foreach ($deleteReqByKpi->get($kpi['id'], collect([]))->values() as $row) {
             $timeline[] = [
                 'type'     => 'Delete Request',
-                'status'   => $row['status'] ?? '-',
-                'by'       => $row['requested_by_name'] ?? '-',
+                'status'   => $row['status'] ?? 'pending',
+                'by'       => $row['requested_by_name'] ?? null,
                 'date'     => $row['created_at'] ?? null,
-                'approver' => $row['approver_name'] ?? '-',
+                'approver' => $row['approver_name'] ?? null,
             ];
         }
 
