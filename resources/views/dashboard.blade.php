@@ -87,8 +87,23 @@
     $individualKpiCount    = $individualKpis->count();
     $myOnTrack    = $individualKpis->whereIn('status',['on_track','monitoring'])->count();
     $myAtRisk     = $individualKpis->whereIn('status',['at_risk','risk','in_trouble','critical'])->count();
-    $myCompleted  = $individualKpis->sum(fn($k) => collect($k['quarters'] ?? [])->filter(fn($q) => ($q['status'] ?? '') === 'completed' && !empty($q['completion_submitted_at']))->count());
-    $myTotalQuarters = $individualKpis->sum(fn($k) => count($k['quarters'] ?? []));
+    $myCompletedByQ = ['Q1'=>0,'Q2'=>0,'Q3'=>0,'Q4'=>0];
+    $myTotalByQ     = ['Q1'=>0,'Q2'=>0,'Q3'=>0,'Q4'=>0];
+    foreach ($individualKpis as $kpi) {
+        foreach (['Q1','Q2','Q3','Q4'] as $q) {
+            $qr = collect($kpi['quarters'] ?? [])->firstWhere('quarter', $q);
+            if ($qr) {
+                $myTotalByQ[$q]++;
+                if (($qr['status'] ?? '') === 'completed' && !empty($qr['completion_submitted_at'])) $myCompletedByQ[$q]++;
+            }
+        }
+    }
+    $myCompletedAnnual = $individualKpis->filter(function($kpi) {
+        $qs = collect($kpi['quarters'] ?? []);
+        return collect(['Q1','Q2','Q3','Q4'])->every(fn($q) => ($qs->firstWhere('quarter',$q)['status'] ?? '') === 'completed' && !empty($qs->firstWhere('quarter',$q)['completion_submitted_at'] ?? ''));
+    })->count();
+    $myCompleted  = array_sum($myCompletedByQ);
+    $myTotalQuarters = array_sum($myTotalByQ);
     $individualScoreStyle = $scoreStyle($individualPerformance);
 
     // ── CATEGORY GROUPS ─────────────────────────────────────────────────────
@@ -228,8 +243,23 @@
     $totalStaffCount    = $staffPerformanceRows->count();
     $totalKpisVisible   = $kpiCollection->count();
     $totalAtRisk        = $kpiRows->where('_is_risk',true)->count();
-    $totalCompleted     = $kpiRows->sum(fn($k) => collect($k['quarters'] ?? [])->filter(fn($q) => ($q['status'] ?? '') === 'completed' && !empty($q['completion_submitted_at']))->count());
-    $totalQuarters      = $kpiRows->sum(fn($k) => count($k['quarters'] ?? []));
+    $totalCompletedByQ = ['Q1'=>0,'Q2'=>0,'Q3'=>0,'Q4'=>0];
+    $totalByQ          = ['Q1'=>0,'Q2'=>0,'Q3'=>0,'Q4'=>0];
+    foreach ($kpiRows as $kpi) {
+        foreach (['Q1','Q2','Q3','Q4'] as $q) {
+            $qr = collect($kpi['quarters'] ?? [])->firstWhere('quarter', $q);
+            if ($qr) {
+                $totalByQ[$q]++;
+                if (($qr['status'] ?? '') === 'completed' && !empty($qr['completion_submitted_at'])) $totalCompletedByQ[$q]++;
+            }
+        }
+    }
+    $totalCompletedAnnual = $kpiRows->filter(function($kpi) {
+        $qs = collect($kpi['quarters'] ?? []);
+        return collect(['Q1','Q2','Q3','Q4'])->every(fn($q) => ($qs->firstWhere('quarter',$q)['status'] ?? '') === 'completed' && !empty($qs->firstWhere('quarter',$q)['completion_submitted_at'] ?? ''));
+    })->count();
+    $totalCompleted = array_sum($totalCompletedByQ);
+    $totalQuarters  = array_sum($totalByQ);
     $companyDeptCount = $companyTotalDepts ?? count($companyDeptRanking ?? []);
 
     // ── COMPANY BAND COUNTS ──────────────────────────────────────────────────
@@ -335,9 +365,21 @@
                 <p class="text-[9px] text-slate-400">{{ $companyDeptCount ?: $deptRows->count() }} depts</p>
             </div>
             <div class="bg-white rounded-xl p-3 soft-card border border-blue-100">
-                <p class="text-[9px] uppercase font-black text-blue-400">Completed Quarters</p>
-                <p class="text-2xl font-black text-blue-700 mt-1">{{ $totalCompleted }}</p>
-                <p class="text-[9px] text-blue-400">of {{ $totalQuarters }} quarters</p>
+                <p class="text-[9px] uppercase font-black text-blue-400 mb-1.5">Completed Quarters</p>
+                @foreach(['Q1','Q2','Q3','Q4'] as $qi)
+                @php $qc = $totalCompletedByQ[$qi]; $qt = $totalByQ[$qi]; @endphp
+                <div class="flex items-center gap-1.5 mb-1">
+                    <span class="text-[9px] font-black text-slate-400 w-5 shrink-0">{{ $qi }}</span>
+                    <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-blue-400' : 'bg-slate-200' }}" style="width:{{ $qt > 0 ? round(($qc/$qt)*100) : 0 }}%"></div>
+                    </div>
+                    <span class="text-[9px] font-black {{ $qc > 0 ? 'text-blue-600' : 'text-slate-300' }} w-8 text-right shrink-0">{{ $qc }}/{{ $qt }}</span>
+                </div>
+                @endforeach
+                <div class="mt-1.5 pt-1.5 border-t border-slate-100 flex items-center justify-between">
+                    <span class="text-[9px] font-black text-slate-400">Annual (all Q done)</span>
+                    <span class="text-[9px] font-black {{ $totalCompletedAnnual > 0 ? 'text-blue-600' : 'text-slate-300' }}">{{ $totalCompletedAnnual }}/{{ $totalKpisVisible }}</span>
+                </div>
             </div>
         </div>
     </div>
@@ -569,11 +611,20 @@
                 <p class="text-[9px] mt-0.5 {{ $myAtRisk > 0 ? 'text-red-400 font-bold' : 'text-slate-400' }}">{{ $myAtRisk > 0 ? 'Review required' : 'All clear' }}</p>
             </div>
             <div class="bg-white rounded-xl border border-blue-100 p-3 soft-card">
-                <p class="text-[9px] uppercase font-black text-blue-400">Completed Quarters</p>
-                <p class="text-3xl font-black text-blue-700 mt-1">{{ $myCompleted }}</p>
-                <p class="text-[9px] text-blue-300 mt-0.5">of {{ $myTotalQuarters }}</p>
-                <div class="mt-1 h-1 bg-blue-50 rounded-full overflow-hidden">
-                    <div class="h-1 bg-blue-400 rounded-full" style="width:{{ $myTotalQuarters > 0 ? round(($myCompleted/$myTotalQuarters)*100) : 0 }}%"></div>
+                <p class="text-[9px] uppercase font-black text-blue-400 mb-1.5">Completed Quarters</p>
+                @foreach(['Q1','Q2','Q3','Q4'] as $qi)
+                @php $qc = $myCompletedByQ[$qi]; $qt = $myTotalByQ[$qi]; @endphp
+                <div class="flex items-center gap-1.5 mb-1">
+                    <span class="text-[9px] font-black text-slate-400 w-5 shrink-0">{{ $qi }}</span>
+                    <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-blue-400' : 'bg-slate-200' }}" style="width:{{ $qt > 0 ? round(($qc/$qt)*100) : 0 }}%"></div>
+                    </div>
+                    <span class="text-[9px] font-black {{ $qc > 0 ? 'text-blue-600' : 'text-slate-300' }} w-8 text-right shrink-0">{{ $qc }}/{{ $qt }}</span>
+                </div>
+                @endforeach
+                <div class="mt-1.5 pt-1.5 border-t border-slate-100 flex items-center justify-between">
+                    <span class="text-[9px] font-black text-slate-400">Annual (all Q done)</span>
+                    <span class="text-[9px] font-black {{ $myCompletedAnnual > 0 ? 'text-blue-600' : 'text-slate-300' }}">{{ $myCompletedAnnual }}/{{ $individualKpiCount }}</span>
                 </div>
             </div>
         </div>
