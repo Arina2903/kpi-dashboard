@@ -1,6 +1,12 @@
 @include('partials.ai-chat-widget')
 
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
+    #sidebar, #sidebar * {
+        font-family: 'Lora', Georgia, serif;
+    }
+
     #sidebar.collapsed .sidebar-tooltip {
         display: block;
     }
@@ -18,14 +24,14 @@
     }
 
     .custom-scroll::-webkit-scrollbar-thumb {
-        background: rgba(148, 163, 184, 0.35);
+        background: rgba(0, 0, 0, 0.2);
         border-radius: 999px;
     }
 </style>
 
 <aside
     id="sidebar"
-    class="fixed left-0 top-0 z-40 h-screen bg-[#D4A276] text-white
+    class="fixed left-0 top-0 z-40 h-screen bg-[#D4A276] text-black
     w-[230px] min-w-[230px] max-w-[230px]
     px-3 py-4 flex flex-col overflow-visible shrink-0 transition-all duration-300"
 >
@@ -35,8 +41,8 @@
         type="button"
         onclick="event.stopPropagation(); toggleSidebar();"
         class="absolute top-4 right-3 z-[9999] w-7 h-7 flex items-center justify-center
-        text-slate-300 bg-white/10 border border-white/20 rounded-full
-        hover:bg-white/20 hover:text-white transition text-sm"
+        text-black/60 bg-black/10 border border-black/20 rounded-full
+        hover:bg-black/20 hover:text-black transition text-sm"
         aria-label="Close Sidebar"
     >
         ×
@@ -73,17 +79,17 @@
                 {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
             </span>
             @endif
-            <span class="sidebar-icon-only hidden text-white font-bold text-lg">
+            <span class="sidebar-icon-only hidden text-black font-bold text-lg">
                 ☰
             </span>
         </div>
 
         <div class="sidebar-text leading-tight text-left min-w-0">
-            <h1 class="text-[12px] font-bold tracking-wide text-white leading-tight break-words">
+            <h1 class="text-[12px] font-bold tracking-wide text-black leading-tight break-words">
                 {!! nl2br(e(session('company_display_name') ?: 'RICHWORKS KPI')) !!}
             </h1>
 
-            <p class="text-[9px] text-slate-400 uppercase tracking-[0.14em] mt-1">
+            <p class="text-[9px] text-black/50 uppercase tracking-[0.14em] mt-1">
                 Performance System
             </p>
         </div>
@@ -236,7 +242,7 @@
     <nav class="flex-1 overflow-y-auto text-[12px] space-y-5 pr-1 min-h-0 custom-scroll">
         @foreach($navSections as $section)
             <div>
-                <p class="sidebar-text text-[10px] text-slate-400 mb-1 px-2 uppercase tracking-wide">
+                <p class="sidebar-text text-[10px] text-black/50 mb-1 px-2 uppercase tracking-wide">
                     {{ $section['title'] }}
                 </p>
 
@@ -267,7 +273,7 @@
                             class="group relative flex items-center gap-3 px-3 py-2 rounded-xl transition
                             {{ $isActive
                                 ? 'bg-blue-600 text-white font-semibold shadow-sm'
-                                : 'text-slate-200 hover:bg-[#c49060] hover:text-white'
+                                : 'text-black hover:bg-[#c49060] hover:text-black'
                             }}"
                         >
                             <span class="w-5 h-5 flex items-center justify-center shrink-0">
@@ -309,14 +315,14 @@
     </nav>
 
     <!-- SYSTEM ZONE -->
-    <div class="sidebar-system mt-3 pt-3 border-t border-white/10 shrink-0">
-        <p class="sidebar-text text-[9px] text-slate-500 uppercase tracking-wide mb-2 px-1">
+    <div class="sidebar-system mt-3 pt-3 border-t border-black/20 shrink-0">
+        <p class="sidebar-text text-[9px] text-black/50 uppercase tracking-wide mb-2 px-1">
             Current View
         </p>
 
         <div class="sidebar-text border border-indigo-400/30 rounded-xl p-3 bg-indigo-500/10 mb-2">
             @if($canSwitchDepartment ?? false)
-                <p class="text-[10px] text-indigo-300 mb-2 font-semibold">
+                <p class="text-[10px] text-indigo-700 mb-2 font-semibold">
                     Department View
                 </p>
 
@@ -326,8 +332,8 @@
                     <select
                         name="department_code"
                         onchange="this.form.submit()"
-                        class="w-full bg-[#06142f] border border-indigo-400/30 rounded-lg px-2 py-2
-                        text-[11px] text-white outline-none"
+                        class="w-full bg-white/30 border border-indigo-400/30 rounded-lg px-2 py-2
+                        text-[11px] text-black outline-none"
                     >
                         @foreach(($departments ?? []) as $dept)
                             <option
@@ -340,11 +346,11 @@
                     </select>
                 </form>
             @else
-                <p class="text-[10px] text-indigo-300 mb-1 font-semibold">
+                <p class="text-[10px] text-indigo-700 mb-1 font-semibold">
                     Department
                 </p>
 
-                <div class="text-[11px] text-white truncate">
+                <div class="text-[11px] text-black truncate">
                     {{ $department['name'] ?? $user['department_code'] ?? '-' }}
                 </div>
             @endif
@@ -357,8 +363,8 @@
                 type="submit"
                 onclick="return confirm('You are about to logout. Continue?')"
                 class="group relative w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[11px] font-semibold
-                bg-red-500/10 text-red-300 border border-red-400/30
-                hover:bg-red-500/20 hover:text-red-200 transition"
+                bg-red-500/10 text-red-700 border border-red-400/30
+                hover:bg-red-500/20 hover:text-red-800 transition"
             >
                 <span class="w-5 h-5 flex items-center justify-center shrink-0">
                     @include('partials.sidebar-icons', ['icon' => 'logout'])
