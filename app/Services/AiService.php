@@ -227,7 +227,10 @@ PROMPT;
                 $details .= "\nNote: This is a rate/percentage KPI — quarterly targets represent the target rate per quarter, NOT cumulative sums. Good quarterly targets should show a progressive trend toward the annual base target by Q4.";
             } else {
                 $qtSum = array_sum($quarterTargets);
-                $details .= "\nSum of Quarterly Targets: $qtSum$unitLabel (should equal the annual base target of $baseTarget$unitLabel)";
+                $details .= "\nSum of Quarterly Targets: $qtSum$unitLabel (annual base target is $baseTarget$unitLabel)";
+                $details .= $qtSum >= (float)$baseTarget
+                    ? " — quarterly sum meets or exceeds the base target, which is good."
+                    : " — WARNING: quarterly sum is below the annual base target, which means the plan will fall short.";
             }
         }
 
