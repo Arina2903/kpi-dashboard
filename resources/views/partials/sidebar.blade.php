@@ -31,7 +31,7 @@
 
 <aside
     id="sidebar"
-    class="fixed left-0 top-0 z-40 h-screen bg-[#D4A276] text-black
+    class="fixed left-0 top-0 z-40 h-screen bg-[#EADCC9] text-black
     w-[230px] min-w-[230px] max-w-[230px]
     px-3 py-4 flex flex-col overflow-visible shrink-0 transition-all duration-300"
 >
@@ -53,7 +53,7 @@
         type="button"
         onclick="handleSidebarHeaderClick()"
         class="group w-full flex items-center gap-3 mb-5 shrink-0 pr-10 text-left
-        hover:bg-[#c49060] rounded-xl p-2 transition relative"
+        hover:bg-[#d4c4ad] rounded-xl p-2 transition relative"
         aria-label="Open Sidebar"
     >
         <div class="w-10 h-10 flex items-center justify-center shrink-0">
@@ -273,7 +273,7 @@
                             class="group relative flex items-center gap-3 px-3 py-2 rounded-xl transition
                             {{ $isActive
                                 ? 'bg-blue-600 text-white font-semibold shadow-sm'
-                                : 'text-black hover:bg-[#c49060] hover:text-black'
+                                : 'text-black hover:bg-[#d4c4ad] hover:text-black'
                             }}"
                         >
                             <span class="w-5 h-5 flex items-center justify-center shrink-0">
