@@ -188,15 +188,64 @@ PROMPT;
     */
 
     public function scoreKpiDescription(
-        string $kpiTitle,
-        string $description
+        string  $kpiTitle,
+        string  $description,
+        mixed   $baseTarget     = null,
+        mixed   $stretchTarget  = null,
+        ?string $unit           = null,
+        mixed   $weightage      = null,
+        ?string $category       = null,
+        ?string $subCategory    = null,
+        ?array  $quarterTargets = null
     ): array {
         $systemPrompt = 'You are a KPI quality evaluator. Respond ONLY with valid JSON — no markdown, no explanation.';
 
-        $userPrompt = "Score this KPI description out of 10 based on: clarity, measurability, business relevance, and specificity."
-            . "\n\nKPI Title: \"$kpiTitle\""
-            . "\nDescription: \"$description\""
-            . "\n\nRespond with JSON only: {\"score\": number, \"feedback\": \"one short sentence on how to improve it\"}";
+        $unitLabel = match($unit) {
+            'currency'   => 'RM',
+            'percentage' => '%',
+            default      => '',
+        };
+
+        $details  = "KPI Title: \"$kpiTitle\"";
+        $details .= "\nDescription: \"$description\"";
+
+        if ($category)    $details .= "\nCategory: $category";
+        if ($subCategory) $details .= "\nSub-Category: $subCategory";
+        if ($baseTarget !== null)    $details .= "\nBase Target: $baseTarget$unitLabel";
+        if ($stretchTarget !== null) $details .= "\nStretch Target: $stretchTarget$unitLabel";
+        if ($weightage !== null)     $details .= "\nWeightage: $weightage%";
+
+        if (!empty($quarterTargets)) {
+            $qtText = implode(', ', array_map(
+                fn($v, $i) => 'Q' . ($i + 1) . ': ' . $v . $unitLabel,
+                $quarterTargets,
+                array_keys($quarterTargets)
+            ));
+            $details .= "\nQuarterly Targets: $qtText";
+
+            if ($unit === 'percentage') {
+                $details .= "\nNote: This is a rate/percentage KPI — quarterly targets represent the target rate per quarter, NOT cumulative sums. Good quarterly targets should show a progressive trend toward the annual base target by Q4.";
+            } else {
+                $qtSum = array_sum($quarterTargets);
+                $details .= "\nSum of Quarterly Targets: $qtSum$unitLabel (should equal the annual base target of $baseTarget$unitLabel)";
+            }
+        }
+
+        $userPrompt = "Score this KPI out of 10 across these dimensions:\n"
+            . "1. Title clarity — specific and action-oriented?\n"
+            . "2. Description quality — clear, measurable, explains how it is tracked and why it matters?\n"
+            . "3. Target ambition — is the base target meaningful? Is the stretch target a genuine stretch?\n"
+            . "4. Quarterly distribution — do quarterly targets add up to the annual base and show realistic progression?\n"
+            . "5. Overall coherence — do title, description, category, and targets tell a consistent story?\n\n"
+            . "SCORING GUIDE (be fair and encouraging, not overly harsh):\n"
+            . "10 — Perfect: all 5 dimensions are excellent, nothing to improve\n"
+            . "8-9 — Strong: most dimensions are well done, only minor improvements needed\n"
+            . "6-7 — Good: solid effort with 1-2 dimensions that need improvement\n"
+            . "4-5 — Fair: the idea is there but key details are missing (e.g. no measurement method, vague targets)\n"
+            . "1-3 — Weak: major gaps across multiple dimensions\n\n"
+            . "Important: if the title is specific, the description explains the measurement method, and targets are set — this should score at least 7. Reserve scores below 5 for genuinely poor KPIs.\n\n"
+            . $details
+            . "\n\nRespond with JSON only: {\"score\": number, \"feedback\": \"one short sentence on the single most important thing to improve\"}";
 
         $response = $this->request()->post('https://api.openai.com/v1/chat/completions', [
             'model'                 => $this->model,

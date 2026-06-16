@@ -97,13 +97,27 @@ class AiController extends Controller
         $request->validate([
             'kpi_title'       => 'required|string|max:255',
             'kpi_description' => 'required|string',
+            'base_target'     => 'nullable|numeric',
+            'stretch_target'  => 'nullable|numeric',
+            'unit'            => 'nullable|string|max:20',
+            'weightage'       => 'nullable|numeric',
+            'category'        => 'nullable|string|max:100',
+            'sub_category'    => 'nullable|string|max:100',
+            'quarter_targets' => 'nullable|array',
         ]);
 
         try {
 
             $result = $this->ai->scoreKpiDescription(
                 $request->kpi_title,
-                $request->kpi_description
+                $request->kpi_description,
+                $request->base_target,
+                $request->stretch_target,
+                $request->unit,
+                $request->weightage,
+                $request->category,
+                $request->sub_category,
+                $request->quarter_targets,
             );
 
             return response()->json([

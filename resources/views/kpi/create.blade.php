@@ -1125,25 +1125,6 @@
                                             required
                                         >{{ old('kpi_description') }}</textarea>
 
-                                        <div class="mt-3 flex items-center gap-3 flex-wrap">
-
-                                            <button
-                                                type="button"
-                                                id="aiScoreBtn"
-                                                onclick="aiScoreDescription()"
-                                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold transition"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                                <span id="aiScoreLabel">Score my description</span>
-                                            </button>
-
-                                            <!-- Score badge -->
-                                            <div id="aiScoreBadge" class="hidden items-center gap-2">
-                                                <div id="aiScoreCircle" class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-black"></div>
-                                                <p id="aiScoreFeedback" class="text-xs text-slate-500 max-w-xs leading-snug"></p>
-                                            </div>
-
-                                        </div>
 
                                     </div>
 
@@ -2034,8 +2015,50 @@
                          style="display:none;margin-top:16px;padding:12px 14px;border-radius:16px;border:1.5px solid #fcd34d;background:#fffbeb;">
                     </div>
 
+                    <!-- AI SCORE -->
+                    <div class="mt-4 rounded-[20px] border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-4">
+
+                        <div class="flex items-center justify-between">
+
+                            <div>
+                                <p class="text-[11px] uppercase tracking-wider text-violet-500 font-black">ANIRA Score</p>
+                                <p class="text-xs text-slate-400 mt-0.5">AI quality check on your KPI</p>
+                            </div>
+
+                            <button
+                                type="button"
+                                id="aiScoreBtn"
+                                onclick="aiScoreDescription()"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                <span id="aiScoreLabel">Score</span>
+                            </button>
+
+                        </div>
+
+                        <!-- Result -->
+                        <div id="aiScoreBadge" class="hidden mt-3">
+
+                            <div class="flex items-center gap-3">
+
+                                <div id="aiScoreCircle" class="w-14 h-14 rounded-2xl flex flex-col items-center justify-center text-white font-black flex-shrink-0">
+                                    <span id="aiScoreNumber" class="text-xl leading-none"></span>
+                                    <span class="text-[10px] font-medium opacity-80">/10</span>
+                                </div>
+
+                                <p id="aiScoreFeedback" class="text-xs text-slate-500 leading-snug"></p>
+
+                            </div>
+
+                        </div>
+
+                        <p id="aiSuggestError" class="hidden mt-2 text-xs text-red-500 font-medium"></p>
+
+                    </div>
+
                     <!-- SUBMIT -->
-                    <div class="mt-6">
+                    <div class="mt-4">
 
                         <button
                             type="submit"
@@ -3260,51 +3283,76 @@ function toggleOwner(ownerId){
 */
 
 async function aiScoreDescription() {
+    const btn      = document.getElementById('aiScoreBtn');
+    const label    = document.getElementById('aiScoreLabel');
+    const badge    = document.getElementById('aiScoreBadge');
+    const circle   = document.getElementById('aiScoreCircle');
+    const numEl    = document.getElementById('aiScoreNumber');
+    const feedback = document.getElementById('aiScoreFeedback');
+    const errorEl  = document.getElementById('aiSuggestError');
+
     const title       = document.getElementById('kpiTitle')?.value?.trim();
     const description = document.getElementById('kpiDescription')?.value?.trim();
-    const btn         = document.getElementById('aiScoreBtn');
-    const label       = document.getElementById('aiScoreLabel');
-    const badge       = document.getElementById('aiScoreBadge');
-    const circle      = document.getElementById('aiScoreCircle');
-    const feedback    = document.getElementById('aiScoreFeedback');
 
-    if (!title || !description) return;
+    if (!title || !description) {
+        errorEl.textContent = 'Fill in at least the KPI title and description first.';
+        errorEl.classList.remove('hidden');
+        return;
+    }
+
+    const quarterTargets = Array.from(
+        document.querySelectorAll('input[name^="quarters"][name$="[quarter_target]"]')
+    ).map(i => parseFloat(i.value) || 0);
+
+    const payload = {
+        kpi_title:       title,
+        kpi_description: description,
+        base_target:     document.getElementById('baseTarget')?.value    || null,
+        stretch_target:  document.getElementById('stretchTarget')?.value || null,
+        unit:            document.getElementById('unit')?.value           || null,
+        weightage:       document.querySelector('input[name="weightage"]')?.value || null,
+        category:        document.querySelector('input[name="category"]:checked')?.value || null,
+        sub_category:    document.querySelector('input[name="sub_category"]:checked')?.value || null,
+        quarter_targets: quarterTargets.length ? quarterTargets : null,
+    };
 
     btn.disabled = true;
     label.textContent = 'Scoring...';
     badge.classList.add('hidden');
-    badge.classList.remove('flex');
+    errorEl.classList.add('hidden');
 
     try {
         const res = await fetch('{{ route("ai.score-description") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
             },
-            body: JSON.stringify({ kpi_title: title, kpi_description: description }),
+            body: JSON.stringify(payload),
         });
 
         const data = await res.json();
 
         if (data.success) {
             const score = data.score ?? 0;
-            const color = score >= 8 ? '#16a34a'
+            const color = score >= 8 ? '#7c3aed'
                         : score >= 5 ? '#d97706'
                         : '#dc2626';
 
-            circle.textContent      = score + '/10';
+            numEl.textContent       = score;
             circle.style.background = color;
             feedback.textContent    = data.feedback ?? '';
-
             badge.classList.remove('hidden');
-            badge.classList.add('flex');
+        } else {
+            errorEl.textContent = data.message ?? 'Scoring failed.';
+            errorEl.classList.remove('hidden');
         }
     } catch (e) {
-        // silently fail — scoring is non-critical
+        errorEl.textContent = 'Network error. Please try again.';
+        errorEl.classList.remove('hidden');
     } finally {
         btn.disabled = false;
-        label.textContent = 'Score my description';
+        label.textContent = 'Score';
     }
 }
 
