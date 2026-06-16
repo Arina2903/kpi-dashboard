@@ -26,7 +26,7 @@
 
 </head>
 
-<body class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100">
+<body class="min-h-screen bg-[#f4f7fb]">
 
 @include('partials.sidebar')
 
@@ -93,7 +93,7 @@
 
         <div class="glass rounded-[20px] p-5 border border-white/70">
             <p class="text-xs uppercase text-slate-500 font-black">Quarter Requests</p>
-            <h2 class="text-3xl font-black mt-2 text-blue-700">{{ $quarterCount ?? 0 }}</h2>
+            <h2 class="text-3xl font-black mt-2 text-[#6B3F2A]">{{ $quarterCount ?? 0 }}</h2>
         </div>
 
         <div class="glass rounded-[20px] p-5 border border-white/70">
@@ -273,7 +273,7 @@
                 $badgeColor =
                     match($type){
                         'completion'      => 'bg-emerald-50 text-emerald-700',
-                        'quarter_update'  => 'bg-blue-50 text-blue-700',
+                        'quarter_update'  => 'bg-[#FBF5EF] text-[#6B3F2A]',
                         'target_change'   => 'bg-yellow-50 text-yellow-700',
                         'delete_request'  => 'bg-red-50 text-red-700',
                         'weightage_change'=> 'bg-orange-50 text-orange-700',
@@ -429,13 +429,13 @@
 
                                 </div>
 
-                                <div class="rounded-2xl bg-blue-50 border border-blue-100 p-4">
+                                <div class="rounded-2xl bg-[#FBF5EF] border border-[#6B3F2A]/20 p-4">
 
-                                    <p class="text-[10px] uppercase text-blue-500 font-black">
+                                    <p class="text-[10px] uppercase text-[#8B5E4A] font-black">
                                         Requested
                                     </p>
 
-                                    <h3 class="text-xl font-black mt-2 text-blue-700">
+                                    <h3 class="text-xl font-black mt-2 text-[#6B3F2A]">
 
                                         {{ $approval['requested_actual'] ?? 0 }}
 
@@ -536,25 +536,25 @@
                                     @endphp
                                     @if($pfIsImg)
                                         <a href="{{ $pfUrl }}" target="_blank" class="block group">
-                                            <div class="rounded-2xl overflow-hidden border-2 border-sky-200 group-hover:border-blue-400 transition bg-white">
+                                            <div class="rounded-2xl overflow-hidden border-2 border-sky-200 group-hover:border-[#8B5E4A] transition bg-white">
                                                 <img src="{{ $pfUrl }}" alt="{{ $pfName }}"
                                                      class="w-full max-h-64 object-contain">
                                                 <div class="px-3 py-2 border-t border-sky-100 flex items-center gap-2 bg-sky-50">
                                                     <span class="text-base">🖼️</span>
                                                     <span class="text-xs font-bold text-sky-700 truncate flex-1">{{ $pfName }}</span>
-                                                    <span class="text-[10px] text-blue-500 font-black shrink-0">Open ↗</span>
+                                                    <span class="text-[10px] text-[#8B5E4A] font-black shrink-0">Open ↗</span>
                                                 </div>
                                             </div>
                                         </a>
                                     @else
                                         <a href="{{ $pfUrl }}" target="_blank"
-                                           class="flex items-center gap-3 p-3 rounded-2xl border-2 border-sky-200 hover:border-blue-400 hover:bg-blue-50 transition group">
+                                           class="flex items-center gap-3 p-3 rounded-2xl border-2 border-sky-200 hover:border-[#8B5E4A] hover:bg-[#FBF5EF] transition group">
                                             <div class="w-10 h-10 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-xl shrink-0">📄</div>
                                             <div class="flex-1 min-w-0">
                                                 <p class="text-sm font-black text-slate-700 truncate">{{ $pfName }}</p>
                                                 <p class="text-[10px] text-slate-400">PDF Document</p>
                                             </div>
-                                            <span class="text-xs font-black text-blue-500 shrink-0 group-hover:text-blue-700">Open ↗</span>
+                                            <span class="text-xs font-black text-[#8B5E4A] shrink-0 group-hover:text-[#5a3323]">Open ↗</span>
                                         </a>
                                     @endif
                                     @endforeach
@@ -635,13 +635,13 @@
 
                             </div>
 
-                            <div class="rounded-2xl bg-blue-50 border border-blue-100 p-4">
+                            <div class="rounded-2xl bg-[#FBF5EF] border border-[#6B3F2A]/20 p-4">
 
-                                <p class="text-[10px] uppercase text-blue-500 font-black">
+                                <p class="text-[10px] uppercase text-[#8B5E4A] font-black">
                                     Requested Base
                                 </p>
 
-                                <h3 class="text-xl font-black mt-2 text-blue-700">
+                                <h3 class="text-xl font-black mt-2 text-[#6B3F2A]">
                                     {{ number_format($approval['new_base_target'] ?? 0,0) }}
                                 </h3>
 
@@ -659,13 +659,13 @@
 
                             </div>
 
-                            <div class="rounded-2xl bg-blue-50 border border-blue-100 p-4">
+                            <div class="rounded-2xl bg-[#FBF5EF] border border-[#6B3F2A]/20 p-4">
 
-                                <p class="text-[10px] uppercase text-blue-500 font-black">
+                                <p class="text-[10px] uppercase text-[#8B5E4A] font-black">
                                     Requested Stretch
                                 </p>
 
-                                <h3 class="text-xl font-black mt-2 text-blue-700">
+                                <h3 class="text-xl font-black mt-2 text-[#6B3F2A]">
                                     {{ number_format($approval['new_stretch_target'] ?? 0,0) }}
                                 </h3>
 

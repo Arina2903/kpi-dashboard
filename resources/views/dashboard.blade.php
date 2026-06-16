@@ -121,9 +121,9 @@
     foreach ($myKpisByCategory as $cat => $items) { if (!in_array($cat,$categoryOrder)) $orderedCategoryGroups[$cat] = $items; }
 
     // ── STATUS HELPERS ───────────────────────────────────────────────────────
-    $qDotColor   = fn($s) => match(strtolower($s??'')) { 'on_track','monitoring'=>'bg-emerald-500','at_risk','risk'=>'bg-amber-400','in_trouble','critical'=>'bg-red-500','completed'=>'bg-blue-500',default=>'bg-slate-300' };
-    $statusBadge = fn($s) => match(strtolower($s??'')) { 'on_track','monitoring'=>['class'=>'bg-emerald-100 text-emerald-700','label'=>'On Track'],'at_risk','risk'=>['class'=>'bg-amber-100 text-amber-700','label'=>'At Risk'],'in_trouble','critical'=>['class'=>'bg-red-100 text-red-700','label'=>'In Trouble'],'completed'=>['class'=>'bg-blue-100 text-blue-700','label'=>'Completed'],default=>['class'=>'bg-slate-100 text-slate-600','label'=>'Not Started'] };
-    $cardBorder  = fn($s) => match(strtolower($s??'')) { 'on_track','monitoring'=>'border-l-emerald-400','at_risk','risk'=>'border-l-amber-400','in_trouble','critical'=>'border-l-red-400','completed'=>'border-l-blue-400',default=>'border-l-slate-200' };
+    $qDotColor   = fn($s) => match(strtolower($s??'')) { 'on_track','monitoring'=>'bg-emerald-500','at_risk','risk'=>'bg-amber-400','in_trouble','critical'=>'bg-red-500','completed'=>'bg-[#6B3F2A]',default=>'bg-slate-300' };
+    $statusBadge = fn($s) => match(strtolower($s??'')) { 'on_track','monitoring'=>['class'=>'bg-emerald-100 text-emerald-700','label'=>'On Track'],'at_risk','risk'=>['class'=>'bg-amber-100 text-amber-700','label'=>'At Risk'],'in_trouble','critical'=>['class'=>'bg-red-100 text-red-700','label'=>'In Trouble'],'completed'=>['class'=>'bg-[#F5EAE0] text-[#6B3F2A]','label'=>'Completed'],default=>['class'=>'bg-slate-100 text-slate-600','label'=>'Not Started'] };
+    $cardBorder  = fn($s) => match(strtolower($s??'')) { 'on_track','monitoring'=>'border-l-emerald-400','at_risk','risk'=>'border-l-amber-400','in_trouble','critical'=>'border-l-red-400','completed'=>'border-l-[#8B5E4A]',default=>'border-l-slate-200' };
 
     // ── STAFF BASE ROWS ──────────────────────────────────────────────────────
     // Use name as fallback key so people with null employee_id don't merge
@@ -345,7 +345,7 @@
         <p class="text-blue-100 text-[11px] mt-0.5">{{ $currentUserName }} · {{ $user['role'] ?? '-' }} · {{ $currentDepartment }} · {{ $currentFinancialYear }}</p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
-        <a href="{{ route('kpi.index') }}"   class="bg-white text-blue-900 hover:bg-blue-50 px-4 py-2 rounded-xl shadow font-bold text-xs transition">My KPIs</a>
+        <a href="{{ route('kpi.index') }}"   class="bg-white text-[#3a2015] hover:bg-[#FBF5EF] px-4 py-2 rounded-xl shadow font-bold text-xs transition">My KPIs</a>
         <a href="{{ route('weightage') }}"   class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20">Weightage</a>
     </div>
 </div>
@@ -407,21 +407,21 @@
                 <p class="text-2xl font-black text-slate-900 mt-1">{{ $companyTotalStaff ?: $totalStaffCount }}</p>
                 <p class="text-[9px] text-slate-400">{{ $companyDeptCount ?: $deptRows->count() }} depts</p>
             </div>
-            <div class="bg-white rounded-xl p-3 soft-card border border-blue-100">
-                <p class="text-[9px] uppercase font-black text-blue-400 mb-1.5">Completed Quarters</p>
+            <div class="bg-white rounded-xl p-3 soft-card border border-[#6B3F2A]/20">
+                <p class="text-[9px] uppercase font-black text-[#A07060] mb-1.5">Completed Quarters</p>
                 @foreach(['Q1','Q2','Q3','Q4'] as $qi)
                 @php $qc = $totalCompletedByQ[$qi]; $qt = $totalByQ[$qi]; @endphp
                 <div class="flex items-center gap-1.5 mb-1">
                     <span class="text-[9px] font-black text-slate-400 w-5 shrink-0">{{ $qi }}</span>
                     <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-blue-400' : 'bg-slate-200' }}" style="width:{{ $qt > 0 ? round(($qc/$qt)*100) : 0 }}%"></div>
+                        <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-[#8B5E4A]' : 'bg-slate-200' }}" style="width:{{ $qt > 0 ? round(($qc/$qt)*100) : 0 }}%"></div>
                     </div>
-                    <span class="text-[9px] font-black {{ $qc > 0 ? 'text-blue-600' : 'text-slate-300' }} w-8 text-right shrink-0">{{ $qc }}/{{ $qt }}</span>
+                    <span class="text-[9px] font-black {{ $qc > 0 ? 'text-[#6B3F2A]' : 'text-slate-300' }} w-8 text-right shrink-0">{{ $qc }}/{{ $qt }}</span>
                 </div>
                 @endforeach
                 <div class="mt-1.5 pt-1.5 border-t border-slate-100 flex items-center justify-between">
                     <span class="text-[9px] font-black text-slate-400">Annual (all Q done)</span>
-                    <span class="text-[9px] font-black {{ $totalCompletedAnnual > 0 ? 'text-blue-600' : 'text-slate-300' }}">{{ $totalCompletedAnnual }}/{{ $totalKpisVisible }}</span>
+                    <span class="text-[9px] font-black {{ $totalCompletedAnnual > 0 ? 'text-[#6B3F2A]' : 'text-slate-300' }}">{{ $totalCompletedAnnual }}/{{ $totalKpisVisible }}</span>
                 </div>
             </div>
         </div>
@@ -528,7 +528,7 @@
                                                 $roleUpper = strtoupper(trim($staff['role'] ?? '-'));
                                                 $roleColor = match($roleUpper) {
                                                     'SLT'       => 'bg-purple-100 text-purple-700',
-                                                    'VP'        => 'bg-blue-100 text-blue-700',
+                                                    'VP'        => 'bg-[#F5EAE0] text-[#6B3F2A]',
                                                     'MANAGER'   => 'bg-indigo-100 text-indigo-700',
                                                     'EXECUTIVE' => 'bg-slate-100 text-slate-600',
                                                     default     => 'bg-slate-100 text-slate-500',
@@ -819,21 +819,21 @@
                 <p class="text-3xl font-black {{ $myAtRisk > 0 ? 'text-red-700' : 'text-slate-400' }} mt-1">{{ $myAtRisk }}</p>
                 <p class="text-[9px] mt-0.5 {{ $myAtRisk > 0 ? 'text-red-400 font-bold' : 'text-slate-400' }}">{{ $myAtRisk > 0 ? 'Review required' : 'All clear' }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-blue-100 p-3 soft-card">
-                <p class="text-[9px] uppercase font-black text-blue-400 mb-1.5">Completed Quarters</p>
+            <div class="bg-white rounded-xl border border-[#6B3F2A]/20 p-3 soft-card">
+                <p class="text-[9px] uppercase font-black text-[#A07060] mb-1.5">Completed Quarters</p>
                 @foreach(['Q1','Q2','Q3','Q4'] as $qi)
                 @php $qc = $myCompletedByQ[$qi]; $qt = $myTotalByQ[$qi]; @endphp
                 <div class="flex items-center gap-1.5 mb-1">
                     <span class="text-[9px] font-black text-slate-400 w-5 shrink-0">{{ $qi }}</span>
                     <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-blue-400' : 'bg-slate-200' }}" style="width:{{ $qt > 0 ? round(($qc/$qt)*100) : 0 }}%"></div>
+                        <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-[#8B5E4A]' : 'bg-slate-200' }}" style="width:{{ $qt > 0 ? round(($qc/$qt)*100) : 0 }}%"></div>
                     </div>
-                    <span class="text-[9px] font-black {{ $qc > 0 ? 'text-blue-600' : 'text-slate-300' }} w-8 text-right shrink-0">{{ $qc }}/{{ $qt }}</span>
+                    <span class="text-[9px] font-black {{ $qc > 0 ? 'text-[#6B3F2A]' : 'text-slate-300' }} w-8 text-right shrink-0">{{ $qc }}/{{ $qt }}</span>
                 </div>
                 @endforeach
                 <div class="mt-1.5 pt-1.5 border-t border-slate-100 flex items-center justify-between">
                     <span class="text-[9px] font-black text-slate-400">Annual (all Q done)</span>
-                    <span class="text-[9px] font-black {{ $myCompletedAnnual > 0 ? 'text-blue-600' : 'text-slate-300' }}">{{ $myCompletedAnnual }}/{{ $individualKpiCount }}</span>
+                    <span class="text-[9px] font-black {{ $myCompletedAnnual > 0 ? 'text-[#6B3F2A]' : 'text-slate-300' }}">{{ $myCompletedAnnual }}/{{ $individualKpiCount }}</span>
                 </div>
             </div>
         </div>
@@ -927,7 +927,7 @@
     @php
         $modalStatus = $kpi['status'] ?? 'not_started';
         $modalStatusLabel = match($modalStatus) { 'not_started'=>'Not Started','on_track'=>'On Track','monitoring'=>'Monitoring','at_risk'=>'At Risk','risk'=>'Risk','in_trouble'=>'In Trouble','critical'=>'Critical','completed'=>'Completed',default=>'Not Started' };
-        $modalStatusClass = match($modalStatus) { 'on_track','monitoring'=>'bg-blue-100 text-blue-700','at_risk','risk'=>'bg-amber-100 text-amber-700','in_trouble','critical'=>'bg-red-100 text-red-700','completed'=>'bg-emerald-100 text-emerald-700',default=>'bg-slate-100 text-slate-700' };
+        $modalStatusClass = match($modalStatus) { 'on_track','monitoring'=>'bg-[#F5EAE0] text-[#6B3F2A]','at_risk','risk'=>'bg-amber-100 text-amber-700','in_trouble','critical'=>'bg-red-100 text-red-700','completed'=>'bg-emerald-100 text-emerald-700',default=>'bg-slate-100 text-slate-700' };
         $mc = ['Financial'=>['bg-emerald-700 text-white',['bg-emerald-50 text-emerald-800 border border-emerald-200']],'Growth & Customer'=>['bg-indigo-700 text-white',['bg-indigo-50 text-indigo-800 border border-indigo-200']],'Initiatives'=>['bg-amber-600 text-white',['bg-amber-50 text-amber-800 border border-amber-200']],'People'=>['bg-pink-700 text-white',['bg-pink-50 text-pink-800 border border-pink-200']],'Default'=>['bg-slate-700 text-white',['bg-slate-50 text-slate-800 border border-slate-200']]];
         $mset = $mc[$kpi['category']??'Default'] ?? $mc['Default'];
         $mCatClass = $mset[0]; $mSubClass = $mset[1][0];
@@ -956,7 +956,7 @@
                 <div class="grid grid-cols-3 gap-2">
                     <div class="rounded-xl bg-slate-50 border border-slate-200 p-2"><p class="text-[9px] text-slate-400 uppercase">Base Target</p><p class="text-xs font-black text-slate-900">{{ $mFmt($mBase) }}</p></div>
                     <div class="rounded-xl bg-slate-50 border border-slate-200 p-2"><p class="text-[9px] text-slate-400 uppercase">Stretch</p><p class="text-xs font-black text-slate-900">{{ $mFmt(max(0,(float)($kpi['stretch_target']??0))) }}</p></div>
-                    <div class="rounded-xl bg-blue-50 border border-blue-100 p-2"><p class="text-[9px] text-blue-400 uppercase">Actual</p><p class="text-xs font-black text-blue-800">{{ $mFmt($mActual) }}</p></div>
+                    <div class="rounded-xl bg-[#FBF5EF] border border-[#6B3F2A]/20 p-2"><p class="text-[9px] text-[#A07060] uppercase">Actual</p><p class="text-xs font-black text-[#4a2a1a]">{{ $mFmt($mActual) }}</p></div>
                 </div>
                 <div class="rounded-xl border border-slate-200 p-3">
                     <div class="flex items-center justify-between mb-2">

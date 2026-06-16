@@ -121,8 +121,8 @@
             --text:#0f172a;
             --muted:#64748b;
 
-            --blue:#2563eb;
-            --blue-soft:#dbeafe;
+            --brown:#6B3F2A;
+            --brown-soft:#F5EAE0;
 
             --cyan:#06b6d4;
             --cyan-soft:#cffafe;
@@ -676,7 +676,7 @@
 
                     <div class="relative flex gap-4">
 
-                        <div class="w-2 rounded-full bg-gradient-to-b from-blue-700 to-cyan-500"></div>
+                        <div class="w-2 rounded-full bg-gradient-to-b from-[#5a3323] to-cyan-500"></div>
 
                         <div class="flex-1">
 
@@ -705,13 +705,13 @@
                                 <!-- ASSIGNMENT -->
                                 <div class="xl:col-span-4">
 
-                                    <div class="rounded-[24px] border border-blue-100 bg-[#f8fbff] p-5 h-full">
+                                    <div class="rounded-[24px] border border-[#6B3F2A]/20 bg-[#f8fbff] p-5 h-full">
 
                                         <div class="flex items-center gap-4">
 
                                             <div>
 
-                                                <p class="text-[11px] uppercase tracking-wider text-blue-500 font-black">
+                                                <p class="text-[11px] uppercase tracking-wider text-[#8B5E4A] font-black">
                                                     EXECUTION OWNER
                                                 </p>
 
@@ -736,7 +736,7 @@
                                             <select
                                                 name="assigned_employee_id"
                                                 id="assignedEmployee"
-                                                class="w-full mt-2 rounded-2xl border border-blue-200 bg-white px-4 py-4 font-semibold text-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                                                class="w-full mt-2 rounded-2xl border border-[#6B3F2A]/30 bg-white px-4 py-4 font-semibold text-slate-800 focus:border-[#6B3F2A] focus:ring-4 focus:ring-[#6B3F2A]/20">
 
                                                 <option value="">
                                                     No Assignment
@@ -1019,7 +1019,7 @@
                         <!-- HEADER -->
                         <div class="flex items-center gap-4">
 
-                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-500 text-white flex items-center justify-center font-black shadow-lg">
+                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#6B3F2A] to-[#5a3323] text-white flex items-center justify-center font-black shadow-lg">
                                 3
                             </div>
 
@@ -1088,13 +1088,13 @@
                             <!-- KPI DESCRIPTION -->
                             <div class="xl:col-span-3">
 
-                                <div class="rounded-[24px] border border-blue-100 bg-[#f8fbff] p-5 h-full">
+                                <div class="rounded-[24px] border border-[#6B3F2A]/20 bg-[#f8fbff] p-5 h-full">
 
                                     <div class="flex items-center gap-4">
 
                                         <div>
 
-                                            <p class="text-[11px] uppercase tracking-wider text-blue-500 font-black">
+                                            <p class="text-[11px] uppercase tracking-wider text-[#8B5E4A] font-black">
                                                 KPI DESCRIPTION
                                             </p>
 
@@ -1157,7 +1157,7 @@
                         <!-- HEADER -->
                         <div class="flex items-center gap-4">
 
-                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-600 to-blue-500 text-white flex items-center justify-center font-black shadow-lg">
+                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#8B5E4A] to-[#6B3F2A] text-white flex items-center justify-center font-black shadow-lg">
                                 4
                             </div>
 
@@ -1241,13 +1241,13 @@
                             <!-- TARGET -->
                             <div class="xl:col-span-3">
 
-                                <div class="rounded-[24px] border border-blue-100 bg-[#f8fbff] p-5 h-full">
+                                <div class="rounded-[24px] border border-[#6B3F2A]/20 bg-[#f8fbff] p-5 h-full">
 
                                     <div class="flex items-center gap-4">
 
                                         <div>
 
-                                            <p class="text-[11px] uppercase tracking-wider text-blue-500 font-black">
+                                            <p class="text-[11px] uppercase tracking-wider text-[#8B5E4A] font-black">
                                                 TARGET SETTING
                                             </p>
 
@@ -1301,9 +1301,9 @@
 
                                     </div>
 
-                                    <div class="mt-4 rounded-xl bg-blue-50 border border-blue-100 p-3">
+                                    <div class="mt-4 rounded-xl bg-[#FBF5EF] border border-[#6B3F2A]/20 p-3">
 
-                                        <p class="text-xs text-blue-700">
+                                        <p class="text-xs text-[#6B3F2A]">
                                             Base Target ialah sasaran minimum yang wajib dicapai. Stretch Target ialah sasaran lebih tinggi yang menunjukkan prestasi cemerlang.
                                         </p>
 
@@ -1777,7 +1777,7 @@
 
                                 <div class="metric-card metric-blue p-5">
 
-                                    <p class="text-xs font-bold text-blue-500 uppercase tracking-wide">
+                                    <p class="text-xs font-bold text-[#8B5E4A] uppercase tracking-wide">
                                         Quarter Target Total
                                     </p>
 
@@ -1885,12 +1885,12 @@
 
                         <div
                             class="rounded-2xl
-                                bg-blue-50
+                                bg-[#FBF5EF]
                                 border
-                                border-blue-100
+                                border-[#6B3F2A]/20
                                 p-3">
 
-                            <p class="text-xs text-blue-500">
+                            <p class="text-xs text-[#8B5E4A]">
                                 Category
                             </p>
 
@@ -1904,12 +1904,12 @@
 
                         <div
                             class="rounded-2xl
-                                bg-blue-50
+                                bg-[#FBF5EF]
                                 border
-                                border-blue-100
+                                border-[#6B3F2A]/20
                                 p-3">
 
-                            <p class="text-xs text-blue-500">
+                            <p class="text-xs text-[#8B5E4A]">
                                 Sub Category
                             </p>
 
@@ -1929,7 +1929,7 @@
                         <div
                             class="rounded-2xl
                                 border
-                                border-blue-100
+                                border-[#6B3F2A]/20
                                 bg-white
                                 p-4">
 
@@ -1992,12 +1992,12 @@
                     <div
                         class="mt-4
                             rounded-2xl
-                            bg-blue-50
+                            bg-[#FBF5EF]
                             border
-                            border-blue-100
+                            border-[#6B3F2A]/20
                             p-4">
 
-                        <p class="text-xs text-blue-500">
+                        <p class="text-xs text-[#8B5E4A]">
                             Quarter Target Total
                         </p>
 
@@ -2430,7 +2430,7 @@
             case 'on_track':
 
                 indicator.innerHTML =
-                    '<span class="text-blue-600">On Track</span>';
+                    '<span class="text-[#6B3F2A]">On Track</span>';
 
                 break;
 
@@ -2665,7 +2665,7 @@
 
             statusInput.classList.add(
                 'metric-blue',
-                'text-blue-700'
+                'text-[#6B3F2A]'
             );
 
         }
@@ -2879,7 +2879,7 @@ window.addEventListener(
         navItems.forEach(item => {
 
             item.classList.remove(
-                'text-blue-600',
+                'text-[#6B3F2A]',
                 'font-black'
             );
 
@@ -2890,7 +2890,7 @@ window.addEventListener(
                 href === '#' + current
             ){
                 item.classList.add(
-                    'text-blue-600',
+                    'text-[#6B3F2A]',
                     'font-black'
                 );
             }
@@ -3033,12 +3033,12 @@ function bindAssignmentCards(){
                                     <p class="font-black text-white text-base mt-1 leading-snug">${data.kpi_title ?? '-'}</p>
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
-                                    <div class="rounded-2xl bg-blue-50 border border-blue-100 p-3">
-                                        <p class="text-[9px] uppercase tracking-widest text-blue-500 font-black">Category</p>
+                                    <div class="rounded-2xl bg-[#FBF5EF] border border-[#6B3F2A]/20 p-3">
+                                        <p class="text-[9px] uppercase tracking-widest text-[#8B5E4A] font-black">Category</p>
                                         <p class="font-bold text-slate-900 mt-1 text-sm">${data.category ?? '-'}</p>
                                     </div>
-                                    <div class="rounded-2xl bg-blue-50 border border-blue-100 p-3">
-                                        <p class="text-[9px] uppercase tracking-widest text-blue-500 font-black">Sub Category</p>
+                                    <div class="rounded-2xl bg-[#FBF5EF] border border-[#6B3F2A]/20 p-3">
+                                        <p class="text-[9px] uppercase tracking-widest text-[#8B5E4A] font-black">Sub Category</p>
                                         <p class="font-bold text-slate-900 mt-1 text-sm">${data.sub_category ?? '-'}</p>
                                     </div>
                                 </div>
@@ -3076,12 +3076,12 @@ function bindAssignmentCards(){
                         <!-- TARGET -->
                         <div>
                             <div class="flex items-center gap-2 mb-3">
-                                <div class="w-1 h-5 rounded-full bg-gradient-to-b from-sky-500 to-blue-500"></div>
+                                <div class="w-1 h-5 rounded-full bg-gradient-to-b from-[#8B5E4A] to-[#6B3F2A]"></div>
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Target</p>
                             </div>
                             <div class="grid grid-cols-3 gap-2">
-                                <div class="rounded-2xl bg-blue-50 border border-blue-100 p-4">
-                                    <p class="text-[9px] uppercase tracking-widest text-blue-500 font-black">Base Target</p>
+                                <div class="rounded-2xl bg-[#FBF5EF] border border-[#6B3F2A]/20 p-4">
+                                    <p class="text-[9px] uppercase tracking-widest text-[#8B5E4A] font-black">Base Target</p>
                                     <p class="text-xl font-black text-[#06142f] mt-1">${Number(data.base_target ?? 0).toLocaleString()}</p>
                                     <p class="text-[9px] text-blue-300 mt-1 uppercase font-bold">Annual</p>
                                 </div>

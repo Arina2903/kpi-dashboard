@@ -22,8 +22,8 @@
         }
         input:focus, textarea:focus, select:focus {
             outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+            border-color: #6B3F2A;
+            box-shadow: 0 0 0 3px rgba(107,63,42,.12);
         }
         .weightage-input::-webkit-outer-spin-button,
         .weightage-input::-webkit-inner-spin-button {
@@ -36,7 +36,7 @@
     </style>
 </head>
 
-<body class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100">
+<body class="min-h-screen bg-[#f4f7fb]">
 
 @include('partials.sidebar')
 
@@ -56,7 +56,7 @@
 
         @if($permission['can_create'])
             <a href="{{ route('kpi.create') }}"
-               class="bg-white text-blue-900 hover:bg-blue-50 px-4 py-2 rounded-2xl shadow font-bold text-sm">
+               class="bg-white text-[#3a2015] hover:bg-[#FBF5EF] px-4 py-2 rounded-2xl shadow font-bold text-sm">
                 + Create KPI
             </a>
         @endif
@@ -171,7 +171,7 @@
             $individualPerformanceLabel = 'Watch';
             $individualPerformanceBadge = 'bg-yellow-50 text-yellow-700 border-yellow-100';
         } elseif ($individualPerformance < 90) {
-            $individualPerformanceBar = 'bg-gradient-to-r from-blue-400 to-indigo-500';
+            $individualPerformanceBar = 'bg-gradient-to-r from-[#8B5E4A] to-[#6B3F2A]';
             $individualPerformanceText = 'text-indigo-700';
             $individualPerformanceLabel = 'Good';
             $individualPerformanceBadge = 'bg-indigo-50 text-indigo-700 border-indigo-100';
@@ -187,7 +187,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
 
         <!-- INDIVIDUAL PERFORMANCE SPLASH CARD -->
-        <div class="glass card-hover px-4 py-3 rounded-[18px] border border-indigo-100 bg-gradient-to-br from-white via-indigo-50 to-blue-50 shadow-sm md:col-span-2 xl:col-span-1">
+        <div class="glass card-hover px-4 py-3 rounded-[18px] border border-indigo-100 bg-gradient-to-br from-white via-amber-50 to-[#FBF5EF] shadow-sm md:col-span-2 xl:col-span-1">
             <div class="flex items-center justify-between gap-3">
                 <div>
                     <p class="text-slate-500 text-[10px] font-semibold uppercase">KPI Score</p>
@@ -234,12 +234,12 @@
     </div>
 
     <!-- ── KPI SCORE GUIDE ──────────────────────────────────────────────────── -->
-    <div class="glass rounded-[20px] border border-blue-100 shadow-sm overflow-hidden">
+    <div class="glass rounded-[20px] border border-[#6B3F2A]/20 shadow-sm overflow-hidden">
 
         <!-- Toggle Header -->
-        <button onclick="toggleScoreGuide()" class="w-full flex items-center justify-between px-5 py-4 hover:bg-blue-50/40 transition-colors text-left">
+        <button onclick="toggleScoreGuide()" class="w-full flex items-center justify-between px-5 py-4 hover:bg-[#FBF5EF]/40 transition-colors text-left">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-sm">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-[#6B3F2A] to-[#5a3323] flex items-center justify-center shrink-0 shadow-sm">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <div>
@@ -248,7 +248,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <span id="scoreGuideToggleLabel" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">Show Guide</span>
+                <span id="scoreGuideToggleLabel" class="text-[10px] font-bold text-[#6B3F2A] bg-[#FBF5EF] px-2.5 py-1 rounded-full border border-[#6B3F2A]/20">Show Guide</span>
                 <svg id="scoreGuideChevron" class="w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </div>
         </button>
@@ -274,7 +274,7 @@
                             </div>
                         </div>
                         <div class="flex items-start gap-3 p-3 rounded-2xl bg-indigo-50 border border-indigo-100">
-                            <div class="mt-1 w-10 h-2 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 shrink-0"></div>
+                            <div class="mt-1 w-10 h-2 rounded-full bg-gradient-to-r from-[#8B5E4A] to-[#6B3F2A] shrink-0"></div>
                             <div class="min-w-0">
                                 <p class="text-xs font-black text-indigo-700">Good &nbsp;·&nbsp; 75% – 89%</p>
                                 <p class="text-[10px] text-slate-500 mt-0.5 leading-relaxed">Solid progress. Small gaps to close.</p>
@@ -334,10 +334,10 @@
                                 <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Significantly behind plan. Immediate action needed.</p>
                             </div>
                         </div>
-                        <div class="flex items-start gap-3 p-3 rounded-2xl bg-blue-50 border border-blue-100">
-                            <span class="mt-1 w-3 h-3 rounded-full bg-blue-500 shrink-0 ring-2 ring-blue-200"></span>
+                        <div class="flex items-start gap-3 p-3 rounded-2xl bg-[#FBF5EF] border border-[#6B3F2A]/20">
+                            <span class="mt-1 w-3 h-3 rounded-full bg-[#6B3F2A] shrink-0 ring-2 ring-[#6B3F2A]/30"></span>
                             <div>
-                                <p class="text-xs font-black text-blue-700">Completed</p>
+                                <p class="text-xs font-black text-[#6B3F2A]">Completed</p>
                                 <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Quarter target achieved and officially closed.</p>
                             </div>
                         </div>
@@ -465,7 +465,7 @@
     @endif
 
     <!-- FILTER -->
-    <div class="glass rounded-[20px] shadow-sm border border-indigo-100 bg-gradient-to-r from-white via-indigo-50/40 to-blue-50/40 p-5">
+    <div class="glass rounded-[20px] shadow-sm border border-indigo-100 bg-gradient-to-r from-white via-amber-50/40 to-[#FBF5EF]/40 p-5">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
                 <label class="text-xs font-bold text-slate-500 uppercase">Search</label>
@@ -2658,7 +2658,7 @@ function renderKpiDetail(activeQuarter) {
         on_track:           ['On Track',          'bg-emerald-100 text-emerald-700 border-emerald-200', '🟢'],
         at_risk:            ['At Risk',            'bg-amber-100 text-amber-700 border-amber-200',       '🟡'],
         in_trouble:         ['In Trouble',         'bg-red-100 text-red-700 border-red-200',             '🔴'],
-        completed:          ['Completed',          'bg-blue-100 text-blue-700 border-blue-200',          '🔵'],
+        completed:          ['Completed',          'bg-[#F5EAE0] text-[#6B3F2A] border-[#6B3F2A]/30',          '🔵'],
         not_started:        ['Not Started',        'bg-slate-100 text-slate-600 border-slate-200',       '⚪'],
         pending_completion: ['Pending Approval',   'bg-yellow-100 text-yellow-700 border-yellow-200',   '⏳'],
     };
@@ -2883,8 +2883,8 @@ function renderKpiDetail(activeQuarter) {
                             <div class="flex items-center gap-1 mb-1"><span class="text-xs">📐</span><p class="text-[9px] uppercase text-sky-500 font-black">Unit</p></div>
                             <p class="text-sm font-black text-slate-700">${unitLabel}</p>
                         </div>
-                        <div class="rounded-2xl bg-blue-50 border border-blue-100 p-3">
-                            <div class="flex items-center gap-1 mb-1"><span class="text-xs">🎯</span><p class="text-[9px] uppercase text-blue-500 font-black">Target</p></div>
+                        <div class="rounded-2xl bg-[#FBF5EF] border border-[#6B3F2A]/20 p-3">
+                            <div class="flex items-center gap-1 mb-1"><span class="text-xs">🎯</span><p class="text-[9px] uppercase text-[#8B5E4A] font-black">Target</p></div>
                             <p class="text-xl font-black text-slate-900">${fmtVal(target)}</p>
                         </div>
                         <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-3">
@@ -2949,24 +2949,24 @@ function renderKpiDetail(activeQuarter) {
 
                         <!-- COMPLETION PROOF — shown only when status = completed -->
                         <div id="completionProofSection" class="${quarter.status === 'completed' ? '' : 'hidden'}">
-                            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4 space-y-3">
+                            <div class="rounded-2xl border border-[#6B3F2A]/30 bg-[#FBF5EF] p-4 space-y-3">
                                 <div class="flex items-center gap-2">
                                     <span class="text-base">🏆</span>
-                                    <p class="text-xs font-black text-blue-800 uppercase tracking-wide">Completion Proof Required</p>
+                                    <p class="text-xs font-black text-[#4a2a1a] uppercase tracking-wide">Completion Proof Required</p>
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">
                                         Completion Review <span class="text-red-500">*</span> <span class="text-slate-400 normal-case font-medium">(min 10 chars)</span>
                                     </label>
                                     <textarea id="qCompletionReview" rows="3" placeholder="Describe what was achieved, challenges faced, and outcome..."
-                                        class="w-full mt-1.5 rounded-2xl border border-blue-200 bg-white px-4 py-3 text-sm text-slate-700 resize-none focus:border-blue-500 transition"></textarea>
+                                        class="w-full mt-1.5 rounded-2xl border border-[#6B3F2A]/30 bg-white px-4 py-3 text-sm text-slate-700 resize-none focus:border-[#6B3F2A] transition"></textarea>
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">
                                         Proof Files <span class="text-red-500">*</span> <span class="text-slate-400 normal-case font-medium">(JPG, PNG, PDF · max 5 MB each · up to 5 files)</span>
                                     </label>
                                     <input id="qProofImage" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
-                                        class="w-full mt-1.5 rounded-2xl border border-blue-200 bg-white px-4 py-2.5 text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer">
+                                        class="w-full mt-1.5 rounded-2xl border border-[#6B3F2A]/30 bg-white px-4 py-2.5 text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-[#6B3F2A] file:text-white hover:file:bg-[#5a3323] cursor-pointer">
                                     <div id="proofPreviewList" class="hidden mt-2 space-y-1.5"></div>
                                 </div>
                             </div>
@@ -3067,11 +3067,11 @@ function renderKpiDetail(activeQuarter) {
                     </div>
                     <div class="flex gap-3">
                         <div class="flex flex-col items-center shrink-0">
-                            <div class="w-3 h-3 rounded-full bg-blue-400 mt-0.5"></div>
+                            <div class="w-3 h-3 rounded-full bg-[#8B5E4A] mt-0.5"></div>
                             <div class="w-px flex-1 bg-slate-100 mt-1"></div>
                         </div>
-                        <div class="rounded-2xl bg-blue-50 border border-blue-100 p-3 flex-1">
-                            <p class="text-xs font-black text-blue-700">Quarter Updated</p>
+                        <div class="rounded-2xl bg-[#FBF5EF] border border-[#6B3F2A]/20 p-3 flex-1">
+                            <p class="text-xs font-black text-[#6B3F2A]">Quarter Updated</p>
                             <p class="text-[10px] text-slate-500 mt-1">
                                 ${quarter.updated_at
                                     ? new Date(quarter.updated_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
@@ -3083,10 +3083,10 @@ function renderKpiDetail(activeQuarter) {
 
                 <!-- COMPLETION PROOF DISPLAY (if quarter already completed/pending with proof) -->
                 ${(quarter.status === 'completed' || quarter.status === 'pending_completion') && (quarter.completion_review || quarter.completion_proof_url || quarter.completion_proof_urls?.length) ? `
-                <div class="bg-white rounded-3xl border border-blue-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-blue-100 bg-blue-50 flex items-center gap-2">
+                <div class="bg-white rounded-3xl border border-[#6B3F2A]/30 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-[#6B3F2A]/20 bg-[#FBF5EF] flex items-center gap-2">
                         <span class="text-lg">🏆</span>
-                        <p class="text-xs font-black text-blue-800 uppercase tracking-wider">Completion Evidence</p>
+                        <p class="text-xs font-black text-[#4a2a1a] uppercase tracking-wider">Completion Evidence</p>
                         <span class="ml-auto text-[10px] ${quarter.status === 'completed' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200'} border px-2 py-0.5 rounded-lg font-bold">
                             ${quarter.status === 'completed' ? 'Approved ✓' : 'Pending Approval'}
                         </span>
@@ -3229,11 +3229,11 @@ function toggleCompletionProof(status) {
         section.classList.remove('hidden');
         btn.innerHTML = '🏆 Submit Completion';
         btn.className = btn.className.replace('from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 shadow-indigo-600/20',
-            'from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-blue-600/20');
+            'from-[#6B3F2A] to-[#5a3323] hover:from-[#5a3323] hover:to-[#4a2a1a] shadow-[#6B3F2A]/20');
     } else {
         section.classList.add('hidden');
         btn.innerHTML = '💾 Save Quarter Details';
-        btn.className = btn.className.replace('from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-blue-600/20',
+        btn.className = btn.className.replace('from-[#6B3F2A] to-[#5a3323] hover:from-[#5a3323] hover:to-[#4a2a1a] shadow-[#6B3F2A]/20',
             'from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 shadow-indigo-600/20');
     }
 }
@@ -3260,24 +3260,24 @@ function renderProofFiles(quarter) {
         const name  = f.name || ('File ' + (i+1));
         if (isImg) {
             return `<a href="${f.url}" target="_blank" class="block group">
-                <div class="rounded-2xl overflow-hidden border-2 border-slate-200 group-hover:border-blue-400 transition bg-slate-50">
+                <div class="rounded-2xl overflow-hidden border-2 border-slate-200 group-hover:border-[#8B5E4A] transition bg-slate-50">
                     <img src="${f.url}" alt="${name}" class="w-full max-h-52 object-contain">
                     <div class="px-3 py-2 border-t border-slate-100 flex items-center gap-2">
                         <span class="text-base">🖼️</span>
                         <span class="text-xs font-bold text-slate-600 truncate flex-1">${name}</span>
-                        <span class="text-[10px] text-blue-500 font-black shrink-0">Open ↗</span>
+                        <span class="text-[10px] text-[#8B5E4A] font-black shrink-0">Open ↗</span>
                     </div>
                 </div>
             </a>`;
         } else {
             return `<a href="${f.url}" target="_blank"
-                class="flex items-center gap-3 p-3 rounded-2xl border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 transition group">
+                class="flex items-center gap-3 p-3 rounded-2xl border-2 border-slate-200 hover:border-[#8B5E4A] hover:bg-[#FBF5EF] transition group">
                 <div class="w-10 h-10 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-xl shrink-0">📄</div>
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-black text-slate-700 truncate">${name}</p>
                     <p class="text-[10px] text-slate-400">PDF Document</p>
                 </div>
-                <span class="text-xs font-black text-blue-500 shrink-0 group-hover:text-blue-700">Open ↗</span>
+                <span class="text-xs font-black text-[#8B5E4A] shrink-0 group-hover:text-[#5a3323]">Open ↗</span>
             </a>`;
         }
     }).join('');
@@ -3303,11 +3303,11 @@ document.addEventListener('change', function(e) {
         const isImg = file.type.startsWith('image/');
         const sizeMb = (file.size / 1024 / 1024).toFixed(1);
         const row = document.createElement('div');
-        row.className = 'flex items-center gap-2 p-2 rounded-xl border border-blue-100 bg-blue-50';
+        row.className = 'flex items-center gap-2 p-2 rounded-xl border border-[#6B3F2A]/20 bg-[#FBF5EF]';
         if (isImg) {
             const objUrl = URL.createObjectURL(file);
             row.innerHTML = `
-                <img src="${objUrl}" class="w-10 h-10 rounded-lg object-cover border border-blue-200 shrink-0">
+                <img src="${objUrl}" class="w-10 h-10 rounded-lg object-cover border border-[#6B3F2A]/30 shrink-0">
                 <div class="flex-1 min-w-0">
                     <p class="text-xs font-black text-slate-700 truncate">${file.name}</p>
                     <p class="text-[10px] text-slate-400">${sizeMb} MB · Image</p>
@@ -3817,7 +3817,7 @@ function renderAssignedKpiDetail(activeQ) {
         on_track:    ['On Track',    'bg-emerald-100 text-emerald-700'],
         at_risk:     ['At Risk',     'bg-yellow-100 text-yellow-700'],
         in_trouble:  ['In Trouble',  'bg-red-100 text-red-700'],
-        completed:   ['Completed',   'bg-blue-100 text-blue-700'],
+        completed:   ['Completed',   'bg-[#F5EAE0] text-[#6B3F2A]'],
         not_started: ['Not Started', 'bg-slate-100 text-slate-600'],
     };
 

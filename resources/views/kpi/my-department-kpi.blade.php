@@ -7,7 +7,7 @@
         .glass { background: rgba(255,255,255,.92); backdrop-filter: blur(14px); }
         .card-hover { transition: .2s ease; }
         .card-hover:hover { transform: translateY(-2px); box-shadow: 0 18px 35px rgba(15,23,42,.09); }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #6B3F2A; box-shadow: 0 0 0 3px rgba(107,63,42,.12); }
         .drawer-slide { transition: transform .3s cubic-bezier(.4,0,.2,1); }
         .cat-section { animation: fadeIn .2s ease; }
         @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
@@ -141,7 +141,7 @@
 
         $deptPerfColor = match(true) {
             $departmentPerformance >= 90 => ['bar' => 'from-emerald-400 to-green-500', 'text' => 'text-emerald-400', 'label' => 'Excellent', 'badge' => 'bg-emerald-100 text-emerald-700'],
-            $departmentPerformance >= 75 => ['bar' => 'from-blue-400 to-indigo-500',  'text' => 'text-blue-300',    'label' => 'Good',      'badge' => 'bg-blue-100 text-blue-700'],
+            $departmentPerformance >= 75 => ['bar' => 'from-[#8B5E4A] to-[#6B3F2A]',  'text' => 'text-blue-300',    'label' => 'Good',      'badge' => 'bg-[#F5EAE0] text-[#6B3F2A]'],
             $departmentPerformance >= 50 => ['bar' => 'from-yellow-400 to-amber-500', 'text' => 'text-yellow-300', 'label' => 'Watch',     'badge' => 'bg-yellow-100 text-yellow-700'],
             default                      => ['bar' => 'from-red-400 to-rose-500',     'text' => 'text-red-300',    'label' => 'Critical',  'badge' => 'bg-red-100 text-red-700'],
         };
@@ -164,7 +164,7 @@
 
         $statusDef = [
             'completed'   => ['label' => 'Completed',  'color' => 'bg-emerald-100 text-emerald-700', 'dot' => 'bg-emerald-500'],
-            'on_track'    => ['label' => 'On Track',   'color' => 'bg-blue-100 text-blue-700',       'dot' => 'bg-blue-500'],
+            'on_track'    => ['label' => 'On Track',   'color' => 'bg-[#F5EAE0] text-[#6B3F2A]',       'dot' => 'bg-[#6B3F2A]'],
             'at_risk'     => ['label' => 'At Risk',    'color' => 'bg-yellow-100 text-yellow-700',   'dot' => 'bg-yellow-500'],
             'in_trouble'  => ['label' => 'In Trouble', 'color' => 'bg-red-100 text-red-700',         'dot' => 'bg-red-500'],
             'not_started' => ['label' => 'Not Started','color' => 'bg-slate-100 text-slate-500',     'dot' => 'bg-slate-400'],
@@ -216,9 +216,9 @@
                     <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span class="text-[11px] font-black text-emerald-700">Excellent</span></div>
                     <span class="text-[11px] font-black text-emerald-600">≥ 90%</span>
                 </div>
-                <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-blue-50 border border-blue-100">
-                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-blue-500"></span><span class="text-[11px] font-black text-blue-700">Good</span></div>
-                    <span class="text-[11px] font-black text-blue-600">75 – 89%</span>
+                <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-[#FBF5EF] border border-[#6B3F2A]/20">
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#6B3F2A]"></span><span class="text-[11px] font-black text-[#6B3F2A]">Good</span></div>
+                    <span class="text-[11px] font-black text-[#6B3F2A]">75 – 89%</span>
                 </div>
                 <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-yellow-50 border border-yellow-100">
                     <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-yellow-500"></span><span class="text-[11px] font-black text-yellow-700">Watch</span></div>
@@ -295,7 +295,7 @@
 
             $spColor = match(true) {
                 $staffPerformance >= 90 => ['bar' => 'from-emerald-400 to-green-500', 'text' => 'text-emerald-700', 'label' => 'Excellent', 'badge' => 'bg-emerald-100 text-emerald-700'],
-                $staffPerformance >= 75 => ['bar' => 'from-blue-400 to-indigo-500',  'text' => 'text-blue-700',    'label' => 'Good',      'badge' => 'bg-blue-100 text-blue-700'],
+                $staffPerformance >= 75 => ['bar' => 'from-[#8B5E4A] to-[#6B3F2A]',  'text' => 'text-[#6B3F2A]',    'label' => 'Good',      'badge' => 'bg-[#F5EAE0] text-[#6B3F2A]'],
                 $staffPerformance >= 50 => ['bar' => 'from-yellow-400 to-amber-500', 'text' => 'text-yellow-700', 'label' => 'Watch',     'badge' => 'bg-yellow-100 text-yellow-700'],
                 default                 => ['bar' => 'from-red-400 to-rose-500',     'text' => 'text-red-700',    'label' => 'Critical',  'badge' => 'bg-red-100 text-red-700'],
             };
@@ -332,7 +332,7 @@
 
                     {{-- AVATAR + INFO --}}
                     <div class="flex items-center gap-4 flex-1 min-w-0">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#06142f] to-blue-700 flex items-center justify-center text-white font-black text-lg shrink-0 group-hover:scale-105 transition">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#06142f] to-[#5a3323] flex items-center justify-center text-white font-black text-lg shrink-0 group-hover:scale-105 transition">
                             {{ $initials ?: '?' }}
                         </div>
                         <div class="min-w-0 flex-1">
@@ -363,8 +363,8 @@
                         </span>
                         @endif
                         @if($goodCount > 0)
-                        <span class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 text-[10px] font-black border border-blue-100">
-                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>Good {{ $goodCount }}
+                        <span class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#FBF5EF] text-[#6B3F2A] text-[10px] font-black border border-[#6B3F2A]/20">
+                            <span class="w-2 h-2 rounded-full bg-[#6B3F2A]"></span>Good {{ $goodCount }}
                         </span>
                         @endif
                         @if($watchCount > 0)
@@ -463,7 +463,7 @@
 
                             $kColor = match(true) {
                                 $kachv >= 90 => ['bar' => 'from-emerald-400 to-green-500', 'text' => 'text-emerald-700', 'label' => 'Excellent', 'badge' => 'bg-emerald-100 text-emerald-700'],
-                                $kachv >= 75 => ['bar' => 'from-blue-400 to-indigo-500',  'text' => 'text-blue-700',    'label' => 'Good',      'badge' => 'bg-blue-100 text-blue-700'],
+                                $kachv >= 75 => ['bar' => 'from-[#8B5E4A] to-[#6B3F2A]',  'text' => 'text-[#6B3F2A]',    'label' => 'Good',      'badge' => 'bg-[#F5EAE0] text-[#6B3F2A]'],
                                 $kachv >= 50 => ['bar' => 'from-yellow-400 to-amber-500', 'text' => 'text-yellow-700', 'label' => 'Watch',     'badge' => 'bg-yellow-100 text-yellow-700'],
                                 default      => ['bar' => 'from-red-400 to-rose-500',     'text' => 'text-red-700',    'label' => 'Critical',  'badge' => 'bg-red-100 text-red-700'],
                             };
@@ -507,7 +507,7 @@
                                         $qks = $qkt > 0 ? ($qka / $qkt) * 100 : 0;
                                         $qDot = match(true) {
                                             $qks >= 90 => 'bg-emerald-500 text-white',
-                                            $qks >= 75 => 'bg-blue-500 text-white',
+                                            $qks >= 75 => 'bg-[#6B3F2A] text-white',
                                             $qks >= 50 => 'bg-yellow-400 text-white',
                                             $qks > 0   => 'bg-red-500 text-white',
                                             default    => 'bg-slate-200 text-slate-400',
@@ -567,7 +567,7 @@ const categoryColors = {
 
 const statusLabels = {
     'completed':   { label: 'Completed',  color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
-    'on_track':    { label: 'On Track',   color: 'bg-blue-100 text-blue-700',       dot: 'bg-blue-500' },
+    'on_track':    { label: 'On Track',   color: 'bg-[#F5EAE0] text-[#6B3F2A]',       dot: 'bg-[#6B3F2A]' },
     'at_risk':     { label: 'At Risk',    color: 'bg-yellow-100 text-yellow-700',   dot: 'bg-yellow-500' },
     'in_trouble':  { label: 'In Trouble', color: 'bg-red-100 text-red-700',         dot: 'bg-red-500' },
     'not_started': { label: 'Not Started',color: 'bg-slate-100 text-slate-500',     dot: 'bg-slate-400' },
@@ -575,7 +575,7 @@ const statusLabels = {
 
 function achvBadge(score){
     if(score >= 90) return { label: 'Excellent', color: 'bg-emerald-100 text-emerald-700', bar: 'from-emerald-400 to-green-500' };
-    if(score >= 75) return { label: 'Good',      color: 'bg-blue-100 text-blue-700',       bar: 'from-blue-400 to-indigo-500' };
+    if(score >= 75) return { label: 'Good',      color: 'bg-[#F5EAE0] text-[#6B3F2A]',       bar: 'from-[#8B5E4A] to-[#6B3F2A]' };
     if(score >= 50) return { label: 'Watch',     color: 'bg-yellow-100 text-yellow-700',   bar: 'from-yellow-400 to-amber-500' };
     return           { label: 'Critical',  color: 'bg-red-100 text-red-700',         bar: 'from-red-400 to-rose-500' };
 }
@@ -756,7 +756,7 @@ function openKpiDrawer(card){
                     <h3 class="text-xs font-black text-slate-700 uppercase tracking-wide mb-3">Achievement Guide</h3>
                     <div class="space-y-2 text-[11px]">
                         <div class="flex justify-between px-3 py-1.5 rounded-xl bg-emerald-50"><span class="font-black text-emerald-700">● Excellent</span><span class="text-emerald-600 font-bold">≥ 90%</span></div>
-                        <div class="flex justify-between px-3 py-1.5 rounded-xl bg-blue-50"><span class="font-black text-blue-700">● Good</span><span class="text-blue-600 font-bold">75 – 89%</span></div>
+                        <div class="flex justify-between px-3 py-1.5 rounded-xl bg-[#FBF5EF]"><span class="font-black text-[#6B3F2A]">● Good</span><span class="text-[#6B3F2A] font-bold">75 – 89%</span></div>
                         <div class="flex justify-between px-3 py-1.5 rounded-xl bg-yellow-50"><span class="font-black text-yellow-700">● Watch</span><span class="text-yellow-600 font-bold">50 – 74%</span></div>
                         <div class="flex justify-between px-3 py-1.5 rounded-xl bg-red-50"><span class="font-black text-red-700">● Critical</span><span class="text-red-600 font-bold">< 50%</span></div>
                     </div>

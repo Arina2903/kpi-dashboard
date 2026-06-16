@@ -11,7 +11,7 @@
     </style>
 </head>
 
-<body class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 pb-28">
+<body class="min-h-screen bg-[#f4f7fb] pb-28">
 
 @include('partials.sidebar')
 
@@ -58,8 +58,8 @@
 
                     <span class="text-slate-400 font-black">→</span>
 
-                    <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2">
-                        <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center shrink-0">3</span>
+                    <div class="flex items-center gap-2 bg-[#FBF5EF] border border-[#6B3F2A]/30 rounded-xl px-3 py-2">
+                        <span class="w-6 h-6 rounded-full bg-[#6B3F2A] text-white text-[10px] font-black flex items-center justify-center shrink-0">3</span>
                         <div>
                             <p class="text-xs font-black text-slate-800">Boss Reviews</p>
                             <p class="text-[10px] text-slate-500">Approves or Rejects</p>
@@ -85,12 +85,12 @@
             </div>
 
             <div class="xl:w-[220px] shrink-0">
-                <div class="rounded-xl border {{ $approverName ? 'border-blue-200 bg-blue-50' : 'border-slate-200 bg-slate-50' }} p-4">
-                    <p class="text-[10px] uppercase font-black {{ $approverName ? 'text-blue-500' : 'text-slate-400' }}">Your Approver</p>
+                <div class="rounded-xl border {{ $approverName ? 'border-[#6B3F2A]/30 bg-[#FBF5EF]' : 'border-slate-200 bg-slate-50' }} p-4">
+                    <p class="text-[10px] uppercase font-black {{ $approverName ? 'text-[#8B5E4A]' : 'text-slate-400' }}">Your Approver</p>
                     @if($approverName)
                         <p class="text-base font-black text-slate-900 mt-1">{{ $approverName }}</p>
                         <p class="text-[11px] text-slate-500 mt-0.5">{{ $approverRole }}</p>
-                        <p class="text-[10px] text-blue-600 mt-2">Approval requests go to this person</p>
+                        <p class="text-[10px] text-[#6B3F2A] mt-2">Approval requests go to this person</p>
                     @else
                         <p class="text-sm font-black text-slate-500 mt-1">No approver set</p>
                         <p class="text-[10px] text-slate-400 mt-1">Contact your administrator</p>
@@ -165,7 +165,7 @@
 
         <div class="rounded-2xl bg-white p-4 border border-slate-200 shadow-sm">
             <p class="text-xs uppercase font-black text-slate-400">Individual Performance</p>
-            <h2 class="text-2xl font-black text-blue-700 mt-2">{{ number_format($individualPerformance, 2) }}%</h2>
+            <h2 class="text-2xl font-black text-[#6B3F2A] mt-2">{{ number_format($individualPerformance, 2) }}%</h2>
         </div>
 
     </div>
@@ -384,7 +384,7 @@
      class="fixed inset-0 z-[99999] bg-black/60 flex items-start justify-center p-4 overflow-y-auto">
     <div class="bg-white rounded-3xl w-full max-w-2xl my-6 shadow-2xl">
 
-        <div class="bg-gradient-to-r from-indigo-700 to-blue-700 rounded-t-3xl px-6 py-5 text-white">
+        <div class="bg-gradient-to-r from-indigo-700 to-[#5a3323] rounded-t-3xl px-6 py-5 text-white">
             <h2 class="text-xl font-black">Review All Changes</h2>
             <p class="text-blue-100 text-sm mt-1">Check everything before confirming — you cannot undo this</p>
         </div>
@@ -642,12 +642,12 @@ function buildSaveReviewModal() {
 
         /* Approver banner */
         if (approverName) {
-            html += '<div class="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 flex items-center gap-3 mb-4">';
-            html +=   '<div class="w-8 h-8 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center shrink-0">' +
+            html += '<div class="rounded-xl bg-[#FBF5EF] border border-[#6B3F2A]/30 px-4 py-3 flex items-center gap-3 mb-4">';
+            html +=   '<div class="w-8 h-8 rounded-full bg-[#6B3F2A] text-white text-xs font-black flex items-center justify-center shrink-0">' +
                           escapeHtml(approverName.charAt(0).toUpperCase()) +
                       '</div>';
             html +=   '<div>';
-            html +=     '<p class="text-[10px] font-black text-blue-700">Approval requests go to</p>';
+            html +=     '<p class="text-[10px] font-black text-[#6B3F2A]">Approval requests go to</p>';
             html +=     '<p class="text-sm font-black text-slate-900">' + escapeHtml(approverName) +
                             ' <span class="font-normal text-slate-500 text-xs">(' + escapeHtml(approverRole) + ')</span></p>';
             html +=   '</div>';
