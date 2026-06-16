@@ -53,7 +53,7 @@
         type="button"
         onclick="handleSidebarHeaderClick()"
         class="group w-full flex items-center gap-3 mb-5 shrink-0 pr-10 text-left
-        hover:bg-[#d4c4ad] rounded-xl p-2 transition relative"
+        hover:bg-[#c9b49a] rounded-xl p-2 transition relative"
         aria-label="Open Sidebar"
     >
         <div class="w-10 h-10 flex items-center justify-center shrink-0">
@@ -71,11 +71,11 @@
                 class="w-9 h-9 object-contain sidebar-logo bg-transparent"
                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
             />
-            <span class="sidebar-logo w-9 h-9 rounded-full bg-blue-600 text-white font-bold text-base items-center justify-center" style="display:none">
+            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#6B3F2A] text-white font-bold text-base items-center justify-center" style="display:none">
                 {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
             </span>
             @else
-            <span class="sidebar-logo w-9 h-9 rounded-full bg-blue-600 text-white font-bold text-base flex items-center justify-center">
+            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#6B3F2A] text-white font-bold text-base flex items-center justify-center">
                 {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
             </span>
             @endif
@@ -272,8 +272,8 @@
                             href="{{ $item['href'] }}"
                             class="group relative flex items-center gap-3 px-3 py-2 rounded-xl transition
                             {{ $isActive
-                                ? 'bg-blue-600 text-white font-semibold shadow-sm'
-                                : 'text-black hover:bg-[#d4c4ad] hover:text-black'
+                                ? 'bg-[#6B3F2A] text-white font-semibold shadow-sm'
+                                : 'text-black hover:bg-[#c9b49a] hover:text-black'
                             }}"
                         >
                             <span class="w-5 h-5 flex items-center justify-center shrink-0">
@@ -320,9 +320,9 @@
             Current View
         </p>
 
-        <div class="sidebar-text border border-indigo-400/30 rounded-xl p-3 bg-indigo-500/10 mb-2">
+        <div class="sidebar-text border border-[#6B3F2A]/30 rounded-xl p-3 bg-[#6B3F2A]/10 mb-2">
             @if($canSwitchDepartment ?? false)
-                <p class="text-[10px] text-indigo-700 mb-2 font-semibold">
+                <p class="text-[10px] text-[#6B3F2A] mb-2 font-semibold">
                     Department View
                 </p>
 
@@ -332,7 +332,7 @@
                     <select
                         name="department_code"
                         onchange="this.form.submit()"
-                        class="w-full bg-white/30 border border-indigo-400/30 rounded-lg px-2 py-2
+                        class="w-full bg-white/30 border border-[#6B3F2A]/30 rounded-lg px-2 py-2
                         text-[11px] text-black outline-none"
                     >
                         @foreach(($departments ?? []) as $dept)
@@ -346,7 +346,7 @@
                     </select>
                 </form>
             @else
-                <p class="text-[10px] text-indigo-700 mb-1 font-semibold">
+                <p class="text-[10px] text-[#6B3F2A] mb-1 font-semibold">
                     Department
                 </p>
 
