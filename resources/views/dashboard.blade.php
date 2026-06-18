@@ -1,9 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RCG KPI Dashboard</title>
+
+    {{-- Preconnect to external hosts so DNS+TLS is resolved before requests fire --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://ui-avatars.com">
+
+    {{-- Inter font — loaded here once for the whole page --}}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    {{-- Tailwind Play CDN — must be sync (it generates styles by scanning DOM) --}}
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         .brand-panel { background: radial-gradient(circle at top left,rgba(59,130,246,.16),transparent 30%), radial-gradient(circle at bottom right,rgba(20,184,166,.13),transparent 34%), linear-gradient(135deg,#06142f 0%,#0b1f45 52%,#020617 100%); }
         .soft-card   { box-shadow: 0 8px 30px rgba(15,23,42,.07); }
@@ -1081,6 +1094,8 @@
     </div>
 @endforeach
 
+{{-- Chart.js loaded here (end of body) so it never blocks first paint --}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 // ── DATA FROM PHP ───────────────────────────────────────────────────────────
 const deptData = @json($deptChartData);
