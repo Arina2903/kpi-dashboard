@@ -844,29 +844,30 @@
                 <div class="space-y-2">
                     @foreach($myLinkageMap as $lnk)
                     @php $lnkMet = $lnk['met']; @endphp
-                    <div class="p-2.5 rounded-xl border {{ $lnkMet ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50' }}">
+                    <div class="p-2.5 rounded-xl border {{ $lnkMet ? 'border-[#91BF9B]/40' : 'border-[#5B7553]' }}"
+                         style="{{ $lnkMet ? 'background:rgba(168,233,184,0.08)' : 'background:rgba(91,117,83,0.18)' }}">
                         <div class="flex items-center justify-between mb-1.5">
                             <div class="min-w-0">
                                 <span class="text-xs font-black text-[#DAFFD3]">{{ $lnk['sub_category'] }}</span>
                                 <span class="ml-1.5 text-[9px] text-[#91BF9B]/70">{{ $lnk['category'] }} · from {{ $lnk['assigner_name'] ?? '-' }}</span>
                             </div>
                             @if(!$lnkMet)
-                            <span class="shrink-0 ml-2 text-[9px] font-black bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">Gap</span>
+                            <span class="shrink-0 ml-2 text-[9px] font-black px-1.5 py-0.5 rounded border text-[#DAFFD3] border-[#5B7553]" style="background:rgba(91,117,83,0.35)">Gap</span>
                             @else
-                            <span class="shrink-0 ml-2 text-[9px] font-black bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200">Met ✓</span>
+                            <span class="shrink-0 ml-2 text-[9px] font-black px-1.5 py-0.5 rounded border text-[#DAFFD3] border-[#91BF9B]/40" style="background:rgba(145,191,155,0.2)">Met ✓</span>
                             @endif
                         </div>
                         <div class="flex items-center gap-2 mb-1.5">
-                            <div class="flex-1 h-1.5 bg-white/80 rounded-full overflow-hidden border border-[#6B9080]">
-                                <div class="h-1.5 rounded-full {{ $lnkMet ? 'bg-emerald-400' : 'bg-amber-400' }}" style="width:{{ $lnk['pct'] }}%"></div>
+                            <div class="flex-1 h-1.5 rounded-full overflow-hidden border border-[#5B7553]/40" style="background:rgba(255,255,255,0.08)">
+                                <div class="h-1.5 rounded-full {{ $lnkMet ? 'bg-[#A8E9B8]' : 'bg-[#91BF9B]' }}" style="width:{{ $lnk['pct'] }}%"></div>
                             </div>
-                            <span class="text-[9px] font-black {{ $lnkMet ? 'text-emerald-700' : 'text-amber-700' }} w-7 text-right shrink-0">{{ $lnk['pct'] }}%</span>
+                            <span class="text-[9px] font-black text-[#DAFFD3] w-7 text-right shrink-0">{{ $lnk['pct'] }}%</span>
                         </div>
                         <div class="flex justify-between text-[9px] text-[#91BF9B]/70">
                             <span>Target: <span class="font-black text-[#DAFFD3]">{{ $fmtLinkageVal($lnk['assigned_target'], $lnk['unit']) }}</span></span>
                             <span>Covered: <span class="font-black text-[#DAFFD3]">{{ $fmtLinkageVal($lnk['covered'], $lnk['unit']) }}</span></span>
                             @if(!$lnkMet)
-                            <span class="text-amber-400 font-black">Gap: {{ $fmtLinkageVal($lnk['gap'], $lnk['unit']) }}</span>
+                            <span class="text-[#DAFFD3] font-black">Gap: {{ $fmtLinkageVal($lnk['gap'], $lnk['unit']) }}</span>
                             @endif
                         </div>
                     </div>
