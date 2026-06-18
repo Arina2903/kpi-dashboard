@@ -45,7 +45,7 @@
 <div class="p-4 space-y-4">
 
     <!-- HEADER -->
-    <div class="rounded-[18px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#a8cec6] text-white px-5 py-3.5 shadow-xl flex flex-row items-center justify-between gap-4">
+    <div class="rounded-[18px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548] text-white px-5 py-3.5 shadow-xl flex flex-row items-center justify-between gap-4">
         <div>
             <a href="/dashboard" class="text-[10px] text-blue-100 hover:text-white">← Dashboard</a>
             <h1 class="text-xl font-bold mt-1">KPI List</h1>

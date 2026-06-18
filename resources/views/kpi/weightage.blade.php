@@ -19,7 +19,7 @@
 <div class="p-6 space-y-6">
 
     <!-- HEADER -->
-    <div class="rounded-3xl bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#a8cec6] text-white p-6 shadow-xl">
+    <div class="rounded-3xl bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548] text-white p-6 shadow-xl">
         <a href="/kpi" class="text-sm text-blue-100 hover:text-white">← Back to KPI List</a>
         <h1 class="text-3xl font-bold mt-3">Manage Weightage</h1>
         <p class="text-white/60 text-sm mt-1">{{ $fy ?? '' }} · {{ session('short_name') }}</p>

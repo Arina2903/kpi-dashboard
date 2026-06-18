@@ -38,7 +38,7 @@
 <div class="p-6 space-y-6">
 
     <!-- HEADER -->
-    <div class="rounded-[20px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#a8cec6] text-white p-6 shadow-xl">
+    <div class="rounded-[20px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548] text-white p-6 shadow-xl">
 
         <div class="flex justify-between items-center">
 

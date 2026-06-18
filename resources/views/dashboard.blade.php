@@ -339,7 +339,7 @@
 <div class="p-4 space-y-3">
 
 {{-- ═══════ HEADER ═══════════════════════════════════════════════════════ --}}
-<div class="rounded-[18px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#a8cec6] text-white px-6 py-4 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+<div class="rounded-[18px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548] text-white px-6 py-4 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-3">
     <div>
         <h1 class="text-xl font-black">Dashboard</h1>
         <p class="text-white/70 text-[11px] mt-0.5">{{ $currentUserName }} · {{ $user['role'] ?? '-' }} · {{ $currentDepartment }} · {{ $currentFinancialYear }}</p>
