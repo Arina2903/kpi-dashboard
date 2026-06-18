@@ -31,7 +31,7 @@
 
 <aside
     id="sidebar"
-    class="fixed left-0 top-0 z-40 h-screen bg-[#EADCC9] text-black
+    class="fixed left-0 top-0 z-40 h-screen bg-white text-black
     w-[230px] min-w-[230px] max-w-[230px]
     px-3 py-4 flex flex-col overflow-visible shrink-0 transition-all duration-300"
 >
@@ -41,8 +41,8 @@
         type="button"
         onclick="event.stopPropagation(); toggleSidebar();"
         class="absolute top-4 right-3 z-[9999] w-7 h-7 flex items-center justify-center
-        text-black/60 bg-black/10 border border-black/20 rounded-full
-        hover:bg-black/20 hover:text-black transition text-sm"
+        text-gray-400 bg-gray-100 border border-gray-200 rounded-full
+        hover:bg-gray-200 hover:text-black transition text-sm"
         aria-label="Close Sidebar"
     >
         ×
@@ -53,7 +53,7 @@
         type="button"
         onclick="handleSidebarHeaderClick()"
         class="group w-full flex items-center gap-3 mb-5 shrink-0 pr-10 text-left
-        hover:bg-[#c9b49a] rounded-xl p-2 transition relative"
+        hover:bg-gray-100 rounded-xl p-2 transition relative"
         aria-label="Open Sidebar"
     >
         <div class="w-10 h-10 flex items-center justify-center shrink-0">
@@ -273,7 +273,7 @@
                             class="group relative flex items-center gap-3 px-3 py-2 rounded-xl transition
                             {{ $isActive
                                 ? 'bg-[#6B3F2A] text-white font-semibold shadow-sm'
-                                : 'text-black hover:bg-[#c9b49a] hover:text-black'
+                                : 'text-black hover:bg-gray-100 hover:text-black'
                             }}"
                         >
                             <span class="w-5 h-5 flex items-center justify-center shrink-0">
@@ -315,7 +315,7 @@
     </nav>
 
     <!-- SYSTEM ZONE -->
-    <div class="sidebar-system mt-3 pt-3 border-t border-black/20 shrink-0">
+    <div class="sidebar-system mt-3 pt-3 border-t border-gray-200 shrink-0">
         <p class="sidebar-text text-[9px] text-black/50 uppercase tracking-wide mb-2 px-1">
             Current View
         </p>
