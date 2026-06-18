@@ -288,6 +288,13 @@ Route::middleware(['kpi.auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | PERFORMANCE EVALUATION
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/performance/kpi', [\App\Http\Controllers\PerformanceController::class, 'kpiAppraisal'])->name('performance.kpi');
+
+    /*
+    |--------------------------------------------------------------------------
     | MY DEPARTMENT KPI
     |--------------------------------------------------------------------------
     */
