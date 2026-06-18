@@ -376,17 +376,17 @@
     <div class="xl:col-span-2 flex flex-col gap-3">
 
         {{-- My Department donut --}}
-        <div class="bg-white rounded-2xl p-3 soft-card border border-[#6B9080] flex items-center gap-3">
-            <div class="relative shrink-0" style="width:88px;height:88px;">
-                <canvas id="chartCompanyDonut" width="88" height="88"></canvas>
+        <div class="bg-white rounded-2xl p-2.5 soft-card border border-[#6B9080] flex items-center gap-2.5 shrink-0">
+            <div class="relative shrink-0" style="width:64px;height:64px;">
+                <canvas id="chartCompanyDonut" width="64" height="64"></canvas>
                 <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <p class="text-sm font-black {{ $myDeptScoreStyle['text'] }}">{{ number_format($myDeptPerformance,1) }}%</p>
-                    <p class="text-[8px] text-slate-400">{{ $currentDepartment }}</p>
+                    <p class="text-xs font-black {{ $myDeptScoreStyle['text'] }}">{{ number_format($myDeptPerformance,1) }}%</p>
+                    <p class="text-[7px] text-slate-400">{{ $currentDepartment }}</p>
                 </div>
             </div>
-            <div class="flex-1 min-w-0">
+            <div class="min-w-0">
                 <p class="text-[9px] font-black text-slate-500 uppercase mb-0.5">{{ $currentDepartment }} Achievement</p>
-                <p class="text-[8px] text-slate-400 mb-1.5">Staff score distribution</p>
+                <p class="text-[8px] text-slate-400">Staff score distribution</p>
             </div>
         </div>
 
