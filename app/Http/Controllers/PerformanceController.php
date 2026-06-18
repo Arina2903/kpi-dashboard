@@ -85,7 +85,7 @@ class PerformanceController extends Controller
 
         // ── KPIs for this user ────────────────────────────────────────────────
         $kpis = $supabase->get('kpis', [
-            'owner_id'       => 'eq.' . $user['id'],
+            'employee_id'    => 'eq.' . $user['id'],
             'financial_year' => 'eq.' . $this->currentFinancialYear,
             'select'         => 'id,kpi_title,category,sub_category,unit,base_target,actual_value,status,weightage',
         ]) ?? [];
