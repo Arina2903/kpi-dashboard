@@ -308,125 +308,212 @@
             </div>{{-- /p-6 --}}
         </div>{{-- /Section 1 --}}
 
-        {{-- KPI Table --}}
-        <div class="mb-6">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 class="text-sm font-black text-slate-900">KPI Performance — {{ $qLabel }}</h3>
-                    <p class="text-[10px] text-slate-400 mt-0.5">{{ count($kpis) }} KPIs for {{ $currentFinancialYear }}</p>
-                </div>
-                <span class="text-[9px] font-black text-[#6B9080] bg-[#6B9080]/10 px-3 py-1.5 rounded-full uppercase tracking-wider">{{ $qLabel }} · {{ $currentFinancialYear }}</span>
+        {{-- ══ SECTION 2 ══════════════════════════════════════════════════════ --}}
+        <div class="border border-[#6B9080]/40 rounded-2xl overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-[#1a3d34] to-[#2d5548] px-5 py-3">
+                <p class="text-[11px] font-black text-white uppercase tracking-widest">Section 2 – OKR / KPI Quarterly Performance Review</p>
             </div>
 
+            <div class="overflow-x-auto">
             @if(empty($kpis))
-            <div class="border border-dashed border-[#6B9080] rounded-2xl p-10 text-center">
+            <div class="p-10 text-center">
                 <p class="text-slate-400 text-sm">No KPIs found for {{ $currentFinancialYear }}</p>
             </div>
             @else
-            <div class="border border-[#6B9080]/30 rounded-2xl overflow-hidden">
-                <table class="w-full text-xs">
-                    <thead>
-                        <tr class="bg-gradient-to-r from-[#1a3d34] to-[#2d5548] text-white">
-                            <th class="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider w-6">#</th>
-                            <th class="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider">KPI Title</th>
-                            <th class="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider">Category</th>
-                            <th class="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider">Weight</th>
-                            <th class="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider">Target</th>
-                            <th class="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider">{{ $qLabel }} Actual</th>
-                            <th class="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider">{{ $qLabel }} Score</th>
-                            <th class="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($kpis as $i => $kpi)
-                        @php
-                            $qScore  = $quarterScores[$kpi['id']] ?? null;
-                            $actual  = isset($qScore['quarter_actual']) ? (float)$qScore['quarter_actual'] : null;
-                            $target  = isset($qScore['quarter_target']) ? (float)$qScore['quarter_target'] : (float)($kpi['base_target'] ?? 0);
-                            $score   = ($actual !== null && $target > 0) ? round($actual / $target * 100, 1) : null;
-                            $status  = $qScore['status'] ?? ($kpi['status'] ?? 'not_started');
+            <table class="w-full text-xs" id="sec2Table">
+                <thead>
+                    <tr class="bg-[#1a3d34] text-white">
+                        <th class="px-3 py-3 text-center font-black text-[10px] uppercase tracking-wider w-10">No.</th>
+                        <th class="px-3 py-3 text-left font-black text-[10px] uppercase tracking-wider w-40">OKR</th>
+                        <th class="px-3 py-3 text-center font-black text-[10px] uppercase tracking-wider w-10">Sub</th>
+                        <th class="px-3 py-3 text-left font-black text-[10px] uppercase tracking-wider">Initiative</th>
+                        <th class="px-3 py-3 text-center font-black text-[10px] uppercase tracking-wider w-20">A · Actual</th>
+                        <th class="px-3 py-3 text-center font-black text-[10px] uppercase tracking-wider w-20">B · Target</th>
+                        <th class="px-3 py-3 text-center font-black text-[10px] uppercase tracking-wider w-24">C · Score<br><span class="font-normal normal-case">(A÷B)×5</span></th>
+                        <th class="px-3 py-3 text-center font-black text-[10px] uppercase tracking-wider w-24">D · Pro-Rated<br><span class="font-normal normal-case">Self Score</span></th>
+                        <th class="px-3 py-3 text-center font-black text-[10px] uppercase tracking-wider w-24">Appraiser<br><span class="font-normal normal-case">Score</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach($kpis as $kpiIdx => $kpi)
+                @php
+                    $qs        = $quarterScores[$kpi['id']] ?? null;
+                    $dbActual  = isset($qs['quarter_actual']) ? (float)$qs['quarter_actual'] : '';
+                    $dbTarget  = isset($qs['quarter_target']) ? (float)$qs['quarter_target'] : (float)($kpi['base_target'] ?? '');
+                    $subCount  = 4;
+                    $kpiNo     = $kpiIdx + 1;
+                @endphp
+                {{-- OKR group header row --}}
+                <tr class="bg-[#6B9080]/10 border-b border-[#6B9080]/20">
+                    <td class="px-3 py-3 text-center font-black text-slate-800">{{ $kpiNo }}</td>
+                    <td class="px-3 py-3" colspan="2">
+                        <p class="font-black text-[#1a3d34] text-[11px] uppercase tracking-wide">OKR / KPI</p>
+                        <p class="text-xs text-slate-700 mt-0.5 leading-snug">{{ $kpi['kpi_title'] }}</p>
+                        <p class="text-[9px] text-slate-400">{{ $kpi['category'] ?? '' }}{{ isset($kpi['sub_category']) ? ' · '.$kpi['sub_category'] : '' }}</p>
+                    </td>
+                    <td colspan="6" class="px-3 py-3 text-right">
+                        <span class="text-[9px] font-black text-[#6B9080] bg-[#6B9080]/10 px-2 py-1 rounded-full uppercase tracking-wider">{{ $kpi['weightage'] ?? '—' }}% weight</span>
+                    </td>
+                </tr>
+                {{-- 4 sub-initiative rows --}}
+                @for($sub = 1; $sub <= $subCount; $sub++)
+                @php
+                    $subLabel  = $kpiNo . '.' . $sub;
+                    $isFirst   = $sub === 1;
+                    $rowBg     = $sub % 2 === 0 ? 'bg-slate-50/40' : 'bg-white';
+                @endphp
+                <tr class="{{ $rowBg }} border-b border-[#6B9080]/10 sec2-row" data-kpi="{{ $kpiNo }}" data-sub="{{ $sub }}">
+                    <td class="px-3 py-2"></td>
+                    <td class="px-3 py-2"></td>
+                    <td class="px-3 py-2 text-center text-[10px] font-black text-slate-500">{{ $subLabel }}</td>
+                    {{-- Initiative text --}}
+                    <td class="px-3 py-2">
+                        <input type="text"
+                               placeholder="Initiative {{ $subLabel }}…"
+                               class="w-full bg-transparent border-b border-[#6B9080]/30 py-1 text-[11px] text-slate-700 placeholder-slate-300 focus:outline-none focus:border-[#6B9080] transition">
+                    </td>
+                    {{-- A: Actual --}}
+                    <td class="px-3 py-2 text-center">
+                        <input type="number" step="any" min="0"
+                               value="{{ $isFirst && $dbActual !== '' ? $dbActual : '' }}"
+                               placeholder="—"
+                               data-col="actual"
+                               class="w-16 text-center bg-white border border-[#6B9080]/30 rounded-lg px-1 py-1 text-[11px] text-slate-700 focus:outline-none focus:border-[#6B9080] transition sec2-actual">
+                    </td>
+                    {{-- B: Target --}}
+                    <td class="px-3 py-2 text-center">
+                        <input type="number" step="any" min="0"
+                               value="{{ $isFirst && $dbTarget !== '' ? $dbTarget : '' }}"
+                               placeholder="—"
+                               data-col="target"
+                               class="w-16 text-center bg-white border border-[#6B9080]/30 rounded-lg px-1 py-1 text-[11px] text-slate-700 focus:outline-none focus:border-[#6B9080] transition sec2-target">
+                    </td>
+                    {{-- C: Score auto-calc --}}
+                    <td class="px-3 py-2 text-center">
+                        <span class="sec2-score text-sm font-black text-slate-300">—</span>
+                    </td>
+                    {{-- D: Pro-Rated Self Score --}}
+                    <td class="px-3 py-2 text-center">
+                        <input type="number" step="0.1" min="0" max="5" placeholder="—"
+                               class="w-16 text-center bg-white border border-[#6B9080]/30 rounded-lg px-1 py-1 text-[11px] text-slate-700 focus:outline-none focus:border-[#6B9080] transition">
+                    </td>
+                    {{-- Appraiser Score --}}
+                    <td class="px-3 py-2 text-center">
+                        <input type="number" step="0.1" min="0" max="5" placeholder="—"
+                               class="w-16 text-center bg-white border border-[#6B9080]/30 rounded-lg px-1 py-1 text-[11px] text-slate-700 focus:outline-none focus:border-[#6B9080] transition">
+                    </td>
+                </tr>
+                @endfor
+                @endforeach
 
-                            $statusConfig = match(strtolower($status)) {
-                                'on_track','monitoring' => ['bg' => 'bg-emerald-100', 'text' => 'text-emerald-700', 'label' => 'On Track'],
-                                'at_risk','risk'        => ['bg' => 'bg-amber-100',   'text' => 'text-amber-700',   'label' => 'At Risk'],
-                                'in_trouble','critical' => ['bg' => 'bg-red-100',     'text' => 'text-red-700',     'label' => 'Critical'],
-                                'completed'             => ['bg' => 'bg-[#F5EAE0]',   'text' => 'text-[#6B3F2A]',   'label' => 'Completed'],
-                                default                 => ['bg' => 'bg-slate-100',   'text' => 'text-slate-500',   'label' => 'Not Started'],
-                            };
-
-                            $scoreColor = match(true) {
-                                $score === null => 'text-slate-300',
-                                $score >= 90   => 'text-emerald-600',
-                                $score >= 70   => 'text-[#6B9080]',
-                                $score >= 50   => 'text-amber-500',
-                                default        => 'text-red-500',
-                            };
-                        @endphp
-                        <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-slate-50/60' }} border-b border-[#6B9080]/10 hover:bg-[#6B9080]/5 transition">
-                            <td class="px-4 py-3 text-slate-400 font-bold">{{ $i + 1 }}</td>
-                            <td class="px-4 py-3">
-                                <p class="font-black text-slate-800 leading-snug">{{ $kpi['kpi_title'] }}</p>
-                                <p class="text-[9px] text-slate-400 mt-0.5">{{ $kpi['sub_category'] ?? '-' }}</p>
-                            </td>
-                            <td class="px-4 py-3 text-slate-600">{{ $kpi['category'] ?? '-' }}</td>
-                            <td class="px-4 py-3 text-center">
-                                <span class="font-black text-[#6B9080]">{{ $kpi['weightage'] ?? '-' }}%</span>
-                            </td>
-                            <td class="px-4 py-3 text-center font-semibold text-slate-700">
-                                {{ number_format((float)($kpi['base_target'] ?? 0), 0) }}
-                            </td>
-                            <td class="px-4 py-3 text-center font-semibold text-slate-700">
-                                {{ $actual !== null ? number_format((float)$actual, 0) : '—' }}
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <span class="font-black text-lg {{ $scoreColor }}">
-                                    {{ $score !== null ? number_format((float)$score, 1).'%' : '—' }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                    {{ $statusConfig['label'] }}
-                                </span>
-                            </td>
-                        </tr>
-                        @endforeach
-
-                        {{-- Summary row --}}
-                        @php
-                            $totalWeight = collect($kpis)->sum(fn($k) => (float)($k['weightage'] ?? 0));
-                            $scores = collect($kpis)->map(function($k) use ($quarterScores) {
-                                $qs  = $quarterScores[$k['id']] ?? null;
-                                $act = isset($qs['quarter_actual']) ? (float)$qs['quarter_actual'] : null;
-                                $tgt = isset($qs['quarter_target']) ? (float)$qs['quarter_target'] : (float)($k['base_target'] ?? 0);
-                                return ($act !== null && $tgt > 0) ? round($act / $tgt * 100, 1) : null;
-                            })->filter(fn($s) => $s !== null);
-                            $avgScore = $scores->isNotEmpty() ? round($scores->avg(), 1) : null;
-                        @endphp
-                        <tr class="bg-gradient-to-r from-[#1a3d34]/5 to-[#6B9080]/10 border-t-2 border-[#6B9080]/30">
-                            <td colspan="3" class="px-4 py-3">
-                                <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-wider">Overall Summary</p>
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <span class="font-black text-slate-800">{{ number_format($totalWeight, 0) }}%</span>
-                            </td>
-                            <td class="px-4 py-3"></td>
-                            <td class="px-4 py-3"></td>
-                            <td class="px-4 py-3 text-center">
-                                @if($avgScore !== null)
-                                <span class="font-black text-lg {{ $avgScore >= 90 ? 'text-emerald-600' : ($avgScore >= 70 ? 'text-[#6B9080]' : ($avgScore >= 50 ? 'text-amber-500' : 'text-red-500')) }}">
-                                    {{ number_format($avgScore, 1) }}%
-                                </span>
-                                @else
-                                <span class="text-slate-300 font-black">—</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-3"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                {{-- Total Score row --}}
+                <tr class="bg-gradient-to-r from-[#1a3d34] to-[#2d5548] text-white">
+                    <td colspan="6" class="px-4 py-3 text-right">
+                        <p class="text-[10px] font-black uppercase tracking-widest">Total Score Section 2</p>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <span id="sec2TotalScore" class="text-base font-black">—</span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <span id="sec2TotalSelf" class="text-base font-black">—</span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <span id="sec2TotalAppraiser" class="text-base font-black">—</span>
+                    </td>
+                </tr>
+                {{-- % row --}}
+                <tr class="bg-[#1a3d34]/5 border-t border-[#6B9080]/20">
+                    <td colspan="6" class="px-4 py-3 text-right">
+                        <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest">% Total</p>
+                        <p class="text-[9px] text-slate-400">Formula: Total Score Section 2 ÷ {{ count($kpis) * 5 }} × 70</p>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <span id="sec2PctScore" class="text-base font-black text-slate-300">—</span>
+                        <p class="text-[9px] text-slate-400">/ 70 pts</p>
+                    </td>
+                    <td colspan="2" class="px-4 py-3 text-center text-[9px] text-slate-400 italic leading-relaxed">
+                        Example: A (target) = 100 calls,<br>A (actual) = 60,<br>Score C = (A÷B) × 5 = 3.0
+                    </td>
+                </tr>
+                </tbody>
+            </table>
             @endif
+            </div>
         </div>
+
+        <script>
+        // Section 2 — live score calculation
+        (function () {
+            const maxPerKpi = 5; // max score per sub-initiative
+            const kpiCount  = {{ count($kpis) }};
+
+            function scoreColorClass(v) {
+                if (v === null) return 'text-slate-300';
+                if (v >= 4)    return 'text-emerald-600';
+                if (v >= 3)    return 'text-[#6B9080]';
+                if (v >= 2)    return 'text-amber-500';
+                return 'text-red-500';
+            }
+
+            function recalcRow(row) {
+                const a = parseFloat(row.querySelector('.sec2-actual')?.value);
+                const b = parseFloat(row.querySelector('.sec2-target')?.value);
+                const scoreEl = row.querySelector('.sec2-score');
+                if (!scoreEl) return null;
+                if (!isNaN(a) && !isNaN(b) && b > 0) {
+                    const c = Math.min((a / b) * 5, 5);
+                    scoreEl.textContent = c.toFixed(2);
+                    scoreEl.className = 'sec2-score text-sm font-black ' + scoreColorClass(c);
+                    return c;
+                }
+                scoreEl.textContent = '—';
+                scoreEl.className = 'sec2-score text-sm font-black text-slate-300';
+                return null;
+            }
+
+            function recalcAll() {
+                const rows   = document.querySelectorAll('#sec2Table tr.sec2-row');
+                let totalC   = 0, countC = 0;
+                let totalSelf = 0, countSelf = 0;
+                let totalApp = 0, countApp = 0;
+
+                rows.forEach(row => {
+                    const c = recalcRow(row);
+                    if (c !== null) { totalC += c; countC++; }
+
+                    const selfInp = row.querySelectorAll('input[type=number]')[2];
+                    const appInp  = row.querySelectorAll('input[type=number]')[3];
+                    const sv = parseFloat(selfInp?.value);
+                    const av = parseFloat(appInp?.value);
+                    if (!isNaN(sv)) { totalSelf += sv; countSelf++; }
+                    if (!isNaN(av)) { totalApp  += av; countApp++; }
+                });
+
+                const maxTotal = kpiCount * 5;
+
+                const scoreEl    = document.getElementById('sec2TotalScore');
+                const selfEl     = document.getElementById('sec2TotalSelf');
+                const appEl      = document.getElementById('sec2TotalAppraiser');
+                const pctEl      = document.getElementById('sec2PctScore');
+
+                scoreEl.textContent = countC    ? totalC.toFixed(2)    : '—';
+                selfEl.textContent  = countSelf ? totalSelf.toFixed(2) : '—';
+                appEl.textContent   = countApp  ? totalApp.toFixed(2)  : '—';
+
+                if (countC) {
+                    const pct = (totalC / maxTotal * 70).toFixed(1);
+                    pctEl.textContent = pct + '%';
+                    pctEl.className = 'text-base font-black ' + scoreColorClass(totalC / maxTotal * 5);
+                } else {
+                    pctEl.textContent = '—';
+                    pctEl.className = 'text-base font-black text-slate-300';
+                }
+            }
+
+            document.getElementById('sec2Table')?.addEventListener('input', recalcAll);
+            recalcAll();
+        })();
+        </script>
 
         {{-- Signature Section --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 pt-8 border-t border-[#6B9080]/20">
