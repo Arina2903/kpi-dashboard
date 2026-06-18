@@ -345,8 +345,8 @@
         <p class="text-white/70 text-[11px] mt-0.5">{{ $currentUserName }} · {{ $user['role'] ?? '-' }} · {{ $currentDepartment }} · {{ $currentFinancialYear }}</p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
-        <a href="{{ route('kpi.index') }}"   class="bg-white text-[#1a3d34] hover:bg-[#f0faf7] px-4 py-2 rounded-xl shadow font-bold text-xs transition">My KPIs</a>
-        <a href="{{ route('weightage') }}"   class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20">Weightage</a>
+        <a href="{{ route('kpi.create') }}"  class="bg-white text-[#1a3d34] hover:bg-[#f0faf7] px-4 py-2 rounded-xl shadow font-bold text-xs transition">+ Create KPI</a>
+        <a href="{{ route('kpi.index') }}"   class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20">My KPIs</a>
     </div>
 </div>
 
@@ -354,8 +354,127 @@
 @if(session('error'))<div class="bg-red-50 text-red-700 px-3 py-2 rounded-xl text-xs border border-red-200">{{ session('error') }}</div>@endif
 @if($errors->any())<div class="bg-red-50 text-red-700 px-3 py-2 rounded-xl text-xs border border-red-200">{{ $errors->first() }}</div>@endif
 
-{{-- ═══════ TIER 1: DEPT RANKING — visible to ALL roles ═══════════════════ --}}
+{{-- ═══════ MY PERFORMANCE ══════════════════════════════════════════════════ --}}
+<div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080]">
+    <div class="h-1 bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#A4C3B2]"></div>
+    <div class="flex flex-col lg:flex-row">
+
+        {{-- Left: dark score panel --}}
+        <div class="bg-gradient-to-br from-[#1a3d34] to-[#2d5548] text-white p-5 lg:min-w-[240px] xl:min-w-[260px] flex flex-col justify-between">
+            <div>
+                <p class="text-[9px] uppercase tracking-widest font-black text-white/50 mb-3">My Performance · {{ $currentFinancialYear }}</p>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-white/20">
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode($currentUserName) }}&background=6B9080&color=fff&size=40" class="w-full h-full object-cover"/>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-black text-white leading-tight">{{ $currentUserName }}</h2>
+                        <p class="text-[9px] text-white/60 mt-0.5">{{ $userPosition }} · {{ $currentDepartment }}</p>
+                    </div>
+                </div>
+                @if($individualKpiCount === 0)
+                    <p class="text-4xl font-black text-white/20 mb-2">—</p>
+                    <p class="text-xs text-white/40">No KPIs for {{ $currentFinancialYear }}</p>
+                @elseif($individualWeightage <= 0)
+                    <p class="text-4xl font-black text-white/20 mb-2">—</p>
+                    <p class="text-xs text-white/40">{{ $individualKpiCount }} KPIs · weightage not set</p>
+                    <a href="{{ route('weightage') }}" class="inline-block mt-2 text-xs font-black text-white/80 underline">Set weightage →</a>
+                @else
+                    <div class="flex items-end gap-1.5 mb-2">
+                        <span class="text-5xl font-black leading-none {{ $individualScoreStyle['text'] }}">{{ number_format($individualPerformance,1) }}</span>
+                        <span class="text-xl font-black text-white/40 mb-1">%</span>
+                    </div>
+                    <div class="h-1.5 bg-white/20 rounded-full overflow-hidden mb-2">
+                        <div class="h-1.5 rounded-full {{ $individualScoreStyle['bar'] }}" style="width:{{ min($individualPerformance,100) }}%"></div>
+                    </div>
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black border {{ $individualScoreStyle['badge'] }}">{{ $individualScoreStyle['label'] }}</span>
+                    <p class="text-[9px] text-white/40 mt-1.5">{{ $individualKpiCount }} KPIs · {{ number_format($individualWeightage,0) }}% weightage</p>
+                @endif
+            </div>
+            <div class="flex gap-2 mt-5 pt-4 border-t border-white/10">
+                <a href="{{ route('kpi.index') }}" class="flex-1 text-center bg-white/15 hover:bg-white/25 text-white px-3 py-2 rounded-xl text-xs font-black transition">My KPIs</a>
+                <a href="{{ route('weightage') }}" class="flex-1 text-center bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-xs font-black transition border border-white/20">Weightage</a>
+            </div>
+        </div>
+
+        {{-- Right: Stats + quarterly completion --}}
+        <div class="flex-1 p-5 flex flex-col justify-between">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                <div class="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
+                    <p class="text-2xl font-black text-slate-900">{{ $individualKpiCount }}</p>
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide mt-1">Total KPIs</p>
+                </div>
+                <div class="bg-emerald-50 rounded-2xl p-3 text-center border border-emerald-100">
+                    <p class="text-2xl font-black text-emerald-600">{{ $myOnTrack }}</p>
+                    <p class="text-[9px] text-emerald-500 uppercase tracking-wide mt-1">On Track</p>
+                </div>
+                @if($myAtRisk > 0)
+                <div class="bg-red-50 rounded-2xl p-3 text-center border border-red-100">
+                    <p class="text-2xl font-black text-red-600">{{ $myAtRisk }}</p>
+                    <p class="text-[9px] text-red-400 uppercase tracking-wide mt-1">At Risk</p>
+                </div>
+                @else
+                <div class="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
+                    <p class="text-2xl font-black text-slate-300">0</p>
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide mt-1">At Risk</p>
+                </div>
+                @endif
+                <div class="bg-[#6B9080]/5 rounded-2xl p-3 text-center border border-[#6B9080]/20">
+                    <p class="text-2xl font-black text-[#6B9080]">{{ number_format($individualWeightage,0) }}%</p>
+                    <p class="text-[9px] text-[#6B9080]/70 uppercase tracking-wide mt-1">Weightage</p>
+                </div>
+            </div>
+            <div>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">My Quarterly Completion</p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    @foreach(['Q1','Q2','Q3','Q4'] as $qi)
+                    @php $qc = $myCompletedByQ[$qi]; $qt = $myTotalByQ[$qi]; $pct = $qt > 0 ? round(($qc/$qt)*100) : 0; @endphp
+                    <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-black text-slate-700">{{ $qi }}</span>
+                            <span class="text-[10px] font-black {{ $pct >= 100 ? 'text-[#6B9080]' : ($pct > 0 ? 'text-amber-500' : 'text-slate-300') }}">{{ $pct }}%</span>
+                        </div>
+                        <div class="h-1.5 bg-slate-200 rounded-full overflow-hidden mb-1.5">
+                            <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-[#A4C3B2]' : 'bg-slate-200' }}" style="width:{{ $pct }}%"></div>
+                        </div>
+                        <p class="text-[8px] text-slate-400">{{ $qc }}/{{ $qt }} KPIs</p>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ═══════ COMPANY OVERVIEW TOGGLE ════════════════════════════════════════ --}}
 @php $rankingCount = count($companyDeptRanking ?? []); @endphp
+@if($rankingCount > 0 || $deptRows->count() > 0)
+<div>
+    <button onclick="toggleCompanySection()"
+        class="w-full flex items-center justify-between bg-white rounded-2xl px-5 py-4 border border-[#6B9080] soft-card hover:bg-slate-50/60 transition">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-[#6B9080]/10 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-[#6B9080]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+            </div>
+            <div class="text-left">
+                <p class="text-sm font-black text-slate-800">Company Overview</p>
+                <p class="text-[9px] text-slate-400 mt-0.5">Department ranking · team performance · quarterly trends</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span id="companyToggleBadge" class="text-[9px] font-black text-[#6B9080] bg-[#6B9080]/10 px-2.5 py-1 rounded-full">Show</span>
+            <svg id="companyChevron" class="w-4 h-4 text-slate-400 transition-transform duration-300" style="transform:rotate(-90deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
+    </button>
+
+    {{-- Collapsible company content --}}
+    <div id="companySectionWrapper" class="space-y-3 mt-3" style="display:none">
+
+{{-- ── DEPT RANKING CONTENT ──────────────────────────────────────────── --}}
 @if($rankingCount > 0 || $deptRows->count() > 0)
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 items-start">
 
@@ -620,6 +739,10 @@
 
 @endif
 
+    </div>{{-- /companySectionWrapper --}}
+</div>{{-- /companySection --}}
+@endif
+
 {{-- ═══════ KPI TARGET LINKAGES ══════════════════════════════════════════ --}}
 @if($hasAnyLinkage || $canAssignTarget)
 <div class="bg-white rounded-2xl border border-[#6B9080] soft-card overflow-hidden">
@@ -786,106 +909,26 @@
 </div>
 @endif
 
-{{-- ═══════ TIER 3: MY PERFORMANCE — all roles ═══════════════════════════ --}}
-<div class="pt-1 border-t border-[#6B9080]">
-    <div class="flex items-center justify-between mb-3 pt-3">
-        <h2 class="text-sm font-black text-slate-900">My Performance <span class="font-normal text-slate-400 text-xs">· {{ $currentFinancialYear }}</span></h2>
-        <a href="{{ route('kpi.index') }}" class="px-3 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-800 transition">Manage KPIs →</a>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-3">
-        {{-- Score hero --}}
-        <div class="lg:col-span-2 brand-panel rounded-2xl p-4 text-white relative overflow-hidden soft-card">
-            <div class="absolute top-0 right-0 w-28 h-28 rounded-full bg-white/5 -translate-y-8 translate-x-8 pointer-events-none"></div>
-            <p class="text-[9px] uppercase tracking-widest font-black text-white/50">My Performance Score</p>
-
-            @if($individualKpiCount === 0)
-                {{-- No KPIs created yet --}}
-                <div class="mt-4 mb-2">
-                    <p class="text-2xl font-black text-white/30">No KPIs Yet</p>
-                    <p class="text-xs text-blue-200 mt-1.5">You have no KPIs for {{ $currentFinancialYear }}.</p>
-                    <a href="{{ route('kpi.create') }}" class="inline-block mt-3 px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-xl text-xs font-black transition border border-white/20">+ Create First KPI</a>
-                </div>
-            @elseif($individualWeightage <= 0)
-                {{-- Has KPIs but weightage not set --}}
-                <div class="mt-3 flex items-end gap-2">
-                    <span class="text-5xl font-black leading-none text-white/40">—</span>
-                    <span class="text-xl font-black text-white/30 mb-1">%</span>
-                </div>
-                <p class="text-xs text-blue-200 mt-2">{{ $individualKpiCount }} KPI created · weightage not set.</p>
-                <a href="{{ route('weightage') }}" class="inline-block mt-1.5 text-xs font-black text-white underline">Set weightage →</a>
-            @else
-                {{-- Normal: has KPIs + weightage --}}
-                <div class="mt-3 flex items-end gap-2">
-                    <span class="text-5xl font-black leading-none {{ $individualScoreStyle['text'] }}">{{ number_format($individualPerformance,1) }}</span>
-                    <span class="text-xl font-black text-white/50 mb-1">%</span>
-                </div>
-                <span class="inline-block mt-1.5 px-2 py-0.5 rounded-lg text-xs font-black border {{ $individualScoreStyle['badge'] }}">{{ $individualScoreStyle['label'] }}</span>
-                <div class="mt-3 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-1.5 rounded-full {{ $individualScoreStyle['bar'] }}" style="width:{{ min($individualPerformance,100) }}%"></div>
-                </div>
-                <p class="text-[9px] text-white/50/80 mt-1.5">{{ $individualKpiCount }} KPI · {{ number_format($individualWeightage,0) }}% weightage set</p>
+{{-- ═══════ MY KPI CARDS ════════════════════════════════════════════════════ --}}
+<div>
+    <div class="flex items-center justify-between mb-3">
+        <div>
+            <h2 class="text-sm font-black text-slate-900">My KPIs <span class="font-normal text-slate-400 text-xs">· {{ $currentFinancialYear }}</span></h2>
+            @if($individualKpiCount > 0)
+            <p class="text-[9px] text-slate-400 mt-0.5">{{ $individualKpiCount }} KPIs · {{ number_format($individualWeightage,0) }}% total weightage</p>
             @endif
-
-            <div class="mt-3 pt-3 border-t border-white/10 flex gap-2 flex-wrap">
-                <a href="{{ route('kpi.index') }}"  class="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-black transition">My KPIs</a>
-                <a href="{{ route('weightage') }}"  class="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-black transition">Weightage</a>
-                @if($isManager)<a href="{{ route('kpi.my-department-kpi') }}" class="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-black transition">Team KPIs</a>@endif
-            </div>
         </div>
-
-        {{-- Quick stats --}}
-        @if($individualKpiCount === 0)
-        <div class="lg:col-span-3 flex items-center justify-center bg-white rounded-2xl border border-dashed border-[#6B9080] p-8 soft-card">
-            <div class="text-center">
-                <p class="text-slate-400 text-sm font-bold">No KPI data to display</p>
-                <p class="text-slate-300 text-xs mt-1">Create your KPIs to start tracking performance</p>
-                <a href="{{ route('kpi.create') }}" class="inline-block mt-4 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-700 transition">+ Create KPI</a>
-            </div>
-        </div>
-        @else
-        <div class="lg:col-span-3 grid grid-cols-2 sm:grid-cols-4 gap-3 content-start">
-            <div class="bg-white rounded-xl border border-[#6B9080] p-3 soft-card">
-                <p class="text-[9px] uppercase font-black text-slate-400">Total KPIs</p>
-                <p class="text-3xl font-black text-slate-900 mt-1">{{ $individualKpiCount }}</p>
-                <p class="text-[9px] text-slate-400 mt-0.5">This year</p>
-            </div>
-            <div class="bg-white rounded-xl border border-emerald-100 p-3 soft-card">
-                <p class="text-[9px] uppercase font-black text-emerald-600">On Track</p>
-                <p class="text-3xl font-black text-emerald-700 mt-1">{{ $myOnTrack }}</p>
-                <div class="mt-1.5 h-1 bg-emerald-50 rounded-full overflow-hidden">
-                    <div class="h-1 bg-emerald-400 rounded-full" style="width:{{ $individualKpiCount > 0 ? round(($myOnTrack/$individualKpiCount)*100) : 0 }}%"></div>
-                </div>
-            </div>
-            <div class="bg-white rounded-xl border {{ $myAtRisk > 0 ? 'border-red-100' : 'border-[#6B9080]' }} p-3 soft-card">
-                <p class="text-[9px] uppercase font-black {{ $myAtRisk > 0 ? 'text-red-500' : 'text-slate-400' }}">Needs Attention</p>
-                <p class="text-3xl font-black {{ $myAtRisk > 0 ? 'text-red-700' : 'text-slate-400' }} mt-1">{{ $myAtRisk }}</p>
-                <p class="text-[9px] mt-0.5 {{ $myAtRisk > 0 ? 'text-red-400 font-bold' : 'text-slate-400' }}">{{ $myAtRisk > 0 ? 'Review required' : 'All clear' }}</p>
-            </div>
-            <div class="bg-white rounded-xl border border-[#6B9080] p-3 soft-card">
-                <p class="text-[9px] uppercase font-black text-black mb-1.5">Completed Quarters</p>
-                @foreach(['Q1','Q2','Q3','Q4'] as $qi)
-                @php $qc = $myCompletedByQ[$qi]; $qt = $myTotalByQ[$qi]; @endphp
-                <div class="flex items-center gap-1.5 mb-1">
-                    <span class="text-[9px] font-black text-slate-400 w-5 shrink-0">{{ $qi }}</span>
-                    <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-[#A4C3B2]' : 'bg-slate-200' }}" style="width:{{ $qt > 0 ? round(($qc/$qt)*100) : 0 }}%"></div>
-                    </div>
-                    <span class="text-[9px] font-black {{ $qc > 0 ? 'text-black' : 'text-slate-300' }} w-8 text-right shrink-0">{{ $qc }}/{{ $qt }}</span>
-                </div>
-                @endforeach
-                <div class="mt-1.5 pt-1.5 border-t border-[#6B9080] flex items-center justify-between">
-                    <span class="text-[9px] font-black text-slate-400">Annual (all Q done)</span>
-                    <span class="text-[9px] font-black {{ $myCompletedAnnual > 0 ? 'text-black' : 'text-slate-300' }}">{{ $myCompletedAnnual }}/{{ $individualKpiCount }}</span>
-                </div>
-            </div>
-        </div>
-        @endif
+        <a href="{{ route('kpi.create') }}" class="px-3 py-1.5 bg-[#6B9080] text-white rounded-xl text-xs font-black hover:bg-[#5a7a6e] transition">+ Add KPI</a>
     </div>
 
-    {{-- My KPI cards --}}
-    @if($individualKpiCount > 0)
-    <div class="mt-4">
+    @if($individualKpiCount === 0)
+        <div class="bg-white rounded-2xl border border-dashed border-[#6B9080] p-10 soft-card text-center">
+            <p class="text-slate-400 text-sm font-bold">No KPIs yet for {{ $currentFinancialYear }}</p>
+            <p class="text-slate-300 text-xs mt-1">Create your first KPI to start tracking performance</p>
+            <a href="{{ route('kpi.create') }}" class="inline-block mt-4 px-4 py-2 bg-[#6B9080] text-white rounded-xl text-xs font-black hover:bg-[#5a7a6e] transition">+ Create KPI</a>
+        </div>
+    @else
+    <div class="">
         @if($orderedCategoryGroups->isEmpty())
             <div class="bg-white rounded-2xl border border-dashed border-[#6B9080] p-8 text-center">
                 <p class="text-slate-400 text-sm">No KPIs created yet.</p>
@@ -1163,6 +1206,31 @@ deptData.forEach(function(dept) {
     }
 
 
+});
+
+// ── COMPANY OVERVIEW TOGGLE ─────────────────────────────────────────────────
+function toggleCompanySection() {
+    const wrapper = document.getElementById('companySectionWrapper');
+    const badge   = document.getElementById('companyToggleBadge');
+    const chevron = document.getElementById('companyChevron');
+    if (!wrapper) return;
+    const isHidden = wrapper.style.display === 'none' || wrapper.style.display === '';
+    wrapper.style.display = isHidden ? 'block' : 'none';
+    if (badge)   badge.textContent = isHidden ? 'Hide' : 'Show';
+    if (chevron) chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+    localStorage.setItem('companyOverviewOpen', isHidden ? 'true' : 'false');
+}
+document.addEventListener('DOMContentLoaded', function() {
+    if (localStorage.getItem('companyOverviewOpen') === 'true') {
+        const wrapper = document.getElementById('companySectionWrapper');
+        const badge   = document.getElementById('companyToggleBadge');
+        const chevron = document.getElementById('companyChevron');
+        if (wrapper) {
+            wrapper.style.display = 'block';
+            if (badge)   badge.textContent = 'Hide';
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+        }
+    }
 });
 
 // ── LINKAGE FORM: SUB CATEGORY DROPDOWN ─────────────────────────────────────
