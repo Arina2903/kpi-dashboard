@@ -216,18 +216,38 @@ class PerformanceController extends Controller
             ],
             [
                 'no'          => 6,
-                'title'       => 'Initiative',
-                'description' => 'Did the appraisee show initiative, creativity and resourcefulness in carrying out duties and responsibilities?',
+                'title'       => 'Teamwork',
+                'description' => 'Was the appraisee able to adopt and adapt in work conditions/situations and work with others toward a common objective?',
             ],
             [
                 'no'          => 7,
-                'title'       => 'Teamwork & Cooperation',
-                'description' => 'Did the appraisee work cooperatively with team members, support colleagues and contribute positively to group goals?',
+                'title'       => 'Interpersonal Relationships',
+                'description' => 'How well did the appraisee relate to associates, superiors, and external contacts to get the desired cooperation and assistance?',
             ],
             [
                 'no'          => 8,
-                'title'       => 'Integrity & Work Ethics',
-                'description' => 'Did the appraisee demonstrate honesty, reliability and a commitment to professional standards in all work-related matters?',
+                'title'       => 'Attitude Towards Work',
+                'description' => 'Was the appraisee able to work independently without need for direct supervision? How well did the appraisee adapt to new tasks and to changes in the work environment? Did the appraisee show commitment in discharge of his/her duties?',
+            ],
+            [
+                'no'          => 9,
+                'title'       => 'Time Management / Tardiness',
+                'description' => 'Is the appraisee able to plan, execute and complete assigned tasks within the deadline given? Did the appraisee conform to Company\'s rules and regulations at all times? Was the appraisee punctual in attendance and timekeeping?',
+            ],
+            [
+                'no'          => 10,
+                'title'       => 'Appearance',
+                'description' => 'Was the appraisee well groomed? Did the appraisee make an excellent impression?',
+            ],
+            [
+                'no'          => 11,
+                'title'       => 'Dependability / Accountability',
+                'description' => 'Able to carry out work with limited or minimum supervision and able to follow work instructions. Demonstrates high level of commitment to complete tasks assigned and shows initiative in ensuring job is completed efficiently and effectively.',
+            ],
+            [
+                'no'          => 12,
+                'title'       => 'Values',
+                'description' => 'Does the appraisee understand and demonstrate organisation values all the time?',
             ],
         ];
 

@@ -199,49 +199,81 @@
                         <thead>
                             <tr class="bg-gradient-to-r from-[#1a3d34] to-[#2d5548] text-white">
                                 <th class="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider">Area / Assessment</th>
-                                <th class="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider w-24">Rating (1–5)</th>
-                                <th class="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider w-64">Appraiser's Comment</th>
+                                <th class="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider w-20">Self Score</th>
+                                <th class="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider w-24">Superior Score</th>
+                                <th class="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider w-56">Appraiser's Comment</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($assessmentAreas as $i => $area)
                             <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-slate-50/60' }} border-b border-[#6B9080]/10">
-                                <td class="px-4 py-4">
+                                {{-- Area description --}}
+                                <td class="px-4 py-4 align-top">
                                     <p class="font-black text-slate-800 mb-1">{{ $area['no'] }}) {{ $area['title'] }}</p>
                                     <p class="text-[11px] text-slate-400 leading-relaxed italic">{{ $area['description'] }}</p>
                                 </td>
-                                <td class="px-4 py-4 text-center align-top">
-                                    <div class="flex flex-col items-center gap-1.5 pt-1">
+
+                                {{-- Self Score (1–5 radio) --}}
+                                <td class="px-3 py-4 text-center align-top border-l border-[#6B9080]/10">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">Self</p>
+                                    <div class="flex flex-col items-center gap-1">
                                         @foreach([5,4,3,2,1] as $score)
-                                        <label class="flex items-center gap-1.5 cursor-pointer group">
+                                        <label class="flex items-center gap-1 cursor-pointer group">
                                             <input type="radio"
-                                                   name="rating_area_{{ $area['no'] }}"
+                                                   name="self_area_{{ $area['no'] }}"
                                                    value="{{ $score }}"
-                                                   class="w-3.5 h-3.5 accent-[#6B9080] cursor-pointer">
+                                                   class="w-3 h-3 accent-[#6B9080] cursor-pointer self-radio">
                                             <span class="text-[10px] font-bold text-slate-500 group-hover:text-[#6B9080]">{{ $score }}</span>
                                         </label>
                                         @endforeach
                                     </div>
                                 </td>
-                                <td class="px-4 py-4 align-top">
-                                    <textarea rows="4"
-                                              placeholder="Appraiser's comment…"
+
+                                {{-- Superior Score (1–5 radio) --}}
+                                <td class="px-3 py-4 text-center align-top border-l border-[#6B9080]/10">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">Superior</p>
+                                    <div class="flex flex-col items-center gap-1">
+                                        @foreach([5,4,3,2,1] as $score)
+                                        <label class="flex items-center gap-1 cursor-pointer group">
+                                            <input type="radio"
+                                                   name="superior_area_{{ $area['no'] }}"
+                                                   value="{{ $score }}"
+                                                   class="w-3 h-3 accent-[#1a3d34] cursor-pointer superior-radio">
+                                            <span class="text-[10px] font-bold text-slate-500 group-hover:text-[#1a3d34]">{{ $score }}</span>
+                                        </label>
+                                        @endforeach
+                                    </div>
+                                </td>
+
+                                {{-- Appraiser Comment --}}
+                                <td class="px-4 py-4 align-top border-l border-[#6B9080]/10">
+                                    <textarea rows="5" placeholder="Appraiser's comment…"
                                               class="w-full border border-[#6B9080]/30 rounded-lg px-3 py-2 text-[11px] text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition resize-none"></textarea>
                                 </td>
                             </tr>
                             @endforeach
 
-                            {{-- Total / Average row --}}
+                            {{-- Summary row --}}
                             <tr class="bg-gradient-to-r from-[#1a3d34]/5 to-[#6B9080]/10 border-t-2 border-[#6B9080]/30">
-                                <td class="px-4 py-3">
-                                    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-wider">Total Score / Average</p>
-                                    <p class="text-[9px] text-slate-400">Calculated from selected ratings above</p>
+                                <td class="px-4 py-4">
+                                    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-wider">No. of Areas Assessed</p>
+                                    <p class="text-2xl font-black text-slate-800 mt-1">{{ count($assessmentAreas) }}</p>
+                                    <p class="text-[9px] text-slate-400 mt-2 italic">
+                                        Example: For % total, formula is<br>
+                                        <span class="font-black text-slate-600">Total Score Section 3 ÷ {{ count($assessmentAreas) * 5 }} × 25</span>
+                                    </p>
                                 </td>
-                                <td class="px-4 py-3 text-center">
-                                    <span id="avgRatingDisplay" class="text-xl font-black text-slate-300">—</span>
-                                    <p class="text-[9px] text-slate-400 mt-0.5">avg</p>
+                                <td class="px-3 py-4 text-center border-l border-[#6B9080]/20">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Self Score</p>
+                                    <span id="selfTotalDisplay" class="text-2xl font-black text-slate-300">—</span>
+                                    <p class="text-[9px] text-slate-400 mt-1" id="selfPctDisplay"></p>
                                 </td>
-                                <td class="px-4 py-3"></td>
+                                <td class="px-3 py-4 text-center border-l border-[#6B9080]/20">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Superior Score</p>
+                                    <span id="superiorTotalDisplay" class="text-2xl font-black text-slate-300">—</span>
+                                    <p class="text-[9px] text-slate-400 mt-1" id="superiorPctDisplay"></p>
+                                </td>
+                                <td class="border-l border-[#6B9080]/20"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -272,20 +304,36 @@
 </main>
 
 <script>
-// Live average calculator
+const MAX_SCORE = {{ count($assessmentAreas) * 5 }};  // 12 × 5 = 60
+const AREAS    = {{ count($assessmentAreas) }};
+
+function scoreColor(total) {
+    if (total === null) return 'text-2xl font-black text-slate-300';
+    const pct = total / MAX_SCORE * 100;
+    if (pct >= 80) return 'text-2xl font-black text-emerald-600';
+    if (pct >= 60) return 'text-2xl font-black text-[#6B9080]';
+    if (pct >= 40) return 'text-2xl font-black text-amber-500';
+    return 'text-2xl font-black text-red-500';
+}
+
+function recalc(prefix, displayId, pctId) {
+    const checked = document.querySelectorAll(`input[type=radio][name^="${prefix}_area_"]:checked`);
+    const total   = checked.length === AREAS
+        ? [...checked].reduce((s, r) => s + parseInt(r.value), 0)
+        : null;
+    const el  = document.getElementById(displayId);
+    const pel = document.getElementById(pctId);
+    el.textContent = total !== null ? total : '—';
+    el.className   = scoreColor(total);
+    pel.textContent = total !== null
+        ? `${(total / MAX_SCORE * 25).toFixed(1)} / 25 pts`
+        : `(${checked.length}/${AREAS} rated)`;
+}
+
 document.addEventListener('change', function (e) {
-    if (!e.target.name || !e.target.name.startsWith('rating_area_')) return;
-    const radios = document.querySelectorAll('input[type=radio][name^="rating_area_"]:checked');
-    const total  = [...radios].reduce((sum, r) => sum + parseInt(r.value), 0);
-    const avg    = radios.length ? (total / radios.length).toFixed(1) : null;
-    const el     = document.getElementById('avgRatingDisplay');
-    el.textContent = avg ?? '—';
-    el.className = avg
-        ? (avg >= 4 ? 'text-xl font-black text-emerald-600'
-            : avg >= 3 ? 'text-xl font-black text-[#6B9080]'
-            : avg >= 2 ? 'text-xl font-black text-amber-500'
-            : 'text-xl font-black text-red-500')
-        : 'text-xl font-black text-slate-300';
+    if (!e.target.name) return;
+    if (e.target.name.startsWith('self_area_'))     recalc('self',     'selfTotalDisplay',     'selfPctDisplay');
+    if (e.target.name.startsWith('superior_area_')) recalc('superior', 'superiorTotalDisplay', 'superiorPctDisplay');
 });
 </script>
 </body>
