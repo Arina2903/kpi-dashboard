@@ -359,41 +359,41 @@
     <div class="h-1 bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#A4C3B2]"></div>
     <div class="flex flex-col lg:flex-row">
 
-        {{-- Left: dark score panel --}}
-        <div class="bg-gradient-to-br from-[#1a3d34] to-[#2d5548] text-white p-5 lg:min-w-[240px] xl:min-w-[260px] flex flex-col justify-between">
+        {{-- Left: score panel --}}
+        <div class="bg-[#CCE3DE] p-5 lg:min-w-[240px] xl:min-w-[260px] flex flex-col justify-between">
             <div>
-                <p class="text-[9px] uppercase tracking-widest font-black text-white/50 mb-3">My Performance · {{ $currentFinancialYear }}</p>
+                <p class="text-[9px] uppercase tracking-widest font-black text-[#6B9080] mb-3">My Performance · {{ $currentFinancialYear }}</p>
                 <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-white/20">
+                    <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-[#6B9080]/40">
                         <img src="https://ui-avatars.com/api/?name={{ urlencode($currentUserName) }}&background=6B9080&color=fff&size=40" class="w-full h-full object-cover"/>
                     </div>
                     <div>
-                        <h2 class="text-sm font-black text-white leading-tight">{{ $currentUserName }}</h2>
-                        <p class="text-[9px] text-white/60 mt-0.5">{{ $userPosition }} · {{ $currentDepartment }}</p>
+                        <h2 class="text-sm font-black text-slate-900 leading-tight">{{ $currentUserName }}</h2>
+                        <p class="text-[9px] text-slate-500 mt-0.5">{{ $userPosition }} · {{ $currentDepartment }}</p>
                     </div>
                 </div>
                 @if($individualKpiCount === 0)
-                    <p class="text-4xl font-black text-white/20 mb-2">—</p>
-                    <p class="text-xs text-white/40">No KPIs for {{ $currentFinancialYear }}</p>
+                    <p class="text-4xl font-black text-slate-300 mb-2">—</p>
+                    <p class="text-xs text-slate-400">No KPIs for {{ $currentFinancialYear }}</p>
                 @elseif($individualWeightage <= 0)
-                    <p class="text-4xl font-black text-white/20 mb-2">—</p>
-                    <p class="text-xs text-white/40">{{ $individualKpiCount }} KPIs · weightage not set</p>
-                    <a href="{{ route('weightage') }}" class="inline-block mt-2 text-xs font-black text-white/80 underline">Set weightage →</a>
+                    <p class="text-4xl font-black text-slate-300 mb-2">—</p>
+                    <p class="text-xs text-slate-400">{{ $individualKpiCount }} KPIs · weightage not set</p>
+                    <a href="{{ route('weightage') }}" class="inline-block mt-2 text-xs font-black text-[#6B9080] underline">Set weightage →</a>
                 @else
                     <div class="flex items-end gap-1.5 mb-2">
                         <span class="text-5xl font-black leading-none {{ $individualScoreStyle['text'] }}">{{ number_format($individualPerformance,1) }}</span>
-                        <span class="text-xl font-black text-white/40 mb-1">%</span>
+                        <span class="text-xl font-black text-slate-400 mb-1">%</span>
                     </div>
-                    <div class="h-1.5 bg-white/20 rounded-full overflow-hidden mb-2">
+                    <div class="h-1.5 bg-[#6B9080]/20 rounded-full overflow-hidden mb-2">
                         <div class="h-1.5 rounded-full {{ $individualScoreStyle['bar'] }}" style="width:{{ min($individualPerformance,100) }}%"></div>
                     </div>
                     <span class="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black border {{ $individualScoreStyle['badge'] }}">{{ $individualScoreStyle['label'] }}</span>
-                    <p class="text-[9px] text-white/40 mt-1.5">{{ $individualKpiCount }} KPIs · {{ number_format($individualWeightage,0) }}% weightage</p>
+                    <p class="text-[9px] text-slate-500 mt-1.5">{{ $individualKpiCount }} KPIs · {{ number_format($individualWeightage,0) }}% weightage</p>
                 @endif
             </div>
-            <div class="flex gap-2 mt-5 pt-4 border-t border-white/10">
-                <a href="{{ route('kpi.index') }}" class="flex-1 text-center bg-white/15 hover:bg-white/25 text-white px-3 py-2 rounded-xl text-xs font-black transition">My KPIs</a>
-                <a href="{{ route('weightage') }}" class="flex-1 text-center bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-xs font-black transition border border-white/20">Weightage</a>
+            <div class="flex gap-2 mt-5 pt-4 border-t border-[#6B9080]/20">
+                <a href="{{ route('kpi.index') }}" class="flex-1 text-center bg-[#6B9080] hover:bg-[#5a7a6e] text-white px-3 py-2 rounded-xl text-xs font-black transition">My KPIs</a>
+                <a href="{{ route('weightage') }}" class="flex-1 text-center bg-white/60 hover:bg-white text-slate-700 px-3 py-2 rounded-xl text-xs font-black transition border border-[#6B9080]/30">Weightage</a>
             </div>
         </div>
 
