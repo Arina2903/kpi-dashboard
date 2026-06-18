@@ -31,7 +31,7 @@
 
 <aside
     id="sidebar"
-    class="fixed left-0 top-0 z-40 h-screen bg-[#1a3d34] text-white
+    class="fixed left-0 top-0 z-40 h-screen bg-[#A52A2A] text-white
     border-r border-white/10 shadow-[4px_0_24px_rgba(0,0,0,0.30)]
     w-[230px] min-w-[230px] max-w-[230px]
     px-3 py-4 flex flex-col overflow-visible shrink-0 transition-all duration-300"
@@ -72,11 +72,11 @@
                 class="w-9 h-9 object-contain sidebar-logo bg-transparent"
                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
             />
-            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#6B9080] text-white font-bold text-base items-center justify-center" style="display:none">
+            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#8b2222] text-white font-bold text-base items-center justify-center" style="display:none">
                 {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
             </span>
             @else
-            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#6B9080] text-white font-bold text-base flex items-center justify-center">
+            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#8b2222] text-white font-bold text-base flex items-center justify-center">
                 {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
             </span>
             @endif
@@ -90,7 +90,7 @@
                 {!! nl2br(e(session('company_display_name') ?: 'RICHWORKS KPI')) !!}
             </h1>
 
-            <p class="text-[9px] text-[#A4C3B2] uppercase tracking-[0.14em] mt-1 font-semibold">
+            <p class="text-[9px] text-red-200 uppercase tracking-[0.14em] mt-1 font-semibold">
                 Performance System
             </p>
         </div>
@@ -302,7 +302,7 @@
                             href="{{ $item['href'] }}"
                             class="group relative flex items-center gap-3 px-3 py-2 rounded-xl transition
                             {{ $isActive
-                                ? 'bg-[#A4C3B2] text-[#1a3d34] font-black shadow-md'
+                                ? 'bg-white/90 text-[#A52A2A] font-black shadow-md'
                                 : 'text-white/75 font-medium hover:bg-white/10 hover:text-white'
                             }}"
                         >
@@ -352,7 +352,7 @@
 
         <div class="sidebar-text border border-white/10 rounded-xl p-3 bg-white/8 mb-2" style="background:rgba(255,255,255,0.07)">
             @if($canSwitchDepartment ?? false)
-                <p class="text-[10px] text-[#A4C3B2] mb-2 font-semibold">
+                <p class="text-[10px] text-red-200 mb-2 font-semibold">
                     Department View
                 </p>
 
@@ -376,7 +376,7 @@
                     </select>
                 </form>
             @else
-                <p class="text-[10px] text-[#A4C3B2] mb-1 font-semibold">
+                <p class="text-[10px] text-red-200 mb-1 font-semibold">
                     Department
                 </p>
 
