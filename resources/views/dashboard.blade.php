@@ -376,17 +376,33 @@
     <div class="xl:col-span-2 flex flex-col gap-3">
 
         {{-- My Department donut --}}
-        <div class="bg-white rounded-2xl p-2.5 soft-card border border-[#6B9080] flex items-center gap-2.5 shrink-0">
-            <div class="relative shrink-0" style="width:64px;height:64px;">
-                <canvas id="chartCompanyDonut" width="64" height="64"></canvas>
-                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <p class="text-xs font-black {{ $myDeptScoreStyle['text'] }}">{{ number_format($myDeptPerformance,1) }}%</p>
-                    <p class="text-[7px] text-slate-400">{{ $currentDepartment }}</p>
+        <div class="bg-white rounded-2xl p-3 soft-card border border-[#6B9080] shrink-0">
+            {{-- Ring + headline --}}
+            <div class="flex items-center gap-3 mb-2.5">
+                <div class="relative shrink-0" style="width:72px;height:72px;">
+                    <canvas id="chartCompanyDonut" width="72" height="72"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <p class="text-[13px] font-black {{ $myDeptScoreStyle['text'] }}">{{ number_format($myDeptPerformance,1) }}%</p>
+                    </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-wide mb-1">{{ $currentDepartment }} Achievement</p>
+                    <span class="inline-block text-[9px] font-black px-2 py-0.5 rounded-full border {{ $myDeptScoreStyle['badge'] }} mb-1.5">
+                        {{ $myDeptScoreStyle['label'] }}
+                    </span>
+                    <p class="text-[8px] text-slate-400">{{ $totalStaffCount }} staff · {{ $currentFinancialYear }}</p>
                 </div>
             </div>
-            <div class="min-w-0">
-                <p class="text-[9px] font-black text-slate-500 uppercase mb-0.5">{{ $currentDepartment }} Achievement</p>
-                <p class="text-[8px] text-slate-400">Staff score distribution</p>
+            {{-- Band breakdown --}}
+            @php $bandList = [['#10b981','Excellent','≥90%'],['#6366f1','Good','75–89%'],['#f59e0b','Watch','50–74%'],['#ef4444','Critical','<50%']]; @endphp
+            <div class="grid grid-cols-2 gap-x-3 gap-y-1 pt-2 border-t border-slate-100">
+                @foreach($bandList as $bi => $b)
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full shrink-0" style="background:{{ $b[0] }}"></span>
+                    <span class="text-[9px] font-bold text-slate-700">{{ $myDeptBands[$bi] }}</span>
+                    <span class="text-[8px] text-slate-400">{{ $b[1] }}</span>
+                </div>
+                @endforeach
             </div>
         </div>
 
