@@ -387,16 +387,6 @@
             <div class="flex-1 min-w-0">
                 <p class="text-[9px] font-black text-slate-500 uppercase mb-0.5">{{ $currentDepartment }} Achievement</p>
                 <p class="text-[8px] text-slate-400 mb-1.5">Staff score distribution</p>
-                @php $blInfo = [['bg-emerald-500','text-emerald-700','Excellent','≥90%'],['bg-indigo-500','text-indigo-700','Good','75–89%'],['bg-amber-500','text-amber-700','Watch','50–74%'],['bg-red-500','text-red-700','Critical','<50%']]; @endphp
-                <div class="grid grid-cols-2 gap-x-2 gap-y-1">
-                    @foreach($blInfo as $bi => $bl)
-                    <div class="flex items-center gap-1">
-                        <div class="w-2 h-2 rounded-full {{ $bl[0] }} shrink-0"></div>
-                        <span class="text-[9px] {{ $bl[1] }} font-bold">{{ $myDeptBands[$bi] }} staff</span>
-                        <span class="text-[9px] text-slate-400">· {{ $bl[2] }}</span>
-                    </div>
-                    @endforeach
-                </div>
             </div>
         </div>
 
