@@ -94,9 +94,59 @@
         <div class="text-center mb-8">
             <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-3">Private & Confidential</p>
             <div class="bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548] rounded-xl px-8 py-4 inline-block">
-                <h2 class="text-xl font-black text-white tracking-widest uppercase">Performance Appraisal</h2>
+                <h2 class="text-xl font-black text-white tracking-widest uppercase">Executive / Non Executive Performance Appraisal</h2>
             </div>
             <p class="text-xs text-slate-400 mt-3">KPI Evaluation · Quarter {{ $displayQuarter }} · {{ $currentFinancialYear }}</p>
+        </div>
+
+        {{-- Purpose of Review --}}
+        <div class="border border-[#6B9080]/30 rounded-2xl overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-[#1a3d34] to-[#2d5548] px-5 py-2.5">
+                <p class="text-[10px] font-black text-white uppercase tracking-widest">Purpose of Review</p>
+            </div>
+            <div class="p-5 flex flex-col md:flex-row md:items-start gap-6">
+                {{-- Checkboxes --}}
+                <div class="flex flex-col gap-3">
+                    @foreach([
+                        ['id' => 'por_confirmation',     'label' => 'Confirmation'],
+                        ['id' => 'por_quarterly_review', 'label' => 'Quarterly Review'],
+                        ['id' => 'por_others',           'label' => 'Others'],
+                    ] as $opt)
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        <input type="checkbox"
+                               id="{{ $opt['id'] }}"
+                               name="purpose_of_review[]"
+                               value="{{ $opt['label'] }}"
+                               {{ $opt['id'] === 'por_quarterly_review' ? 'checked' : '' }}
+                               class="w-4 h-4 rounded border-[#6B9080] text-[#6B9080] accent-[#6B9080] cursor-pointer">
+                        <span class="text-xs font-black text-slate-700 uppercase tracking-wider group-hover:text-[#6B9080] transition">
+                            {{ $opt['label'] }}
+                        </span>
+                    </label>
+                    @endforeach
+                </div>
+
+                {{-- Divider --}}
+                <div class="hidden md:block w-px bg-[#6B9080]/20 self-stretch"></div>
+
+                {{-- Others specify --}}
+                <div class="flex-1 flex flex-col gap-1.5">
+                    <label for="por_others_text" class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest">Please specify (if Others)</label>
+                    <input type="text" id="por_others_text" placeholder="Describe purpose…"
+                           class="border border-[#6B9080]/40 rounded-xl px-4 py-2.5 text-sm text-slate-700 bg-slate-50 focus:outline-none focus:border-[#6B9080] focus:bg-white transition w-full max-w-md">
+                </div>
+
+                {{-- Year / Period --}}
+                <div class="flex flex-col gap-1.5 md:items-end">
+                    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest">Year / Period Under Review</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg font-black text-slate-800">{{ now()->year }}</span>
+                        <span class="text-slate-400 font-bold">/</span>
+                        <span class="text-lg font-black text-[#6B9080]">{{ $qLabel }}</span>
+                    </div>
+                    <span class="text-[10px] text-slate-400">{{ $currentFinancialYear }}</span>
+                </div>
+            </div>
         </div>
 
         {{-- Employee Info Fields --}}
