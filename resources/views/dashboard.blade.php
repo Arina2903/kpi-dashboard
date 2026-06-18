@@ -357,74 +357,115 @@
 {{-- ═══════ TIER 1: DEPT RANKING — visible to ALL roles ═══════════════════ --}}
 @php $rankingCount = count($companyDeptRanking ?? []); @endphp
 @if($rankingCount > 0 || $deptRows->count() > 0)
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 items-start">
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
 
     {{-- Card 1: Department Annual Ranking --}}
-    <div class="{{ $isManager ? '' : 'sm:col-span-2 xl:col-span-4' }} bg-white rounded-2xl p-4 soft-card border border-[#6B9080]">
-        <div class="flex items-center justify-between mb-1">
-            <h3 class="text-xs font-black text-slate-900">Department Annual Ranking</h3>
-            <span class="text-[10px] text-slate-400">{{ $currentFinancialYear }}</span>
-        </div>
-        <p class="text-[10px] text-slate-400 mb-3">All {{ $rankingCount }} departments · sorted by highest achievement</p>
-        <div style="height:{{ max(80, $rankingCount * 30) }}px; position:relative;">
-            <canvas id="chartDeptRanking"></canvas>
+    <div class="{{ $isManager ? '' : 'sm:col-span-2 xl:col-span-4' }} bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080]">
+        {{-- colour top strip --}}
+        <div class="h-1 bg-gradient-to-r from-[#6B9080] to-[#A4C3B2]"></div>
+        <div class="p-4">
+            <div class="flex items-start justify-between mb-3">
+                <div>
+                    <h3 class="text-[11px] font-black text-slate-800 leading-tight">Department Annual Ranking</h3>
+                    <p class="text-[9px] text-slate-400 mt-0.5">{{ $rankingCount }} departments · by achievement</p>
+                </div>
+                <span class="text-[9px] font-bold text-[#6B9080] bg-[#6B9080]/10 px-2 py-0.5 rounded-full">{{ $currentFinancialYear }}</span>
+            </div>
+            <div style="height:{{ max(80, $rankingCount * 28) }}px; position:relative;">
+                <canvas id="chartDeptRanking"></canvas>
+            </div>
         </div>
     </div>
 
     @if($isManager)
 
     {{-- Card 2: Department Achievement --}}
-    <div class="bg-white rounded-2xl p-3 soft-card border border-[#6B9080]">
-        <div class="flex items-center gap-3 mb-2.5">
-            <div class="relative shrink-0" style="width:64px;height:64px;">
-                <canvas id="chartCompanyDonut" width="64" height="64"></canvas>
+    <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080] flex flex-col">
+        <div class="h-1 bg-gradient-to-r from-[#6B9080] to-[#A4C3B2]"></div>
+        <div class="p-4 flex flex-col items-center text-center flex-1">
+            {{-- label --}}
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">{{ $currentDepartment }} Achievement</p>
+            {{-- donut centred --}}
+            <div class="relative mb-3" style="width:88px;height:88px;">
+                <canvas id="chartCompanyDonut" width="88" height="88"></canvas>
                 <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <p class="text-[12px] font-black {{ $myDeptScoreStyle['text'] }}">{{ number_format($myDeptPerformance,1) }}%</p>
+                    <p class="text-[15px] font-black leading-none {{ $myDeptScoreStyle['text'] }}">{{ number_format($myDeptPerformance,1) }}%</p>
                 </div>
             </div>
-            <div class="flex-1 min-w-0">
-                <p class="text-[9px] font-black text-slate-500 uppercase tracking-wide mb-1">{{ $currentDepartment }} Achievement</p>
-                <span class="inline-block text-[9px] font-black px-2 py-0.5 rounded-full border {{ $myDeptScoreStyle['badge'] }} mb-1">
-                    {{ $myDeptScoreStyle['label'] }}
-                </span>
-                <p class="text-[8px] text-slate-400">{{ $totalStaffCount }} staff · {{ $currentFinancialYear }}</p>
+            {{-- status badge --}}
+            <span class="inline-block text-[9px] font-black px-3 py-1 rounded-full border {{ $myDeptScoreStyle['badge'] }} mb-1">
+                {{ $myDeptScoreStyle['label'] }}
+            </span>
+            <p class="text-[8px] text-slate-400 mb-3">{{ $totalStaffCount }} staff · {{ $currentFinancialYear }}</p>
+            {{-- band breakdown --}}
+            @php $bandList = [['#10b981','Excellent'],['#6366f1','Good'],['#f59e0b','Watch'],['#ef4444','Critical']]; @endphp
+            <div class="w-full grid grid-cols-2 gap-x-3 gap-y-1.5 pt-3 border-t border-slate-100">
+                @foreach($bandList as $bi => $b)
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full shrink-0" style="background:{{ $b[0] }}"></span>
+                    <span class="text-[9px] font-bold text-slate-700">{{ $myDeptBands[$bi] }}</span>
+                    <span class="text-[8px] text-slate-400 ml-0.5">{{ $b[1] }}</span>
+                </div>
+                @endforeach
             </div>
-        </div>
-        @php $bandList = [['#10b981','Excellent'],['#6366f1','Good'],['#f59e0b','Watch'],['#ef4444','Critical']]; @endphp
-        <div class="grid grid-cols-2 gap-x-2 gap-y-1 pt-2 border-t border-slate-100">
-            @foreach($bandList as $bi => $b)
-            <div class="flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full shrink-0" style="background:{{ $b[0] }}"></span>
-                <span class="text-[9px] font-bold text-slate-700">{{ $myDeptBands[$bi] }}</span>
-                <span class="text-[8px] text-slate-400">{{ $b[1] }}</span>
-            </div>
-            @endforeach
         </div>
     </div>
 
     {{-- Card 3: Total Staff --}}
-    <div class="bg-white rounded-2xl p-4 soft-card border border-[#6B9080]">
-        <p class="text-[9px] uppercase font-black text-slate-400 mb-1">Total Staff</p>
-        <p class="text-3xl font-black text-slate-900 mt-2">{{ $companyTotalStaff ?: $totalStaffCount }}</p>
-        <p class="text-[9px] text-slate-400 mt-1">{{ $companyDeptCount ?: $deptRows->count() }} departments</p>
+    <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080] flex flex-col">
+        <div class="h-1 bg-gradient-to-r from-[#6B9080] to-[#A4C3B2]"></div>
+        <div class="p-4 flex flex-col items-center text-center flex-1 justify-between">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest w-full text-left mb-4">Total Staff</p>
+            <div class="flex flex-col items-center flex-1 justify-center">
+                {{-- icon badge --}}
+                <div class="w-12 h-12 rounded-2xl bg-[#6B9080]/10 flex items-center justify-center mb-3">
+                    <svg class="w-6 h-6 text-[#6B9080]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.768-.231-1.48-.634-2.072M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.768.231-1.48.634-2.072m9.732 0A6.001 6.001 0 0012 6a6 6 0 00-4.366 9.928"/>
+                    </svg>
+                </div>
+                <p class="text-5xl font-black text-slate-900 leading-none">{{ $companyTotalStaff ?: $totalStaffCount }}</p>
+                <p class="text-[10px] text-slate-400 mt-2">staff members</p>
+            </div>
+            <div class="w-full mt-4 pt-3 border-t border-slate-100 flex items-center justify-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-[#6B9080]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+                <span class="text-[10px] font-bold text-slate-500">{{ $companyDeptCount ?: $deptRows->count() }} Departments</span>
+            </div>
+        </div>
     </div>
 
     {{-- Card 4: Completed Quarters --}}
-    <div class="bg-white rounded-2xl p-4 soft-card border border-[#6B9080]">
-        <p class="text-[9px] uppercase font-black text-black mb-2">Completed Quarters</p>
-        @foreach(['Q1','Q2','Q3','Q4'] as $qi)
-        @php $qc = $totalCompletedByQ[$qi]; $qt = $totalByQ[$qi]; @endphp
-        <div class="flex items-center gap-1.5 mb-1">
-            <span class="text-[9px] font-black text-slate-400 w-5 shrink-0">{{ $qi }}</span>
-            <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-[#A4C3B2]' : 'bg-slate-200' }}" style="width:{{ $qt > 0 ? round(($qc/$qt)*100) : 0 }}%"></div>
+    <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080]">
+        <div class="h-1 bg-gradient-to-r from-[#6B9080] to-[#A4C3B2]"></div>
+        <div class="p-4">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Completed Quarters</p>
+            @foreach(['Q1','Q2','Q3','Q4'] as $qi)
+            @php $qc = $totalCompletedByQ[$qi]; $qt = $totalByQ[$qi]; $pct = $qt > 0 ? round(($qc/$qt)*100) : 0; @endphp
+            <div class="mb-3">
+                <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-black text-slate-700">{{ $qi }}</span>
+                        <span class="text-[8px] text-slate-400">{{ $qc }}/{{ $qt }} KPIs</span>
+                    </div>
+                    <span class="text-[10px] font-black {{ $pct >= 100 ? 'text-[#6B9080]' : ($pct > 0 ? 'text-amber-500' : 'text-slate-300') }}">{{ $pct }}%</span>
+                </div>
+                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-2 rounded-full transition-all {{ $qc > 0 ? 'bg-[#A4C3B2]' : 'bg-slate-200' }}" style="width:{{ $pct }}%"></div>
+                </div>
             </div>
-            <span class="text-[9px] font-black {{ $qc > 0 ? 'text-black' : 'text-slate-300' }} w-8 text-right shrink-0">{{ $qc }}/{{ $qt }}</span>
-        </div>
-        @endforeach
-        <div class="mt-1.5 pt-1.5 border-t border-[#6B9080] flex items-center justify-between">
-            <span class="text-[9px] font-black text-slate-400">Annual (all Q done)</span>
-            <span class="text-[9px] font-black {{ $totalCompletedAnnual > 0 ? 'text-black' : 'text-slate-300' }}">{{ $totalCompletedAnnual }}/{{ $totalKpisVisible }}</span>
+            @endforeach
+            <div class="mt-3 pt-3 border-t border-slate-100">
+                @php $annualPct = $totalKpisVisible > 0 ? round(($totalCompletedAnnual/$totalKpisVisible)*100) : 0; @endphp
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[9px] font-black text-slate-500">Annual Total</span>
+                    <span class="text-[10px] font-black {{ $annualPct > 0 ? 'text-[#6B9080]' : 'text-slate-300' }}">{{ $annualPct }}%</span>
+                </div>
+                <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-2.5 rounded-full {{ $totalCompletedAnnual > 0 ? 'bg-gradient-to-r from-[#6B9080] to-[#A4C3B2]' : 'bg-slate-200' }}" style="width:{{ $annualPct }}%"></div>
+                </div>
+                <p class="text-[8px] text-slate-400 mt-1 text-right">{{ $totalCompletedAnnual }}/{{ $totalKpisVisible }} KPIs done</p>
+            </div>
         </div>
     </div>
 
