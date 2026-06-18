@@ -281,21 +281,165 @@
             </div>
         </div>
 
-        {{-- Signature Section --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 pt-8 border-t border-[#6B9080]/20">
-            @foreach([
-                ['role'=>'Employee',     'name'=>$currentUserName,  'label'=>'Signature & Date'],
-                ['role'=>'Appraiser',    'name'=>$reportsToName,    'label'=>'Signature & Date'],
-                ['role'=>'HR / Verified','name'=>'',                'label'=>'Signature & Date'],
-            ] as $sig)
-            <div class="text-center">
-                <div class="h-16 border-b-2 border-[#6B9080]/40 border-dashed mb-3 mx-4"></div>
-                <p class="text-xs font-black text-slate-700">{{ $sig['name'] ?: '_______________' }}</p>
-                <p class="text-[9px] text-[#6B9080] font-semibold uppercase tracking-wider mt-1">{{ $sig['role'] }}</p>
-                <p class="text-[9px] text-slate-400 mt-0.5">{{ $sig['label'] }}</p>
+        {{-- ══ SECTION 4 ══════════════════════════════════════════════════════ --}}
+        <div class="border border-[#6B9080]/40 rounded-2xl overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-[#1a3d34] to-[#2d5548] px-5 py-3">
+                <p class="text-[11px] font-black text-white uppercase tracking-widest">Section 4 – Executive / Non-Executive : Performance Analysis</p>
             </div>
-            @endforeach
-        </div>
+
+            <div class="p-6 space-y-6">
+
+                {{-- A) Rating Summary --}}
+                <div>
+                    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest mb-1">A) Rating</p>
+                    <p class="text-[11px] text-slate-500 italic mb-4">This is a summary score of the Appraisal Review in Section 2 and Section 3.</p>
+
+                    <div class="border border-[#6B9080]/30 rounded-xl overflow-hidden mb-5" id="section4Table">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="bg-[#1a3d34] text-white">
+                                    <th class="px-5 py-3 text-left font-black text-[10px] uppercase tracking-wider w-48"></th>
+                                    <th class="px-5 py-3 text-center font-black text-[10px] uppercase tracking-wider">Self Score</th>
+                                    <th class="px-5 py-3 text-center font-black text-[10px] uppercase tracking-wider">Appraiser</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-white border-b border-[#6B9080]/10">
+                                    <td class="px-5 py-4">
+                                        <p class="font-black text-slate-700">Section 2</p>
+                                        <p class="text-[9px] text-slate-400">KPI Performance</p>
+                                    </td>
+                                    <td class="px-5 py-4 text-center">
+                                        <input type="number" min="0" max="100" placeholder="—"
+                                               class="w-20 text-center border border-[#6B9080]/40 rounded-lg px-2 py-1.5 text-sm font-black text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition">
+                                    </td>
+                                    <td class="px-5 py-4 text-center">
+                                        <input type="number" min="0" max="100" placeholder="—"
+                                               class="w-20 text-center border border-[#6B9080]/40 rounded-lg px-2 py-1.5 text-sm font-black text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition">
+                                    </td>
+                                </tr>
+                                <tr class="bg-slate-50/60 border-b border-[#6B9080]/10">
+                                    <td class="px-5 py-4">
+                                        <p class="font-black text-slate-700">Section 3</p>
+                                        <p class="text-[9px] text-slate-400">Attitude & Competency</p>
+                                    </td>
+                                    <td class="px-5 py-4 text-center">
+                                        <input type="number" min="0" max="100" placeholder="—"
+                                               class="w-20 text-center border border-[#6B9080]/40 rounded-lg px-2 py-1.5 text-sm font-black text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition">
+                                    </td>
+                                    <td class="px-5 py-4 text-center">
+                                        <input type="number" min="0" max="100" placeholder="—"
+                                               class="w-20 text-center border border-[#6B9080]/40 rounded-lg px-2 py-1.5 text-sm font-black text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition">
+                                    </td>
+                                </tr>
+                                <tr class="bg-gradient-to-r from-[#1a3d34]/5 to-[#6B9080]/10">
+                                    <td class="px-5 py-4">
+                                        <p class="text-sm font-black text-slate-900 uppercase tracking-wider">Rating</p>
+                                        <p class="text-[9px] text-slate-400">Combined total</p>
+                                    </td>
+                                    <td class="px-5 py-4 text-center">
+                                        <span id="ratingTotalSelf" class="text-xl font-black text-slate-300">—</span>
+                                    </td>
+                                    <td class="px-5 py-4 text-center">
+                                        <span id="ratingTotalAppraiser" class="text-xl font-black text-slate-300">—</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- Scoring Matrix --}}
+                    <div class="border border-[#6B9080]/30 rounded-xl overflow-hidden">
+                        <div class="bg-[#1a3d34] px-5 py-2.5 text-center">
+                            <p class="text-[11px] font-black text-white uppercase tracking-widest">Scoring Matrix</p>
+                        </div>
+                        <table class="w-full text-xs">
+                            <tbody>
+                                @php
+                                $matrix = [
+                                    ['range'=>'90 – 100', 'label'=>'Outstanding',        'bg'=>'bg-emerald-50', 'text'=>'text-emerald-700', 'badge'=>'bg-emerald-100'],
+                                    ['range'=>'70 – 89',  'label'=>'Meets Expectations', 'bg'=>'bg-[#6B9080]/5','text'=>'text-[#1a3d34]',   'badge'=>'bg-[#6B9080]/15'],
+                                    ['range'=>'50 – 69',  'label'=>'Below Average',      'bg'=>'bg-amber-50',   'text'=>'text-amber-700',   'badge'=>'bg-amber-100'],
+                                    ['range'=>'1 – 49',   'label'=>'Unsatisfactory',     'bg'=>'bg-red-50',     'text'=>'text-red-700',     'badge'=>'bg-red-100'],
+                                ];
+                                @endphp
+                                @foreach($matrix as $m)
+                                <tr class="{{ $m['bg'] }} border-b border-[#6B9080]/10">
+                                    <td class="px-5 py-3 text-center font-black text-slate-700 w-32">{{ $m['range'] }}</td>
+                                    <td class="px-5 py-3 text-center">
+                                        <span class="inline-block px-3 py-1 rounded-full text-[10px] font-black {{ $m['badge'] }} {{ $m['text'] }}">{{ $m['label'] }}</span>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Divider --}}
+                <div class="border-t border-[#6B9080]/15"></div>
+
+                {{-- B) Performance Analysis --}}
+                <div>
+                    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest mb-1">B) Performance Analysis</p>
+                    <p class="text-[11px] text-slate-500 italic mb-5">To be completed by Appraiser.</p>
+
+                    <div class="space-y-4">
+                        @foreach([
+                            ['key'=>'strengths',        'label'=>'Strengths'],
+                            ['key'=>'work_ethics',      'label'=>'Work Ethics / Attitude'],
+                            ['key'=>'areas_improvement','label'=>'Areas Need Improvement'],
+                            ['key'=>'training_required','label'=>'Training Required'],
+                        ] as $field)
+                        <div class="flex items-start gap-4">
+                            <div class="w-2 h-2 rounded-full bg-[#6B9080] mt-3 shrink-0"></div>
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5">{{ $field['label'] }}</label>
+                                <input type="text" placeholder="Enter {{ strtolower($field['label']) }}…"
+                                       class="w-full border-b border-[#6B9080]/40 bg-transparent py-2 text-sm text-slate-700 focus:outline-none focus:border-[#6B9080] transition">
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Divider --}}
+                <div class="border-t border-[#6B9080]/15"></div>
+
+                {{-- Appraiser Confirmation --}}
+                <div class="space-y-6">
+                    <div>
+                        <p class="text-xs text-slate-600 italic leading-relaxed mb-6">
+                            I hereby confirm that the foregoing appraisal is a fair and objective evaluation of the appraisee's performance during the period under review.
+                        </p>
+                        <div class="flex justify-end">
+                            <div class="text-center w-72">
+                                <div class="h-14 border-b-2 border-[#6B9080]/40 border-dashed mb-2"></div>
+                                <p class="text-xs font-black text-slate-700">{{ $reportsToName !== '-' ? $reportsToName : '_______________' }}</p>
+                                <p class="text-[9px] text-[#6B9080] font-semibold uppercase tracking-wider mt-1">Signature of the Appraiser – Manager / VP</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-[#6B9080]/15 pt-6">
+                        <p class="text-xs text-slate-600 italic leading-relaxed mb-3">
+                            I hereby confirm that I have read, understood and accept/disagree with the foregoing appraisal.
+                            <span class="text-[#6B9080] font-semibold">(If you disagree please specify)</span>
+                        </p>
+                        <textarea rows="4" placeholder="Write your response here…"
+                                  class="w-full border border-[#6B9080]/40 rounded-xl px-4 py-3 text-sm text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition resize-none mb-6"></textarea>
+                        <div class="flex justify-end">
+                            <div class="text-center w-72">
+                                <div class="h-14 border-b-2 border-[#6B9080]/40 border-dashed mb-2"></div>
+                                <p class="text-xs font-black text-slate-700">{{ $currentUserName }}</p>
+                                <p class="text-[9px] text-[#6B9080] font-semibold uppercase tracking-wider mt-1">Signature of the Appraisee</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>{{-- /p-6 --}}
+        </div>{{-- /Section 4 --}}
 
     </div>{{-- /p-8 --}}
 </div>{{-- /card --}}
@@ -330,10 +474,53 @@ function recalc(prefix, displayId, pctId) {
         : `(${checked.length}/${AREAS} rated)`;
 }
 
+// Section 3 radio recalc
 document.addEventListener('change', function (e) {
     if (!e.target.name) return;
     if (e.target.name.startsWith('self_area_'))     recalc('self',     'selfTotalDisplay',     'selfPctDisplay');
     if (e.target.name.startsWith('superior_area_')) recalc('superior', 'superiorTotalDisplay', 'superiorPctDisplay');
+});
+
+// Section 4 — sum Section 2 + Section 3 inputs into Rating row
+function ratingColor(val) {
+    if (val >= 90) return 'text-xl font-black text-emerald-600';
+    if (val >= 70) return 'text-xl font-black text-[#6B9080]';
+    if (val >= 50) return 'text-xl font-black text-amber-500';
+    return 'text-xl font-black text-red-500';
+}
+
+function recalcRating() {
+    const inputs = document.querySelectorAll('#section4Table input[type=number]');
+    // inputs order: [s2-self, s2-appraiser, s3-self, s3-appraiser]
+    const s2self  = parseFloat(inputs[0]?.value) || null;
+    const s2app   = parseFloat(inputs[1]?.value) || null;
+    const s3self  = parseFloat(inputs[2]?.value) || null;
+    const s3app   = parseFloat(inputs[3]?.value) || null;
+
+    const selfEl = document.getElementById('ratingTotalSelf');
+    const appEl  = document.getElementById('ratingTotalAppraiser');
+
+    if (s2self !== null && s3self !== null) {
+        const total = s2self + s3self;
+        selfEl.textContent = total.toFixed(1);
+        selfEl.className   = ratingColor(total);
+    } else {
+        selfEl.textContent = '—';
+        selfEl.className   = 'text-xl font-black text-slate-300';
+    }
+
+    if (s2app !== null && s3app !== null) {
+        const total = s2app + s3app;
+        appEl.textContent = total.toFixed(1);
+        appEl.className   = ratingColor(total);
+    } else {
+        appEl.textContent = '—';
+        appEl.className   = 'text-xl font-black text-slate-300';
+    }
+}
+
+document.querySelectorAll('#section4Table input[type=number]').forEach(inp => {
+    inp.addEventListener('input', recalcRating);
 });
 </script>
 </body>
