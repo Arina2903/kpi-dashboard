@@ -408,20 +408,20 @@
                 <p class="text-[9px] text-slate-400">{{ $companyDeptCount ?: $deptRows->count() }} depts</p>
             </div>
             <div class="bg-white rounded-xl p-3 soft-card border border-[#6B9080]">
-                <p class="text-[9px] uppercase font-black text-[#A07060] mb-1.5">Completed Quarters</p>
+                <p class="text-[9px] uppercase font-black text-black mb-1.5">Completed Quarters</p>
                 @foreach(['Q1','Q2','Q3','Q4'] as $qi)
                 @php $qc = $totalCompletedByQ[$qi]; $qt = $totalByQ[$qi]; @endphp
                 <div class="flex items-center gap-1.5 mb-1">
                     <span class="text-[9px] font-black text-slate-400 w-5 shrink-0">{{ $qi }}</span>
                     <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-[#8B5E4A]' : 'bg-slate-200' }}" style="width:{{ $qt > 0 ? round(($qc/$qt)*100) : 0 }}%"></div>
+                        <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-[#A4C3B2]' : 'bg-slate-200' }}" style="width:{{ $qt > 0 ? round(($qc/$qt)*100) : 0 }}%"></div>
                     </div>
-                    <span class="text-[9px] font-black {{ $qc > 0 ? 'text-[#6B3F2A]' : 'text-slate-300' }} w-8 text-right shrink-0">{{ $qc }}/{{ $qt }}</span>
+                    <span class="text-[9px] font-black {{ $qc > 0 ? 'text-black' : 'text-slate-300' }} w-8 text-right shrink-0">{{ $qc }}/{{ $qt }}</span>
                 </div>
                 @endforeach
                 <div class="mt-1.5 pt-1.5 border-t border-[#6B9080] flex items-center justify-between">
                     <span class="text-[9px] font-black text-slate-400">Annual (all Q done)</span>
-                    <span class="text-[9px] font-black {{ $totalCompletedAnnual > 0 ? 'text-[#6B3F2A]' : 'text-slate-300' }}">{{ $totalCompletedAnnual }}/{{ $totalKpisVisible }}</span>
+                    <span class="text-[9px] font-black {{ $totalCompletedAnnual > 0 ? 'text-black' : 'text-slate-300' }}">{{ $totalCompletedAnnual }}/{{ $totalKpisVisible }}</span>
                 </div>
             </div>
         </div>
@@ -820,20 +820,20 @@
                 <p class="text-[9px] mt-0.5 {{ $myAtRisk > 0 ? 'text-red-400 font-bold' : 'text-slate-400' }}">{{ $myAtRisk > 0 ? 'Review required' : 'All clear' }}</p>
             </div>
             <div class="bg-white rounded-xl border border-[#6B9080] p-3 soft-card">
-                <p class="text-[9px] uppercase font-black text-[#A07060] mb-1.5">Completed Quarters</p>
+                <p class="text-[9px] uppercase font-black text-black mb-1.5">Completed Quarters</p>
                 @foreach(['Q1','Q2','Q3','Q4'] as $qi)
                 @php $qc = $myCompletedByQ[$qi]; $qt = $myTotalByQ[$qi]; @endphp
                 <div class="flex items-center gap-1.5 mb-1">
                     <span class="text-[9px] font-black text-slate-400 w-5 shrink-0">{{ $qi }}</span>
                     <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-[#8B5E4A]' : 'bg-slate-200' }}" style="width:{{ $qt > 0 ? round(($qc/$qt)*100) : 0 }}%"></div>
+                        <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-[#A4C3B2]' : 'bg-slate-200' }}" style="width:{{ $qt > 0 ? round(($qc/$qt)*100) : 0 }}%"></div>
                     </div>
-                    <span class="text-[9px] font-black {{ $qc > 0 ? 'text-[#6B3F2A]' : 'text-slate-300' }} w-8 text-right shrink-0">{{ $qc }}/{{ $qt }}</span>
+                    <span class="text-[9px] font-black {{ $qc > 0 ? 'text-black' : 'text-slate-300' }} w-8 text-right shrink-0">{{ $qc }}/{{ $qt }}</span>
                 </div>
                 @endforeach
                 <div class="mt-1.5 pt-1.5 border-t border-[#6B9080] flex items-center justify-between">
                     <span class="text-[9px] font-black text-slate-400">Annual (all Q done)</span>
-                    <span class="text-[9px] font-black {{ $myCompletedAnnual > 0 ? 'text-[#6B3F2A]' : 'text-slate-300' }}">{{ $myCompletedAnnual }}/{{ $individualKpiCount }}</span>
+                    <span class="text-[9px] font-black {{ $myCompletedAnnual > 0 ? 'text-black' : 'text-slate-300' }}">{{ $myCompletedAnnual }}/{{ $individualKpiCount }}</span>
                 </div>
             </div>
         </div>
