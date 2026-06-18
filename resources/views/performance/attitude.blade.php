@@ -441,6 +441,88 @@
             </div>{{-- /p-6 --}}
         </div>{{-- /Section 4 --}}
 
+        {{-- ══ SECTION 5 ══════════════════════════════════════════════════════ --}}
+        <div class="border border-[#6B9080]/40 rounded-2xl overflow-hidden mb-2">
+            <div class="bg-gradient-to-r from-[#1a3d34] to-[#2d5548] px-5 py-3">
+                <p class="text-[11px] font-black text-white uppercase tracking-widest">Section 5 – Recommendations &amp; Decisions</p>
+            </div>
+
+            <div class="p-6 space-y-8">
+
+                @php
+                $sec5Blocks = [
+                    [
+                        'key'   => 'manager',
+                        'label' => 'A) Promotability and Other Remarks and Recommendations by the Appraiser (Manager)',
+                        'bold'  => true,
+                    ],
+                    [
+                        'key'   => 'vp',
+                        'label' => 'B) Remarks and/or Recommendations by VP',
+                        'bold'  => true,
+                    ],
+                    [
+                        'key'   => 'slt',
+                        'label' => 'C) Remarks by SLT',
+                        'bold'  => false,
+                    ],
+                ];
+                @endphp
+
+                @foreach($sec5Blocks as $i => $block)
+
+                @if($i > 0)
+                <div class="border-t border-[#6B9080]/15"></div>
+                @endif
+
+                <div>
+                    <p class="text-xs font-black text-slate-700 uppercase tracking-wide mb-3">
+                        {{ $block['label'] }}
+                    </p>
+
+                    {{-- Remarks textarea --}}
+                    <textarea rows="5" placeholder="Write remarks here…"
+                              class="w-full border border-[#6B9080]/40 rounded-xl px-4 py-3 text-sm text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition resize-none mb-4"></textarea>
+
+                    {{-- Checkboxes + Signature --}}
+                    <div class="flex items-end justify-between gap-4 flex-wrap">
+
+                        {{-- Checkboxes --}}
+                        <div class="flex flex-col gap-2">
+                            @foreach(['Confirmation', 'Salary Review', 'Promotion'] as $opt)
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox"
+                                       name="{{ $block['key'] }}_decision[]"
+                                       value="{{ $opt }}"
+                                       class="w-4 h-4 rounded border-[#6B9080] accent-[#6B9080] cursor-pointer">
+                                <span class="text-xs font-black text-slate-700 uppercase tracking-wider group-hover:text-[#6B9080] transition">
+                                    {{ $opt }}
+                                </span>
+                            </label>
+                            @endforeach
+                        </div>
+
+                        {{-- Signature + Date --}}
+                        <div class="flex flex-col items-end gap-3 min-w-[220px]">
+                            <div class="w-full text-center">
+                                <div class="h-12 border-b-2 border-[#6B9080]/40 border-dashed mb-1.5"></div>
+                                <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-widest">Signature</p>
+                            </div>
+                            <div class="flex items-center gap-2 w-full">
+                                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest shrink-0">Date</p>
+                                <div class="flex-1 border-b border-[#6B9080]/40"></div>
+                                <input type="date"
+                                       class="border border-[#6B9080]/30 rounded-lg px-2 py-1 text-xs text-slate-600 bg-white focus:outline-none focus:border-[#6B9080] transition">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @endforeach
+
+            </div>{{-- /p-6 --}}
+        </div>{{-- /Section 5 --}}
+
     </div>{{-- /p-8 --}}
 </div>{{-- /card --}}
 
