@@ -24,15 +24,15 @@
     }
 
     .custom-scroll::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.2);
+        background: rgba(255, 255, 255, 0.18);
         border-radius: 999px;
     }
 </style>
 
 <aside
     id="sidebar"
-    class="fixed left-0 top-0 z-40 h-screen bg-[#F6FFF8] text-slate-800
-    border-r border-gray-200 shadow-[4px_0_20px_rgba(0,0,0,0.06)]
+    class="fixed left-0 top-0 z-40 h-screen bg-[#1a3d34] text-white
+    border-r border-white/10 shadow-[4px_0_24px_rgba(0,0,0,0.30)]
     w-[230px] min-w-[230px] max-w-[230px]
     px-3 py-4 flex flex-col overflow-visible shrink-0 transition-all duration-300"
 >
@@ -42,8 +42,8 @@
         type="button"
         onclick="event.stopPropagation(); toggleSidebar();"
         class="absolute top-4 right-3 z-[9999] w-7 h-7 flex items-center justify-center
-        text-slate-400 bg-white border border-gray-200 rounded-full
-        hover:bg-gray-100 hover:text-slate-700 transition text-sm"
+        text-white/50 bg-white/10 border border-white/20 rounded-full
+        hover:bg-white/20 hover:text-white transition text-sm"
         aria-label="Close Sidebar"
     >
         ×
@@ -54,7 +54,7 @@
         type="button"
         onclick="handleSidebarHeaderClick()"
         class="group w-full flex items-center gap-3 mb-5 shrink-0 pr-10 text-left
-        hover:bg-[#6B9080]/10 rounded-xl p-2 transition relative"
+        hover:bg-white/10 rounded-xl p-2 transition relative"
         aria-label="Open Sidebar"
     >
         <div class="w-10 h-10 flex items-center justify-center shrink-0">
@@ -80,17 +80,17 @@
                 {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
             </span>
             @endif
-            <span class="sidebar-icon-only hidden text-black font-bold text-lg">
+            <span class="sidebar-icon-only hidden text-white font-bold text-lg">
                 ☰
             </span>
         </div>
 
         <div class="sidebar-text leading-tight text-left min-w-0">
-            <h1 class="text-[12px] font-bold tracking-wide text-slate-900 leading-tight break-words">
+            <h1 class="text-[12px] font-bold tracking-wide text-white leading-tight break-words">
                 {!! nl2br(e(session('company_display_name') ?: 'RICHWORKS KPI')) !!}
             </h1>
 
-            <p class="text-[9px] text-[#6B9080] uppercase tracking-[0.14em] mt-1 font-semibold">
+            <p class="text-[9px] text-[#A4C3B2] uppercase tracking-[0.14em] mt-1 font-semibold">
                 Performance System
             </p>
         </div>
@@ -243,7 +243,7 @@
     <nav class="flex-1 overflow-y-auto text-[12px] space-y-5 pr-1 min-h-0 custom-scroll">
         @foreach($navSections as $section)
             <div>
-                <p class="sidebar-text text-[9px] text-slate-400 font-semibold mb-1 px-2 uppercase tracking-widest">
+                <p class="sidebar-text text-[9px] text-white/35 font-semibold mb-1 px-2 uppercase tracking-widest">
                     {{ $section['title'] }}
                 </p>
 
@@ -273,8 +273,8 @@
                             href="{{ $item['href'] }}"
                             class="group relative flex items-center gap-3 px-3 py-2 rounded-xl transition
                             {{ $isActive
-                                ? 'bg-[#6B9080] text-white font-semibold shadow-sm'
-                                : 'text-slate-700 font-medium hover:bg-[#6B9080]/10 hover:text-[#6B9080]'
+                                ? 'bg-[#A4C3B2] text-[#1a3d34] font-black shadow-md'
+                                : 'text-white/75 font-medium hover:bg-white/10 hover:text-white'
                             }}"
                         >
                             <span class="w-5 h-5 flex items-center justify-center shrink-0">
@@ -316,14 +316,14 @@
     </nav>
 
     <!-- SYSTEM ZONE -->
-    <div class="sidebar-system mt-3 pt-3 border-t border-gray-200 shrink-0">
-        <p class="sidebar-text text-[9px] text-slate-400 font-semibold uppercase tracking-widest mb-2 px-1">
+    <div class="sidebar-system mt-3 pt-3 border-t border-white/10 shrink-0">
+        <p class="sidebar-text text-[9px] text-white/35 font-semibold uppercase tracking-widest mb-2 px-1">
             Current View
         </p>
 
-        <div class="sidebar-text border border-[#6B9080]/30 rounded-xl p-3 bg-[#6B9080]/10 mb-2">
+        <div class="sidebar-text border border-white/10 rounded-xl p-3 bg-white/8 mb-2" style="background:rgba(255,255,255,0.07)">
             @if($canSwitchDepartment ?? false)
-                <p class="text-[10px] text-[#6B9080] mb-2 font-semibold">
+                <p class="text-[10px] text-[#A4C3B2] mb-2 font-semibold">
                     Department View
                 </p>
 
@@ -333,8 +333,8 @@
                     <select
                         name="department_code"
                         onchange="this.form.submit()"
-                        class="w-full bg-[#F6FFF8]/60 border border-[#6B9080]/30 rounded-lg px-2 py-2
-                        text-[11px] text-black outline-none"
+                        class="w-full rounded-lg px-2 py-2 text-[11px] text-white outline-none border border-white/20"
+                        style="background:rgba(255,255,255,0.1)"
                     >
                         @foreach(($departments ?? []) as $dept)
                             <option
@@ -347,11 +347,11 @@
                     </select>
                 </form>
             @else
-                <p class="text-[10px] text-[#6B9080] mb-1 font-semibold">
+                <p class="text-[10px] text-[#A4C3B2] mb-1 font-semibold">
                     Department
                 </p>
 
-                <div class="text-[11px] text-black truncate">
+                <div class="text-[11px] text-white truncate">
                     {{ $department['name'] ?? $user['department_code'] ?? '-' }}
                 </div>
             @endif
@@ -364,8 +364,8 @@
                 type="submit"
                 onclick="return confirm('You are about to logout. Continue?')"
                 class="group relative w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[11px] font-semibold
-                bg-red-500/10 text-red-700 border border-red-400/30
-                hover:bg-red-500/20 hover:text-red-800 transition"
+                bg-red-400/10 text-red-300 border border-red-400/20
+                hover:bg-red-400/20 hover:text-red-200 transition"
             >
                 <span class="w-5 h-5 flex items-center justify-center shrink-0">
                     @include('partials.sidebar-icons', ['icon' => 'logout'])
