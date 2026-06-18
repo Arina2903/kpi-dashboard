@@ -761,15 +761,15 @@
 
 {{-- ═══════ KPI TARGET LINKAGES ══════════════════════════════════════════ --}}
 @if($hasAnyLinkage || $canAssignTarget)
-<div class="bg-white rounded-2xl border border-[#6B9080] soft-card overflow-hidden">
-    <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-900 to-blue-800 text-white">
+<div class="bg-[#12100E] rounded-2xl border border-[#5B7553] soft-card overflow-hidden">
+    <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#12100E] to-[#5B7553]">
         <div>
-            <h2 class="text-sm font-black">KPI Target Linkages</h2>
-            <p class="text-[10px] text-blue-200 mt-0.5">Cascading targets · {{ $currentFinancialYear }}</p>
+            <h2 class="text-sm font-black text-[#DAFFD3]">KPI Target Linkages</h2>
+            <p class="text-[10px] text-[#91BF9B] mt-0.5">Cascading targets · {{ $currentFinancialYear }}</p>
         </div>
         @if($canAssignTarget)
         <button onclick="document.getElementById('assignLinkageForm').classList.toggle('hidden')"
-                class="px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-xl text-xs font-black transition border border-white/20">
+                class="px-3 py-1.5 bg-[#5B7553]/40 hover:bg-[#5B7553]/70 text-[#DAFFD3] rounded-xl text-xs font-black transition border border-[#91BF9B]/40">
             + Assign Target
         </button>
         @endif
@@ -777,14 +777,14 @@
 
     {{-- Assign form (hidden by default) --}}
     @if($canAssignTarget)
-    <div id="assignLinkageForm" class="hidden border-b border-[#6B9080] bg-slate-50 px-4 py-3">
+    <div id="assignLinkageForm" class="hidden border-b border-[#5B7553] px-4 py-3" style="background:rgba(91,117,83,0.12)">
         <form action="{{ route('linkage.store') }}" method="POST">
             @csrf
-            <p class="text-[9px] font-black text-slate-400 uppercase mb-2">New Cascading Target</p>
+            <p class="text-[9px] font-black text-[#91BF9B] uppercase mb-2">New Cascading Target</p>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 items-end">
                 <div>
-                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Person</label>
-                    <select name="assignee_id" required class="w-full rounded-xl border border-[#6B9080] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#6B9080] focus:outline-none">
+                    <label class="text-[9px] font-black text-[#91BF9B] uppercase block mb-1">Person</label>
+                    <select name="assignee_id" required class="w-full rounded-xl border border-[#5B7553] px-2 py-2 text-xs font-bold text-[#DAFFD3] focus:border-[#91BF9B] focus:outline-none" style="background:#1e2419">
                         <option value="">Select...</option>
                         @foreach($directReports as $dr)
                         <option value="{{ $dr['id'] }}">{{ $dr['short_name'] }} ({{ $dr['role'] }})</option>
@@ -792,9 +792,9 @@
                     </select>
                 </div>
                 <div>
-                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Category</label>
+                    <label class="text-[9px] font-black text-[#91BF9B] uppercase block mb-1">Category</label>
                     <select id="lnkCategory" name="category" required onchange="updateLnkSubCat()"
-                            class="w-full rounded-xl border border-[#6B9080] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#6B9080] focus:outline-none">
+                            class="w-full rounded-xl border border-[#5B7553] px-2 py-2 text-xs font-bold text-[#DAFFD3] focus:border-[#91BF9B] focus:outline-none" style="background:#1e2419">
                         <option value="Financial">Financial</option>
                         <option value="Growth &amp; Customer">Growth &amp; Customer</option>
                         <option value="Initiatives">Initiatives</option>
@@ -802,53 +802,53 @@
                     </select>
                 </div>
                 <div>
-                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Sub Category</label>
+                    <label class="text-[9px] font-black text-[#91BF9B] uppercase block mb-1">Sub Category</label>
                     <select id="lnkSubCat" name="sub_category" required
-                            class="w-full rounded-xl border border-[#6B9080] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#6B9080] focus:outline-none">
+                            class="w-full rounded-xl border border-[#5B7553] px-2 py-2 text-xs font-bold text-[#DAFFD3] focus:border-[#91BF9B] focus:outline-none" style="background:#1e2419">
                         <option value="Revenue">Revenue</option>
                         <option value="Operating Cost Optimisation">Operating Cost Optimisation</option>
                     </select>
                 </div>
                 <div>
-                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Unit</label>
-                    <select name="unit" required class="w-full rounded-xl border border-[#6B9080] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#6B9080] focus:outline-none">
+                    <label class="text-[9px] font-black text-[#91BF9B] uppercase block mb-1">Unit</label>
+                    <select name="unit" required class="w-full rounded-xl border border-[#5B7553] px-2 py-2 text-xs font-bold text-[#DAFFD3] focus:border-[#91BF9B] focus:outline-none" style="background:#1e2419">
                         <option value="number">Number</option>
                         <option value="currency">Currency (RM)</option>
                         <option value="percentage">Percentage (%)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Annual Target</label>
+                    <label class="text-[9px] font-black text-[#91BF9B] uppercase block mb-1">Annual Target</label>
                     <input name="assigned_target" type="number" step="0.01" min="0" required placeholder="0"
-                           class="w-full rounded-xl border border-[#6B9080] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#6B9080] focus:outline-none">
+                           class="w-full rounded-xl border border-[#5B7553] px-2 py-2 text-xs font-bold text-[#DAFFD3] focus:border-[#91BF9B] focus:outline-none" style="background:#1e2419">
                 </div>
                 <div class="flex gap-1.5">
-                    <button type="submit" class="flex-1 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition">Save</button>
-                    <button type="button" onclick="document.getElementById('assignLinkageForm').classList.add('hidden')" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl text-xs font-black transition">✕</button>
+                    <button type="submit" class="flex-1 px-3 py-2 bg-[#5B7553] hover:bg-[#4a6443] text-[#DAFFD3] rounded-xl text-xs font-black transition">Save</button>
+                    <button type="button" onclick="document.getElementById('assignLinkageForm').classList.add('hidden')" class="px-3 py-2 rounded-xl text-xs font-black transition text-[#91BF9B] border border-[#5B7553] hover:bg-[#5B7553]/20">✕</button>
                 </div>
             </div>
         </form>
     </div>
     @endif
 
-    <div class="p-4">
+    <div class="p-4" style="background:rgba(18,16,14,0.95)">
         @if(!$hasAnyLinkage)
-        <p class="text-xs text-slate-400 text-center py-2">No linkage targets yet. Use "+ Assign Target" to assign a cascading target to your team.</p>
+        <p class="text-xs text-[#91BF9B]/60 text-center py-2">No linkage targets yet. Use "+ Assign Target" to assign a cascading target to your team.</p>
         @else
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
 
             {{-- Targets Assigned to Me --}}
             @if($myLinkageMap->isNotEmpty())
             <div>
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">Targets Assigned to Me</p>
+                <p class="text-[9px] font-black text-[#91BF9B] uppercase tracking-wider mb-2">Targets Assigned to Me</p>
                 <div class="space-y-2">
                     @foreach($myLinkageMap as $lnk)
                     @php $lnkMet = $lnk['met']; @endphp
                     <div class="p-2.5 rounded-xl border {{ $lnkMet ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50' }}">
                         <div class="flex items-center justify-between mb-1.5">
                             <div class="min-w-0">
-                                <span class="text-xs font-black text-slate-800">{{ $lnk['sub_category'] }}</span>
-                                <span class="ml-1.5 text-[9px] text-slate-400">{{ $lnk['category'] }} · from {{ $lnk['assigner_name'] ?? '-' }}</span>
+                                <span class="text-xs font-black text-[#DAFFD3]">{{ $lnk['sub_category'] }}</span>
+                                <span class="ml-1.5 text-[9px] text-[#91BF9B]/70">{{ $lnk['category'] }} · from {{ $lnk['assigner_name'] ?? '-' }}</span>
                             </div>
                             @if(!$lnkMet)
                             <span class="shrink-0 ml-2 text-[9px] font-black bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200">Gap</span>
@@ -862,11 +862,11 @@
                             </div>
                             <span class="text-[9px] font-black {{ $lnkMet ? 'text-emerald-700' : 'text-amber-700' }} w-7 text-right shrink-0">{{ $lnk['pct'] }}%</span>
                         </div>
-                        <div class="flex justify-between text-[9px] text-slate-500">
-                            <span>Target: <span class="font-black text-slate-700">{{ $fmtLinkageVal($lnk['assigned_target'], $lnk['unit']) }}</span></span>
-                            <span>Covered: <span class="font-black text-slate-700">{{ $fmtLinkageVal($lnk['covered'], $lnk['unit']) }}</span></span>
+                        <div class="flex justify-between text-[9px] text-[#91BF9B]/70">
+                            <span>Target: <span class="font-black text-[#DAFFD3]">{{ $fmtLinkageVal($lnk['assigned_target'], $lnk['unit']) }}</span></span>
+                            <span>Covered: <span class="font-black text-[#DAFFD3]">{{ $fmtLinkageVal($lnk['covered'], $lnk['unit']) }}</span></span>
                             @if(!$lnkMet)
-                            <span class="text-amber-600 font-black">Gap: {{ $fmtLinkageVal($lnk['gap'], $lnk['unit']) }}</span>
+                            <span class="text-amber-400 font-black">Gap: {{ $fmtLinkageVal($lnk['gap'], $lnk['unit']) }}</span>
                             @endif
                         </div>
                     </div>
@@ -878,15 +878,15 @@
             {{-- Targets I Assigned --}}
             @if($outgoingWithCoverage->isNotEmpty())
             <div>
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">Targets I Assigned</p>
+                <p class="text-[9px] font-black text-[#91BF9B] uppercase tracking-wider mb-2">Targets I Assigned</p>
                 <div class="space-y-2">
                     @foreach($outgoingWithCoverage as $lnk)
                     @php $lnkMet = $lnk['met']; @endphp
-                    <div class="p-2.5 rounded-xl border border-[#6B9080] bg-slate-50 group">
+                    <div class="p-2.5 rounded-xl border border-[#5B7553] group" style="background:rgba(91,117,83,0.12)">
                         <div class="flex items-center justify-between mb-1.5">
                             <div class="min-w-0">
-                                <span class="text-xs font-black text-slate-800">{{ $lnk['assignee_name'] ?? '-' }}</span>
-                                <span class="ml-1.5 text-[9px] text-slate-400">{{ $lnk['sub_category'] }} · {{ $lnk['category'] }}</span>
+                                <span class="text-xs font-black text-[#DAFFD3]">{{ $lnk['assignee_name'] ?? '-' }}</span>
+                                <span class="ml-1.5 text-[9px] text-[#91BF9B]/70">{{ $lnk['sub_category'] }} · {{ $lnk['category'] }}</span>
                             </div>
                             <div class="shrink-0 ml-2 flex items-center gap-1.5">
                                 @if(!$lnkMet)
@@ -901,16 +901,16 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-2 mb-1.5">
-                            <div class="flex-1 h-1.5 bg-white rounded-full overflow-hidden border border-[#6B9080]">
-                                <div class="h-1.5 rounded-full {{ $lnkMet ? 'bg-emerald-400' : 'bg-amber-300' }}" style="width:{{ $lnk['pct'] }}%"></div>
+                            <div class="flex-1 h-1.5 rounded-full overflow-hidden border border-[#5B7553]" style="background:rgba(255,255,255,0.08)">
+                                <div class="h-1.5 rounded-full {{ $lnkMet ? 'bg-emerald-400' : 'bg-amber-400' }}" style="width:{{ $lnk['pct'] }}%"></div>
                             </div>
-                            <span class="text-[9px] font-black {{ $lnkMet ? 'text-emerald-700' : 'text-amber-700' }} w-7 text-right shrink-0">{{ $lnk['pct'] }}%</span>
+                            <span class="text-[9px] font-black {{ $lnkMet ? 'text-emerald-400' : 'text-amber-400' }} w-7 text-right shrink-0">{{ $lnk['pct'] }}%</span>
                         </div>
-                        <div class="flex justify-between text-[9px] text-slate-500">
-                            <span>Target: <span class="font-black text-slate-700">{{ $fmtLinkageVal($lnk['assigned_target'], $lnk['unit']) }}</span></span>
-                            <span>Covered: <span class="font-black text-slate-700">{{ $fmtLinkageVal($lnk['covered'], $lnk['unit']) }}</span></span>
+                        <div class="flex justify-between text-[9px] text-[#91BF9B]/70">
+                            <span>Target: <span class="font-black text-[#DAFFD3]">{{ $fmtLinkageVal($lnk['assigned_target'], $lnk['unit']) }}</span></span>
+                            <span>Covered: <span class="font-black text-[#DAFFD3]">{{ $fmtLinkageVal($lnk['covered'], $lnk['unit']) }}</span></span>
                             @if(!$lnkMet)
-                            <span class="text-amber-600 font-black">Gap: {{ $fmtLinkageVal($lnk['gap'], $lnk['unit']) }}</span>
+                            <span class="text-amber-400 font-black">Gap: {{ $fmtLinkageVal($lnk['gap'], $lnk['unit']) }}</span>
                             @endif
                         </div>
                     </div>
