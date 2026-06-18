@@ -357,7 +357,7 @@
 {{-- ═══════ TIER 1: DEPT RANKING — visible to ALL roles ═══════════════════ --}}
 @php $rankingCount = count($companyDeptRanking ?? []); @endphp
 @if($rankingCount > 0 || $deptRows->count() > 0)
-<div class="grid grid-cols-1 xl:grid-cols-5 gap-3">
+<div class="grid grid-cols-1 xl:grid-cols-5 gap-3 items-start">
 
     {{-- Department Annual Ranking (always visible, all company depts) --}}
     <div class="{{ $isManager ? 'xl:col-span-3' : 'xl:col-span-5' }} bg-white rounded-2xl p-4 soft-card border border-[#6B9080]">
@@ -366,7 +366,7 @@
             <span class="text-[10px] text-slate-400">{{ $currentFinancialYear }}</span>
         </div>
         <p class="text-[10px] text-slate-400 mb-3">All {{ $rankingCount }} departments · sorted by highest achievement</p>
-        <div style="height:{{ max(100, $rankingCount * 34) }}px; position:relative;">
+        <div style="height:{{ max(80, $rankingCount * 30) }}px; position:relative;">
             <canvas id="chartDeptRanking"></canvas>
         </div>
     </div>
@@ -444,7 +444,7 @@
     <div class="bg-white rounded-2xl p-4 soft-card border border-[#6B9080]">
         <h3 class="text-xs font-black text-slate-900">Quarterly Performance — All Departments</h3>
         <p class="text-[10px] text-slate-400 mt-0.5 mb-3">Q1 → Q4 avg score per dept · {{ $currentFinancialYear }}</p>
-        <div style="height:160px; position:relative;">
+        <div style="height:130px; position:relative;">
             <canvas id="chartQuarterTrend"></canvas>
         </div>
     </div>
