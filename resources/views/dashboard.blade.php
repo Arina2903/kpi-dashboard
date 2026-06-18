@@ -357,10 +357,10 @@
 {{-- ═══════ TIER 1: DEPT RANKING — visible to ALL roles ═══════════════════ --}}
 @php $rankingCount = count($companyDeptRanking ?? []); @endphp
 @if($rankingCount > 0 || $deptRows->count() > 0)
-<div class="grid grid-cols-1 xl:grid-cols-5 gap-3 items-start">
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 items-start">
 
-    {{-- Department Annual Ranking (always visible, all company depts) --}}
-    <div class="{{ $isManager ? 'xl:col-span-3' : 'xl:col-span-5' }} bg-white rounded-2xl p-4 soft-card border border-[#6B9080]">
+    {{-- Card 1: Department Annual Ranking --}}
+    <div class="{{ $isManager ? '' : 'sm:col-span-2 xl:col-span-4' }} bg-white rounded-2xl p-4 soft-card border border-[#6B9080]">
         <div class="flex items-center justify-between mb-1">
             <h3 class="text-xs font-black text-slate-900">Department Annual Ranking</h3>
             <span class="text-[10px] text-slate-400">{{ $currentFinancialYear }}</span>
@@ -371,67 +371,63 @@
         </div>
     </div>
 
-    {{-- Right panel: donut + stat tiles (managers only) --}}
     @if($isManager)
-    <div class="xl:col-span-2 flex flex-col gap-3">
 
-        {{-- My Department donut --}}
-        <div class="bg-white rounded-2xl p-3 soft-card border border-[#6B9080] shrink-0">
-            {{-- Ring + headline --}}
-            <div class="flex items-center gap-3 mb-2.5">
-                <div class="relative shrink-0" style="width:72px;height:72px;">
-                    <canvas id="chartCompanyDonut" width="72" height="72"></canvas>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <p class="text-[13px] font-black {{ $myDeptScoreStyle['text'] }}">{{ number_format($myDeptPerformance,1) }}%</p>
-                    </div>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-wide mb-1">{{ $currentDepartment }} Achievement</p>
-                    <span class="inline-block text-[9px] font-black px-2 py-0.5 rounded-full border {{ $myDeptScoreStyle['badge'] }} mb-1.5">
-                        {{ $myDeptScoreStyle['label'] }}
-                    </span>
-                    <p class="text-[8px] text-slate-400">{{ $totalStaffCount }} staff · {{ $currentFinancialYear }}</p>
+    {{-- Card 2: Department Achievement --}}
+    <div class="bg-white rounded-2xl p-3 soft-card border border-[#6B9080]">
+        <div class="flex items-center gap-3 mb-2.5">
+            <div class="relative shrink-0" style="width:64px;height:64px;">
+                <canvas id="chartCompanyDonut" width="64" height="64"></canvas>
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <p class="text-[12px] font-black {{ $myDeptScoreStyle['text'] }}">{{ number_format($myDeptPerformance,1) }}%</p>
                 </div>
             </div>
-            {{-- Band breakdown --}}
-            @php $bandList = [['#10b981','Excellent','≥90%'],['#6366f1','Good','75–89%'],['#f59e0b','Watch','50–74%'],['#ef4444','Critical','<50%']]; @endphp
-            <div class="grid grid-cols-2 gap-x-3 gap-y-1 pt-2 border-t border-slate-100">
-                @foreach($bandList as $bi => $b)
-                <div class="flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full shrink-0" style="background:{{ $b[0] }}"></span>
-                    <span class="text-[9px] font-bold text-slate-700">{{ $myDeptBands[$bi] }}</span>
-                    <span class="text-[8px] text-slate-400">{{ $b[1] }}</span>
-                </div>
-                @endforeach
+            <div class="flex-1 min-w-0">
+                <p class="text-[9px] font-black text-slate-500 uppercase tracking-wide mb-1">{{ $currentDepartment }} Achievement</p>
+                <span class="inline-block text-[9px] font-black px-2 py-0.5 rounded-full border {{ $myDeptScoreStyle['badge'] }} mb-1">
+                    {{ $myDeptScoreStyle['label'] }}
+                </span>
+                <p class="text-[8px] text-slate-400">{{ $totalStaffCount }} staff · {{ $currentFinancialYear }}</p>
             </div>
         </div>
-
-        {{-- 2 stat tiles: Total Staff (all company) + Completed KPIs --}}
-        <div class="grid grid-cols-2 gap-3">
-            <div class="bg-white rounded-xl p-3 soft-card border border-[#6B9080]">
-                <p class="text-[9px] uppercase font-black text-slate-400">Total Staff</p>
-                <p class="text-2xl font-black text-slate-900 mt-1">{{ $companyTotalStaff ?: $totalStaffCount }}</p>
-                <p class="text-[9px] text-slate-400">{{ $companyDeptCount ?: $deptRows->count() }} depts</p>
+        @php $bandList = [['#10b981','Excellent'],['#6366f1','Good'],['#f59e0b','Watch'],['#ef4444','Critical']]; @endphp
+        <div class="grid grid-cols-2 gap-x-2 gap-y-1 pt-2 border-t border-slate-100">
+            @foreach($bandList as $bi => $b)
+            <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full shrink-0" style="background:{{ $b[0] }}"></span>
+                <span class="text-[9px] font-bold text-slate-700">{{ $myDeptBands[$bi] }}</span>
+                <span class="text-[8px] text-slate-400">{{ $b[1] }}</span>
             </div>
-            <div class="bg-white rounded-xl p-3 soft-card border border-[#6B9080]">
-                <p class="text-[9px] uppercase font-black text-black mb-1.5">Completed Quarters</p>
-                @foreach(['Q1','Q2','Q3','Q4'] as $qi)
-                @php $qc = $totalCompletedByQ[$qi]; $qt = $totalByQ[$qi]; @endphp
-                <div class="flex items-center gap-1.5 mb-1">
-                    <span class="text-[9px] font-black text-slate-400 w-5 shrink-0">{{ $qi }}</span>
-                    <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-[#A4C3B2]' : 'bg-slate-200' }}" style="width:{{ $qt > 0 ? round(($qc/$qt)*100) : 0 }}%"></div>
-                    </div>
-                    <span class="text-[9px] font-black {{ $qc > 0 ? 'text-black' : 'text-slate-300' }} w-8 text-right shrink-0">{{ $qc }}/{{ $qt }}</span>
-                </div>
-                @endforeach
-                <div class="mt-1.5 pt-1.5 border-t border-[#6B9080] flex items-center justify-between">
-                    <span class="text-[9px] font-black text-slate-400">Annual (all Q done)</span>
-                    <span class="text-[9px] font-black {{ $totalCompletedAnnual > 0 ? 'text-black' : 'text-slate-300' }}">{{ $totalCompletedAnnual }}/{{ $totalKpisVisible }}</span>
-                </div>
-            </div>
+            @endforeach
         </div>
     </div>
+
+    {{-- Card 3: Total Staff --}}
+    <div class="bg-white rounded-2xl p-4 soft-card border border-[#6B9080]">
+        <p class="text-[9px] uppercase font-black text-slate-400 mb-1">Total Staff</p>
+        <p class="text-3xl font-black text-slate-900 mt-2">{{ $companyTotalStaff ?: $totalStaffCount }}</p>
+        <p class="text-[9px] text-slate-400 mt-1">{{ $companyDeptCount ?: $deptRows->count() }} departments</p>
+    </div>
+
+    {{-- Card 4: Completed Quarters --}}
+    <div class="bg-white rounded-2xl p-4 soft-card border border-[#6B9080]">
+        <p class="text-[9px] uppercase font-black text-black mb-2">Completed Quarters</p>
+        @foreach(['Q1','Q2','Q3','Q4'] as $qi)
+        @php $qc = $totalCompletedByQ[$qi]; $qt = $totalByQ[$qi]; @endphp
+        <div class="flex items-center gap-1.5 mb-1">
+            <span class="text-[9px] font-black text-slate-400 w-5 shrink-0">{{ $qi }}</span>
+            <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-[#A4C3B2]' : 'bg-slate-200' }}" style="width:{{ $qt > 0 ? round(($qc/$qt)*100) : 0 }}%"></div>
+            </div>
+            <span class="text-[9px] font-black {{ $qc > 0 ? 'text-black' : 'text-slate-300' }} w-8 text-right shrink-0">{{ $qc }}/{{ $qt }}</span>
+        </div>
+        @endforeach
+        <div class="mt-1.5 pt-1.5 border-t border-[#6B9080] flex items-center justify-between">
+            <span class="text-[9px] font-black text-slate-400">Annual (all Q done)</span>
+            <span class="text-[9px] font-black {{ $totalCompletedAnnual > 0 ? 'text-black' : 'text-slate-300' }}">{{ $totalCompletedAnnual }}/{{ $totalKpisVisible }}</span>
+        </div>
+    </div>
+
     @endif
 
 </div>
