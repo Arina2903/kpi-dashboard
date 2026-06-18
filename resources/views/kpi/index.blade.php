@@ -45,18 +45,18 @@
 <div class="p-4 space-y-4">
 
     <!-- HEADER -->
-    <div class="rounded-[18px] bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white px-5 py-3.5 shadow-xl flex flex-row items-center justify-between gap-4">
+    <div class="rounded-[18px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#a8cec6] text-white px-5 py-3.5 shadow-xl flex flex-row items-center justify-between gap-4">
         <div>
             <a href="/dashboard" class="text-[10px] text-blue-100 hover:text-white">← Dashboard</a>
             <h1 class="text-xl font-bold mt-1">KPI List</h1>
-            <p class="text-blue-100 text-[10px] mt-0.5">
+            <p class="text-white/70 text-[10px] mt-0.5">
                 {{ $user['short_name'] }} · {{ $user['role'] }} · {{ $user['department_code'] }} · {{ $fy }}
             </p>
         </div>
 
         @if($permission['can_create'])
             <a href="{{ route('kpi.create') }}"
-               class="bg-white text-[#3a2015] hover:bg-[#FBF5EF] px-4 py-2 rounded-2xl shadow font-bold text-sm">
+               class="bg-white text-[#1a3d34] hover:bg-[#f0faf7] px-4 py-2 rounded-2xl shadow font-bold text-sm">
                 + Create KPI
             </a>
         @endif

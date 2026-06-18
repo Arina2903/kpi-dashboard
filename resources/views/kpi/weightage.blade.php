@@ -19,10 +19,10 @@
 <div class="p-6 space-y-6">
 
     <!-- HEADER -->
-    <div class="rounded-3xl bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white p-6 shadow-xl">
+    <div class="rounded-3xl bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#a8cec6] text-white p-6 shadow-xl">
         <a href="/kpi" class="text-sm text-blue-100 hover:text-white">← Back to KPI List</a>
         <h1 class="text-3xl font-bold mt-3">Manage Weightage</h1>
-        <p class="text-blue-200 text-sm mt-1">{{ $fy ?? '' }} · {{ session('short_name') }}</p>
+        <p class="text-white/60 text-sm mt-1">{{ $fy ?? '' }} · {{ session('short_name') }}</p>
     </div>
 
     <!-- APPROVAL FLOW GUIDE -->
@@ -386,7 +386,7 @@
 
         <div class="bg-gradient-to-r from-indigo-700 to-[#5a3323] rounded-t-3xl px-6 py-5 text-white">
             <h2 class="text-xl font-black">Review All Changes</h2>
-            <p class="text-blue-100 text-sm mt-1">Check everything before confirming — you cannot undo this</p>
+            <p class="text-white/70 text-sm mt-1">Check everything before confirming — you cannot undo this</p>
         </div>
 
         <div id="saveReviewContent" class="p-6 space-y-5">

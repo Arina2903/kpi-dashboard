@@ -38,7 +38,7 @@
 <div class="p-6 space-y-6">
 
     <!-- HEADER -->
-    <div class="rounded-[20px] bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white p-6 shadow-xl">
+    <div class="rounded-[20px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#a8cec6] text-white p-6 shadow-xl">
 
         <div class="flex justify-between items-center">
 
@@ -55,7 +55,7 @@
                     Approval Center
                 </h1>
 
-                <p class="text-blue-100 text-xs mt-2">
+                <p class="text-white/70 text-xs mt-2">
 
                     {{ session('short_name') }}
                     ·

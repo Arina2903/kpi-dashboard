@@ -634,17 +634,17 @@
 
         <div class="mt-4 flex flex-wrap gap-3 text-sm">
             <div class="bg-white/10 border border-white/15 rounded-xl px-3 py-2">
-                <p class="text-blue-100 text-xs">Owner</p>
+                <p class="text-white/70 text-xs">Owner</p>
                 <p class="font-black text-lg">{{ $user['short_name'] ?? '-' }}</p>
             </div>
 
             <div class="bg-white/10 border border-white/15 rounded-xl px-3 py-2">
-                <p class="text-blue-100 text-xs">Role</p>
+                <p class="text-white/70 text-xs">Role</p>
                 <p class="font-black text-lg">{{ $user['role'] ?? '-' }}</p>
             </div>
 
             <div class="bg-white/10 border border-white/15 rounded-xl px-3 py-2">
-                <p class="text-blue-100 text-xs">Department</p>
+                <p class="text-white/70 text-xs">Department</p>
                 <p class="font-black text-lg">{{ $user['department_code'] ?? '-' }}</p>
             </div>
         </div>
@@ -3029,7 +3029,7 @@ function bindAssignmentCards(){
                             </div>
                             <div class="space-y-2">
                                 <div class="rounded-[20px] bg-[#06142f] p-4">
-                                    <p class="text-[9px] uppercase tracking-widest text-blue-300 font-black">KPI Name</p>
+                                    <p class="text-[9px] uppercase tracking-widest text-white/50 font-black">KPI Name</p>
                                     <p class="font-black text-white text-base mt-1 leading-snug">${data.kpi_title ?? '-'}</p>
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
@@ -3083,7 +3083,7 @@ function bindAssignmentCards(){
                                 <div class="rounded-2xl bg-[#FBF5EF] border border-[#6B3F2A]/20 p-4">
                                     <p class="text-[9px] uppercase tracking-widest text-[#8B5E4A] font-black">Base Target</p>
                                     <p class="text-xl font-black text-[#06142f] mt-1">${Number(data.base_target ?? 0).toLocaleString()}</p>
-                                    <p class="text-[9px] text-blue-300 mt-1 uppercase font-bold">Annual</p>
+                                    <p class="text-[9px] text-white/50 mt-1 uppercase font-bold">Annual</p>
                                 </div>
                                 <div class="rounded-2xl bg-purple-50 border border-purple-100 p-4">
                                     <p class="text-[9px] uppercase tracking-widest text-purple-500 font-black">Stretch Target</p>
@@ -3419,7 +3419,7 @@ async function aiSuggestDescription() {
         <!-- modal header -->
         <div class="hero-gradient px-6 py-5 flex items-center justify-between flex-shrink-0">
             <div>
-                <p class="text-blue-200 text-[10px] font-black uppercase tracking-widest">KPI Assignment</p>
+                <p class="text-white/60 text-[10px] font-black uppercase tracking-widest">KPI Assignment</p>
                 <h2 class="font-black text-white text-lg mt-0.5">KPI Detail</h2>
             </div>
             <button

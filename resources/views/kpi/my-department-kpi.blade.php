@@ -27,7 +27,7 @@
             <div>
                 <a href="/dashboard" class="text-xs text-blue-200 hover:text-white font-semibold">← Dashboard</a>
                 <h1 class="text-3xl font-black mt-3 tracking-tight">My Department KPI</h1>
-                <p class="text-blue-200 text-xs mt-2 font-medium">
+                <p class="text-white/60 text-xs mt-2 font-medium">
                     {{ $user['department_code'] ?? '-' }} · {{ $user['role'] ?? '-' }} · {{ $fy }}
                 </p>
             </div>
@@ -49,7 +49,7 @@
 
         {{-- CATEGORY COLOUR LEGEND --}}
         <div class="flex flex-wrap gap-2 mt-5 pt-4 border-t border-white/10">
-            <span class="text-[9px] text-blue-300 uppercase font-black tracking-widest self-center mr-2">Categories:</span>
+            <span class="text-[9px] text-white/50 uppercase font-black tracking-widest self-center mr-2">Categories:</span>
             <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-200 text-[10px] font-black border border-emerald-500/30">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>💰 Financial
             </span>
@@ -141,7 +141,7 @@
 
         $deptPerfColor = match(true) {
             $departmentPerformance >= 90 => ['bar' => 'from-emerald-400 to-green-500', 'text' => 'text-emerald-400', 'label' => 'Excellent', 'badge' => 'bg-emerald-100 text-emerald-700'],
-            $departmentPerformance >= 75 => ['bar' => 'from-[#8B5E4A] to-[#6B3F2A]',  'text' => 'text-blue-300',    'label' => 'Good',      'badge' => 'bg-[#F5EAE0] text-[#6B3F2A]'],
+            $departmentPerformance >= 75 => ['bar' => 'from-[#8B5E4A] to-[#6B3F2A]',  'text' => 'text-white/50',    'label' => 'Good',      'badge' => 'bg-[#F5EAE0] text-[#6B3F2A]'],
             $departmentPerformance >= 50 => ['bar' => 'from-yellow-400 to-amber-500', 'text' => 'text-yellow-300', 'label' => 'Watch',     'badge' => 'bg-yellow-100 text-yellow-700'],
             default                      => ['bar' => 'from-red-400 to-rose-500',     'text' => 'text-red-300',    'label' => 'Critical',  'badge' => 'bg-red-100 text-red-700'],
         };
@@ -424,7 +424,7 @@
                     }
                     $catPerfColor = match(true) {
                         $catPerf >= 90 => 'text-emerald-400',
-                        $catPerf >= 75 => 'text-blue-300',
+                        $catPerf >= 75 => 'text-white/50',
                         $catPerf >= 50 => 'text-yellow-300',
                         default        => 'text-red-300',
                     };

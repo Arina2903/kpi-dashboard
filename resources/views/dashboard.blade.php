@@ -339,13 +339,13 @@
 <div class="p-4 space-y-3">
 
 {{-- ═══════ HEADER ═══════════════════════════════════════════════════════ --}}
-<div class="rounded-[18px] bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white px-6 py-4 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+<div class="rounded-[18px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#a8cec6] text-white px-6 py-4 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-3">
     <div>
         <h1 class="text-xl font-black">Dashboard</h1>
-        <p class="text-blue-100 text-[11px] mt-0.5">{{ $currentUserName }} · {{ $user['role'] ?? '-' }} · {{ $currentDepartment }} · {{ $currentFinancialYear }}</p>
+        <p class="text-white/70 text-[11px] mt-0.5">{{ $currentUserName }} · {{ $user['role'] ?? '-' }} · {{ $currentDepartment }} · {{ $currentFinancialYear }}</p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
-        <a href="{{ route('kpi.index') }}"   class="bg-white text-[#3a2015] hover:bg-[#FBF5EF] px-4 py-2 rounded-xl shadow font-bold text-xs transition">My KPIs</a>
+        <a href="{{ route('kpi.index') }}"   class="bg-white text-[#1a3d34] hover:bg-[#f0faf7] px-4 py-2 rounded-xl shadow font-bold text-xs transition">My KPIs</a>
         <a href="{{ route('weightage') }}"   class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20">Weightage</a>
     </div>
 </div>
@@ -754,7 +754,7 @@
         {{-- Score hero --}}
         <div class="lg:col-span-2 brand-panel rounded-2xl p-4 text-white relative overflow-hidden soft-card">
             <div class="absolute top-0 right-0 w-28 h-28 rounded-full bg-white/5 -translate-y-8 translate-x-8 pointer-events-none"></div>
-            <p class="text-[9px] uppercase tracking-widest font-black text-blue-300">My Performance Score</p>
+            <p class="text-[9px] uppercase tracking-widest font-black text-white/50">My Performance Score</p>
 
             @if($individualKpiCount === 0)
                 {{-- No KPIs created yet --}}
@@ -781,7 +781,7 @@
                 <div class="mt-3 h-1.5 bg-white/20 rounded-full overflow-hidden">
                     <div class="h-1.5 rounded-full {{ $individualScoreStyle['bar'] }}" style="width:{{ min($individualPerformance,100) }}%"></div>
                 </div>
-                <p class="text-[9px] text-blue-300/80 mt-1.5">{{ $individualKpiCount }} KPI · {{ number_format($individualWeightage,0) }}% weightage set</p>
+                <p class="text-[9px] text-white/50/80 mt-1.5">{{ $individualKpiCount }} KPI · {{ number_format($individualWeightage,0) }}% weightage set</p>
             @endif
 
             <div class="mt-3 pt-3 border-t border-white/10 flex gap-2 flex-wrap">
