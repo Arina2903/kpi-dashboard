@@ -357,10 +357,10 @@
 {{-- ═══════ TIER 1: DEPT RANKING — visible to ALL roles ═══════════════════ --}}
 @php $rankingCount = count($companyDeptRanking ?? []); @endphp
 @if($rankingCount > 0 || $deptRows->count() > 0)
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 items-start">
 
     {{-- Card 1: Department Annual Ranking --}}
-    <div class="{{ $isManager ? '' : 'sm:col-span-2 xl:col-span-4' }} bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080]">
+    <div class="{{ $isManager ? 'xl:col-span-2' : 'sm:col-span-2 xl:col-span-5' }} bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080]">
         {{-- colour top strip --}}
         <div class="h-1 bg-gradient-to-r from-[#6B9080] to-[#A4C3B2]"></div>
         <div class="p-4">
