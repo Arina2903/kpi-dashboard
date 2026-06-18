@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attitude Appraisal · {{ $qLabel }} · {{ $currentFinancialYear }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body, * { font-family: 'Inter', sans-serif; }
+        .soft-card { box-shadow: 0 8px 30px rgba(15,23,42,.07); }
+        @media print {
+            #sidebar, #sidebarCloseBtn { display: none !important; }
+            #mainContent { margin-left: 0 !important; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-[#f0f2f7] min-h-screen text-slate-900">
+
+@include('partials.sidebar')
+
+<main id="mainContent" class="ml-[230px] min-h-screen">
+
+{{-- STICKY HEADER --}}
+<div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#f0f2f7]">
+    <div class="rounded-[18px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548] text-white px-6 py-4 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+            <h1 class="text-xl font-black">Attitude Appraisal</h1>
+            <p class="text-white/70 text-[11px] mt-0.5">{{ $currentUserName }} · {{ $userPosition }} · {{ $departmentName }} · {{ $currentFinancialYear }}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 no-print">
+            <button onclick="window.print()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20 flex items-center gap-2">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Print / PDF
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="px-4 pb-8 space-y-4">
+
+{{-- WINDOW BANNER --}}
+@if($isWindowOpen)
+<div class="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-3 flex items-center gap-3">
+    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+    <p class="text-sm font-black text-emerald-700">Submission window is open</p>
+    <span class="text-xs text-emerald-600">{{ $windowStart }} → {{ $windowEnd }}</span>
+</div>
+@else
+<div class="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3 flex items-center gap-3">
+    <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+    <p class="text-sm font-black text-amber-700">{{ $qLabel }} submission window</p>
+    <span class="text-xs text-amber-600">{{ $windowStart }} → {{ $windowEnd }}</span>
+</div>
+@endif
+
+{{-- APPRAISAL CARD --}}
+<div class="bg-white rounded-2xl border border-[#6B9080] soft-card overflow-hidden">
+    <div class="h-1 bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#A4C3B2]"></div>
+
+    <div class="p-8">
+
+        {{-- Report Header --}}
+        <div class="flex items-start justify-between mb-8">
+            <div>
+                @php
+                    $logoMap = ['RCG'=>'images/RCG-Logo.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png'];
+                    $logo = $logoMap[session('company_code')] ?? null;
+                @endphp
+                @if($logo)
+                <img src="{{ asset(ltrim($logo,'/')) }}" alt="Logo" class="h-12 object-contain mb-1">
+                @else
+                <p class="text-2xl font-black text-[#1a3d34]">{{ session('company_display_name') }}</p>
+                @endif
+                <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">Accelerating Your Business Success</p>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#1a3d34] to-[#6B9080] flex items-center justify-center shadow-lg">
+                    <span class="text-3xl font-black text-white">{{ $qLabel }}</span>
+                </div>
+                <span class="text-[9px] font-black text-[#6B9080] uppercase tracking-widest">{{ $currentFinancialYear }}</span>
+            </div>
+        </div>
+
+        {{-- Title --}}
+        <div class="text-center mb-8">
+            <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-3">Private & Confidential</p>
+            <div class="bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548] rounded-xl px-8 py-4 inline-block">
+                <h2 class="text-xl font-black text-white tracking-widest uppercase">Executive / Non Executive Performance Appraisal</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-3">Attitude & Competency Evaluation · Quarter {{ $displayQuarter }} · {{ $currentFinancialYear }}</p>
+        </div>
+
+        {{-- Purpose of Review --}}
+        <div class="border border-[#6B9080]/30 rounded-2xl overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-[#1a3d34] to-[#2d5548] px-5 py-2.5">
+                <p class="text-[10px] font-black text-white uppercase tracking-widest">Purpose of Review</p>
+            </div>
+            <div class="p-5 flex flex-col md:flex-row md:items-start gap-6">
+                <div class="flex flex-col gap-3">
+                    @foreach([
+                        ['id' => 'por_confirmation',     'label' => 'Confirmation'],
+                        ['id' => 'por_quarterly_review', 'label' => 'Quarterly Review'],
+                        ['id' => 'por_others',           'label' => 'Others'],
+                    ] as $opt)
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        <input type="checkbox" id="{{ $opt['id'] }}" value="{{ $opt['label'] }}"
+                               {{ $opt['id'] === 'por_quarterly_review' ? 'checked' : '' }}
+                               class="w-4 h-4 rounded border-[#6B9080] accent-[#6B9080] cursor-pointer">
+                        <span class="text-xs font-black text-slate-700 uppercase tracking-wider group-hover:text-[#6B9080] transition">{{ $opt['label'] }}</span>
+                    </label>
+                    @endforeach
+                </div>
+                <div class="hidden md:block w-px bg-[#6B9080]/20 self-stretch"></div>
+                <div class="flex-1 flex flex-col gap-1.5">
+                    <label class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest">Please specify (if Others)</label>
+                    <input type="text" placeholder="Describe purpose…"
+                           class="border border-[#6B9080]/40 rounded-xl px-4 py-2.5 text-sm text-slate-700 bg-slate-50 focus:outline-none focus:border-[#6B9080] focus:bg-white transition w-full max-w-md">
+                </div>
+                <div class="flex flex-col gap-1.5 md:items-end">
+                    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest">Year / Period Under Review</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg font-black text-slate-800">{{ now()->year }}</span>
+                        <span class="text-slate-400 font-bold">/</span>
+                        <span class="text-lg font-black text-[#6B9080]">{{ $qLabel }}</span>
+                    </div>
+                    <span class="text-[10px] text-slate-400">{{ $currentFinancialYear }}</span>
+                </div>
+            </div>
+        </div>
+
+        {{-- Employee info strip --}}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+            @foreach([
+                ['label'=>'Name',           'value'=>$currentUserName],
+                ['label'=>'Position',        'value'=>$userPosition],
+                ['label'=>'Department',      'value'=>$departmentName],
+                ['label'=>'Reporting To',    'value'=>$reportsToName],
+            ] as $f)
+            <div class="border border-[#6B9080]/30 rounded-xl px-4 py-3 bg-slate-50">
+                <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-widest mb-1">{{ $f['label'] }}</p>
+                <p class="text-xs font-semibold text-slate-800 leading-snug">{{ $f['value'] }}</p>
+            </div>
+            @endforeach
+        </div>
+
+        {{-- ══ SECTION 3 ══════════════════════════════════════════════════════ --}}
+        <div class="border border-[#6B9080]/40 rounded-2xl overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-[#1a3d34] to-[#2d5548] px-5 py-3">
+                <p class="text-[11px] font-black text-white uppercase tracking-widest">Section 3 – Executive / Non-Executive : Performance Appraisal</p>
+            </div>
+
+            {{-- Rating Scale Legend --}}
+            <div class="p-5 border-b border-[#6B9080]/15">
+                <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest mb-3">Rating Scale</p>
+                <div class="border border-[#6B9080]/30 rounded-xl overflow-hidden">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="bg-[#1a3d34] text-white">
+                                <th class="px-4 py-2.5 text-left font-black text-[10px] uppercase tracking-wider w-40">Category</th>
+                                <th class="px-4 py-2.5 text-center font-black text-[10px] uppercase tracking-wider w-16">Rating</th>
+                                <th class="px-4 py-2.5 text-left font-black text-[10px] uppercase tracking-wider">Definition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php
+                            $ratings = [
+                                ['cat'=>'Outstanding',     'score'=>5, 'def'=>'Outstanding & exceptional performance in the position, showing a high level of initiative, consistently sound judgement and excellent decision making.', 'bg'=>'bg-emerald-50', 'badge'=>'bg-emerald-100 text-emerald-700'],
+                                ['cat'=>'Above Average',   'score'=>4, 'def'=>'Performance that consistently meets all normal requirements of the position and exceeds requirements in one or more major aspects of the work.', 'bg'=>'bg-[#6B9080]/5', 'badge'=>'bg-[#6B9080]/15 text-[#1a3d34]'],
+                                ['cat'=>'Average',         'score'=>3, 'def'=>'Performance which meets the normal requirements of the position.', 'bg'=>'bg-white', 'badge'=>'bg-slate-100 text-slate-600'],
+                                ['cat'=>'Below Average',   'score'=>2, 'def'=>'Performance that is below what is normally expected in the position and which requires improvement in one or more basic aspects of the work (remedial steps required).', 'bg'=>'bg-amber-50', 'badge'=>'bg-amber-100 text-amber-700'],
+                                ['cat'=>'Unsatisfactory',  'score'=>1, 'def'=>'Inadequate performance which does not meet the normal performance, and the improvement has not been forthcoming (the employee is to be informed and appropriate action taken such as counselling, redevelopment and training, reassignment, demotion or termination, depending on the circumstances).', 'bg'=>'bg-red-50', 'badge'=>'bg-red-100 text-red-700'],
+                            ];
+                            @endphp
+                            @foreach($ratings as $r)
+                            <tr class="{{ $r['bg'] }} border-b border-[#6B9080]/10">
+                                <td class="px-4 py-2.5">
+                                    <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black {{ $r['badge'] }}">{{ $r['cat'] }}</span>
+                                </td>
+                                <td class="px-4 py-2.5 text-center">
+                                    <span class="text-base font-black text-slate-700">{{ $r['score'] }}</span>
+                                </td>
+                                <td class="px-4 py-2.5 text-slate-600 leading-relaxed">{{ $r['def'] }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- Assessment Areas Table --}}
+            <div class="p-5">
+                <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest mb-3">Area/s of Assessment</p>
+                <div class="border border-[#6B9080]/30 rounded-xl overflow-hidden">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="bg-gradient-to-r from-[#1a3d34] to-[#2d5548] text-white">
+                                <th class="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider">Area / Assessment</th>
+                                <th class="px-4 py-3 text-center font-black text-[10px] uppercase tracking-wider w-24">Rating (1–5)</th>
+                                <th class="px-4 py-3 text-left font-black text-[10px] uppercase tracking-wider w-64">Appraiser's Comment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($assessmentAreas as $i => $area)
+                            <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-slate-50/60' }} border-b border-[#6B9080]/10">
+                                <td class="px-4 py-4">
+                                    <p class="font-black text-slate-800 mb-1">{{ $area['no'] }}) {{ $area['title'] }}</p>
+                                    <p class="text-[11px] text-slate-400 leading-relaxed italic">{{ $area['description'] }}</p>
+                                </td>
+                                <td class="px-4 py-4 text-center align-top">
+                                    <div class="flex flex-col items-center gap-1.5 pt-1">
+                                        @foreach([5,4,3,2,1] as $score)
+                                        <label class="flex items-center gap-1.5 cursor-pointer group">
+                                            <input type="radio"
+                                                   name="rating_area_{{ $area['no'] }}"
+                                                   value="{{ $score }}"
+                                                   class="w-3.5 h-3.5 accent-[#6B9080] cursor-pointer">
+                                            <span class="text-[10px] font-bold text-slate-500 group-hover:text-[#6B9080]">{{ $score }}</span>
+                                        </label>
+                                        @endforeach
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 align-top">
+                                    <textarea rows="4"
+                                              placeholder="Appraiser's comment…"
+                                              class="w-full border border-[#6B9080]/30 rounded-lg px-3 py-2 text-[11px] text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition resize-none"></textarea>
+                                </td>
+                            </tr>
+                            @endforeach
+
+                            {{-- Total / Average row --}}
+                            <tr class="bg-gradient-to-r from-[#1a3d34]/5 to-[#6B9080]/10 border-t-2 border-[#6B9080]/30">
+                                <td class="px-4 py-3">
+                                    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-wider">Total Score / Average</p>
+                                    <p class="text-[9px] text-slate-400">Calculated from selected ratings above</p>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span id="avgRatingDisplay" class="text-xl font-black text-slate-300">—</span>
+                                    <p class="text-[9px] text-slate-400 mt-0.5">avg</p>
+                                </td>
+                                <td class="px-4 py-3"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{-- Signature Section --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 pt-8 border-t border-[#6B9080]/20">
+            @foreach([
+                ['role'=>'Employee',     'name'=>$currentUserName,  'label'=>'Signature & Date'],
+                ['role'=>'Appraiser',    'name'=>$reportsToName,    'label'=>'Signature & Date'],
+                ['role'=>'HR / Verified','name'=>'',                'label'=>'Signature & Date'],
+            ] as $sig)
+            <div class="text-center">
+                <div class="h-16 border-b-2 border-[#6B9080]/40 border-dashed mb-3 mx-4"></div>
+                <p class="text-xs font-black text-slate-700">{{ $sig['name'] ?: '_______________' }}</p>
+                <p class="text-[9px] text-[#6B9080] font-semibold uppercase tracking-wider mt-1">{{ $sig['role'] }}</p>
+                <p class="text-[9px] text-slate-400 mt-0.5">{{ $sig['label'] }}</p>
+            </div>
+            @endforeach
+        </div>
+
+    </div>{{-- /p-8 --}}
+</div>{{-- /card --}}
+
+</div>{{-- /px-4 --}}
+</main>
+
+<script>
+// Live average calculator
+document.addEventListener('change', function (e) {
+    if (!e.target.name || !e.target.name.startsWith('rating_area_')) return;
+    const radios = document.querySelectorAll('input[type=radio][name^="rating_area_"]:checked');
+    const total  = [...radios].reduce((sum, r) => sum + parseInt(r.value), 0);
+    const avg    = radios.length ? (total / radios.length).toFixed(1) : null;
+    const el     = document.getElementById('avgRatingDisplay');
+    el.textContent = avg ?? '—';
+    el.className = avg
+        ? (avg >= 4 ? 'text-xl font-black text-emerald-600'
+            : avg >= 3 ? 'text-xl font-black text-[#6B9080]'
+            : avg >= 2 ? 'text-xl font-black text-amber-500'
+            : 'text-xl font-black text-red-500')
+        : 'text-xl font-black text-slate-300';
+});
+</script>
+</body>
+</html>

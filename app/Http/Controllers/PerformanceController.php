@@ -118,4 +118,135 @@ class PerformanceController extends Controller
             'quarterScores'        => $quarterScores,
         ]);
     }
+
+    public function attitude(SupabaseService $supabase)
+    {
+        if (!session()->has('employee_uuid') || !session()->has('company_code')) {
+            return redirect()->route('login');
+        }
+
+        $employees = $supabase->get('employees', [
+            'id'        => 'eq.' . session('employee_uuid'),
+            'is_active' => 'eq.true',
+            'select'    => '*',
+        ]);
+        $user = $employees[0] ?? null;
+
+        if (!$user) {
+            session()->flush();
+            return redirect()->route('login');
+        }
+
+        $reportsTo = null;
+        if (!empty($user['reports_to_id'])) {
+            $managers  = $supabase->get('employees', [
+                'id'     => 'eq.' . $user['reports_to_id'],
+                'select' => 'id,short_name,full_name,role,position',
+            ]);
+            $reportsTo = $managers[0] ?? null;
+        }
+
+        $department = null;
+        if (!empty($user['department_code'])) {
+            $depts      = $supabase->get('departments', [
+                'code'   => 'eq.' . $user['department_code'],
+                'select' => '*',
+            ]);
+            $department = $depts[0] ?? null;
+        }
+
+        $now   = now();
+        $month = (int) $now->format('n');
+        $year  = (int) $now->format('Y');
+
+        $quarterOfMonth = match(true) {
+            $month <= 3 => 1,
+            $month <= 6 => 2,
+            $month <= 9 => 3,
+            default     => 4,
+        };
+
+        $windows = [
+            1 => ['start' => "{$year}-03-24", 'end' => "{$year}-04-07"],
+            2 => ['start' => "{$year}-06-23", 'end' => "{$year}-07-07"],
+            3 => ['start' => "{$year}-09-22", 'end' => "{$year}-10-06"],
+            4 => ['start' => "{$year}-12-23", 'end' => ($year + 1) . "-01-06"],
+        ];
+
+        $displayQuarter = $quarterOfMonth;
+        $isWindowOpen   = false;
+        foreach ($windows as $q => $win) {
+            if ($now->toDateString() >= $win['start'] && $now->toDateString() <= $win['end']) {
+                $displayQuarter = $q;
+                $isWindowOpen   = true;
+                break;
+            }
+        }
+
+        $window      = $windows[$displayQuarter];
+        $windowStart = \Carbon\Carbon::parse($window['start'])->format('d M Y');
+        $windowEnd   = \Carbon\Carbon::parse($window['end'])->format('d M Y');
+        $qLabel      = 'Q' . $displayQuarter;
+
+        $assessmentAreas = [
+            [
+                'no'          => 1,
+                'title'       => 'Knowledge of Job Requirements',
+                'description' => 'Knowledge of job requirements, methods, techniques and skills involved in doing the job, and in applying these to perform efficiently.',
+            ],
+            [
+                'no'          => 2,
+                'title'       => 'Quality of Work Done',
+                'description' => 'To what degree did the appraisee fulfil the quality expectations of the job? Was the work completed accurate and reliable? What is the degree of excellence of end results?',
+            ],
+            [
+                'no'          => 3,
+                'title'       => 'Planning and Organising Skills',
+                'description' => 'To what degree did the appraisee anticipate needs, forecast conditions, set goals and standards, plan and schedule work?',
+            ],
+            [
+                'no'          => 4,
+                'title'       => 'Decision Making',
+                'description' => 'Was the appraisee able to analyse problems effectively and make sound decisions and commit to those decisions to achieve an acceptable result?',
+            ],
+            [
+                'no'          => 5,
+                'title'       => 'Communication Skills',
+                'description' => 'Did the appraisee communicate effectively verbal and written, with superiors and peers?',
+            ],
+            [
+                'no'          => 6,
+                'title'       => 'Initiative',
+                'description' => 'Did the appraisee show initiative, creativity and resourcefulness in carrying out duties and responsibilities?',
+            ],
+            [
+                'no'          => 7,
+                'title'       => 'Teamwork & Cooperation',
+                'description' => 'Did the appraisee work cooperatively with team members, support colleagues and contribute positively to group goals?',
+            ],
+            [
+                'no'          => 8,
+                'title'       => 'Integrity & Work Ethics',
+                'description' => 'Did the appraisee demonstrate honesty, reliability and a commitment to professional standards in all work-related matters?',
+            ],
+        ];
+
+        return view('performance.attitude', [
+            'user'                 => $user,
+            'currentUserName'      => $user['full_name'] ?? $user['short_name'] ?? 'User',
+            'userPosition'         => $user['position'] ?? $user['role'] ?? '-',
+            'departmentName'       => $department['name'] ?? $user['department_code'] ?? '-',
+            'reportsToName'        => $reportsTo
+                                        ? ($reportsTo['full_name'] ?? $reportsTo['short_name'] ?? '-')
+                                        : '-',
+            'reportsToPosition'    => $reportsTo['position'] ?? $reportsTo['role'] ?? '-',
+            'currentFinancialYear' => $this->currentFinancialYear,
+            'displayQuarter'       => $displayQuarter,
+            'qLabel'               => $qLabel,
+            'isWindowOpen'         => $isWindowOpen,
+            'windowStart'          => $windowStart,
+            'windowEnd'            => $windowEnd,
+            'assessmentAreas'      => $assessmentAreas,
+        ]);
+    }
 }
