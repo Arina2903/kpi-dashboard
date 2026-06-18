@@ -1024,8 +1024,8 @@ const bandColors = ['#10b981','#6366f1','#f59e0b','#ef4444'];
             datasets: [{
                 label: 'Annual Score (%)',
                 data: sorted.map(d => d.score),
-                backgroundColor: sorted.map(d => scoreHex(d.score) + 'cc'),
-                borderColor:     sorted.map(d => scoreHex(d.score)),
+                backgroundColor: '#A4C3B2cc',
+                borderColor:     '#A4C3B2',
                 borderWidth: 1.5,
                 borderRadius: 6,
             }]
