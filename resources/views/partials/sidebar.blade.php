@@ -96,7 +96,7 @@
         </div>
 
         <div class="sidebar-tooltip hidden absolute left-[70px] top-1/2 -translate-y-1/2
-            bg-black text-white text-[10px] px-2 py-1 rounded-md
+            bg-black text-[#C9B29B] text-[10px] px-2 py-1 rounded-md
             opacity-0 group-hover:opacity-100 pointer-events-none transition
             whitespace-nowrap z-[9999] shadow-lg">
             Open Sidebar
@@ -319,7 +319,7 @@
                                 @if(($item['badge'] ?? 0) > 0)
 
                                     <span class="sidebar-text min-w-[20px] h-[20px]
-                                        rounded-full bg-red-500 text-white text-[10px]
+                                        rounded-full bg-red-500 text-[#C9B29B] text-[10px]
                                         font-black flex items-center justify-center
                                         px-1 shadow-lg shadow-red-500/30">
 
@@ -332,7 +332,7 @@
                             </div>
 
                             <div class="sidebar-tooltip hidden absolute left-[58px] top-1/2 -translate-y-1/2
-                                bg-black text-white text-[10px] px-2 py-1 rounded-md
+                                bg-black text-[#C9B29B] text-[10px] px-2 py-1 rounded-md
                                 opacity-0 group-hover:opacity-100 pointer-events-none transition duration-150
                                 whitespace-nowrap z-[9999] shadow-lg">
                                 {{ $item['label'] }}
@@ -405,7 +405,7 @@
                 </span>
 
                 <div class="sidebar-tooltip hidden absolute left-[58px] top-1/2 -translate-y-1/2
-                    bg-black text-white text-[10px] px-2 py-1 rounded-md
+                    bg-black text-[#C9B29B] text-[10px] px-2 py-1 rounded-md
                     opacity-0 group-hover:opacity-100 pointer-events-none transition duration-150
                     whitespace-nowrap z-[9999] shadow-lg">
                     Logout
