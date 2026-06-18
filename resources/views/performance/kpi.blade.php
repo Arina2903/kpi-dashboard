@@ -154,10 +154,11 @@
                     <tbody>
                         @foreach($kpis as $i => $kpi)
                         @php
-                            $qScore = $quarterScores[$kpi['id']] ?? null;
-                            $score  = $qScore['score'] ?? null;
-                            $actual = $qScore['actual_value'] ?? null;
-                            $status = $qScore['status'] ?? ($kpi['status'] ?? 'not_started');
+                            $qScore  = $quarterScores[$kpi['id']] ?? null;
+                            $actual  = isset($qScore['quarter_actual']) ? (float)$qScore['quarter_actual'] : null;
+                            $target  = isset($qScore['quarter_target']) ? (float)$qScore['quarter_target'] : (float)($kpi['base_target'] ?? 0);
+                            $score   = ($actual !== null && $target > 0) ? round($actual / $target * 100, 1) : null;
+                            $status  = $qScore['status'] ?? ($kpi['status'] ?? 'not_started');
 
                             $statusConfig = match(strtolower($status)) {
                                 'on_track','monitoring' => ['bg' => 'bg-emerald-100', 'text' => 'text-emerald-700', 'label' => 'On Track'],
@@ -168,11 +169,11 @@
                             };
 
                             $scoreColor = match(true) {
-                                $score === null          => 'text-slate-300',
-                                $score >= 90            => 'text-emerald-600',
-                                $score >= 70            => 'text-[#6B9080]',
-                                $score >= 50            => 'text-amber-500',
-                                default                 => 'text-red-500',
+                                $score === null => 'text-slate-300',
+                                $score >= 90   => 'text-emerald-600',
+                                $score >= 70   => 'text-[#6B9080]',
+                                $score >= 50   => 'text-amber-500',
+                                default        => 'text-red-500',
                             };
                         @endphp
                         <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-slate-50/60' }} border-b border-[#6B9080]/10 hover:bg-[#6B9080]/5 transition">
@@ -207,10 +208,13 @@
                         {{-- Summary row --}}
                         @php
                             $totalWeight = collect($kpis)->sum(fn($k) => (float)($k['weightage'] ?? 0));
-                            $scoredKpis  = collect($kpis)->filter(fn($k) => isset($quarterScores[$k['id']]['score']));
-                            $avgScore    = $scoredKpis->isNotEmpty()
-                                ? $scoredKpis->avg(fn($k) => (float)$quarterScores[$k['id']]['score'])
-                                : null;
+                            $scores = collect($kpis)->map(function($k) use ($quarterScores) {
+                                $qs  = $quarterScores[$k['id']] ?? null;
+                                $act = isset($qs['quarter_actual']) ? (float)$qs['quarter_actual'] : null;
+                                $tgt = isset($qs['quarter_target']) ? (float)$qs['quarter_target'] : (float)($k['base_target'] ?? 0);
+                                return ($act !== null && $tgt > 0) ? round($act / $tgt * 100, 1) : null;
+                            })->filter(fn($s) => $s !== null);
+                            $avgScore = $scores->isNotEmpty() ? round($scores->avg(), 1) : null;
                         @endphp
                         <tr class="bg-gradient-to-r from-[#1a3d34]/5 to-[#6B9080]/10 border-t-2 border-[#6B9080]/30">
                             <td colspan="3" class="px-4 py-3">

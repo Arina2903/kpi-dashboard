@@ -95,7 +95,7 @@ class PerformanceController extends Controller
             $qRows = $supabase->get('kpi_quarters', [
                 'kpi_id'  => 'eq.' . $kpi['id'],
                 'quarter' => 'eq.' . $qLabel,
-                'select'  => 'quarter,actual_value,score,status',
+                'select'  => 'quarter,quarter_target,quarter_actual,status',
             ]);
             $quarterScores[$kpi['id']] = $qRows[0] ?? null;
         }
