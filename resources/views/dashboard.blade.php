@@ -336,19 +336,22 @@
 @endphp
 
 <main id="mainContent" class="ml-[230px] min-h-screen">
-<div class="p-4 space-y-3">
 
-{{-- ═══════ HEADER ═══════════════════════════════════════════════════════ --}}
-<div class="rounded-[18px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548] text-white px-6 py-4 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-    <div>
-        <h1 class="text-xl font-black">Dashboard</h1>
-        <p class="text-white/70 text-[11px] mt-0.5">{{ $currentUserName }} · {{ $user['role'] ?? '-' }} · {{ $currentDepartment }} · {{ $currentFinancialYear }}</p>
-    </div>
-    <div class="flex flex-wrap items-center gap-2">
-        <a href="{{ route('kpi.create') }}"  class="bg-white text-[#1a3d34] hover:bg-[#f0faf7] px-4 py-2 rounded-xl shadow font-bold text-xs transition">+ Create KPI</a>
-        <a href="{{ route('kpi.index') }}"   class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20">My KPIs</a>
+{{-- ═══════ HEADER (sticky) ════════════════════════════════════════════════ --}}
+<div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#f0f2f7]">
+    <div class="rounded-[18px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548] text-white px-6 py-4 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+            <h1 class="text-xl font-black">Dashboard</h1>
+            <p class="text-white/70 text-[11px] mt-0.5">{{ $currentUserName }} · {{ $user['role'] ?? '-' }} · {{ $currentDepartment }} · {{ $currentFinancialYear }}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('kpi.create') }}"  class="bg-white text-[#1a3d34] hover:bg-[#f0faf7] px-4 py-2 rounded-xl shadow font-bold text-xs transition">+ Create KPI</a>
+            <a href="{{ route('kpi.index') }}"   class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20">My KPIs</a>
+        </div>
     </div>
 </div>
+
+<div class="px-4 pb-4 space-y-3">
 
 @if(session('success'))<div class="bg-emerald-50 text-emerald-700 px-3 py-2 rounded-xl text-xs border border-emerald-200">{{ session('success') }}</div>@endif
 @if(session('error'))<div class="bg-red-50 text-red-700 px-3 py-2 rounded-xl text-xs border border-red-200">{{ session('error') }}</div>@endif
