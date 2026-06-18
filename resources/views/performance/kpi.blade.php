@@ -172,6 +172,142 @@
             @endforeach
         </div>
 
+        {{-- ══════════════════════════════════════════════════════════════════
+             SECTION 1 – TO BE COMPLETED BY EMPLOYEE UNDER REVIEW
+        ══════════════════════════════════════════════════════════════════ --}}
+        <div class="border border-[#6B9080]/40 rounded-2xl overflow-hidden mb-6">
+
+            {{-- Section Header --}}
+            <div class="bg-gradient-to-r from-[#1a3d34] to-[#2d5548] px-5 py-3">
+                <p class="text-[11px] font-black text-white uppercase tracking-widest">Section 1 – To Be Completed by Employee Under Review</p>
+            </div>
+
+            <div class="p-6 space-y-6">
+
+                {{-- PART A --}}
+                <div>
+                    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest mb-4 pb-1 border-b border-[#6B9080]/20">Part A – Employee's Particulars</p>
+
+                    {{-- Row 1: Name + Start Date --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Name</label>
+                            <input type="text" value="{{ $currentUserName }}" readonly
+                                   class="w-full border border-[#6B9080]/40 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:outline-none cursor-default">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Start Date</label>
+                            <input type="text" value="{{ isset($user['start_date']) ? \Carbon\Carbon::parse($user['start_date'])->format('d M Y') : (isset($user['created_at']) ? \Carbon\Carbon::parse($user['created_at'])->format('d M Y') : '') }}"
+                                   placeholder="DD MMM YYYY"
+                                   class="w-full border border-[#6B9080]/40 rounded-xl px-4 py-2.5 text-sm text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition">
+                        </div>
+                    </div>
+
+                    {{-- Row 2: Current Position + Dept/Div --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Current Position</label>
+                            <input type="text" value="{{ $userPosition }}" readonly
+                                   class="w-full border border-[#6B9080]/40 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:outline-none cursor-default">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Dept / Div</label>
+                            <input type="text" value="{{ $departmentName }}" readonly
+                                   class="w-full border border-[#6B9080]/40 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:outline-none cursor-default">
+                        </div>
+                    </div>
+
+                    {{-- Row 3: Months/Years of Service --}}
+                    <div class="mb-4">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Months / Years of Service</label>
+                        @php
+                            $serviceText = '';
+                            $serviceDate = $user['start_date'] ?? $user['created_at'] ?? null;
+                            if ($serviceDate) {
+                                $start   = \Carbon\Carbon::parse($serviceDate);
+                                $diff    = $start->diff(now());
+                                $yrs     = $diff->y;
+                                $mos     = $diff->m;
+                                $serviceText = ($yrs > 0 ? $yrs . ' yr' . ($yrs > 1 ? 's' : '') . ' ' : '') . $mos . ' month' . ($mos !== 1 ? 's' : '');
+                            }
+                        @endphp
+                        <input type="text" value="{{ $serviceText }}" readonly
+                               class="w-full md:w-1/2 border border-[#6B9080]/40 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:outline-none cursor-default">
+                    </div>
+
+                    {{-- Row 4: Leave / Lateness --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Medical Leave Taken During Review Period</label>
+                                <input type="number" min="0" placeholder="Days"
+                                       class="w-32 border border-[#6B9080]/40 rounded-xl px-4 py-2.5 text-sm text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Emergency Leave Taken During Review Period</label>
+                                <input type="number" min="0" placeholder="Days"
+                                       class="w-32 border border-[#6B9080]/40 rounded-xl px-4 py-2.5 text-sm text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">No. of Lateness During Review Period</label>
+                            <input type="number" min="0" placeholder="Times"
+                                   class="w-32 border border-[#6B9080]/40 rounded-xl px-4 py-2.5 text-sm text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Divider --}}
+                <div class="border-t border-[#6B9080]/15"></div>
+
+                {{-- PART B --}}
+                <div>
+                    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest mb-1">Part B</p>
+                    <p class="text-xs text-slate-600 mb-3">Summarize present duties &amp; indicate if any key tasks set for the year / period have been achieved.</p>
+                    <textarea rows="5" placeholder="Write your summary here…"
+                              class="w-full border border-[#6B9080]/40 rounded-xl px-4 py-3 text-sm text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition resize-none"></textarea>
+                </div>
+
+                {{-- Divider --}}
+                <div class="border-t border-[#6B9080]/15"></div>
+
+                {{-- PART C --}}
+                <div>
+                    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest mb-1">Part C</p>
+                    <p class="text-xs text-slate-600 mb-3"><span class="italic">[Where applicable]</span> List what you see as your key tasks for the forthcoming year / period.</p>
+                    <textarea rows="5" placeholder="List your key tasks for the next period…"
+                              class="w-full border border-[#6B9080]/40 rounded-xl px-4 py-3 text-sm text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition resize-none"></textarea>
+                </div>
+
+                {{-- Divider --}}
+                <div class="border-t border-[#6B9080]/15"></div>
+
+                {{-- PART D --}}
+                <div>
+                    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest mb-1">Part D – To Be Completed by the Appraiser / Superior</p>
+                    <p class="text-xs text-slate-500 mb-4 italic">
+                        I hereby confirm that the above information provided by the appraisee is correct and that the appraisee has been directly reporting to me since
+                        <input type="text" placeholder="DD MMM YYYY"
+                               class="inline-block w-32 border-b border-[#6B9080] bg-transparent text-sm text-slate-700 px-1 focus:outline-none mx-1">
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Name</label>
+                            <input type="text" value="{{ $reportsToName !== '-' ? $reportsToName : '' }}"
+                                   placeholder="Appraiser name"
+                                   class="w-full border border-[#6B9080]/40 rounded-xl px-4 py-2.5 text-sm text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Designation</label>
+                            <input type="text" placeholder="Appraiser designation"
+                                   class="w-full border border-[#6B9080]/40 rounded-xl px-4 py-2.5 text-sm text-slate-700 bg-white focus:outline-none focus:border-[#6B9080] transition">
+                        </div>
+                    </div>
+                </div>
+
+            </div>{{-- /p-6 --}}
+        </div>{{-- /Section 1 --}}
+
         {{-- KPI Table --}}
         <div class="mb-6">
             <div class="flex items-center justify-between mb-4">
