@@ -112,11 +112,58 @@
 
         /* ── Print ────────────────────────────────────────── */
         @media print {
-            #sidebar, #sidebarCloseBtn, .no-print { display: none !important; }
+            /* Force all colours & backgrounds to print */
+            *, *::before, *::after {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            @page {
+                size: A4 portrait;
+                margin: 12mm 10mm;
+            }
+
+            /* Hide chrome */
+            #sidebar, #sidebarCloseBtn, .no-print,
+            .sticky { display: none !important; }
+
+            /* Remove layout offsets */
             #mainContent { margin-left: 0 !important; }
-            .doc-card { box-shadow: none !important; }
-            body { background: white !important; }
-            .px-4 { padding-left: 0 !important; padding-right: 0 !important; }
+            body { background: #f0f2f7 !important; }
+            .px-4 { padding-left: 4px !important; padding-right: 4px !important; }
+            .pt-3 { padding-top: 0 !important; }
+            .pb-10 { padding-bottom: 0 !important; }
+
+            /* Document card full-width, keep shadow subtle */
+            .doc-card {
+                box-shadow: none !important;
+                border: 1px solid #6B9080 !important;
+                border-radius: 12px !important;
+            }
+
+            /* Keep section bars dark teal */
+            .sec-bar {
+                background: linear-gradient(90deg, #1a3d34, #2d5548) !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+
+            /* Keep table headers dark */
+            .doc-tbl th { background: #1a3d34 !important; color: #fff !important; }
+            .okr-hdr td { background: rgba(107,144,128,.15) !important; }
+
+            /* Keep part labels teal */
+            .part-label { color: #6B9080 !important; }
+
+            /* Gradient accent strip at top */
+            .h-\[3px\] { background: linear-gradient(to right, #1a3d34, #6B9080, #A4C3B2) !important; }
+
+            /* Signature pads — show canvas outline in print */
+            canvas { border: 1px solid #ccc !important; border-radius: 8px; }
+
+            /* Avoid page breaks inside sections */
+            .border.border-\[#6B9080\]\/25.rounded-xl { page-break-inside: avoid; }
+            tr { page-break-inside: avoid; }
         }
     </style>
 </head>

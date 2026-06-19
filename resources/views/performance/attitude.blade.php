@@ -64,11 +64,36 @@
         .sig-line { border-bottom:1.5px dashed rgba(107,144,128,.40); height:44px; margin-bottom:6px; }
 
         @media print {
-            #sidebar, #sidebarCloseBtn, .no-print { display:none !important; }
+            *, *::before, *::after {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            @page { size: A4 portrait; margin: 12mm 10mm; }
+
+            #sidebar, #sidebarCloseBtn, .no-print,
+            .sticky { display:none !important; }
+
             #mainContent { margin-left:0 !important; }
-            .doc-card { box-shadow:none !important; }
-            body { background:white !important; }
-            .px-4 { padding-left:0 !important; padding-right:0 !important; }
+            body { background:#f0f2f7 !important; }
+            .px-4 { padding-left:4px !important; padding-right:4px !important; }
+            .pt-3 { padding-top:0 !important; }
+            .pb-10 { padding-bottom:0 !important; }
+
+            .doc-card { box-shadow:none !important; border:1px solid #6B9080 !important; border-radius:12px !important; }
+            .sec-bar { background:linear-gradient(90deg,#1a3d34,#2d5548) !important; }
+            .doc-tbl th { background:#1a3d34 !important; color:#fff !important; }
+            .part-label { color:#6B9080 !important; }
+
+            input[type=radio]:checked + label {
+                background:#1a3d34 !important;
+                border-color:#1a3d34 !important;
+                color:#fff !important;
+            }
+
+            .border.rounded-xl { page-break-inside:avoid; }
+            tr { page-break-inside:avoid; }
         }
     </style>
 </head>
