@@ -110,6 +110,10 @@
         /* ── Sig line ─────────────────────────────────────── */
         .sig-line { border-bottom: 1.5px dashed rgba(107,144,128,.40); height: 44px; margin-bottom: 6px; }
 
+        /* ── Print table header (hidden on screen) ─────────── */
+        #print-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        #print-thead { display: none; }
+
         /* ── Print ────────────────────────────────────────── */
         @media print {
             /* Force all colours & backgrounds to print */
@@ -121,23 +125,15 @@
 
             @page {
                 size: A4 portrait;
-                margin: 26mm 10mm 12mm;
+                margin: 10mm 10mm 12mm;
             }
 
-            /* Repeating header — fixed so it appears on every page */
-            #print-page-header {
-                display: flex !important;
-                position: fixed;
-                top: 0; left: 0; right: 0;
-                height: 22mm;
-                background: white !important;
-                border-bottom: 1.5px solid #6B9080 !important;
-                padding: 3mm 10mm;
-                align-items: center;
-                justify-content: space-between;
-            }
+            /* Repeating header — table-header-group repeats cleanly on every page */
+            #print-table { width: 100% !important; border-collapse: collapse !important; }
+            #print-thead { display: table-header-group !important; }
+            #print-thead td { padding: 4mm 0 3mm; background: white !important; }
 
-            /* Hide original doc header — replaced by fixed print header */
+            /* Hide original doc header — replaced by table header */
             #doc-hdr { display: none !important; }
 
             /* Hide chrome */
@@ -220,21 +216,28 @@
     </div>
 </div>
 
-{{-- Print header: hidden on screen, repeats on every printed page --}}
+{{-- Print table: thead = logo+Q2, repeats on every printed page via table-header-group --}}
 @php $phLogoMap=['RCG'=>'images/RCG-Logo.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $phLogo=$phLogoMap[session('company_code')]??null; @endphp
-<div id="print-page-header" style="display:none">
-    <div>
-        @if($phLogo)<img src="{{ asset($phLogo) }}" alt="Logo" style="height:28px;object-fit:contain;display:block">
-        @else<span style="font-size:12px;font-weight:900;color:#1a3d34">{{ session('company_display_name') }}</span>@endif
-        <p style="font-size:7px;color:#94a3b8;letter-spacing:.18em;text-transform:uppercase;margin-top:3px">Accelerating Your Business Success</p>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
-        <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#1a3d34,#6B9080);display:flex;align-items:center;justify-content:center">
-            <span style="font-size:14px;font-weight:900;color:white;line-height:1">{{ $qLabel }}</span>
+<table id="print-table">
+<thead id="print-thead">
+<tr><td>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+            @if($phLogo)<img src="{{ asset($phLogo) }}" alt="Logo" style="height:28px;object-fit:contain;display:block">
+            @else<span style="font-size:12px;font-weight:900;color:#1a3d34">{{ session('company_display_name') }}</span>@endif
+            <p style="font-size:7px;color:#94a3b8;letter-spacing:.18em;text-transform:uppercase;margin-top:3px">Accelerating Your Business Success</p>
         </div>
-        <span style="font-size:7px;font-weight:700;color:#6B9080;letter-spacing:.12em;text-transform:uppercase">{{ $currentFinancialYear }}</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+            <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#1a3d34,#6B9080);display:flex;align-items:center;justify-content:center">
+                <span style="font-size:14px;font-weight:900;color:white;line-height:1">{{ $qLabel }}</span>
+            </div>
+            <span style="font-size:7px;font-weight:700;color:#6B9080;letter-spacing:.12em;text-transform:uppercase">{{ $currentFinancialYear }}</span>
+        </div>
     </div>
-</div>
+</td></tr>
+</thead>
+<tbody>
+<tr><td style="padding:0">
 
 <div class="px-4 pb-10 pt-3">
 <div class="max-w-5xl mx-auto">
@@ -600,6 +603,9 @@
 
 </div>
 </div>{{-- /px-4 --}}
+</td></tr>
+</tbody>
+</table>
 </main>
 
 <script>
