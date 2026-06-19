@@ -70,7 +70,23 @@
                 color-adjust: exact !important;
             }
 
-            @page { size: A4 portrait; margin: 12mm 10mm; }
+            @page { size: A4 portrait; margin: 26mm 10mm 12mm; }
+
+            /* Repeating header — fixed so it appears on every page */
+            #print-page-header {
+                display: flex !important;
+                position: fixed;
+                top: 0; left: 0; right: 0;
+                height: 22mm;
+                background: white !important;
+                border-bottom: 1.5px solid #6B9080 !important;
+                padding: 3mm 10mm;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            /* Hide original doc header — replaced by fixed print header */
+            #doc-hdr { display: none !important; }
 
             #sidebar, #sidebarCloseBtn, .no-print,
             .sticky { display:none !important; }
@@ -135,6 +151,22 @@
     </div>
 </div>
 
+{{-- Print header: hidden on screen, repeats on every printed page --}}
+@php $phLogoMap=['RCG'=>'images/RCG-Logo.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $phLogo=$phLogoMap[session('company_code')]??null; @endphp
+<div id="print-page-header" style="display:none">
+    <div>
+        @if($phLogo)<img src="{{ asset($phLogo) }}" alt="Logo" style="height:28px;object-fit:contain;display:block">
+        @else<span style="font-size:12px;font-weight:900;color:#1a3d34">{{ session('company_display_name') }}</span>@endif
+        <p style="font-size:7px;color:#94a3b8;letter-spacing:.18em;text-transform:uppercase;margin-top:3px">Accelerating Your Business Success</p>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+        <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#1a3d34,#6B9080);display:flex;align-items:center;justify-content:center">
+            <span style="font-size:14px;font-weight:900;color:white;line-height:1">{{ $qLabel }}</span>
+        </div>
+        <span style="font-size:7px;font-weight:700;color:#6B9080;letter-spacing:.12em;text-transform:uppercase">{{ $currentFinancialYear }}</span>
+    </div>
+</div>
+
 <div class="px-4 pb-10 pt-3">
 <div class="max-w-5xl mx-auto">
 
@@ -144,7 +176,7 @@
     <div class="px-10 py-8">
 
         {{-- Doc header --}}
-        <div class="flex items-start justify-between mb-7 pb-6 border-b border-slate-100">
+        <div id="doc-hdr" class="flex items-start justify-between mb-7 pb-6 border-b border-slate-100">
             <div>
                 @php $logoMap = ['RCG'=>'images/RCG-Logo.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $logo = $logoMap[session('company_code')] ?? null; @endphp
                 @if($logo)
