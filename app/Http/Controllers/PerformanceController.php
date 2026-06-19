@@ -26,6 +26,17 @@ class PerformanceController extends Controller
             return redirect()->route('login');
         }
 
+        // ── Tenure calculation ────────────────────────────────────────────────
+        $joinDate = $user['join_date'] ?? null;
+        $tenure   = '—';
+        if ($joinDate) {
+            $diff = \Carbon\Carbon::parse($joinDate)->diff(now());
+            $parts = [];
+            if ($diff->y > 0) $parts[] = $diff->y . ' year' . ($diff->y !== 1 ? 's' : '');
+            if ($diff->m > 0) $parts[] = $diff->m . ' month' . ($diff->m !== 1 ? 's' : '');
+            $tenure = $parts ? implode(' ', $parts) : 'Less than 1 month';
+        }
+
         // Reporting-to (approver)
         $reportsTo = null;
         if (!empty($user['reports_to_id'])) {
@@ -108,6 +119,8 @@ class PerformanceController extends Controller
             'reportsToName'        => $reportsTo
                                         ? ($reportsTo['full_name'] ?? $reportsTo['short_name'] ?? '-')
                                         : '-',
+            'joinDate'             => $joinDate ? \Carbon\Carbon::parse($joinDate)->format('d M Y') : '—',
+            'tenure'               => $tenure,
             'currentFinancialYear' => $this->currentFinancialYear,
             'displayQuarter'       => $displayQuarter,
             'qLabel'               => $qLabel,

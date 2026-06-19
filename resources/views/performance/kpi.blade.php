@@ -302,12 +302,11 @@
                         </div>
                         {{-- Service --}}
                         <div class="col-span-2">
-                            <p class="f-label">Months / Years of Service</p>
-                            @php
-                                $sd = $user['start_date'] ?? $user['created_at'] ?? null;
-                                if ($sd) { $diff = \Carbon\Carbon::parse($sd)->diff(now()); $svc = ($diff->y > 0 ? $diff->y.'yr '.'' : '') . $diff->m.' month'.($diff->m!==1?'s':''); } else { $svc = ''; }
-                            @endphp
-                            <p class="f-val">{{ $svc ?: '—' }}</p>
+                            <p class="f-label">Date Joined</p>
+                            <p class="f-val">{{ $joinDate }}</p>
+                            <div class="mt-1 h-px bg-slate-200"></div>
+                            <p class="f-label mt-3">Months / Years of Service</p>
+                            <p class="f-val text-[#1a3d34] font-black">{{ $tenure }}</p>
                             <div class="mt-1 h-px bg-slate-200"></div>
                         </div>
                     </div>
