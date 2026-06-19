@@ -300,12 +300,15 @@
                             <p class="f-val">{{ $departmentName }}</p>
                             <div class="mt-1 h-px bg-slate-200"></div>
                         </div>
-                        {{-- Service --}}
-                        <div class="col-span-2">
+                        {{-- Date Joined --}}
+                        <div>
                             <p class="f-label">Date Joined</p>
                             <p class="f-val">{{ $joinDate }}</p>
                             <div class="mt-1 h-px bg-slate-200"></div>
-                            <p class="f-label mt-3">Months / Years of Service</p>
+                        </div>
+                        {{-- Tenure --}}
+                        <div>
+                            <p class="f-label">Months / Years of Service</p>
                             <p class="f-val">{{ $tenure }}</p>
                             <div class="mt-1 h-px bg-slate-200"></div>
                         </div>
