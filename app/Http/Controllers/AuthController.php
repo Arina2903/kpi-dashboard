@@ -140,6 +140,10 @@ class AuthController extends Controller
 
         $this->setDashboardSession($selectedDashboard);
 
+        // Clear bulky available_dashboards to keep session cookie small
+        session()->forget('available_dashboards');
+        session()->save();
+
         return redirect()->route('dashboard');
     }
 
@@ -218,32 +222,18 @@ class AuthController extends Controller
     private function setDashboardSession(array $dashboard): void
     {
         session([
-            'employee' => $dashboard,
-            'employee_uuid' => $dashboard['employee_uuid'],
-            'employee_id' => $dashboard['employee_id'],
-
-            'employee_name' => $dashboard['short_name']
-                ?? $dashboard['full_name']
-                ?? 'User',
-
-            'short_name' => $dashboard['short_name'] ?? null,
-            'full_name' => $dashboard['full_name'] ?? null,
-
-            'employee_role' => $dashboard['role'],
-            'role' => $dashboard['role'],
-
-            'position' => $dashboard['position'] ?? null,
-            'department_code' => $dashboard['department_code'],
-
-            'company_code' => $dashboard['company_code'],
-            'company_name' => $dashboard['company_name'],
-
+            'employee_uuid'        => $dashboard['employee_uuid'],
+            'employee_id'          => $dashboard['employee_id'],
+            'employee_name'        => $dashboard['short_name'] ?? $dashboard['full_name'] ?? 'User',
+            'short_name'           => $dashboard['short_name'] ?? null,
+            'full_name'            => $dashboard['full_name'] ?? null,
+            'role'                 => $dashboard['role'],
+            'position'             => $dashboard['position'] ?? null,
+            'department_code'      => $dashboard['department_code'],
+            'company_code'         => $dashboard['company_code'],
+            'company_name'         => $dashboard['company_name'],
             'company_display_name' => $dashboard['company_display_name'],
-            'company_logo' => $dashboard['company_logo'],
-
-            'manager_code' => $dashboard['manager_code'] ?? null,
-            'vp_code' => $dashboard['vp_code'] ?? null,
-            'reports_to' => $dashboard['reports_to'] ?? null,
+            'company_logo'         => $dashboard['company_logo'],
         ]);
     }
 
