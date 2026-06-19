@@ -42,7 +42,7 @@ class PerformanceController extends Controller
         if (!empty($user['reports_to_id'])) {
             $managers  = $supabase->get('employees', [
                 'id'     => 'eq.' . $user['reports_to_id'],
-                'select' => 'id,short_name,full_name,role',
+                'select' => 'id,short_name,full_name,role,position',
             ]);
             $reportsTo = $managers[0] ?? null;
         }
@@ -116,9 +116,8 @@ class PerformanceController extends Controller
             'currentUserName'      => $user['full_name'] ?? $user['short_name'] ?? 'User',
             'userPosition'         => $user['position'] ?? $user['role'] ?? '-',
             'departmentName'       => $department['name'] ?? $user['department_code'] ?? '-',
-            'reportsToName'        => $reportsTo
-                                        ? ($reportsTo['full_name'] ?? $reportsTo['short_name'] ?? '-')
-                                        : '-',
+            'reportsToName'        => $reportsTo ? ($reportsTo['full_name'] ?? $reportsTo['short_name'] ?? '-') : '-',
+            'reportsToPosition'    => $reportsTo['position'] ?? $reportsTo['role'] ?? '-',
             'joinDate'             => $joinDate ? \Carbon\Carbon::parse($joinDate)->format('d M Y') : '—',
             'tenure'               => $tenure,
             'currentFinancialYear' => $this->currentFinancialYear,

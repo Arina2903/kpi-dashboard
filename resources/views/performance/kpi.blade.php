@@ -365,7 +365,7 @@
                             </div>
                             <div>
                                 <p class="f-label">Designation</p>
-                                <input type="text" placeholder="Job title" class="f-input">
+                                <input type="text" value="{{ $reportsToPosition !== '-' ? $reportsToPosition : '' }}" placeholder="Job title" class="f-input">
                             </div>
                         </div>
                     </div>
