@@ -293,6 +293,7 @@ Route::middleware(['kpi.auth'])->group(function () {
     */
     Route::get('/performance/kpi',        [\App\Http\Controllers\PerformanceController::class, 'kpiAppraisal'])->name('performance.kpi');
     Route::get('/performance/attitude',   [\App\Http\Controllers\PerformanceController::class, 'attitude'])->name('performance.attitude');
+    Route::get('/performance/report',     [\App\Http\Controllers\PerformanceController::class, 'report'])->name('performance.report');
 
     /*
     |--------------------------------------------------------------------------

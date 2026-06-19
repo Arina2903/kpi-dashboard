@@ -281,4 +281,141 @@ class PerformanceController extends Controller
             'assessmentAreas'      => $assessmentAreas,
         ]);
     }
+
+    public function report(SupabaseService $supabase)
+    {
+        if (!session()->has('employee_uuid') || !session()->has('company_code')) {
+            return redirect()->route('login');
+        }
+
+        $employees = $supabase->get('employees', [
+            'id'        => 'eq.' . session('employee_uuid'),
+            'is_active' => 'eq.true',
+            'select'    => '*',
+        ]);
+        $user = $employees[0] ?? null;
+
+        if (!$user) {
+            session()->flush();
+            return redirect()->route('login');
+        }
+
+        // ── Tenure ─────────────────────────────────────────────────────────────
+        $joinDate = $user['join_date'] ?? null;
+        $tenure   = '—';
+        if ($joinDate) {
+            $diff  = \Carbon\Carbon::parse($joinDate)->diff(now());
+            $parts = [];
+            if ($diff->y > 0) $parts[] = $diff->y . ' year' . ($diff->y !== 1 ? 's' : '');
+            if ($diff->m > 0) $parts[] = $diff->m . ' month' . ($diff->m !== 1 ? 's' : '');
+            $tenure = $parts ? implode(' ', $parts) : 'Less than 1 month';
+        }
+
+        // ── Reports-to ─────────────────────────────────────────────────────────
+        $reportsTo = null;
+        if (!empty($user['reports_to_id'])) {
+            $managers  = $supabase->get('employees', [
+                'id'     => 'eq.' . $user['reports_to_id'],
+                'select' => 'id,short_name,full_name,role,position',
+            ]);
+            $reportsTo = $managers[0] ?? null;
+        }
+
+        // ── Department ─────────────────────────────────────────────────────────
+        $department = null;
+        if (!empty($user['department_code'])) {
+            $depts      = $supabase->get('departments', [
+                'code'   => 'eq.' . $user['department_code'],
+                'select' => '*',
+            ]);
+            $department = $depts[0] ?? null;
+        }
+
+        // ── Quarter logic ──────────────────────────────────────────────────────
+        $now   = now();
+        $month = (int) $now->format('n');
+        $year  = (int) $now->format('Y');
+
+        $quarterOfMonth = match(true) {
+            $month <= 3 => 1,
+            $month <= 6 => 2,
+            $month <= 9 => 3,
+            default     => 4,
+        };
+
+        $windows = [
+            1 => ['start' => "{$year}-03-24", 'end' => "{$year}-04-07"],
+            2 => ['start' => "{$year}-06-23", 'end' => "{$year}-07-07"],
+            3 => ['start' => "{$year}-09-22", 'end' => "{$year}-10-06"],
+            4 => ['start' => "{$year}-12-23", 'end' => ($year + 1) . "-01-06"],
+        ];
+
+        $displayQuarter = $quarterOfMonth;
+        $isWindowOpen   = false;
+        foreach ($windows as $q => $win) {
+            if ($now->toDateString() >= $win['start'] && $now->toDateString() <= $win['end']) {
+                $displayQuarter = $q;
+                $isWindowOpen   = true;
+                break;
+            }
+        }
+
+        $window      = $windows[$displayQuarter];
+        $windowStart = \Carbon\Carbon::parse($window['start'])->format('d M Y');
+        $windowEnd   = \Carbon\Carbon::parse($window['end'])->format('d M Y');
+        $qLabel      = 'Q' . $displayQuarter;
+
+        // ── KPIs ───────────────────────────────────────────────────────────────
+        $kpis = $supabase->get('kpis', [
+            'employee_id'    => 'eq.' . $user['id'],
+            'financial_year' => 'eq.' . $this->currentFinancialYear,
+            'select'         => 'id,kpi_title,category,sub_category,unit,base_target,actual_value,status,weightage',
+        ]) ?? [];
+
+        $quarterScores = [];
+        foreach ($kpis as $kpi) {
+            $qRows = $supabase->get('kpi_quarters', [
+                'kpi_id'  => 'eq.' . $kpi['id'],
+                'quarter' => 'eq.' . $qLabel,
+                'select'  => 'quarter,quarter_target,quarter_actual,status',
+            ]);
+            $quarterScores[$kpi['id']] = $qRows[0] ?? null;
+        }
+
+        // ── Assessment areas (attitude) ────────────────────────────────────────
+        $assessmentAreas = [
+            ['no' =>  1, 'title' => 'Knowledge of Job Requirements',  'description' => 'Knowledge of job requirements, methods, techniques and skills involved in doing the job, and in applying these to perform efficiently.'],
+            ['no' =>  2, 'title' => 'Quality of Work Done',           'description' => 'To what degree did the appraisee fulfil the quality expectations of the job? Was the work completed accurate and reliable? What is the degree of excellence of end results?'],
+            ['no' =>  3, 'title' => 'Planning and Organising Skills', 'description' => 'To what degree did the appraisee anticipate needs, forecast conditions, set goals and standards, plan and schedule work?'],
+            ['no' =>  4, 'title' => 'Decision Making',                'description' => 'Was the appraisee able to analyse problems effectively and make sound decisions and commit to those decisions to achieve an acceptable result?'],
+            ['no' =>  5, 'title' => 'Communication Skills',           'description' => 'Did the appraisee communicate effectively verbal and written, with superiors and peers?'],
+            ['no' =>  6, 'title' => 'Teamwork',                       'description' => 'Was the appraisee able to adopt and adapt in work conditions/situations and work with others toward a common objective?'],
+            ['no' =>  7, 'title' => 'Interpersonal Relationships',    'description' => 'How well did the appraisee relate to associates, superiors, and external contacts to get the desired cooperation and assistance?'],
+            ['no' =>  8, 'title' => 'Attitude Towards Work',          'description' => 'Was the appraisee able to work independently without need for direct supervision? How well did the appraisee adapt to new tasks and to changes in the work environment? Did the appraisee show commitment in discharge of his/her duties?'],
+            ['no' =>  9, 'title' => 'Time Management / Tardiness',    'description' => "Is the appraisee able to plan, execute and complete assigned tasks within the deadline given? Did the appraisee conform to Company's rules and regulations at all times? Was the appraisee punctual in attendance and timekeeping?"],
+            ['no' => 10, 'title' => 'Appearance',                     'description' => 'Was the appraisee well groomed? Did the appraisee make an excellent impression?'],
+            ['no' => 11, 'title' => 'Dependability / Accountability', 'description' => 'Able to carry out work with limited or minimum supervision and able to follow work instructions. Demonstrates high level of commitment to complete tasks assigned and shows initiative in ensuring job is completed efficiently and effectively.'],
+            ['no' => 12, 'title' => 'Values',                         'description' => 'Does the appraisee understand and demonstrate organisation values all the time?'],
+        ];
+
+        return view('performance.report', [
+            'user'                 => $user,
+            'currentUserName'      => $user['full_name'] ?? $user['short_name'] ?? 'User',
+            'userPosition'         => $user['position'] ?? $user['role'] ?? '-',
+            'departmentName'       => $department['name'] ?? $user['department_code'] ?? '-',
+            'reportsToName'        => $reportsTo ? ($reportsTo['full_name'] ?? $reportsTo['short_name'] ?? '-') : '-',
+            'reportsToPosition'    => $reportsTo['position'] ?? $reportsTo['role'] ?? '-',
+            'joinDate'             => $joinDate ? \Carbon\Carbon::parse($joinDate)->format('d M Y') : '—',
+            'tenure'               => $tenure,
+            'currentFinancialYear' => $this->currentFinancialYear,
+            'displayQuarter'       => $displayQuarter,
+            'qLabel'               => $qLabel,
+            'isWindowOpen'         => $isWindowOpen,
+            'windowStart'          => $windowStart,
+            'windowEnd'            => $windowEnd,
+            'kpis'                 => $kpis,
+            'quarterScores'        => $quarterScores,
+            'assessmentAreas'      => $assessmentAreas,
+        ]);
+    }
 }

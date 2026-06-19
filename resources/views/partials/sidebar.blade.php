@@ -198,6 +198,12 @@
                         'match' => 'performance/culture*',
                         'icon' => 'culture',
                     ],
+                    [
+                        'label' => 'Overall Report',
+                        'href' => '/performance/report',
+                        'match' => 'performance/report*',
+                        'icon' => 'report',
+                    ],
                 ],
             ],
             [
