@@ -175,30 +175,6 @@
                 'title' => 'Performance Evaluation',
                 'items' => [
                     [
-                        'label' => 'KPI',
-                        'href' => '/performance/kpi',
-                        'match' => 'performance/kpi*',
-                        'icon' => 'eval-kpi',
-                    ],
-                    [
-                        'label' => 'Attitude',
-                        'href' => '/performance/attitude',
-                        'match' => 'performance/attitude*',
-                        'icon' => 'attitude',
-                    ],
-                    [
-                        'label' => 'Attendance',
-                        'href' => '/performance/attendance',
-                        'match' => 'performance/attendance*',
-                        'icon' => 'attendance',
-                    ],
-                    [
-                        'label' => 'Culture',
-                        'href' => '/performance/culture',
-                        'match' => 'performance/culture*',
-                        'icon' => 'culture',
-                    ],
-                    [
                         'label' => 'Overall Report',
                         'href' => '/performance/report',
                         'match' => 'performance/report*',
