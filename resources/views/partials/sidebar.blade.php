@@ -29,7 +29,7 @@
 
 <aside
     id="sidebar"
-    class="fixed left-0 top-0 z-40 h-screen bg-[#12100E] text-[#E2FFDD]
+    class="fixed left-0 top-0 z-40 h-screen bg-[#1a3d34] text-[#E2FFDD]
     border-r border-white/10 shadow-[4px_0_24px_rgba(0,0,0,0.30)]
     w-[230px] min-w-[230px] max-w-[230px]
     px-3 py-4 flex flex-col overflow-visible shrink-0 transition-all duration-300"
@@ -70,11 +70,11 @@
                 class="w-9 h-9 object-contain sidebar-logo bg-transparent"
                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
             />
-            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#2a2520] text-[#E2FFDD] font-bold text-base items-center justify-center" style="display:none">
+            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#0d2b23] text-[#E2FFDD] font-bold text-base items-center justify-center" style="display:none">
                 {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
             </span>
             @else
-            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#2a2520] text-[#E2FFDD] font-bold text-base flex items-center justify-center">
+            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#0d2b23] text-[#E2FFDD] font-bold text-base flex items-center justify-center">
                 {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
             </span>
             @endif
@@ -300,7 +300,7 @@
                             href="{{ $item['href'] }}"
                             class="group relative flex items-center gap-3 px-3 py-2 rounded-xl transition
                             {{ $isActive
-                                ? 'bg-[#C9B29B]/20 text-[#E2FFDD] font-black shadow-md'
+                                ? 'bg-[#6B9080]/40 text-[#E2FFDD] font-black shadow-md'
                                 : 'text-[#E2FFDD]/80 font-medium hover:bg-white/10 hover:text-[#E2FFDD]'
                             }}"
                         >
