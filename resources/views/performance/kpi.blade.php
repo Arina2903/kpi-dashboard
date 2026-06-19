@@ -306,7 +306,7 @@
                             <p class="f-val">{{ $joinDate }}</p>
                             <div class="mt-1 h-px bg-slate-200"></div>
                             <p class="f-label mt-3">Months / Years of Service</p>
-                            <p class="f-val text-[#1a3d34] font-black">{{ $tenure }}</p>
+                            <p class="f-val">{{ $tenure }}</p>
                             <div class="mt-1 h-px bg-slate-200"></div>
                         </div>
                     </div>
