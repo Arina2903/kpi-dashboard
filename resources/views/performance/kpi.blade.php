@@ -355,7 +355,8 @@
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
                         <p class="text-[11px] text-slate-500 italic leading-relaxed mb-5">
                             I hereby confirm that the above information provided by the appraisee is correct and that the appraisee has been directly reporting to me since
-                            <input type="text" placeholder="DD MMM YYYY" class="f-input inline-block" style="width:130px; display:inline; border-bottom-color: rgba(107,144,128,.4);">.
+                            <input type="date" id="sinceDate" class="f-input inline-block" style="width:160px; display:inline; border-bottom-color: rgba(107,144,128,.4);" value="{{ now()->format('Y-m-d') }}">.
+                            <span class="text-[9px] text-slate-400 ml-1">(editable)</span>
                         </p>
                         <div class="grid grid-cols-2 gap-6">
                             <div>
