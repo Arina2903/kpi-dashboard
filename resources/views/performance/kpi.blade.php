@@ -469,19 +469,50 @@
         </div>
 
         {{-- ── Signatures ───────────────────────────────────────────────── --}}
-        <div class="grid grid-cols-3 gap-8 pt-7 border-t border-slate-100">
-            @foreach([
-                ['role'=>'Employee',     'name'=>$currentUserName],
-                ['role'=>'Reporting To', 'name'=>$reportsToName],
-                ['role'=>'HR Verified',  'name'=>''],
-            ] as $sig)
-            <div class="text-center">
-                <div class="sig-line mx-4"></div>
-                <p class="text-xs font-bold text-slate-700 mt-1">{{ $sig['name'] ?: '_______________' }}</p>
-                <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-widest mt-1">{{ $sig['role'] }}</p>
-                <p class="text-[9px] text-slate-400 mt-2">Date: _______________</p>
+        <div class="pt-7 border-t border-slate-100">
+            <p class="f-label mb-5">Signatures</p>
+            <div class="grid grid-cols-3 gap-6">
+                @foreach([
+                    ['id'=>'sig_employee',   'role'=>'Employee',     'name'=>$currentUserName],
+                    ['id'=>'sig_reporting',  'role'=>'Reporting To', 'name'=>$reportsToName],
+                    ['id'=>'sig_hr',         'role'=>'HR Verified',  'name'=>''],
+                ] as $sig)
+                <div>
+                    {{-- Canvas pad --}}
+                    <div class="relative border border-[#6B9080]/30 rounded-xl overflow-hidden bg-slate-50/60 mb-2" style="height:100px;">
+                        <canvas id="{{ $sig['id'] }}_canvas"
+                                style="width:100%;height:100%;touch-action:none;cursor:crosshair;display:block;"></canvas>
+                        {{-- Upload preview --}}
+                        <img id="{{ $sig['id'] }}_img" src="" alt=""
+                             style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:4px;background:white;">
+                        {{-- Placeholder hint --}}
+                        <div id="{{ $sig['id'] }}_hint"
+                             class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <svg class="w-5 h-5 text-slate-300 mb-1" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-1.414.94l-3.414.854.854-3.414a4 4 0 01.94-1.414z"/></svg>
+                            <span class="text-[9px] text-slate-300 font-medium">Draw or upload signature</span>
+                        </div>
+                    </div>
+
+                    {{-- Controls --}}
+                    <div class="flex items-center justify-between mb-3 no-print">
+                        <div class="flex gap-1.5">
+                            <button type="button" onclick="clearSig('{{ $sig['id'] }}')"
+                                class="text-[9px] font-bold px-2 py-1 rounded-lg border border-slate-200 text-slate-500 hover:border-[#6B9080] hover:text-[#6B9080] transition bg-white">
+                                Clear
+                            </button>
+                            <label class="text-[9px] font-bold px-2 py-1 rounded-lg border border-[#6B9080]/40 text-[#6B9080] hover:bg-[#6B9080]/8 transition bg-white cursor-pointer">
+                                Upload
+                                <input type="file" accept="image/*" class="sr-only" onchange="uploadSig('{{ $sig['id'] }}', this)">
+                            </label>
+                        </div>
+                        <input type="date" class="text-[9px] border border-slate-200 rounded-lg px-2 py-1 text-slate-500 bg-white outline-none focus:border-[#6B9080] transition" value="{{ now()->format('Y-m-d') }}">
+                    </div>
+
+                    <p class="text-xs font-bold text-slate-700 text-center">{{ $sig['name'] ?: '_______________' }}</p>
+                    <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-widest mt-1 text-center">{{ $sig['role'] }}</p>
+                </div>
+                @endforeach
             </div>
-            @endforeach
         </div>
 
     </div>{{-- /px-10 py-8 --}}
@@ -544,6 +575,94 @@
 
     document.getElementById('sec2Table')?.addEventListener('input', recalc);
     recalc();
+})();
+
+// ── Signature Pads ──────────────────────────────────────────────────────────
+(function () {
+    const pads = {};
+
+    function initPad(id) {
+        const canvas = document.getElementById(id + '_canvas');
+        if (!canvas) return;
+
+        const hint = document.getElementById(id + '_hint');
+        const ctx  = canvas.getContext('2d');
+        let drawing = false, hasMark = false;
+
+        function resize() {
+            const dpr  = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width  = rect.width  * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            ctx.strokeStyle = '#1a3d34';
+            ctx.lineWidth   = 1.8;
+            ctx.lineCap     = 'round';
+            ctx.lineJoin    = 'round';
+        }
+
+        resize();
+
+        function pos(e) {
+            const r = canvas.getBoundingClientRect();
+            const src = e.touches ? e.touches[0] : e;
+            return { x: src.clientX - r.left, y: src.clientY - r.top };
+        }
+
+        function start(e) {
+            e.preventDefault();
+            drawing = true;
+            const p = pos(e);
+            ctx.beginPath(); ctx.moveTo(p.x, p.y);
+            if (hint) hint.style.display = 'none';
+            hasMark = true;
+        }
+        function move(e) {
+            if (!drawing) return;
+            e.preventDefault();
+            const p = pos(e);
+            ctx.lineTo(p.x, p.y); ctx.stroke();
+        }
+        function end(e) { drawing = false; }
+
+        canvas.addEventListener('mousedown',  start);
+        canvas.addEventListener('mousemove',  move);
+        canvas.addEventListener('mouseup',    end);
+        canvas.addEventListener('mouseleave', end);
+        canvas.addEventListener('touchstart', start, { passive: false });
+        canvas.addEventListener('touchmove',  move,  { passive: false });
+        canvas.addEventListener('touchend',   end);
+
+        pads[id] = { canvas, ctx, hint, hasMark: () => hasMark, clear: () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            hasMark = false;
+            if (hint) hint.style.display = '';
+        }};
+    }
+
+    ['sig_employee','sig_reporting','sig_hr'].forEach(initPad);
+
+    window.clearSig = function(id) {
+        const img = document.getElementById(id + '_img');
+        if (img) { img.style.display = 'none'; img.src = ''; }
+        if (pads[id]) pads[id].clear();
+    };
+
+    window.uploadSig = function(id, input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById(id + '_img');
+            const hint = document.getElementById(id + '_hint');
+            if (pads[id]) pads[id].clear();
+            img.src = e.target.result;
+            img.style.display = 'block';
+            if (hint) hint.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+        input.value = '';
+    };
 })();
 </script>
 </body>
