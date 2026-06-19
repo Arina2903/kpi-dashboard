@@ -29,7 +29,7 @@
 
 <aside
     id="sidebar"
-    class="fixed left-0 top-0 z-40 h-screen bg-[#1a3d34] text-[#E2FFDD]
+    class="fixed left-0 top-0 z-40 h-screen bg-[#0d2218] text-white
     border-r border-white/10 shadow-[4px_0_24px_rgba(0,0,0,0.30)]
     w-[230px] min-w-[230px] max-w-[230px]
     px-3 py-4 flex flex-col overflow-visible shrink-0 transition-all duration-300"
@@ -40,8 +40,8 @@
         type="button"
         onclick="event.stopPropagation(); toggleSidebar();"
         class="absolute top-4 right-3 z-[9999] w-7 h-7 flex items-center justify-center
-        text-[#E2FFDD]/70 bg-white/10 border border-white/20 rounded-full
-        hover:bg-white/20 hover:text-[#E2FFDD] transition text-sm"
+        text-[#A4C3B2] bg-white/10 border border-white/20 rounded-full
+        hover:bg-white/20 hover:text-white transition text-sm"
         aria-label="Close Sidebar"
     >
         ×
@@ -70,31 +70,31 @@
                 class="w-9 h-9 object-contain sidebar-logo bg-transparent"
                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
             />
-            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#0d2b23] text-[#E2FFDD] font-bold text-base items-center justify-center" style="display:none">
+            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#071a12] text-white font-bold text-base items-center justify-center" style="display:none">
                 {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
             </span>
             @else
-            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#0d2b23] text-[#E2FFDD] font-bold text-base flex items-center justify-center">
+            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#071a12] text-white font-bold text-base flex items-center justify-center">
                 {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
             </span>
             @endif
-            <span class="sidebar-icon-only hidden text-[#E2FFDD] font-bold text-lg">
+            <span class="sidebar-icon-only hidden text-white font-bold text-lg">
                 ☰
             </span>
         </div>
 
         <div class="sidebar-text leading-tight text-left min-w-0">
-            <h1 class="text-[12px] font-bold tracking-wide text-[#E2FFDD] leading-tight break-words">
+            <h1 class="text-[12px] font-bold tracking-wide text-white leading-tight break-words">
                 {!! nl2br(e(session('company_display_name') ?: 'RICHWORKS KPI')) !!}
             </h1>
 
-            <p class="text-[9px] text-[#E2FFDD]/70 uppercase tracking-[0.14em] mt-1 font-semibold">
+            <p class="text-[9px] text-[#A4C3B2] uppercase tracking-[0.14em] mt-1 font-semibold">
                 Performance System
             </p>
         </div>
 
         <div class="sidebar-tooltip hidden absolute left-[70px] top-1/2 -translate-y-1/2
-            bg-black text-[#E2FFDD] text-[10px] px-2 py-1 rounded-md
+            bg-black text-white text-[10px] px-2 py-1 rounded-md
             opacity-0 group-hover:opacity-100 pointer-events-none transition
             whitespace-nowrap z-[9999] shadow-lg">
             Open Sidebar
@@ -270,7 +270,7 @@
     <nav class="flex-1 overflow-y-auto text-[12px] space-y-5 pr-1 min-h-0 custom-scroll">
         @foreach($navSections as $section)
             <div>
-                <p class="sidebar-text text-[9px] text-[#E2FFDD]/50 font-semibold mb-1 px-2 uppercase tracking-widest">
+                <p class="sidebar-text text-[9px] text-[#A4C3B2] font-semibold mb-1 px-2 uppercase tracking-widest">
                     {{ $section['title'] }}
                 </p>
 
@@ -300,8 +300,8 @@
                             href="{{ $item['href'] }}"
                             class="group relative flex items-center gap-3 px-3 py-2 rounded-xl transition
                             {{ $isActive
-                                ? 'bg-[#6B9080]/40 text-[#E2FFDD] font-black shadow-md'
-                                : 'text-[#E2FFDD]/80 font-medium hover:bg-white/10 hover:text-[#E2FFDD]'
+                                ? 'bg-[#6B9080]/40 text-white font-black shadow-md'
+                                : 'text-white/85 font-medium hover:bg-white/10 hover:text-white'
                             }}"
                         >
                             <span class="w-5 h-5 flex items-center justify-center shrink-0">
@@ -317,7 +317,7 @@
                                 @if(($item['badge'] ?? 0) > 0)
 
                                     <span class="sidebar-text min-w-[20px] h-[20px]
-                                        rounded-full bg-red-500 text-[#E2FFDD] text-[10px]
+                                        rounded-full bg-red-500 text-white text-[10px]
                                         font-black flex items-center justify-center
                                         px-1 shadow-lg shadow-red-500/30">
 
@@ -330,7 +330,7 @@
                             </div>
 
                             <div class="sidebar-tooltip hidden absolute left-[58px] top-1/2 -translate-y-1/2
-                                bg-black text-[#E2FFDD] text-[10px] px-2 py-1 rounded-md
+                                bg-black text-white text-[10px] px-2 py-1 rounded-md
                                 opacity-0 group-hover:opacity-100 pointer-events-none transition duration-150
                                 whitespace-nowrap z-[9999] shadow-lg">
                                 {{ $item['label'] }}
@@ -344,13 +344,13 @@
 
     <!-- SYSTEM ZONE -->
     <div class="sidebar-system mt-3 pt-3 border-t border-white/10 shrink-0">
-        <p class="sidebar-text text-[9px] text-[#E2FFDD]/50 font-semibold uppercase tracking-widest mb-2 px-1">
+        <p class="sidebar-text text-[9px] text-[#A4C3B2] font-semibold uppercase tracking-widest mb-2 px-1">
             Current View
         </p>
 
         <div class="sidebar-text border border-white/10 rounded-xl p-3 bg-white/8 mb-2" style="background:rgba(255,255,255,0.07)">
             @if($canSwitchDepartment ?? false)
-                <p class="text-[10px] text-[#E2FFDD] mb-2 font-semibold">
+                <p class="text-[10px] text-white mb-2 font-semibold">
                     Department View
                 </p>
 
@@ -360,7 +360,7 @@
                     <select
                         name="department_code"
                         onchange="this.form.submit()"
-                        class="w-full rounded-lg px-2 py-2 text-[11px] text-[#E2FFDD] outline-none border border-white/20"
+                        class="w-full rounded-lg px-2 py-2 text-[11px] text-white outline-none border border-white/20"
                         style="background:rgba(255,255,255,0.1)"
                     >
                         @foreach(($departments ?? []) as $dept)
@@ -374,11 +374,11 @@
                     </select>
                 </form>
             @else
-                <p class="text-[10px] text-[#E2FFDD] mb-1 font-semibold">
+                <p class="text-[10px] text-white mb-1 font-semibold">
                     Department
                 </p>
 
-                <div class="text-[11px] text-[#E2FFDD] truncate">
+                <div class="text-[11px] text-white truncate">
                     {{ $department['name'] ?? $user['department_code'] ?? '-' }}
                 </div>
             @endif
@@ -391,8 +391,8 @@
                 type="submit"
                 onclick="return confirm('You are about to logout. Continue?')"
                 class="group relative w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[11px] font-semibold
-                bg-red-400/10 text-[#E2FFDD] border border-red-400/20
-                hover:bg-red-400/20 hover:text-[#E2FFDD] transition"
+                bg-red-400/10 text-white border border-red-400/20
+                hover:bg-red-400/20 hover:text-white transition"
             >
                 <span class="w-5 h-5 flex items-center justify-center shrink-0">
                     @include('partials.sidebar-icons', ['icon' => 'logout'])
@@ -403,7 +403,7 @@
                 </span>
 
                 <div class="sidebar-tooltip hidden absolute left-[58px] top-1/2 -translate-y-1/2
-                    bg-black text-[#E2FFDD] text-[10px] px-2 py-1 rounded-md
+                    bg-black text-white text-[10px] px-2 py-1 rounded-md
                     opacity-0 group-hover:opacity-100 pointer-events-none transition duration-150
                     whitespace-nowrap z-[9999] shadow-lg">
                     Logout
