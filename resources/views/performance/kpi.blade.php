@@ -161,9 +161,10 @@
             /* Signature pads — show canvas outline in print */
             canvas { border: 1px solid #ccc !important; border-radius: 8px; }
 
-            /* Avoid page breaks inside sections */
-            .border.border-\[#6B9080\]\/25.rounded-xl { page-break-inside: avoid; }
-            tr { page-break-inside: avoid; }
+            /* Avoid page breaks inside sections and rows */
+            .border.border-\[#6B9080\]\/25.rounded-xl,
+            .sig-block { page-break-inside: avoid; }
+            tr, p { page-break-inside: avoid; }
         }
     </style>
 </head>

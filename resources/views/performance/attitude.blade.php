@@ -92,8 +92,10 @@
                 color:#fff !important;
             }
 
-            .border.rounded-xl { page-break-inside:avoid; }
-            tr { page-break-inside:avoid; }
+            /* Avoid page breaks inside content blocks */
+            .border.rounded-xl,
+            .sig-block { page-break-inside:avoid; }
+            tr, p { page-break-inside:avoid; }
         }
     </style>
 </head>
