@@ -171,7 +171,7 @@
                     ],
                 ],
             ],
-            ...(in_array(session('role'), ['SLT', 'VP']) ? [[
+            ...(session('hr_access') ? [[
                 'title' => 'Attendance',
                 'items' => [
                     [

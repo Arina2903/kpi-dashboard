@@ -199,6 +199,7 @@ class AuthController extends Controller
                 'full_name' => $employee['full_name'] ?? null,
 
                 'role' => $employee['role'],
+                'hr_access' => (bool)($employee['hr_access'] ?? false),
                 'position' => $employee['position'] ?? null,
                 'department_code' => $employee['department_code'],
 
@@ -228,6 +229,7 @@ class AuthController extends Controller
             'short_name'           => $dashboard['short_name'] ?? null,
             'full_name'            => $dashboard['full_name'] ?? null,
             'role'                 => $dashboard['role'],
+            'hr_access'            => $dashboard['hr_access'] ?? false,
             'position'             => $dashboard['position'] ?? null,
             'department_code'      => $dashboard['department_code'],
             'company_code'         => $dashboard['company_code'],

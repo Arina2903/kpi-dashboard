@@ -14,7 +14,7 @@ class AttendanceController extends Controller
 
     private function authorise(): bool
     {
-        return in_array(session('role'), ['SLT', 'VP']);
+        return session('hr_access') === true;
     }
 
     public function index()
