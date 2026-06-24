@@ -322,6 +322,26 @@ class SupabaseService
 
     /*
     |--------------------------------------------------------------------------
+    | UPSERT (insert or update on conflict)
+    |--------------------------------------------------------------------------
+    */
+
+    public function upsert(string $table, array $data, string $onConflict = 'id'): mixed
+    {
+        return Http::timeout(15)->connectTimeout(5)->withHeaders([
+            'apikey'        => $this->key,
+            'Authorization' => 'Bearer ' . $this->key,
+            'Content-Type'  => 'application/json',
+            'Accept'        => 'application/json',
+            'Prefer'        => 'resolution=merge-duplicates,return=representation',
+        ])->post(
+            $this->endpoint($table) . '?on_conflict=' . $onConflict,
+            $data
+        )->throw()->json();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | SAFE DELETE
     |--------------------------------------------------------------------------
     */

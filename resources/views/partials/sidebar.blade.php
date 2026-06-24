@@ -172,6 +172,17 @@
                 ],
             ],
             [
+                'title' => 'Attendance',
+                'items' => [
+                    [
+                        'label' => 'Import & Analysis',
+                        'href'  => '/attendance',
+                        'match' => 'attendance*',
+                        'icon'  => 'attendance',
+                    ],
+                ],
+            ],
+            [
                 'title' => 'Performance Evaluation',
                 'items' => [
                     [
