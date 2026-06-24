@@ -12,11 +12,29 @@ class AttendanceController extends Controller
     // Working hours: 08:30 MY time
     const WORK_START = '08:30';
 
-    public function index()
+    private function authorise(SupabaseService $supabase): bool
+    {
+        if (!session()->has('employee_uuid')) return false;
+
+        $emp = $supabase->get('employees', [
+            'id'     => 'eq.' . session('employee_uuid'),
+            'select' => 'role',
+        ]);
+
+        $role = $emp[0]['role'] ?? '';
+        return in_array($role, ['SLT', 'VP']);
+    }
+
+    public function index(SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid') || !session()->has('company_code')) {
             return redirect()->route('login');
         }
+
+        if (!$this->authorise($supabase)) {
+            abort(403, 'Access restricted to SLT and VP only.');
+        }
+
         return view('attendance.index', [
             'defaultMonth' => now()->month,
             'defaultYear'  => now()->year,
@@ -26,6 +44,10 @@ class AttendanceController extends Controller
     public function import(Request $request, SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid')) return redirect()->route('login');
+
+        if (!$this->authorise($supabase)) {
+            abort(403, 'Access restricted to SLT and VP only.');
+        }
 
         $request->validate([
             'sheet_url' => 'required|url',
@@ -59,13 +81,16 @@ class AttendanceController extends Controller
         $rows    = array_map('str_getcsv', $lines);
         array_shift($rows); // remove header
 
-        // ── Public holidays for this month ─────────────────────────────────
-        $phRows = $supabase->get('public_holidays', [
-            'holiday_date' => 'gte.' . "{$year}-" . str_pad($month, 2, '0', STR_PAD_LEFT) . '-01',
-            'holiday_date' => 'lte.' . "{$year}-" . str_pad($month, 2, '0', STR_PAD_LEFT) . '-31',
-            'select'       => 'holiday_date,name',
+        // ── Public holidays (fetch whole year, filter by month in PHP) ────
+        // Cannot use duplicate array keys for gte+lte in one call
+        $allPh = $supabase->get('public_holidays', [
+            'select' => 'holiday_date',
         ]) ?? [];
-        $publicHolidays = array_column($phRows, 'holiday_date');
+        $publicHolidays = array_values(array_filter(
+            array_column($allPh, 'holiday_date'),
+            fn($d) => \Carbon\Carbon::parse($d)->year === $year
+                   && \Carbon\Carbon::parse($d)->month === $month
+        ));
 
         // ── Build all working days in the month ────────────────────────────
         $start       = Carbon::create($year, $month, 1);
@@ -239,6 +264,10 @@ class AttendanceController extends Controller
     public function save(Request $request, SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid')) return response()->json(['error' => 'Unauthenticated'], 401);
+
+        if (!$this->authorise($supabase)) {
+            return response()->json(['error' => 'Access restricted to SLT and VP only.'], 403);
+        }
 
         $data = $request->validate([
             'records'   => 'required|array',
