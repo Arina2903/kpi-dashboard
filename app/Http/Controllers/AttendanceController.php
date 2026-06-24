@@ -12,26 +12,18 @@ class AttendanceController extends Controller
     // Working hours: 08:30 MY time
     const WORK_START = '08:30';
 
-    private function authorise(SupabaseService $supabase): bool
+    private function authorise(): bool
     {
-        if (!session()->has('employee_uuid')) return false;
-
-        $emp = $supabase->get('employees', [
-            'id'     => 'eq.' . session('employee_uuid'),
-            'select' => 'role',
-        ]);
-
-        $role = $emp[0]['role'] ?? '';
-        return in_array($role, ['SLT', 'VP']);
+        return in_array(session('role'), ['SLT', 'VP']);
     }
 
-    public function index(SupabaseService $supabase)
+    public function index()
     {
         if (!session()->has('employee_uuid') || !session()->has('company_code')) {
             return redirect()->route('login');
         }
 
-        if (!$this->authorise($supabase)) {
+        if (!$this->authorise()) {
             abort(403, 'Access restricted to SLT and VP only.');
         }
 
@@ -45,7 +37,7 @@ class AttendanceController extends Controller
     {
         if (!session()->has('employee_uuid')) return redirect()->route('login');
 
-        if (!$this->authorise($supabase)) {
+        if (!$this->authorise()) {
             abort(403, 'Access restricted to SLT and VP only.');
         }
 
@@ -265,7 +257,7 @@ class AttendanceController extends Controller
     {
         if (!session()->has('employee_uuid')) return response()->json(['error' => 'Unauthenticated'], 401);
 
-        if (!$this->authorise($supabase)) {
+        if (!$this->authorise()) {
             return response()->json(['error' => 'Access restricted to SLT and VP only.'], 403);
         }
 

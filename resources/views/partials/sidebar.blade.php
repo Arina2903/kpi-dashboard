@@ -171,7 +171,7 @@
                     ],
                 ],
             ],
-            [
+            ...(in_array(session('role'), ['SLT', 'VP']) ? [[
                 'title' => 'Attendance',
                 'items' => [
                     [
@@ -181,7 +181,7 @@
                         'icon'  => 'attendance',
                     ],
                 ],
-            ],
+            ]] : []),
             [
                 'title' => 'Performance Evaluation',
                 'items' => [

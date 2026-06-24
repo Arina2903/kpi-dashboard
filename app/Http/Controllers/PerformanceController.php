@@ -382,6 +382,53 @@ class PerformanceController extends Controller
             $quarterScores[$kpi['id']] = $qRows[0] ?? null;
         }
 
+        // ── Attendance: aggregate quarter months from attendance_summary ────────
+        $quarterMonths = match($displayQuarter) {
+            1 => [1, 2, 3],
+            2 => [4, 5, 6],
+            3 => [7, 8, 9],
+            4 => [10, 11, 12],
+        };
+
+        $allAttendance = $supabase->get('attendance_summary', [
+            'employee_id' => 'eq.' . $user['id'],
+            'year'        => 'eq.' . $year,
+            'select'      => 'month,working_days,present_days,absent_days,late_count,total_late_minutes,mc_days,al_days,other_leave_days',
+        ]) ?? [];
+
+        $qAttendance = array_filter($allAttendance, fn($r) => in_array((int)$r['month'], $quarterMonths));
+
+        $attendanceSummary = [
+            'has_data'           => !empty($qAttendance),
+            'working_days'       => 0,
+            'present_days'       => 0,
+            'absent_days'        => 0,
+            'late_count'         => 0,
+            'total_late_minutes' => 0,
+            'mc_days'            => 0,
+            'al_days'            => 0,
+            'other_leave_days'   => 0,
+            'months'             => [],
+        ];
+        foreach ($qAttendance as $ar) {
+            $attendanceSummary['working_days']       += (int)($ar['working_days'] ?? 0);
+            $attendanceSummary['present_days']       += (int)($ar['present_days'] ?? 0);
+            $attendanceSummary['absent_days']        += (int)($ar['absent_days'] ?? 0);
+            $attendanceSummary['late_count']         += (int)($ar['late_count'] ?? 0);
+            $attendanceSummary['total_late_minutes'] += (int)($ar['total_late_minutes'] ?? 0);
+            $attendanceSummary['mc_days']            += (int)($ar['mc_days'] ?? 0);
+            $attendanceSummary['al_days']            += (int)($ar['al_days'] ?? 0);
+            $attendanceSummary['other_leave_days']   += (int)($ar['other_leave_days'] ?? 0);
+            $attendanceSummary['months'][]           = \Carbon\Carbon::create($year, (int)$ar['month'], 1)->format('M Y');
+        }
+        $attendanceSummary['awol'] = max(
+            0,
+            $attendanceSummary['absent_days']
+            - $attendanceSummary['mc_days']
+            - $attendanceSummary['al_days']
+            - $attendanceSummary['other_leave_days']
+        );
+
         // ── Assessment areas (attitude) ────────────────────────────────────────
         $assessmentAreas = [
             ['no' =>  1, 'title' => 'Knowledge of Job Requirements',  'description' => 'Knowledge of job requirements, methods, techniques and skills involved in doing the job, and in applying these to perform efficiently.'],
@@ -416,6 +463,7 @@ class PerformanceController extends Controller
             'kpis'                 => $kpis,
             'quarterScores'        => $quarterScores,
             'assessmentAreas'      => $assessmentAreas,
+            'attendanceSummary'    => $attendanceSummary,
         ]);
     }
 }
