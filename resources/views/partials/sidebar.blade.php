@@ -171,9 +171,10 @@
                     ],
                 ],
             ],
-            ...(session('hr_access') ? [[
-                'title' => 'Attendance',
-                'items' => [
+            [
+                'title'   => 'Attendance',
+                'hr_only' => true,
+                'items'   => [
                     [
                         'label' => 'Import & Analysis',
                         'href'  => '/attendance',
@@ -181,7 +182,7 @@
                         'icon'  => 'attendance',
                     ],
                 ],
-            ]] : []),
+            ],
             [
                 'title' => 'Performance Evaluation',
                 'items' => [
@@ -262,6 +263,9 @@
     <!-- NAVIGATION -->
     <nav class="flex-1 overflow-y-auto text-[12px] space-y-5 pr-1 min-h-0 custom-scroll">
         @foreach($navSections as $section)
+            @if(($section['hr_only'] ?? false) && !session('hr_access'))
+                @continue
+            @endif
             <div>
                 <p class="sidebar-text text-[9px] text-[#A4C3B2] font-semibold mb-1 px-2 uppercase tracking-widest">
                     {{ $section['title'] }}
