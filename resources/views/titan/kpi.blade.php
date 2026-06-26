@@ -76,6 +76,26 @@
     </p>
     @endif
 
+    {{-- ── COLLAPSE ALL / EXPAND ALL ──────────────────────────────────── --}}
+    @if(count($viewStaff) > 1)
+    <div class="flex items-center gap-2 no-print">
+        <button onclick="collapseAll()"
+            class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black border-2 border-[#06142f] text-[#06142f] hover:bg-[#06142f] hover:text-white transition">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/>
+            </svg>
+            Collapse All
+        </button>
+        <button onclick="expandAll()"
+            class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black border-2 border-[#06142f] text-[#06142f] hover:bg-[#06142f] hover:text-white transition">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+            Expand All
+        </button>
+    </div>
+    @endif
+
     {{-- ── STAFF TABS (manager sees all; executive sees only self) ─────── --}}
     @if($isManager && count($viewStaff) > 1)
     <div class="flex flex-wrap gap-2 no-print" id="staffTabs">
@@ -119,13 +139,14 @@
         $ytdRetScore = $ytdRetTarget > 0 ? min(100, ($ytdRetActual / $ytdRetTarget) * 100) : 0;
     @endphp
 
-    <div class="staff-block bg-white rounded-2xl shadow-sm border border-slate-200/70 overflow-hidden"
+    <div class="staff-block bg-white rounded-2xl shadow-sm border border-[#06142f]/20 overflow-hidden"
          data-emp="{{ $emp['id'] }}">
 
-        {{-- Employee header --}}
-        <div class="px-6 py-4 bg-gradient-to-r from-[#06142f] to-[#0a2342] flex items-center justify-between">
+        {{-- Employee header (click to toggle) --}}
+        <div class="px-6 py-4 bg-gradient-to-r from-[#06142f] to-[#0a2342] flex items-center justify-between cursor-pointer select-none"
+             onclick="toggleCard('{{ $emp['id'] }}')">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center text-white font-black text-sm">
+                <div class="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center text-white font-black text-sm shrink-0">
                     {{ strtoupper(substr($emp['short_name'] ?? 'X', 0, 1)) }}
                 </div>
                 <div>
@@ -133,19 +154,27 @@
                     <p class="text-blue-300 text-[10px] font-semibold uppercase tracking-wide">{{ $emp['role'] }}</p>
                 </div>
             </div>
-            <div class="flex gap-4 text-right">
-                <div>
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden sm:block">
                     <p class="text-[9px] text-blue-300 uppercase font-black tracking-wide">YTD Collection</p>
                     <p class="text-white font-black text-sm">RM {{ number_format($ytdRevActual) }}</p>
                 </div>
-                <div>
+                <div class="text-right hidden sm:block">
                     <p class="text-[9px] text-blue-300 uppercase font-black tracking-wide">YTD Retention</p>
                     <p class="text-white font-black text-sm">{{ $ytdRetActual }} / {{ $ytdRetTarget }}</p>
+                </div>
+                {{-- Chevron toggle --}}
+                <div id="chevron-{{ $emp['id'] }}"
+                     class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition shrink-0">
+                    <svg class="w-4 h-4 text-white transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                    </svg>
                 </div>
             </div>
         </div>
 
-        {{-- KPI table --}}
+        {{-- KPI table (collapsible) --}}
+        <div id="body-{{ $emp['id'] }}" class="card-body overflow-x-auto transition-all duration-300">
         <div class="overflow-x-auto">
             <table class="w-full text-[12px]">
                 <thead>
@@ -285,6 +314,25 @@
 </main>
 
 <script>
+// ── Card collapse / expand ─────────────────────────────────────────────────
+function toggleCard(empId) {
+    const body    = document.getElementById('body-' + empId);
+    const chevron = document.getElementById('chevron-' + empId)?.querySelector('svg');
+    const isHidden = body.classList.contains('hidden');
+    body.classList.toggle('hidden', !isHidden);
+    if (chevron) chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+}
+
+function collapseAll() {
+    document.querySelectorAll('.card-body').forEach(b => b.classList.add('hidden'));
+    document.querySelectorAll('[id^="chevron-"] svg').forEach(s => s.style.transform = 'rotate(-90deg)');
+}
+
+function expandAll() {
+    document.querySelectorAll('.card-body').forEach(b => b.classList.remove('hidden'));
+    document.querySelectorAll('[id^="chevron-"] svg').forEach(s => s.style.transform = 'rotate(0deg)');
+}
+
 // ── Staff tab switching ─────────────────────────────────────────────────────
 function switchStaff(empId) {
     const blocks = document.querySelectorAll('.staff-block');
