@@ -1974,6 +1974,12 @@ class KpiController extends Controller
             'select'          => 'id,employee_id,short_name,role',
         ]) ?? [];
 
+        // Filter to specific employees if the caller supplied a list
+        $requestedIds = $request->input('employee_ids', []);
+        if (!empty($requestedIds)) {
+            $employees = array_filter($employees, fn($e) => in_array($e['id'], $requestedIds));
+        }
+
         $created = 0;
         $skipped = 0;
         $now     = $this->nowMy();

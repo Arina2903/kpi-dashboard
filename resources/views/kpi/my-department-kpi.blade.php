@@ -45,11 +45,11 @@
                     <h3 class="text-2xl font-black mt-1">{{ $fy }}</h3>
                 </div>
                 <button
-                    id="applyTemplateBtn"
-                    onclick="applyKpiTemplate()"
+                    id="openWizardBtn"
+                    onclick="openWizard()"
                     class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-black px-4 py-3 rounded-2xl shadow-lg transition">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                    Generate KPIs from Template
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    KPI Template Wizard
                 </button>
             </div>
         </div>
@@ -71,6 +71,17 @@
             </span>
         </div>
     </div>
+
+    {{-- EXECUTIVE GUIDANCE BANNER --}}
+    @if(($user['role'] ?? '') === 'EXECUTIVE' && count($kpis) > 0)
+    <div class="bg-blue-50 border border-blue-200 rounded-xl px-5 py-4 flex gap-3 items-start">
+        <svg class="w-5 h-5 text-blue-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div>
+            <p class="text-[12px] font-bold text-blue-800">Your KPIs have been set up for you</p>
+            <p class="text-[11px] text-blue-600 mt-0.5">Your manager has created your KPI targets. For each KPI below, click <strong>Edit</strong> to fill in your quarterly targets (Q1–Q4) and update your actual achievement each quarter.</p>
+        </div>
+    </div>
+    @endif
 
     @php
         $categoryOrder = ['Financial', 'Growth & Customer', 'Initiatives', 'People'];
@@ -781,38 +792,284 @@ function closeKpiDrawer(){
     document.body.classList.remove('overflow-hidden');
 }
 
-async function applyKpiTemplate() {
-    const btn = document.getElementById('applyTemplateBtn');
-    if (!confirm('This will generate KPI entries for ALL staff in this department based on the template. Existing KPIs will not be overwritten. Continue?')) return;
+// ─────────────────────────────────────────────
+// KPI TEMPLATE WIZARD
+// ─────────────────────────────────────────────
+let wizardTemplates = [];
+let wizardEmployees = [];
 
-    btn.disabled = true;
+async function openWizard() {
+    const w = document.getElementById('kpiWizard');
+    w.classList.remove('hidden');
+    w.classList.add('flex');
+    document.body.classList.add('overflow-hidden');
+    await loadWizardStep1();
+}
+
+function closeWizard() {
+    const w = document.getElementById('kpiWizard');
+    w.classList.add('hidden');
+    w.classList.remove('flex');
+    document.body.classList.remove('overflow-hidden');
+}
+
+async function loadWizardStep1() {
+    showStep(1);
+    const res = await fetch('{{ route("kpi-templates.index") }}');
+    wizardTemplates = await res.json();
+    renderTemplates();
+}
+
+function renderTemplates() {
+    const container = document.getElementById('templateList');
+    if (!wizardTemplates.length) {
+        container.innerHTML = '<p class="text-slate-400 text-sm italic py-4 text-center">No templates yet. Add one below.</p>';
+        return;
+    }
+    const unitColor = {
+        percentage: 'bg-purple-100 text-purple-700',
+        currency:   'bg-emerald-100 text-emerald-700',
+        number:     'bg-blue-100 text-blue-700',
+    };
+    container.innerHTML = wizardTemplates.map(t => `
+        <div class="flex items-start gap-3 py-3 border-b border-slate-100 last:border-0">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-[10px] font-black uppercase bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">${t.category}</span>
+                    ${t.sub_category ? `<span class="text-[10px] text-slate-500">${t.sub_category}</span>` : ''}
+                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${(unitColor[t.unit]||'bg-slate-100 text-slate-600')}">${t.unit}</span>
+                </div>
+                <p class="text-sm font-bold text-slate-800 mt-1">${t.kpi_title}</p>
+                ${t.kpi_description ? `<p class="text-xs text-slate-500 mt-0.5">${t.kpi_description}</p>` : ''}
+            </div>
+            <button onclick="deleteTemplate('${t.id}')" class="text-red-400 hover:text-red-600 text-xs font-semibold shrink-0 mt-1">Delete</button>
+        </div>
+    `).join('');
+}
+
+async function deleteTemplate(id) {
+    if (!confirm('Delete this template?')) return;
+    await fetch(`/kpi-templates/${id}`, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+    });
+    wizardTemplates = wizardTemplates.filter(t => t.id !== id);
+    renderTemplates();
+}
+
+async function addTemplate() {
+    const form = document.getElementById('addTemplateForm');
+    const data = {
+        category:        document.getElementById('tpl_category').value.trim(),
+        sub_category:    document.getElementById('tpl_sub').value.trim(),
+        kpi_title:       document.getElementById('tpl_title').value.trim(),
+        kpi_description: document.getElementById('tpl_desc').value.trim(),
+        unit:            document.getElementById('tpl_unit').value,
+    };
+    if (!data.category || !data.kpi_title) {
+        alert('Category and KPI Title are required.');
+        return;
+    }
+    const res = await fetch('{{ route("kpi-templates.store") }}', {
+        method:  'POST',
+        headers: {
+            'Content-Type':  'application/json',
+            'X-CSRF-TOKEN':  '{{ csrf_token() }}',
+        },
+        body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (json.success) {
+        wizardTemplates.push(json.template);
+        renderTemplates();
+        form.reset();
+    }
+}
+
+async function goToStep2() {
+    if (!wizardTemplates.length) {
+        alert('Please add at least one template first.');
+        return;
+    }
+    showStep(2);
+    renderEmployees();
+}
+
+function renderEmployees() {
+    const employees = @json($employees ?? []);
+    const kpis      = @json($kpis ?? []);
+    wizardEmployees  = employees;
+
+    const empKpiCount = {};
+    kpis.forEach(k => {
+        empKpiCount[k.employee_id] = (empKpiCount[k.employee_id] || 0) + 1;
+    });
+
+    const container = document.getElementById('employeeList');
+    const roleColor = {
+        EXECUTIVE: 'bg-slate-100 text-slate-600',
+        MANAGER:   'bg-blue-100 text-blue-700',
+        SLT:       'bg-purple-100 text-purple-700',
+        VP:        'bg-amber-100 text-amber-700',
+    };
+
+    container.innerHTML = employees.map(e => `
+        <label class="flex items-center gap-3 py-3 border-b border-slate-100 last:border-0 cursor-pointer hover:bg-slate-50 px-2 rounded-lg">
+            <input type="checkbox" class="emp-check w-4 h-4 rounded" value="${e.id}" checked>
+            <div class="flex-1">
+                <p class="text-sm font-bold text-slate-800">${e.short_name ?? e.employee_id}</p>
+                <span class="text-[10px] font-black px-2 py-0.5 rounded-full ${roleColor[e.role] || 'bg-slate-100 text-slate-600'}">${e.role}</span>
+            </div>
+            ${empKpiCount[e.id]
+                ? `<span class="text-[10px] bg-teal-100 text-teal-700 font-semibold px-2 py-0.5 rounded-full">${empKpiCount[e.id]} KPI(s) exist</span>`
+                : '<span class="text-[10px] bg-red-50 text-red-400 font-semibold px-2 py-0.5 rounded-full">No KPIs yet</span>'
+            }
+        </label>
+    `).join('');
+}
+
+function toggleAllEmployees(checked) {
+    document.querySelectorAll('.emp-check').forEach(c => c.checked = checked);
+}
+
+async function generateForSelected() {
+    const ids = [...document.querySelectorAll('.emp-check:checked')].map(c => c.value);
+    if (!ids.length) {
+        alert('Please select at least one staff member.');
+        return;
+    }
+    const btn = document.getElementById('generateBtn');
+    btn.disabled    = true;
     btn.textContent = 'Generating…';
 
     try {
         const res = await fetch('{{ route("kpi.apply-template") }}', {
-            method: 'POST',
+            method:  'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
-                    || '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
             },
-            body: JSON.stringify({})
+            body: JSON.stringify({ employee_ids: ids }),
         });
         const data = await res.json();
         if (data.success) {
+            closeWizard();
             alert(data.message);
             location.reload();
         } else {
-            alert('Error: ' + (data.error ?? 'Unknown error'));
+            alert('Error: ' + (data.error ?? 'Unknown'));
         }
     } catch (e) {
         alert('Network error. Please try again.');
     } finally {
-        btn.disabled = false;
-        btn.textContent = 'Generate KPIs from Template';
+        btn.disabled    = false;
+        btn.textContent = 'Generate KPIs for Selected →';
     }
 }
+
+function showStep(n) {
+    const s1 = document.getElementById('wizardStep1');
+    const s2 = document.getElementById('wizardStep2');
+    s1.classList.toggle('hidden', n !== 1);
+    s2.classList.toggle('hidden', n !== 2);
+    s2.classList.toggle('flex', n === 2);
+}
 </script>
+
+{{-- KPI TEMPLATE WIZARD MODAL --}}
+<div id="kpiWizard" class="hidden fixed inset-0 bg-black/60 z-[9999] items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+
+        {{-- STEP 1: TEMPLATES --}}
+        <div id="wizardStep1">
+            <div class="bg-gradient-to-r from-[#06142f] to-blue-900 text-white px-6 py-5 flex items-center justify-between shrink-0">
+                <div>
+                    <p class="text-[10px] text-blue-300 uppercase font-black tracking-widest">Step 1 of 2</p>
+                    <h2 class="text-lg font-black mt-0.5">KPI Templates</h2>
+                    <p class="text-[11px] text-blue-200 mt-0.5">Define what KPIs your team should have. These will be applied to selected staff.</p>
+                </div>
+                <button onclick="closeWizard()" class="text-white/60 hover:text-white text-2xl leading-none">×</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto px-6 py-4">
+                {{-- Template list --}}
+                <div id="templateList" class="mb-4"></div>
+
+                {{-- Add form --}}
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4" id="addTemplateForm">
+                    <p class="text-[11px] font-black text-slate-600 uppercase tracking-wider mb-3">Add New Template</p>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Category *</label>
+                            <input id="tpl_category" type="text" placeholder="e.g. Financial" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Sub Category</label>
+                            <input id="tpl_sub" type="text" placeholder="e.g. Revenue" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">KPI Title *</label>
+                        <input id="tpl_title" type="text" placeholder="e.g. Total Collection Achievement (Revenue)" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400">
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Description</label>
+                        <input id="tpl_desc" type="text" placeholder="e.g. To achieve targeted individual monthly revenue collection." class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400">
+                    </div>
+                    <div class="flex items-end gap-3">
+                        <div class="flex-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Unit *</label>
+                            <select id="tpl_unit" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400">
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="currency">Currency (RM)</option>
+                                <option value="number">Number</option>
+                            </select>
+                        </div>
+                        <button onclick="addTemplate()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-black px-4 py-2 rounded-lg transition">
+                            + Add
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-slate-100 flex justify-between items-center shrink-0 bg-white">
+                <button onclick="closeWizard()" class="text-slate-500 text-sm font-semibold hover:text-slate-700">Cancel</button>
+                <button onclick="goToStep2()" class="bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-black px-6 py-2.5 rounded-xl transition">
+                    Next: Select Staff →
+                </button>
+            </div>
+        </div>
+
+        {{-- STEP 2: SELECT EMPLOYEES --}}
+        <div id="wizardStep2" class="hidden flex-col h-full">
+            <div class="bg-gradient-to-r from-[#06142f] to-blue-900 text-white px-6 py-5 flex items-center justify-between shrink-0">
+                <div>
+                    <p class="text-[10px] text-blue-300 uppercase font-black tracking-widest">Step 2 of 2</p>
+                    <h2 class="text-lg font-black mt-0.5">Select Staff</h2>
+                    <p class="text-[11px] text-blue-200 mt-0.5">Choose who should receive these KPI templates. Existing KPIs will not be duplicated.</p>
+                </div>
+                <button onclick="closeWizard()" class="text-white/60 hover:text-white text-2xl leading-none">×</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto px-6 py-4">
+                <div class="flex gap-3 mb-3">
+                    <button onclick="toggleAllEmployees(true)" class="text-[11px] text-blue-600 font-semibold hover:underline">Select All</button>
+                    <span class="text-slate-300">|</span>
+                    <button onclick="toggleAllEmployees(false)" class="text-[11px] text-slate-500 font-semibold hover:underline">Deselect All</button>
+                </div>
+                <div id="employeeList"></div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-slate-100 flex justify-between items-center shrink-0 bg-white">
+                <button onclick="showStep(1)" class="text-slate-500 text-sm font-semibold hover:text-slate-700">← Back</button>
+                <button id="generateBtn" onclick="generateForSelected()" class="bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-black px-6 py-2.5 rounded-xl transition">
+                    Generate KPIs for Selected →
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
 
 </body>
 </html>

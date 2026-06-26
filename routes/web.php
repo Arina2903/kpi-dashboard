@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KpiController;
+use App\Http\Controllers\KpiTemplateController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AiController;
@@ -314,6 +315,16 @@ Route::middleware(['kpi.auth'])->group(function () {
         '/kpi/apply-template',
         [KpiController::class, 'applyTemplate']
     )->name('kpi.apply-template');
+
+    /*
+    |--------------------------------------------------------------------------
+    | KPI TEMPLATE CRUD
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/kpi-templates',          [KpiTemplateController::class, 'index'])->name('kpi-templates.index');
+    Route::post('/kpi-templates',         [KpiTemplateController::class, 'store'])->name('kpi-templates.store');
+    Route::delete('/kpi-templates/{id}',  [KpiTemplateController::class, 'destroy'])->name('kpi-templates.destroy');
 
     /*
     |--------------------------------------------------------------------------
