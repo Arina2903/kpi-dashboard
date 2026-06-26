@@ -292,7 +292,7 @@
                     <div class="part-label">Part A &nbsp;·&nbsp; Employee's Particulars</div>
                     <div class="grid grid-cols-2 gap-x-10 gap-y-5">
                         <div><p class="f-label">Name</p><p class="f-val">{{ $currentUserName }}</p><div class="mt-1 h-px bg-slate-200"></div></div>
-                        <div><p class="f-label">Start Date</p><input type="text" value="{{ isset($user['start_date']) ? \Carbon\Carbon::parse($user['start_date'])->format('d M Y') : '' }}" placeholder="DD MMM YYYY" class="f-input"></div>
+                        <div><p class="f-label">Start Date</p><input type="text" value="{{ $joinDate !== '—' ? $joinDate : '' }}" placeholder="DD MMM YYYY" class="f-input"></div>
                         <div><p class="f-label">Current Position</p><p class="f-val">{{ $userPosition }}</p><div class="mt-1 h-px bg-slate-200"></div></div>
                         <div><p class="f-label">Department / Division</p><p class="f-val">{{ $departmentName }}</p><div class="mt-1 h-px bg-slate-200"></div></div>
                         <div><p class="f-label">Date Joined</p><p class="f-val">{{ $joinDate }}</p><div class="mt-1 h-px bg-slate-200"></div></div>
