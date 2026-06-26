@@ -55,23 +55,6 @@
                 @endif
             </div>
         </div>
-
-        {{-- CATEGORY COLOUR LEGEND --}}
-        <div class="flex flex-wrap gap-2 mt-5 pt-4 border-t border-white/10">
-            <span class="text-[9px] text-white/50 uppercase font-black tracking-widest self-center mr-2">Categories:</span>
-            <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-200 text-[10px] font-black border border-emerald-500/30">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>💰 Financial
-            </span>
-            <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-200 text-[10px] font-black border border-indigo-500/30">
-                <span class="w-2 h-2 rounded-full bg-indigo-400 shrink-0"></span>📈 Growth & Customer
-            </span>
-            <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-200 text-[10px] font-black border border-amber-500/30">
-                <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>🚀 Initiatives
-            </span>
-            <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/20 text-pink-200 text-[10px] font-black border border-pink-500/30">
-                <span class="w-2 h-2 rounded-full bg-pink-400 shrink-0"></span>👥 People
-            </span>
-        </div>
     </div>
 
     {{-- EXECUTIVE GUIDANCE BANNER --}}
