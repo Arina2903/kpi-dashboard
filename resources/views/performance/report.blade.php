@@ -299,8 +299,15 @@
                         <div><p class="f-label">Months / Years of Service</p><p class="f-val">{{ $tenure }}</p><div class="mt-1 h-px bg-slate-200"></div></div>
                     </div>
                     <div class="mt-5 grid grid-cols-3 gap-6">
-                        @foreach(['Medical Leave (Days)','Emergency Leave (Days)','No. of Lateness'] as $lf)
-                        <div><p class="f-label">{{ $lf }}</p><input type="number" min="0" placeholder="0" class="f-input" style="max-width:80px;"></div>
+                        @php
+                            $partAFields = [
+                                'Medical Leave (Days)'   => $attendanceSummary['mc_days'] ?? null,
+                                'Emergency Leave (Days)' => $attendanceSummary['other_leave_days'] ?? null,
+                                'No. of Lateness'        => $attendanceSummary['late_count'] ?? null,
+                            ];
+                        @endphp
+                        @foreach($partAFields as $lf => $lv)
+                        <div><p class="f-label">{{ $lf }}</p><input type="number" min="0" placeholder="0" value="{{ $attendanceSummary['has_data'] ? $lv : '' }}" class="f-input" style="max-width:80px;"></div>
                         @endforeach
                     </div>
                 </div>
