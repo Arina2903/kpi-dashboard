@@ -14,33 +14,33 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-[#f0f4f8]">
+<body class="min-h-screen bg-[#f0f2f7]">
 
 @include('partials.sidebar')
 
-<main id="mainContent" class="ml-[230px] min-h-screen transition-all duration-300 bg-[#f0f4f8]">
+<main id="mainContent" class="ml-[230px] min-h-screen transition-all duration-300 bg-[#f0f2f7]">
 <div class="p-6 space-y-5">
 
     {{-- ── HEADER ─────────────────────────────────────────────────────── --}}
-    <div class="rounded-2xl bg-gradient-to-r from-[#06142f] via-[#0a2342] to-[#0e3460] text-white px-8 py-7 shadow-xl">
+    <div class="rounded-[18px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548] text-white px-8 py-7 shadow-xl">
         <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
             <div>
-                <a href="{{ route('kpi.my-department-kpi') }}" class="text-xs text-blue-300 hover:text-white font-semibold">← My Department KPI</a>
+                <a href="{{ route('kpi.my-department-kpi') }}" class="text-xs text-[#A4C3B2] hover:text-white font-semibold">← My Department KPI</a>
                 <h1 class="text-3xl font-black mt-3 tracking-tight">Titan KPI Dashboard</h1>
                 <p class="text-white/60 text-xs mt-1 font-medium">Financial Performance · RCG · {{ $fy }}</p>
             </div>
             <div class="flex flex-wrap gap-3 items-center">
                 <div class="bg-white/10 rounded-2xl px-5 py-3 text-center min-w-[80px]">
-                    <p class="text-[9px] text-blue-200 uppercase font-black tracking-wider">Staff</p>
+                    <p class="text-[9px] text-[#A4C3B2] uppercase font-black tracking-wider">Staff</p>
                     <h3 class="text-2xl font-black mt-1">{{ count($allStaff) }}</h3>
                 </div>
                 <div class="bg-white/10 rounded-2xl px-5 py-3 text-center min-w-[80px]">
-                    <p class="text-[9px] text-blue-200 uppercase font-black tracking-wider">KPIs</p>
+                    <p class="text-[9px] text-[#A4C3B2] uppercase font-black tracking-wider">KPIs</p>
                     <h3 class="text-2xl font-black mt-1">2</h3>
                 </div>
                 @if($isManager)
                 <button id="syncBtn" onclick="syncFromSheet()"
-                    class="no-print flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-black px-5 py-3 rounded-2xl shadow-lg transition">
+                    class="no-print flex items-center gap-2 bg-white text-[#1a3d34] hover:bg-[#CCE3DE] text-xs font-black px-5 py-3 rounded-2xl shadow-lg transition">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
@@ -53,8 +53,8 @@
         {{-- Guide for executive --}}
         @if(!$isManager)
         <div class="mt-5 bg-white/10 border border-white/20 rounded-xl px-5 py-3 flex items-start gap-3">
-            <svg class="w-5 h-5 text-blue-300 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <p class="text-[12px] text-blue-100">Your KPI performance is automatically synced from the collection tracking sheet by your manager. <strong>Actual</strong> = total collected · <strong>Base Target</strong> = potential revenue from all your clients.</p>
+            <svg class="w-5 h-5 text-[#A4C3B2] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p class="text-[12px] text-white/80">Your KPI performance is automatically synced from the collection tracking sheet by your manager. <strong>Actual</strong> = total collected · <strong>Base Target</strong> = potential revenue from all your clients.</p>
         </div>
         @endif
     </div>
@@ -80,14 +80,14 @@
     @if(count($viewStaff) > 1)
     <div class="flex items-center gap-2 no-print">
         <button onclick="collapseAll()"
-            class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black border-2 border-[#06142f] text-[#06142f] hover:bg-[#06142f] hover:text-white transition">
+            class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black border-2 border-[#1a3d34] text-[#1a3d34] hover:bg-[#1a3d34] hover:text-white transition">
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/>
             </svg>
             Collapse All
         </button>
         <button onclick="expandAll()"
-            class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black border-2 border-[#06142f] text-[#06142f] hover:bg-[#06142f] hover:text-white transition">
+            class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black border-2 border-[#1a3d34] text-[#1a3d34] hover:bg-[#1a3d34] hover:text-white transition">
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
             </svg>
@@ -100,12 +100,12 @@
     @if($isManager && count($viewStaff) > 1)
     <div class="flex flex-wrap gap-2 no-print" id="staffTabs">
         <button onclick="switchStaff('all')" id="tab-all"
-            class="staff-tab active-tab px-4 py-2 rounded-xl text-xs font-black border-2 border-[#06142f] bg-[#06142f] text-white transition">
+            class="staff-tab active-tab px-4 py-2 rounded-xl text-xs font-black border-2 border-[#1a3d34] bg-[#1a3d34] text-white transition">
             All Staff
         </button>
         @foreach($viewStaff as $emp)
         <button onclick="switchStaff('{{ $emp['id'] }}')" id="tab-{{ $emp['id'] }}"
-            class="staff-tab px-4 py-2 rounded-xl text-xs font-black border-2 border-slate-200 text-slate-600 hover:border-[#06142f] hover:text-[#06142f] transition">
+            class="staff-tab px-4 py-2 rounded-xl text-xs font-black border-2 border-slate-200 text-slate-600 hover:border-[#1a3d34] hover:text-[#1a3d34] transition">
             {{ $emp['short_name'] ?? $emp['employee_id'] }}
         </button>
         @endforeach
@@ -139,11 +139,11 @@
         $ytdRetScore = $ytdRetTarget > 0 ? min(100, ($ytdRetActual / $ytdRetTarget) * 100) : 0;
     @endphp
 
-    <div class="staff-block bg-white rounded-2xl shadow-sm border border-[#06142f]/20 overflow-hidden"
+    <div class="staff-block bg-white rounded-2xl shadow-sm border border-[#6B9080]/30 overflow-hidden"
          data-emp="{{ $emp['id'] }}">
 
         {{-- Employee header (click to toggle) --}}
-        <div class="px-6 py-4 bg-gradient-to-r from-[#06142f] to-[#0a2342] flex items-center justify-between cursor-pointer select-none"
+        <div class="px-6 py-4 bg-gradient-to-r from-[#1a3d34] via-[#2d5548] to-[#6B9080] flex items-center justify-between cursor-pointer select-none"
              onclick="toggleCard('{{ $emp['id'] }}')">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center text-white font-black text-sm shrink-0">
@@ -151,16 +151,16 @@
                 </div>
                 <div>
                     <p class="text-white font-black text-sm">{{ $emp['short_name'] ?? $emp['employee_id'] }}</p>
-                    <p class="text-blue-300 text-[10px] font-semibold uppercase tracking-wide">{{ $emp['role'] }}</p>
+                    <p class="text-[#A4C3B2] text-[10px] font-semibold uppercase tracking-wide">{{ $emp['role'] }}</p>
                 </div>
             </div>
             <div class="flex items-center gap-4">
                 <div class="text-right hidden sm:block">
-                    <p class="text-[9px] text-blue-300 uppercase font-black tracking-wide">YTD Collection</p>
+                    <p class="text-[9px] text-[#A4C3B2] uppercase font-black tracking-wide">YTD Collection</p>
                     <p class="text-white font-black text-sm">RM {{ number_format($ytdRevActual) }}</p>
                 </div>
                 <div class="text-right hidden sm:block">
-                    <p class="text-[9px] text-blue-300 uppercase font-black tracking-wide">YTD Retention</p>
+                    <p class="text-[9px] text-[#A4C3B2] uppercase font-black tracking-wide">YTD Retention</p>
                     <p class="text-white font-black text-sm">{{ $ytdRetActual }} / {{ $ytdRetTarget }}</p>
                 </div>
                 {{-- Chevron toggle --}}
@@ -178,7 +178,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-[12px]">
                 <thead>
-                    <tr class="bg-[#06142f] text-white">
+                    <tr class="bg-[#1a3d34] text-white">
                         <th class="px-4 py-2.5 text-left font-black text-[10px] uppercase tracking-wider w-16">Category</th>
                         <th class="px-3 py-2.5 text-left font-black text-[10px] uppercase tracking-wider w-10">#</th>
                         <th class="px-4 py-2.5 text-left font-black text-[10px] uppercase tracking-wider">KPI / Month</th>
@@ -192,16 +192,16 @@
                 <tbody>
 
                     {{-- Category header row: Financial (60%) --}}
-                    <tr class="bg-[#0f2d5a]/8 border-b border-slate-200">
+                    <tr class="bg-[#1a3d34]/5 border-b border-slate-200">
                         <td rowspan="{{ count($kpiDefs) * count($months) + count($kpiDefs) + 1 }}"
-                            class="px-4 py-3 align-middle text-center border-r border-slate-200 bg-[#0f2d5a]/5">
-                            <div class="writing-vertical font-black text-[11px] text-[#06142f] uppercase tracking-wide"
+                            class="px-4 py-3 align-middle text-center border-r border-[#6B9080]/20 bg-[#CCE3DE]/40">
+                            <div class="writing-vertical font-black text-[11px] text-[#1a3d34] uppercase tracking-wide"
                                  style="writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap">
                                 Financial (60%)
                             </div>
                         </td>
-                        <td colspan="7" class="px-4 py-2 bg-[#0f2d5a]/5">
-                            <span class="text-[10px] text-slate-400 italic">Category: Financial</span>
+                        <td colspan="7" class="px-4 py-2 bg-[#CCE3DE]/30">
+                            <span class="text-[10px] text-[#6B9080] font-semibold italic">Category: Financial</span>
                         </td>
                     </tr>
 
@@ -237,7 +237,7 @@
                                 <span class="w-1.5 h-1.5 rounded-full {{ $hasData ? 'bg-emerald-500' : ($isFuture ? 'bg-slate-200' : 'bg-amber-400') }} shrink-0"></span>
                                 <span class="font-semibold text-slate-700">{{ $monthName }}</span>
                                 @if($monthNum === $currentMonth)
-                                <span class="text-[9px] bg-blue-100 text-blue-700 font-black px-1.5 py-0.5 rounded-full">Current</span>
+                                <span class="text-[9px] bg-[#CCE3DE] text-[#1a3d34] font-black px-1.5 py-0.5 rounded-full">Current</span>
                                 @endif
                             </div>
                         </td>
@@ -285,14 +285,14 @@
                     @endforeach
 
                     {{-- YTD total row --}}
-                    <tr class="bg-[#06142f] text-white border-t-2 border-[#06142f]">
-                        <td colspan="2" class="px-4 py-3 font-black text-[11px] uppercase tracking-wider text-blue-200">YTD Total</td>
+                    <tr class="bg-[#1a3d34] text-white border-t-2 border-[#1a3d34]">
+                        <td colspan="2" class="px-4 py-3 font-black text-[11px] uppercase tracking-wider text-[#A4C3B2]">YTD Total</td>
                         <td class="px-4 py-3 text-right font-black">RM {{ number_format($ytdRevActual) }}</td>
-                        <td class="px-4 py-3 text-right font-black text-blue-200">RM {{ number_format($ytdRevTarget) }}</td>
+                        <td class="px-4 py-3 text-right font-black text-[#A4C3B2]">RM {{ number_format($ytdRevTarget) }}</td>
                         <td class="px-4 py-3 text-right font-black">
                             {{ $ytdRevTarget > 0 ? round($ytdRevActual/$ytdRevTarget*100,1) : 0 }}%
                         </td>
-                        <td class="px-4 py-3 text-right text-blue-200 font-semibold">—</td>
+                        <td class="px-4 py-3 text-right text-[#A4C3B2] font-semibold">—</td>
                         <td class="px-4 py-3 text-right font-black text-emerald-300">
                             {{ round($ytdFinalScore, 2) }}
                         </td>
@@ -305,8 +305,8 @@
     @endforeach
 
     @if(empty($viewStaff))
-    <div class="bg-white rounded-2xl p-10 text-center shadow-sm">
-        <p class="text-slate-400 text-sm">No staff data found for Titan department.</p>
+    <div class="bg-white rounded-2xl p-10 text-center shadow-sm border border-[#6B9080]/20">
+        <p class="text-[#6B9080] text-sm">No staff data found for Titan department.</p>
     </div>
     @endif
 
@@ -349,8 +349,8 @@ function switchStaff(empId) {
     tabs.forEach(t => {
         const active = t.id === 'tab-' + empId;
         t.classList.toggle('active-tab', active);
-        t.classList.toggle('border-[#06142f]', active);
-        t.classList.toggle('bg-[#06142f]', active);
+        t.classList.toggle('border-[#1a3d34]', active);
+        t.classList.toggle('bg-[#1a3d34]', active);
         t.classList.toggle('text-white', active);
         t.classList.toggle('border-slate-200', !active);
         t.classList.toggle('text-slate-600', !active);
