@@ -44,6 +44,7 @@
                     <p class="text-[9px] text-blue-200 uppercase font-black tracking-wider">FY</p>
                     <h3 class="text-2xl font-black mt-1">{{ $fy }}</h3>
                 </div>
+                @if(session('company_code') === 'RCG' && ($user['department_code'] ?? '') === 'TITAN')
                 <button
                     id="openWizardBtn"
                     onclick="openWizard()"
@@ -51,6 +52,15 @@
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                     KPI Template Wizard
                 </button>
+                @else
+                <button
+                    id="applyTemplateBtn"
+                    onclick="applyKpiTemplate()"
+                    class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-black px-4 py-3 rounded-2xl shadow-lg transition">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    Generate KPIs from Template
+                </button>
+                @endif
             </div>
         </div>
 
@@ -790,6 +800,31 @@ function openKpiDrawer(card){
 function closeKpiDrawer(){
     document.getElementById('kpiDrawer')?.classList.add('hidden');
     document.body.classList.remove('overflow-hidden');
+}
+
+// ─────────────────────────────────────────────
+// GENERATE KPIs FROM TEMPLATE (non-Titan depts)
+// ─────────────────────────────────────────────
+async function applyKpiTemplate() {
+    const btn = document.getElementById('applyTemplateBtn');
+    if (!confirm('This will generate KPI entries for ALL staff in this department based on the template. Existing KPIs will not be overwritten. Continue?')) return;
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+    try {
+        const res = await fetch('{{ route("kpi.apply-template") }}', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
+            body: JSON.stringify({})
+        });
+        const data = await res.json();
+        if (data.success) { alert(data.message); location.reload(); }
+        else { alert('Error: ' + (data.error ?? 'Unknown error')); }
+    } catch (e) {
+        alert('Network error. Please try again.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generate KPIs from Template';
+    }
 }
 
 // ─────────────────────────────────────────────
