@@ -88,11 +88,11 @@
         }
 
         .sub-radio:checked + .sub-card{
-            background:#f8fafc;
-            border-color:#06142f;
-            color:#06142f;
+            background:#f0f9f6;
+            border-color:#1a3d34;
+            color:#1a3d34;
             box-shadow:
-                inset 0 0 0 1px #2563eb;
+                inset 0 0 0 1px #6B9080;
         }
 
         .sub-radio:checked + .sub-card::after{
@@ -112,8 +112,8 @@
         }
 
         :root{
-            --navy:#06142f;
-            --navy-soft:#0b1f46;
+            --navy:#1a3d34;
+            --navy-soft:#2d5548;
             --slate:#0f172a;
             --surface:#ffffff;
             --surface-soft:#f8fafc;
@@ -151,9 +151,9 @@
             background:
                 linear-gradient(
                     135deg,
-                    #06142f 0%,
-                    #0b1f46 45%,
-                    #101827 100%
+                    #1a3d34 0%,
+                    #2d5548 45%,
+                    #6B9080 100%
                 );
         }
 
@@ -207,9 +207,9 @@
             background:
                 linear-gradient(
                     180deg,
-                    #06142f 0%,
-                    #2563eb 45%,
-                    #06b6d4 100%
+                    #1a3d34 0%,
+                    #6B9080 45%,
+                    #A4C3B2 100%
                 );
 
             opacity:.9;
@@ -224,7 +224,7 @@
             align-items:center;
             justify-content:center;
 
-            background:#06142f;
+            background:#1a3d34;
             color:white;
 
             font-size:13px;
@@ -384,9 +384,9 @@
         }
 
         .status-on-track{
-            background:#f8fafc;
-            border-color:#06142f;
-            color:#06142f;
+            background:#f0f9f6;
+            border-color:#1a3d34;
+            color:#1a3d34;
         }
 
         .status-risk{
@@ -411,22 +411,22 @@
             background:
                 linear-gradient(
                     135deg,
-                    #06142f 0%,
-                    #0b1f46 45%,
-                    #2563eb 100%
+                    #1a3d34 0%,
+                    #2d5548 45%,
+                    #6B9080 100%
                 );
 
             border:1px solid rgba(255,255,255,.08);
 
             box-shadow:
-                0 14px 30px rgba(6,20,47,.20);
+                0 14px 30px rgba(26,61,52,.20);
         }
 
         .primary-btn:hover{
             transform:translateY(-1px);
 
             box-shadow:
-                0 20px 35px rgba(6,20,47,.25);
+                0 20px 35px rgba(26,61,52,.25);
         }
 
         .outline-btn{
@@ -440,8 +440,8 @@
         }
 
         .outline-btn:hover{
-            background:#f8fafc;
-            border-color:#06142f;
+            background:#f0f9f6;
+            border-color:#1a3d34;
         }
 
         .info-card{
@@ -564,10 +564,10 @@
             font-size:11px;
             font-weight:800;
 
-            background:#f8fafc;
-            color:#06142f;
+            background:#f0f9f6;
+            color:#1a3d34;
 
-            border:1px solid #dbeafe;
+            border:1px solid #A4C3B2;
         }
 
         .sidebar-shadow{
@@ -621,13 +621,13 @@
 
     <!-- HEADER -->
     <div class="hero-gradient rounded-[2rem] text-white p-6 soft-glow overflow-hidden">
-        <a href="{{ route('kpi.index') }}" class="text-sm text-blue-100 hover:text-white">
+        <a href="{{ route('kpi.index') }}" class="text-sm text-[#A4C3B2] hover:text-white">
             ← Back to KPI List
         </a>
 
         <div class="mt-3">
             <h1 class="text-3xl font-black tracking-tight">Create My KPI</h1>
-            <p class="text-sm text-blue-100 mt-1">
+            <p class="text-sm text-white/70 mt-1">
                 {{ $fy ?? 'FY' . now()->year }} · KPI ini akan direkod atas nama anda sendiri.
             </p>
         </div>
@@ -1012,7 +1012,7 @@
 
                 <div class="relative flex gap-4">
 
-                    <div class="w-2 rounded-full bg-gradient-to-b from-[#06142f] to-indigo-500"></div>
+                    <div class="w-2 rounded-full bg-gradient-to-b from-[#1a3d34] to-indigo-500"></div>
 
                     <div class="flex-1">
 
@@ -1150,7 +1150,7 @@
 
                 <div class="relative flex gap-4">
 
-                    <div class="w-2 rounded-full bg-gradient-to-b from-[#06142f] to-sky-500"></div>
+                    <div class="w-2 rounded-full bg-gradient-to-b from-[#1a3d34] to-sky-500"></div>
 
                     <div class="flex-1">
 
@@ -1783,7 +1783,7 @@
 
                                     <p
                                         id="summaryQuarterTargetTotal"
-                                        class="text-2xl font-black text-[#06142f] mt-2"
+                                        class="text-2xl font-black text-[#1a3d34] mt-2"
                                     >
                                         0.00
                                     </p>
@@ -1822,7 +1822,7 @@
                         <div
                             class="w-12 h-12
                                 rounded-2xl
-                                bg-[#06142f]
+                                bg-[#1a3d34]
                                 text-white
                                 flex
                                 items-center
@@ -1859,7 +1859,7 @@
                             Owner
                         </p>
 
-                        <p class="font-black text-[#06142f] mt-1">
+                        <p class="font-black text-[#1a3d34] mt-1">
                             {{ $user['short_name'] ?? '-' }}
                         </p>
 
@@ -1896,7 +1896,7 @@
 
                             <p
                                 id="summaryCategory"
-                                class="font-bold text-[#06142f] mt-1">
+                                class="font-bold text-[#1a3d34] mt-1">
                                 -
                             </p>
 
@@ -1915,7 +1915,7 @@
 
                             <p
                                 id="summarySubCategory"
-                                class="font-bold text-[#06142f] mt-1">
+                                class="font-bold text-[#1a3d34] mt-1">
                                 -
                             </p>
 
@@ -1939,7 +1939,7 @@
 
                             <p
                                 id="summaryBase"
-                                class="font-black text-lg text-[#06142f] mt-1">
+                                class="font-black text-lg text-[#1a3d34] mt-1">
                                 0.00
                             </p>
 
@@ -1958,7 +1958,7 @@
 
                             <p
                                 id="summaryStretch"
-                                class="font-black text-lg text-[#06142f] mt-1">
+                                class="font-black text-lg text-[#1a3d34] mt-1">
                                 0.00
                             </p>
 
@@ -2003,7 +2003,7 @@
 
                         <p
                             id="sidebarQuarterTargetTotal"
-                            class="text-xl font-black text-[#06142f] mt-1">
+                            class="text-xl font-black text-[#1a3d34] mt-1">
                             0.00
                         </p>
 
@@ -2063,8 +2063,8 @@
                         <button
                             type="submit"
                             class="w-full
-                                bg-[#06142f]
-                                hover:bg-[#0b1f46]
+                                bg-[#1a3d34]
+                                hover:bg-[#2d5548]
                                 text-white
                                 font-black
                                 py-4
@@ -2384,7 +2384,7 @@
             summaryEl.textContent = totalText;
             summaryEl.className = matched
                 ? 'text-2xl font-black mt-2 text-emerald-600'
-                : (targetTotal > 0 ? 'text-2xl font-black mt-2 text-red-500' : 'text-2xl font-black mt-2 text-[#06142f]');
+                : (targetTotal > 0 ? 'text-2xl font-black mt-2 text-red-500' : 'text-2xl font-black mt-2 text-[#1a3d34]');
         }
 
         if(sidebarEl){
@@ -3000,7 +3000,7 @@ function bindAssignmentCards(){
                                         <div class="grid grid-cols-3 gap-2">
                                             <div class="rounded-xl bg-white border border-purple-100 p-2">
                                                 <p class="text-[9px] text-purple-400 uppercase font-black tracking-wider">Target</p>
-                                                <p class="text-sm font-black text-[#06142f] mt-0.5">${Number(q.quarter_target ?? 0).toLocaleString()}</p>
+                                                <p class="text-sm font-black text-[#1a3d34] mt-0.5">${Number(q.quarter_target ?? 0).toLocaleString()}</p>
                                             </div>
                                             <div class="rounded-xl bg-white border border-purple-100 p-2">
                                                 <p class="text-[9px] text-purple-400 uppercase font-black tracking-wider">Start</p>
@@ -3028,7 +3028,7 @@ function bindAssignmentCards(){
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">KPI Information</p>
                             </div>
                             <div class="space-y-2">
-                                <div class="rounded-[20px] bg-[#06142f] p-4">
+                                <div class="rounded-[20px] bg-[#1a3d34] p-4">
                                     <p class="text-[9px] uppercase tracking-widest text-white/50 font-black">KPI Name</p>
                                     <p class="font-black text-white text-base mt-1 leading-snug">${data.kpi_title ?? '-'}</p>
                                 </div>
@@ -3082,17 +3082,17 @@ function bindAssignmentCards(){
                             <div class="grid grid-cols-3 gap-2">
                                 <div class="rounded-2xl bg-[#FBF5EF] border border-[#6B3F2A]/20 p-4">
                                     <p class="text-[9px] uppercase tracking-widest text-[#8B5E4A] font-black">Base Target</p>
-                                    <p class="text-xl font-black text-[#06142f] mt-1">${Number(data.base_target ?? 0).toLocaleString()}</p>
+                                    <p class="text-xl font-black text-[#1a3d34] mt-1">${Number(data.base_target ?? 0).toLocaleString()}</p>
                                     <p class="text-[9px] text-white/50 mt-1 uppercase font-bold">Annual</p>
                                 </div>
                                 <div class="rounded-2xl bg-purple-50 border border-purple-100 p-4">
                                     <p class="text-[9px] uppercase tracking-widest text-purple-500 font-black">Stretch Target</p>
-                                    <p class="text-xl font-black text-[#06142f] mt-1">${Number(data.stretch_target ?? 0).toLocaleString()}</p>
+                                    <p class="text-xl font-black text-[#1a3d34] mt-1">${Number(data.stretch_target ?? 0).toLocaleString()}</p>
                                     <p class="text-[9px] text-purple-300 mt-1 uppercase font-bold">Annual</p>
                                 </div>
                                 <div class="rounded-2xl bg-amber-50 border border-amber-100 p-4">
                                     <p class="text-[9px] uppercase tracking-widest text-amber-600 font-black">Weightage</p>
-                                    <p class="text-xl font-black text-[#06142f] mt-1">${data.weightage ?? 0}%</p>
+                                    <p class="text-xl font-black text-[#1a3d34] mt-1">${data.weightage ?? 0}%</p>
                                     <p class="text-[9px] text-amber-300 mt-1 uppercase font-bold">Weight</p>
                                 </div>
                             </div>

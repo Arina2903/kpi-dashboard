@@ -22,7 +22,7 @@
 <div class="p-6 space-y-5">
 
     {{-- HEADER --}}
-    <div class="rounded-[20px] bg-gradient-to-r from-[#06142f] via-blue-900 to-indigo-900 text-white p-7 shadow-xl">
+    <div class="rounded-[20px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548] text-white p-7 shadow-xl">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
             <div>
                 <a href="/dashboard" class="text-xs text-blue-200 hover:text-white font-semibold">← Dashboard</a>
@@ -335,7 +335,7 @@
 
                     {{-- AVATAR + INFO --}}
                     <div class="flex items-center gap-4 flex-1 min-w-0">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#06142f] to-[#5a3323] flex items-center justify-center text-white font-black text-lg shrink-0 group-hover:scale-105 transition">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1a3d34] to-[#6B9080] flex items-center justify-center text-white font-black text-lg shrink-0 group-hover:scale-105 transition">
                             {{ $initials ?: '?' }}
                         </div>
                         <div class="min-w-0 flex-1">
@@ -992,7 +992,7 @@ function showStep(n) {
 
         {{-- STEP 1: TEMPLATES --}}
         <div id="wizardStep1">
-            <div class="bg-gradient-to-r from-[#06142f] to-blue-900 text-white px-6 py-5 flex items-center justify-between shrink-0">
+            <div class="bg-gradient-to-r from-[#1a3d34] to-[#2d5548] text-white px-6 py-5 flex items-center justify-between shrink-0">
                 <div>
                     <p class="text-[10px] text-blue-300 uppercase font-black tracking-widest">Step 1 of 2</p>
                     <h2 class="text-lg font-black mt-0.5">KPI Templates</h2>
@@ -1052,7 +1052,7 @@ function showStep(n) {
 
         {{-- STEP 2: SELECT EMPLOYEES --}}
         <div id="wizardStep2" class="hidden flex-col h-full">
-            <div class="bg-gradient-to-r from-[#06142f] to-blue-900 text-white px-6 py-5 flex items-center justify-between shrink-0">
+            <div class="bg-gradient-to-r from-[#1a3d34] to-[#2d5548] text-white px-6 py-5 flex items-center justify-between shrink-0">
                 <div>
                     <p class="text-[10px] text-blue-300 uppercase font-black tracking-widest">Step 2 of 2</p>
                     <h2 class="text-lg font-black mt-0.5">Select Staff</h2>
