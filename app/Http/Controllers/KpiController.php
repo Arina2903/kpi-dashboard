@@ -2170,14 +2170,6 @@ class KpiController extends Controller
 
         });
 
-        // Check if a template exists for this department
-        $templateCount = $supabase->get('kpi_templates', [
-            'department_code' => 'eq.' . $user['department_code'],
-            'financial_year'  => 'eq.' . $fy,
-            'select'          => 'id',
-            'limit'           => '1',
-        ]);
-
         return view('kpi.my-department-kpi', array_merge([
 
             'user' => $user,
@@ -2190,8 +2182,6 @@ class KpiController extends Controller
 
             'departmentPerformance'
                 => round($departmentPerformance, 2),
-
-            'hasTemplate' => !empty($templateCount),
 
         ], $this->sidebarData($supabase, $user)));
     }
