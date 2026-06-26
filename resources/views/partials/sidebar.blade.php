@@ -141,6 +141,13 @@
                         'icon' => 'department',
                     ],
                     [
+                        'label'     => 'Titan KPI',
+                        'href'      => route('titan-kpi.index'),
+                        'match'     => 'titan-kpi*',
+                        'icon'      => 'report',
+                        'titan_only' => true,
+                    ],
+                    [
                         'label' => 'Manage Weightage',
                         'href' => route('weightage'),
                         'match' => [
@@ -273,6 +280,9 @@
 
                 <div class="space-y-1">
                     @foreach($section['items'] as $item)
+                        @if(($item['titan_only'] ?? false) && !(session('company_code') === 'RCG' && session('department_code') === 'TITAN' && session('role') !== 'VP'))
+                            @continue
+                        @endif
                         @php
                             $isActive = false;
 

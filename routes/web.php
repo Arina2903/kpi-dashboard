@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KpiController;
 use App\Http\Controllers\KpiTemplateController;
+use App\Http\Controllers\TitanKpiController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AiController;
@@ -325,6 +326,16 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::get('/kpi-templates',          [KpiTemplateController::class, 'index'])->name('kpi-templates.index');
     Route::post('/kpi-templates',         [KpiTemplateController::class, 'store'])->name('kpi-templates.store');
     Route::delete('/kpi-templates/{id}',  [KpiTemplateController::class, 'destroy'])->name('kpi-templates.destroy');
+
+    /*
+    |--------------------------------------------------------------------------
+    | TITAN KPI DASHBOARD (RCG / TITAN dept only, no VP)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/titan-kpi',              [TitanKpiController::class, 'index'])->name('titan-kpi.index');
+    Route::post('/titan-kpi/sync',        [TitanKpiController::class, 'sync'])->name('titan-kpi.sync');
+    Route::post('/titan-kpi/weightage',   [TitanKpiController::class, 'updateWeightage'])->name('titan-kpi.weightage');
 
     /*
     |--------------------------------------------------------------------------
