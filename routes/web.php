@@ -310,6 +310,11 @@ Route::middleware(['kpi.auth'])->group(function () {
         [KpiController::class, 'myDepartmentKpi']
     )->name('kpi.my-department-kpi');
 
+    Route::post(
+        '/kpi/apply-template',
+        [KpiController::class, 'applyTemplate']
+    )->name('kpi.apply-template');
+
     /*
     |--------------------------------------------------------------------------
     | KPI LINKAGES (cascading targets)

@@ -1942,6 +1942,118 @@ class KpiController extends Controller
         }
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | APPLY KPI TEMPLATE TO ALL EMPLOYEES IN DEPARTMENT
+    |--------------------------------------------------------------------------
+    */
+
+    public function applyTemplate(Request $request, SupabaseService $supabase)
+    {
+        $user = $this->currentUser($supabase);
+        $fy   = $this->currentFY();
+        $dept = $user['department_code'];
+
+        // Fetch templates for this department
+        $templates = $supabase->get('kpi_templates', [
+            'department_code' => 'eq.' . $dept,
+            'financial_year'  => 'eq.' . $fy,
+            'select'          => '*',
+            'order'           => 'sort_order.asc',
+        ]) ?? [];
+
+        if (empty($templates)) {
+            return response()->json(['error' => 'No templates defined for department ' . $dept . '.'], 404);
+        }
+
+        // All active employees in this department
+        $employees = $supabase->get('employees', [
+            'company_code'    => 'eq.' . $user['company_code'],
+            'department_code' => 'eq.' . $dept,
+            'is_active'       => 'eq.true',
+            'select'          => 'id,employee_id,short_name,role',
+        ]) ?? [];
+
+        $created = 0;
+        $skipped = 0;
+        $now     = $this->nowMy();
+
+        foreach ($employees as $emp) {
+            foreach ($templates as $tpl) {
+                // Avoid duplicates — check by title + employee + FY
+                $exists = $supabase->get('kpis', [
+                    'employee_id'    => 'eq.' . $emp['id'],
+                    'financial_year' => 'eq.' . $fy,
+                    'kpi_title'      => 'eq.' . $tpl['kpi_title'],
+                    'select'         => 'id',
+                    'limit'          => '1',
+                ]);
+
+                if (!empty($exists)) {
+                    $skipped++;
+                    continue;
+                }
+
+                $kpiPayload = [
+                    'employee_id'            => $emp['id'],
+                    'department_code'        => $dept,
+                    'company_code'           => $user['company_code'],
+                    'created_by'             => $user['id'],
+                    'financial_year'         => $fy,
+                    'category'               => $tpl['category'],
+                    'sub_category'           => $tpl['sub_category'],
+                    'kpi_title'              => $tpl['kpi_title'],
+                    'kpi_description'        => $tpl['kpi_description'],
+                    'unit'                   => $tpl['unit'],
+                    'base_target'            => 0,
+                    'stretch_target'         => 0,
+                    'actual_value'           => 0,
+                    'achievement_percentage' => 0,
+                    'status'                 => 'not_started',
+                    'created_at'             => $now,
+                    'updated_at'             => $now,
+                ];
+
+                $inserted = $supabase->insert('kpis', $kpiPayload);
+                $kpiId    = $inserted[0]['id'] ?? null;
+
+                if (!$kpiId) {
+                    $fallback = $supabase->get('kpis', [
+                        'employee_id'    => 'eq.' . $emp['id'],
+                        'financial_year' => 'eq.' . $fy,
+                        'kpi_title'      => 'eq.' . $tpl['kpi_title'],
+                        'select'         => 'id',
+                        'order'          => 'created_at.desc',
+                        'limit'          => '1',
+                    ]);
+                    $kpiId = $fallback[0]['id'] ?? null;
+                }
+
+                if ($kpiId) {
+                    foreach (['Q1', 'Q2', 'Q3', 'Q4'] as $q) {
+                        $supabase->safeInsert('kpi_quarters', [
+                            'kpi_id'         => $kpiId,
+                            'quarter'        => $q,
+                            'quarter_target' => 0,
+                            'quarter_actual' => 0,
+                            'status'         => 'not_started',
+                            'created_at'     => $now,
+                            'updated_at'     => $now,
+                        ]);
+                    }
+                    $created++;
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Done! {$created} KPI(s) created, {$skipped} already existed.",
+            'created' => $created,
+            'skipped' => $skipped,
+        ]);
+    }
+
     public function myDepartmentKpi(SupabaseService $supabase)
     {
         $user = $this->currentUser($supabase);
@@ -2058,6 +2170,14 @@ class KpiController extends Controller
 
         });
 
+        // Check if a template exists for this department
+        $templateCount = $supabase->get('kpi_templates', [
+            'department_code' => 'eq.' . $user['department_code'],
+            'financial_year'  => 'eq.' . $fy,
+            'select'          => 'id',
+            'limit'           => '1',
+        ]);
+
         return view('kpi.my-department-kpi', array_merge([
 
             'user' => $user,
@@ -2070,6 +2190,8 @@ class KpiController extends Controller
 
             'departmentPerformance'
                 => round($departmentPerformance, 2),
+
+            'hasTemplate' => !empty($templateCount),
 
         ], $this->sidebarData($supabase, $user)));
     }
