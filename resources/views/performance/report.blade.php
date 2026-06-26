@@ -301,13 +301,13 @@
                     <div class="mt-5 grid grid-cols-3 gap-6">
                         @php
                             $partAFields = [
-                                'Medical Leave (Days)'   => $attendanceSummary['mc_days'] ?? null,
-                                'Emergency Leave (Days)' => $attendanceSummary['other_leave_days'] ?? null,
-                                'No. of Lateness'        => $attendanceSummary['late_count'] ?? null,
+                                'Medical Leave (Days)'   => $attendanceYTD['mc_days'],
+                                'Emergency Leave (Days)' => $attendanceYTD['other_leave_days'],
+                                'No. of Lateness'        => $attendanceYTD['late_count'],
                             ];
                         @endphp
                         @foreach($partAFields as $lf => $lv)
-                        <div><p class="f-label">{{ $lf }}</p><input type="number" min="0" placeholder="0" value="{{ $attendanceSummary['has_data'] ? $lv : '' }}" class="f-input" style="max-width:80px;"></div>
+                        <div><p class="f-label">{{ $lf }}</p><input type="number" min="0" placeholder="0" value="{{ $attendanceYTD['has_data'] ? $lv : '' }}" class="f-input" style="max-width:80px;"></div>
                         @endforeach
                     </div>
                 </div>

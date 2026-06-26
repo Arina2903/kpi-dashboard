@@ -429,6 +429,14 @@ class PerformanceController extends Controller
             - $attendanceSummary['other_leave_days']
         );
 
+        // ── YTD totals (all uploaded months this year) for Part A ─────────────
+        $attendanceYTD = ['has_data' => !empty($allAttendance), 'mc_days' => 0, 'other_leave_days' => 0, 'late_count' => 0];
+        foreach ($allAttendance as $ar) {
+            $attendanceYTD['mc_days']          += (int)($ar['mc_days'] ?? 0);
+            $attendanceYTD['other_leave_days'] += (int)($ar['other_leave_days'] ?? 0);
+            $attendanceYTD['late_count']       += (int)($ar['late_count'] ?? 0);
+        }
+
         // ── Assessment areas (attitude) ────────────────────────────────────────
         $assessmentAreas = [
             ['no' =>  1, 'title' => 'Knowledge of Job Requirements',  'description' => 'Knowledge of job requirements, methods, techniques and skills involved in doing the job, and in applying these to perform efficiently.'],
@@ -464,6 +472,7 @@ class PerformanceController extends Controller
             'quarterScores'        => $quarterScores,
             'assessmentAreas'      => $assessmentAreas,
             'attendanceSummary'    => $attendanceSummary,
+            'attendanceYTD'        => $attendanceYTD,
         ]);
     }
 }
