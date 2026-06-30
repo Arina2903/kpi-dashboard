@@ -35,9 +35,10 @@ class TitanKpiController extends Controller
 
     private function isTitanUser(array $user): bool
     {
-        return $user['company_code'] === 'RCG'
-            && $user['department_code'] === 'TITAN'
-            && $user['role'] !== 'VP';
+        return $user['role'] !== 'VP' && (
+            ($user['company_code'] === 'RCG'  && $user['department_code'] === 'TITAN') ||
+            ($user['company_code'] === 'RGHB' && $user['department_code'] === 'BTS')
+        );
     }
 
     /*
@@ -64,8 +65,9 @@ class TitanKpiController extends Controller
             fn($e) => $e['role'] !== 'VP'
         ));
 
-        // Executive only sees themselves; manager/SLT sees all
-        $isManager = in_array($user['role'], ['MANAGER', 'SLT']);
+        // BTS/RGHB users are oversight managers; TITAN manager/SLT also see all
+        $isManager = in_array($user['role'], ['MANAGER', 'SLT'])
+            || ($user['company_code'] === 'RGHB' && $user['department_code'] === 'BTS');
         $viewStaff = $isManager ? $allStaff
             : array_values(array_filter($allStaff, fn($e) => $e['id'] === $user['id']));
 

@@ -280,7 +280,13 @@
 
                 <div class="space-y-1">
                     @foreach($section['items'] as $item)
-                        @if(($item['titan_only'] ?? false) && !(session('company_code') === 'RCG' && session('department_code') === 'TITAN' && session('role') !== 'VP'))
+                        @php
+                            $hasTitanAccess = session('role') !== 'VP' && (
+                                (session('company_code') === 'RCG'  && session('department_code') === 'TITAN') ||
+                                (session('company_code') === 'RGHB' && session('department_code') === 'BTS')
+                            );
+                        @endphp
+                        @if(($item['titan_only'] ?? false) && !$hasTitanAccess)
                             @continue
                         @endif
                         @php

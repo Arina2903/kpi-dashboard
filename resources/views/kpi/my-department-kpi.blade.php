@@ -44,7 +44,8 @@
                     <p class="text-[9px] text-blue-200 uppercase font-black tracking-wider">FY</p>
                     <h3 class="text-2xl font-black mt-1">{{ $fy }}</h3>
                 </div>
-                @if(session('company_code') === 'RCG' && ($user['department_code'] ?? '') === 'TITAN')
+                @if((session('company_code') === 'RCG' && ($user['department_code'] ?? '') === 'TITAN') ||
+                    (session('company_code') === 'RGHB' && ($user['department_code'] ?? '') === 'BTS'))
                 <button
                     id="openWizardBtn"
                     onclick="openWizard()"
