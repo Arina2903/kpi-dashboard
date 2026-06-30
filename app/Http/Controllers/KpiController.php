@@ -128,9 +128,6 @@ class KpiController extends Controller
 
         $role = strtoupper(trim($user['role'] ?? ''));
 
-        if ($role === 'SLT') {
-            return redirect('/dashboard')->with('info', 'KPI List is for individual KPI management. Use the Dashboard for company-wide overview.');
-        }
 
         $employees = [];
         $kpis = [];
