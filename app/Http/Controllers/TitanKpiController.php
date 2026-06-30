@@ -43,7 +43,7 @@ class TitanKpiController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | INDEX — Titan KPI dashboard (live from Google Sheet)
+    | INDEX — Titan KPI dashboard (auto-sync from Google Sheet on every load)
     |--------------------------------------------------------------------------
     */
 
@@ -71,22 +71,43 @@ class TitanKpiController extends Controller
         $viewStaff = $isManager ? $allStaff
             : array_values(array_filter($allStaff, fn($e) => $e['id'] === $user['id']));
 
-        // Fetch live KPI data from Google Sheet (Total Collected = actual, Potential Collection = base_target)
+        // Auto-sync: fetch from Google Sheet and upsert actual + base_target into DB
         $sheetData = $this->fetchSheetData();
-
-        // Build monthlyData keyed by employee_id → kpi_key → month_number
-        $monthlyData = [];
-        foreach ($viewStaff as $emp) {
-            $camKey = strtolower(trim($emp['short_name'] ?? ''));
+        $now = now()->toDateTimeString();
+        foreach ($allStaff as $emp) {
+            $camKey  = strtolower(trim($emp['short_name'] ?? ''));
             $camData = $sheetData[$camKey] ?? [];
             foreach (self::MONTHS as $monthNum => $monthName) {
                 foreach (array_keys(self::KPIS) as $kpiKey) {
-                    $monthlyData[$emp['id']][$kpiKey][$monthNum] = [
-                        'actual'      => $camData[$monthNum][$kpiKey]['actual']      ?? 0,
-                        'base_target' => $camData[$monthNum][$kpiKey]['base_target'] ?? 0,
-                        'weightage'   => 10,
-                    ];
+                    $actual = $camData[$monthNum][$kpiKey]['actual']      ?? 0;
+                    $base   = $camData[$monthNum][$kpiKey]['base_target'] ?? 0;
+                    $supabase->upsert('titan_monthly_kpi', [
+                        'employee_id'    => $emp['id'],
+                        'company_code'   => 'RCG',
+                        'financial_year' => $fy,
+                        'kpi_key'        => $kpiKey,
+                        'month_number'   => $monthNum,
+                        'month_name'     => $monthName,
+                        'actual'         => $actual,
+                        'base_target'    => $base,
+                        'weightage'      => 10,
+                        'synced_at'      => $now,
+                        'updated_at'     => $now,
+                    ], 'employee_id,financial_year,kpi_key,month_number');
                 }
+            }
+        }
+
+        // Read back from DB (preserves any manual weightage edits)
+        $monthlyData = [];
+        foreach ($viewStaff as $emp) {
+            $rows = $supabase->get('titan_monthly_kpi', [
+                'employee_id'    => 'eq.' . $emp['id'],
+                'financial_year' => 'eq.' . $fy,
+                'select'         => 'kpi_key,month_number,actual,base_target,weightage',
+            ]) ?? [];
+            foreach ($rows as $r) {
+                $monthlyData[$emp['id']][$r['kpi_key']][$r['month_number']] = $r;
             }
         }
 
