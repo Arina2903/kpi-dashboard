@@ -71,31 +71,34 @@ class TitanKpiController extends Controller
         $viewStaff = $isManager ? $allStaff
             : array_values(array_filter($allStaff, fn($e) => $e['id'] === $user['id']));
 
-        // Auto-sync: fetch from Google Sheet and upsert actual + base_target into DB
+        // Auto-sync: fetch from Google Sheet and bulk-upsert all rows in ONE API call
         $sheetData = $this->fetchSheetData();
-        $now = now()->toDateTimeString();
-        foreach ($allStaff as $emp) {
-            $camKey  = strtolower(trim($emp['short_name'] ?? ''));
-            $camData = $sheetData[$camKey] ?? [];
-            foreach (self::MONTHS as $monthNum => $monthName) {
-                foreach (array_keys(self::KPIS) as $kpiKey) {
-                    $actual = $camData[$monthNum][$kpiKey]['actual']      ?? 0;
-                    $base   = $camData[$monthNum][$kpiKey]['base_target'] ?? 0;
-                    $supabase->upsert('titan_monthly_kpi', [
-                        'employee_id'    => $emp['id'],
-                        'company_code'   => 'RCG',
-                        'financial_year' => $fy,
-                        'kpi_key'        => $kpiKey,
-                        'month_number'   => $monthNum,
-                        'month_name'     => $monthName,
-                        'actual'         => $actual,
-                        'base_target'    => $base,
-                        'weightage'      => 10,
-                        'synced_at'      => $now,
-                        'updated_at'     => $now,
-                    ], 'employee_id,financial_year,kpi_key,month_number');
+        if (!empty($sheetData)) {
+            $now  = now()->toDateTimeString();
+            $rows = [];
+            foreach ($allStaff as $emp) {
+                $camKey  = strtolower(trim($emp['short_name'] ?? ''));
+                $camData = $sheetData[$camKey] ?? [];
+                foreach (self::MONTHS as $monthNum => $monthName) {
+                    foreach (array_keys(self::KPIS) as $kpiKey) {
+                        $rows[] = [
+                            'employee_id'    => $emp['id'],
+                            'company_code'   => 'RCG',
+                            'financial_year' => $fy,
+                            'kpi_key'        => $kpiKey,
+                            'month_number'   => $monthNum,
+                            'month_name'     => $monthName,
+                            'actual'         => $camData[$monthNum][$kpiKey]['actual']      ?? 0,
+                            'base_target'    => $camData[$monthNum][$kpiKey]['base_target'] ?? 0,
+                            'weightage'      => 10,
+                            'synced_at'      => $now,
+                            'updated_at'     => $now,
+                        ];
+                    }
                 }
             }
+            // Single bulk API call instead of 240 individual ones
+            $supabase->upsert('titan_monthly_kpi', $rows, 'employee_id,financial_year,kpi_key,month_number');
         }
 
         // Read back from DB (preserves any manual weightage edits)
