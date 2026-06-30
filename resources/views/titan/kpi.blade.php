@@ -99,13 +99,12 @@
     {{-- ── STAFF TABS (manager sees all; executive sees only self) ─────── --}}
     @if($isManager && count($viewStaff) > 1)
     <div class="flex flex-wrap gap-2 no-print" id="staffTabs">
-        <button onclick="switchStaff('all')" id="tab-all"
-            class="staff-tab active-tab px-4 py-2 rounded-xl text-xs font-black border-2 border-[#1a3d34] bg-[#1a3d34] text-white transition">
-            All Staff
-        </button>
-        @foreach($viewStaff as $emp)
+        @foreach($viewStaff as $i => $emp)
         <button onclick="switchStaff('{{ $emp['id'] }}')" id="tab-{{ $emp['id'] }}"
-            class="staff-tab px-4 py-2 rounded-xl text-xs font-black border-2 border-slate-200 text-slate-600 hover:border-[#1a3d34] hover:text-[#1a3d34] transition">
+            class="staff-tab px-4 py-2 rounded-xl text-xs font-black border-2 transition
+            {{ $i === 0
+                ? 'active-tab border-[#1a3d34] bg-[#1a3d34] text-white'
+                : 'border-slate-200 text-slate-600 hover:border-[#1a3d34] hover:text-[#1a3d34]' }}">
             {{ $emp['short_name'] ?? $emp['employee_id'] }}
         </button>
         @endforeach
@@ -139,7 +138,7 @@
         $ytdRetScore = $ytdRetTarget > 0 ? min(100, ($ytdRetActual / $ytdRetTarget) * 100) : 0;
     @endphp
 
-    <div class="staff-block bg-white rounded-2xl shadow-sm border border-[#6B9080]/30 overflow-hidden"
+    <div class="staff-block bg-white rounded-2xl shadow-sm border border-[#6B9080]/30 overflow-hidden {{ $loop->first ? '' : 'hidden' }}"
          data-emp="{{ $emp['id'] }}">
 
         {{-- Employee header (click to toggle) --}}
@@ -338,13 +337,9 @@ function switchStaff(empId) {
     const blocks = document.querySelectorAll('.staff-block');
     const tabs   = document.querySelectorAll('.staff-tab');
 
-    if (empId === 'all') {
-        blocks.forEach(b => b.classList.remove('hidden'));
-    } else {
-        blocks.forEach(b => {
-            b.classList.toggle('hidden', b.dataset.emp !== empId);
-        });
-    }
+    blocks.forEach(b => {
+        b.classList.toggle('hidden', b.dataset.emp !== empId);
+    });
 
     tabs.forEach(t => {
         const active = t.id === 'tab-' + empId;
