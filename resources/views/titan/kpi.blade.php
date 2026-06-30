@@ -9,7 +9,7 @@
         .score-bar { height: 4px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
         .score-fill { height: 100%; border-radius: 999px; transition: width .4s ease; }
         @media print {
-            #sidebar, #syncBtn, .no-print { display: none !important; }
+            #sidebar, .no-print { display: none !important; }
             #mainContent { margin-left: 0 !important; }
         }
     </style>
@@ -38,43 +38,12 @@
                     <p class="text-[9px] text-[#A4C3B2] uppercase font-black tracking-wider">KPIs</p>
                     <h3 class="text-2xl font-black mt-1">2</h3>
                 </div>
-                @if($isManager)
-                <button id="syncBtn" onclick="syncFromSheet()"
-                    class="no-print flex items-center gap-2 bg-white text-[#1a3d34] hover:bg-[#CCE3DE] text-xs font-black px-5 py-3 rounded-2xl shadow-lg transition">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                    Sync from Google Sheet
-                </button>
-                @endif
             </div>
         </div>
 
         {{-- Guide for executive --}}
-        @if(!$isManager)
-        <div class="mt-5 bg-white/10 border border-white/20 rounded-xl px-5 py-3 flex items-start gap-3">
-            <svg class="w-5 h-5 text-[#A4C3B2] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <p class="text-[12px] text-white/80">Your KPI performance is automatically synced from the collection tracking sheet by your manager. <strong>Actual</strong> = total collected · <strong>Base Target</strong> = potential revenue from all your clients.</p>
-        </div>
-        @endif
     </div>
 
-    {{-- ── LAST SYNC INFO ──────────────────────────────────────────────── --}}
-    @php
-        $lastSynced = null;
-        foreach ($monthlyData as $empData) {
-            foreach ($empData as $kpiData) {
-                foreach ($kpiData as $row) {
-                    if (!$lastSynced || $row['synced_at'] > $lastSynced) $lastSynced = $row['synced_at'];
-                }
-            }
-        }
-    @endphp
-    @if($lastSynced)
-    <p class="text-[11px] text-slate-400 font-medium px-1">
-        Last synced: {{ \Carbon\Carbon::parse($lastSynced)->format('d M Y, h:i A') }}
-    </p>
-    @endif
 
     {{-- ── COLLAPSE ALL / EXPAND ALL ──────────────────────────────────── --}}
     @if(count($viewStaff) > 1)
@@ -352,34 +321,6 @@ function switchStaff(empId) {
     });
 }
 
-// ── Sync from Google Sheet ──────────────────────────────────────────────────
-async function syncFromSheet() {
-    const btn = document.getElementById('syncBtn');
-    if (!confirm('Sync latest data from the Google Sheet for all Titan staff?\n\nThis will update Actual and Base Target for all months.')) return;
-
-    btn.disabled = true;
-    btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Syncing…`;
-
-    try {
-        const res  = await fetch('{{ route("titan-kpi.sync") }}', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-            body:    JSON.stringify({}),
-        });
-        const data = await res.json();
-        if (data.success) {
-            alert('✓ ' + data.message);
-            location.reload();
-        } else {
-            alert('Error: ' + (data.error ?? 'Unknown'));
-        }
-    } catch (e) {
-        alert('Network error. Please try again.');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Sync from Google Sheet`;
-    }
-}
 </script>
 
 </body>
