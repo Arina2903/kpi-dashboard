@@ -43,7 +43,7 @@ class TitanKpiController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | INDEX — Titan KPI dashboard
+    | INDEX — Titan KPI dashboard (live from Google Sheet)
     |--------------------------------------------------------------------------
     */
 
@@ -54,7 +54,7 @@ class TitanKpiController extends Controller
 
         $fy = $this->currentFY();
 
-        // All active Titan staff (non-VP)
+        // All active Titan staff (non-VP), sorted A–Z
         $allStaff = array_values(array_filter(
             $supabase->get('employees', [
                 'company_code'    => 'eq.RCG',
@@ -64,29 +64,120 @@ class TitanKpiController extends Controller
             ]) ?? [],
             fn($e) => $e['role'] !== 'VP'
         ));
+        usort($allStaff, fn($a, $b) => strcasecmp($a['short_name'] ?? '', $b['short_name'] ?? ''));
 
-        // BTS/RGHB users are oversight managers; TITAN manager/SLT also see all
         $isManager = in_array($user['role'], ['MANAGER', 'SLT'])
             || ($user['company_code'] === 'RGHB' && $user['department_code'] === 'BTS');
         $viewStaff = $isManager ? $allStaff
             : array_values(array_filter($allStaff, fn($e) => $e['id'] === $user['id']));
 
-        // Fetch monthly KPI data
+        // Fetch live KPI data from Google Sheet (Total Collected = actual, Potential Collection = base_target)
+        $sheetData = $this->fetchSheetData();
+
+        // Build monthlyData keyed by employee_id → kpi_key → month_number
         $monthlyData = [];
         foreach ($viewStaff as $emp) {
-            $rows = $supabase->get('titan_monthly_kpi', [
-                'employee_id'    => 'eq.' . $emp['id'],
-                'financial_year' => 'eq.' . $fy,
-                'select'         => '*',
-                'order'          => 'kpi_key.asc,month_number.asc',
-            ]) ?? [];
-            // Key by kpi_key → month_number
-            foreach ($rows as $r) {
-                $monthlyData[$emp['id']][$r['kpi_key']][$r['month_number']] = $r;
+            $camKey = strtolower(trim($emp['short_name'] ?? ''));
+            $camData = $sheetData[$camKey] ?? [];
+            foreach (self::MONTHS as $monthNum => $monthName) {
+                foreach (array_keys(self::KPIS) as $kpiKey) {
+                    $monthlyData[$emp['id']][$kpiKey][$monthNum] = [
+                        'actual'      => $camData[$monthNum][$kpiKey]['actual']      ?? 0,
+                        'base_target' => $camData[$monthNum][$kpiKey]['base_target'] ?? 0,
+                        'weightage'   => 10,
+                    ];
+                }
             }
         }
 
         return view('titan.kpi', compact('user', 'fy', 'allStaff', 'viewStaff', 'monthlyData', 'isManager'));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | FETCH SHEET DATA — parse Google Sheet CSV into per-CAM KPI values
+    |    revenue:   actual = Total Collected (sum of monthly payments)
+    |               base   = Potential Collection (sum of client Amount)
+    |    retention: actual = clients who paid that month
+    |               base   = total clients with a membership amount
+    |--------------------------------------------------------------------------
+    */
+
+    private function fetchSheetData(): array
+    {
+        $csvUrl   = 'https://docs.google.com/spreadsheets/d/' . self::SHEET_ID . '/export?format=csv';
+        $response = Http::timeout(30)->get($csvUrl);
+        if (!$response->successful()) return [];
+
+        $lines = explode("\n", str_replace("\r", '', trim($response->body())));
+        $rows  = array_map('str_getcsv', $lines);
+
+        // Locate header row (contains both "CAM" and "January")
+        $headerRow = null;
+        $headerIdx = 0;
+        foreach ($rows as $i => $row) {
+            if (in_array('CAM', $row) && in_array('January', $row)) {
+                $headerRow = $row;
+                $headerIdx = $i;
+                break;
+            }
+        }
+        if (!$headerRow) return [];
+
+        $camCol    = array_search('CAM',    $headerRow);
+        $amountCol = array_search('Amount', $headerRow);
+
+        // Month column indices — first occurrence of each month name
+        $monthCols = [];
+        foreach (self::MONTHS as $num => $name) {
+            foreach ($headerRow as $col => $val) {
+                if ($val === $name && !isset($monthCols[$num])) {
+                    $monthCols[$num] = $col;
+                }
+            }
+        }
+
+        // Group client rows by CAM name (lowercase)
+        $dataRows = array_slice($rows, $headerIdx + 1);
+        $byCam    = [];
+        foreach ($dataRows as $row) {
+            $cam = strtolower(trim(str_replace("\n", '', $row[$camCol] ?? '')));
+            if ($cam !== '') $byCam[$cam][] = $row;
+        }
+
+        // Compute per-CAM, per-month Potential Collection (base) and Total Collected (actual)
+        $result = [];
+        foreach ($byCam as $camKey => $clientRows) {
+            // Potential Collection = sum of membership Amount for all clients with an Amount
+            $clientsWithAmt = array_filter($clientRows, fn($r) => trim($r[$amountCol] ?? '') !== '');
+            $baseRevenue    = 0.0;
+            foreach ($clientsWithAmt as $r) {
+                $baseRevenue += (float) preg_replace('/[^0-9.]/', '', $r[$amountCol]);
+            }
+            $baseRetention = count($clientsWithAmt);
+
+            foreach ($monthCols as $monthNum => $monthCol) {
+                $actualRevenue   = 0.0;
+                $actualRetention = 0;
+
+                foreach ($clientRows as $r) {
+                    $monthVal = trim($r[$monthCol] ?? '');
+                    if ($monthVal === '') continue;
+
+                    $monthAmount = (float) preg_replace('/[^0-9.]/', '', $monthVal);
+                    // Numeric amount → use directly; non-numeric mark (tick/✓) → use client's Amount
+                    $actualRevenue += $monthAmount > 0
+                        ? $monthAmount
+                        : (float) preg_replace('/[^0-9.]/', '', $r[$amountCol] ?? '0');
+                    $actualRetention++;
+                }
+
+                $result[$camKey][$monthNum]['revenue']   = ['actual' => $actualRevenue,   'base_target' => $baseRevenue];
+                $result[$camKey][$monthNum]['retention'] = ['actual' => $actualRetention, 'base_target' => $baseRetention];
+            }
+        }
+
+        return $result;
     }
 
     /*
