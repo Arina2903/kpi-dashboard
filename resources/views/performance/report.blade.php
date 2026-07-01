@@ -387,16 +387,25 @@
                 @foreach($kpis as $ki => $kpi)
                 @php $qs=$quarterScores[$kpi['id']]??null; $dbAct=isset($qs['quarter_actual'])?(float)$qs['quarter_actual']:''; $dbTgt=isset($qs['quarter_target'])?(float)$qs['quarter_target']:(float)($kpi['base_target']??''); $kpiNo=$ki+1; @endphp
                 <tr class="okr-hdr">
-                    <td class="text-center font-black text-[#1a3d34] text-xs">{{ $kpiNo }}</td>
-                    <td colspan="2">
-                        <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-wider">OKR / KPI</p>
-                        <p class="text-xs font-bold text-slate-800 leading-snug mt-0.5">{{ $kpi['kpi_title'] }}</p>
-                        @if(!empty($kpi['sub_category']))<p class="text-[9px] text-slate-400 mt-0.5">{{ $kpi['sub_category'] }}</p>@endif
-                    </td>
-                    <td colspan="6" class="text-right">
-                        <span class="inline-block text-[9px] font-black text-[#6B9080] bg-white border border-[#6B9080]/30 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                            {{ $kpi['weightage']??'—' }}% weight &nbsp;·&nbsp; {{ $kpi['category']??'' }}
-                        </span>
+                    <td class="text-center font-black text-[#1a3d34] text-xs align-top" style="padding-top:14px;">{{ $kpiNo }}</td>
+                    <td colspan="8" style="padding:10px 14px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+                            <span style="font-size:8px;font-weight:900;color:#6B9080;text-transform:uppercase;letter-spacing:.1em;min-width:76px;">Category</span>
+                            <span style="font-size:11px;font-weight:700;color:#1a3d34;">{{ $kpi['category']??'—' }}</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+                            <span style="font-size:8px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;min-width:76px;">Sub Category</span>
+                            <span style="font-size:10px;font-weight:600;color:#475569;">{{ $kpi['sub_category']??'—' }}</span>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span style="font-size:8px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;min-width:76px;">{{ $qLabel }}</span>
+                                <span style="font-size:12px;font-weight:700;color:#1e293b;line-height:1.3;">{{ $kpi['kpi_title'] }}</span>
+                            </div>
+                            <span style="flex-shrink:0;font-size:9px;font-weight:900;color:#6B9080;background:#fff;border:1px solid rgba(107,144,128,.30);padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;">
+                                {{ $kpi['weightage']??'—' }}% weight
+                            </span>
+                        </div>
                     </td>
                 </tr>
                 @for($s=1;$s<=4;$s++)
