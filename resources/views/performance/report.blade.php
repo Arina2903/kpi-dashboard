@@ -37,6 +37,13 @@
         .f-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #94a3b8; margin-bottom: 3px; }
         .f-val   { font-size: 13px; font-weight: 600; color: #1e293b; text-transform: uppercase; }
 
+        /* Optional date — hidden until clicked or has value */
+        .date-opt { color: transparent; border-color: transparent; cursor: pointer; }
+        .date-opt::-webkit-calendar-picker-indicator { display: none; }
+        .date-opt:focus { color: #475569; border-color: rgba(107,144,128,.40); }
+        .date-opt:focus::-webkit-calendar-picker-indicator { display: block; }
+        .date-opt.has-value { color: #475569; border-color: rgba(107,144,128,.40); }
+
         .f-input {
             width: 100%; border: none; border-bottom: 1.5px solid rgba(107,144,128,.30);
             padding: 5px 0; font-size: 13px; font-weight: 600; color: #1e293b;
@@ -330,7 +337,7 @@
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
                         <p class="text-[11px] text-slate-500 italic leading-relaxed mb-4">
                             I hereby confirm that the above information provided by the appraisee is correct and that the appraisee has been directly reporting to me since
-                            <input type="date" value="" class="border-b border-[#6B9080]/40 bg-transparent text-xs text-slate-600 outline-none mx-1 px-0.5">.
+                            <input type="date" value="" id="partd-date" class="date-opt border-b bg-transparent text-xs outline-none mx-1 px-0.5" onchange="this.classList.toggle('has-value',!!this.value)">.
                         </p>
                         <div class="grid grid-cols-2 gap-6">
                             <div><p class="f-label">Appraiser Name</p><input type="text" value="{{ $reportsToName !== '-' ? $reportsToName : '' }}" placeholder="Full name" class="f-input"></div>
