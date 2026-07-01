@@ -330,7 +330,7 @@
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
                         <p class="text-[11px] text-slate-500 italic leading-relaxed mb-4">
                             I hereby confirm that the above information provided by the appraisee is correct and that the appraisee has been directly reporting to me since
-                            <input type="date" value="{{ now()->format('Y-m-d') }}" class="border-b border-[#6B9080]/40 bg-transparent text-xs text-slate-600 outline-none mx-1 px-0.5">.
+                            <input type="date" value="" class="border-b border-[#6B9080]/40 bg-transparent text-xs text-slate-600 outline-none mx-1 px-0.5">.
                         </p>
                         <div class="grid grid-cols-2 gap-6">
                             <div><p class="f-label">Appraiser Name</p><input type="text" value="{{ $reportsToName !== '-' ? $reportsToName : '' }}" placeholder="Full name" class="f-input"></div>
