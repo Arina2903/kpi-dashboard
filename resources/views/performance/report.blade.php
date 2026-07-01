@@ -187,7 +187,7 @@
 <table id="print-table">
 <thead id="print-thead">
 <tr><td>
-    <div style="display:flex;align-items:center;gap:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
         @if($phLogo)<img src="{{ asset($phLogo) }}" alt="Logo" style="height:40px;object-fit:contain;display:block">
         @else<span style="font-size:12px;font-weight:900;color:#1a3d34">{{ session('company_display_name') }}</span>@endif
         <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
@@ -212,7 +212,7 @@
     <div class="px-10 py-8">
 
         {{-- Doc header (hidden in print — replaced by print-thead) --}}
-        <div id="doc-hdr" class="flex items-center gap-4 mb-7 pb-6 border-b border-slate-100">
+        <div id="doc-hdr" class="flex items-center justify-between mb-7 pb-6 border-b border-slate-100">
             @php $logoMap=['RCG'=>'images/RCG-Logo-black.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $logo=$logoMap[session('company_code')]??null; @endphp
             @if($logo)<img src="{{ asset(ltrim($logo,'/')) }}" alt="Logo" class="h-12 object-contain">
             @else<p class="text-xl font-black text-[#1a3d34]">{{ session('company_display_name') }}</p>@endif
