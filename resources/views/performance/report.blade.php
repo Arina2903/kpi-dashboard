@@ -35,12 +35,13 @@
         .part-label::after { content: ''; flex: 1; height: 1px; background: rgba(107,144,128,.25); }
 
         .f-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #94a3b8; margin-bottom: 3px; }
-        .f-val   { font-size: 13px; font-weight: 600; color: #1e293b; }
+        .f-val   { font-size: 13px; font-weight: 600; color: #1e293b; text-transform: uppercase; }
 
         .f-input {
             width: 100%; border: none; border-bottom: 1.5px solid rgba(107,144,128,.30);
-            padding: 5px 0; font-size: 13px; font-weight: 500; color: #334155;
+            padding: 5px 0; font-size: 13px; font-weight: 600; color: #1e293b;
             background: transparent; outline: none; transition: border-color .15s;
+            text-transform: uppercase;
         }
         .f-input:focus { border-bottom-color: #6B9080; }
 
