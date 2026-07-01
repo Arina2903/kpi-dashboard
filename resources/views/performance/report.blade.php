@@ -37,12 +37,13 @@
         .f-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #94a3b8; margin-bottom: 3px; }
         .f-val   { font-size: 13px; font-weight: 600; color: #1e293b; text-transform: uppercase; }
 
-        /* Optional date — hidden until clicked or has value */
-        .date-opt { color: transparent; border-color: transparent; cursor: pointer; }
-        .date-opt::-webkit-calendar-picker-indicator { display: none; }
-        .date-opt:focus { color: #475569; border-color: rgba(107,144,128,.40); }
-        .date-opt:focus::-webkit-calendar-picker-indicator { display: block; }
-        .date-opt.has-value { color: #475569; border-color: rgba(107,144,128,.40); }
+        /* Part D — optional date with calendar icon */
+        .partd-wrap { position: relative; display: inline-flex; align-items: center; gap: 2px; vertical-align: middle; }
+        .partd-cal  { color: #6B9080; cursor: pointer; display: inline-flex; align-items: center; padding: 2px 4px; border-radius: 4px; transition: color .15s, background .15s; }
+        .partd-cal:hover { color: #4a7c6b; background: rgba(107,144,128,.15); }
+        .partd-val  { font-size: 11px; font-weight: 600; color: #1e293b; display: none; border-bottom: 1.5px solid rgba(107,144,128,.40); padding-bottom: 1px; }
+        .partd-clr  { display: none; font-size: 14px; line-height: 1; color: #94a3b8; cursor: pointer; background: none; border: none; padding: 0 2px; vertical-align: middle; }
+        .partd-clr:hover { color: #ef4444; }
 
         .f-input {
             width: 100%; border: none; border-bottom: 1.5px solid rgba(107,144,128,.30);
@@ -118,6 +119,8 @@
 
         /* ── Print ─────────────────────────────────────────── */
         @media print {
+            .partd-cal, .partd-clr { display: none !important; }
+
             *, *::before, *::after {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
@@ -337,7 +340,14 @@
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
                         <p class="text-[11px] text-slate-500 italic leading-relaxed mb-4">
                             I hereby confirm that the above information provided by the appraisee is correct and that the appraisee has been directly reporting to me since
-                            <input type="date" value="" id="partd-date" class="date-opt border-b bg-transparent text-xs outline-none mx-1 px-0.5" onchange="this.classList.toggle('has-value',!!this.value)">.
+                            <span class="partd-wrap mx-1">
+                                <span id="partd-val" class="partd-val"></span>
+                                <span id="partd-cal" class="partd-cal" onclick="openPartDPicker()" title="Select date">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                </span>
+                                <button type="button" id="partd-clr" class="partd-clr" onclick="clearPartDDate()" title="Clear date">×</button>
+                                <input type="date" id="partd-date" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;" onchange="setPartDDate(this.value)">
+                            </span>.
                         </p>
                         <div class="grid grid-cols-2 gap-6">
                             <div><p class="f-label">Appraiser Name</p><input type="text" value="{{ $reportsToName !== '-' ? $reportsToName : '' }}" placeholder="Full name" class="f-input"></div>
@@ -745,6 +755,32 @@
         if(!isNaN(a)&&!isNaN(b)&&b>0){const s=(a/b)*5;scoreEl.textContent=s.toFixed(2);scoreEl.className='sec2-score font-black text-sm '+sc(s,5);}
         else{scoreEl.textContent='—';scoreEl.className='sec2-score font-black text-sm sc-none';}
     });
+
+    // Part D optional date
+    window.openPartDPicker = function() {
+        var inp = document.getElementById('partd-date');
+        try { inp.showPicker(); } catch(e) { inp.click(); }
+    };
+    window.setPartDDate = function(val) {
+        var valEl = document.getElementById('partd-val');
+        var calEl = document.getElementById('partd-cal');
+        var clrEl = document.getElementById('partd-clr');
+        if (val) {
+            var d = new Date(val + 'T00:00:00');
+            valEl.textContent = d.toLocaleDateString('en-GB', {day:'2-digit', month:'long', year:'numeric'});
+            valEl.style.display = 'inline';
+            calEl.style.display = 'none';
+            clrEl.style.display = 'inline';
+        } else {
+            valEl.style.display = 'none';
+            calEl.style.display = 'inline-flex';
+            clrEl.style.display = 'none';
+        }
+    };
+    window.clearPartDDate = function() {
+        document.getElementById('partd-date').value = '';
+        window.setPartDDate('');
+    };
 
     // Section 6 live sum
     document.querySelectorAll('.s6-input').forEach(function(inp){
