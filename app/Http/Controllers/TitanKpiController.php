@@ -119,86 +119,149 @@ class TitanKpiController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | FETCH SHEET DATA — parse Google Sheet CSV into per-CAM KPI values
-    |    revenue:   actual = Total Collected (sum of monthly payments)
-    |               base   = Potential Collection (sum of client Amount)
-    |    retention: actual = clients who paid that month
-    |               base   = total clients with a membership amount
+    | FETCH SHEET DATA — download XLSX, read each CAM's sheet tab directly
+    |    revenue:   actual      = "Total Collected" row per month
+    |               base_target = "Potential Collection" row per month
+    |    retention: actual      = clients with Settle/Reactive status per month
+    |               base_target = clients with any active status per month
     |--------------------------------------------------------------------------
     */
 
+    // Column letter → month number (same layout in every CAM sheet tab)
+    private const COL_MONTH = [
+        'H' => 1, 'I' => 2, 'J' => 3,  'K' => 4,
+        'L' => 5, 'M' => 6, 'N' => 7,  'O' => 8,
+        'P' => 9, 'Q' => 10, 'R' => 11, 'S' => 12,
+    ];
+
+    // Statuses that count as "paid / retained"
+    private const PAID_STATUSES = ['Settle', 'Reactive'];
+
+    // Statuses that remove a client from Potential Collection
+    private const DROPOUT_STATUSES = ['Terminated', 'N/A', 'Request to Stop'];
+
     private function fetchSheetData(): array
     {
-        $csvUrl   = 'https://docs.google.com/spreadsheets/d/' . self::SHEET_ID . '/export?format=csv';
-        $response = Http::timeout(30)->get($csvUrl);
+        $xlsxUrl  = 'https://docs.google.com/spreadsheets/d/' . self::SHEET_ID . '/export?format=xlsx';
+        $response = Http::timeout(45)->get($xlsxUrl);
         if (!$response->successful()) return [];
 
-        $lines = explode("\n", str_replace("\r", '', trim($response->body())));
-        $rows  = array_map('str_getcsv', $lines);
+        // ZipArchive needs a real file on disk
+        $tmp = sys_get_temp_dir() . '/titan_kpi_' . uniqid() . '.xlsx';
+        file_put_contents($tmp, $response->body());
 
-        // Locate header row (contains both "CAM" and "January")
-        $headerRow = null;
-        $headerIdx = 0;
-        foreach ($rows as $i => $row) {
-            if (in_array('CAM', $row) && in_array('January', $row)) {
-                $headerRow = $row;
-                $headerIdx = $i;
-                break;
+        $zip = new \ZipArchive();
+        if ($zip->open($tmp) !== true) { @unlink($tmp); return []; }
+
+        try {
+            $ss         = $this->xlsxSharedStrings($zip->getFromName('xl/sharedStrings.xml') ?: '');
+            $sheetFiles = $this->xlsxSheetFileMap(
+                $zip->getFromName('xl/workbook.xml') ?: '',
+                $zip->getFromName('xl/_rels/workbook.xml.rels') ?: ''
+            );
+
+            $result = [];
+            foreach ($sheetFiles as $name => $path) {
+                if (in_array($name, ['MASTER', 'Sheet2'])) continue;
+                $camKey = strtolower($name);
+                $data   = $this->xlsxParseCamSheet($zip->getFromName($path) ?: '', $ss);
+                if (!empty($data)) $result[$camKey] = $data;
             }
+        } finally {
+            $zip->close();
+            @unlink($tmp);
         }
-        if (!$headerRow) return [];
 
-        $camCol    = array_search('CAM',    $headerRow);
-        $amountCol = array_search('Amount', $headerRow);
+        return $result;
+    }
 
-        // Month column indices — first occurrence of each month name
-        $monthCols = [];
-        foreach (self::MONTHS as $num => $name) {
-            foreach ($headerRow as $col => $val) {
-                if ($val === $name && !isset($monthCols[$num])) {
-                    $monthCols[$num] = $col;
+    private function xlsxSharedStrings(string $xml): array
+    {
+        $strings = [];
+        preg_match_all('/<si>(.*?)<\/si>/s', $xml, $m);
+        foreach ($m[1] as $entry) {
+            $text = preg_replace('/<[^>]+>/', '', $entry);
+            $strings[] = trim(html_entity_decode($text, ENT_QUOTES | ENT_XML1, 'UTF-8'));
+        }
+        return $strings;
+    }
+
+    private function xlsxSheetFileMap(string $wbXml, string $relsXml): array
+    {
+        // rId → target file
+        $relMap = [];
+        preg_match_all('/Id="(rId\d+)"[^>]*Target="(worksheets\/sheet\d+\.xml)"/', $relsXml, $rm);
+        foreach ($rm[1] as $i => $rid) {
+            $relMap[$rid] = 'xl/' . $rm[2][$i];
+        }
+
+        // sheet name → file path
+        $map = [];
+        preg_match_all('/name="([^"]+)"[^>]*r:id="(rId\d+)"/', $wbXml, $sm);
+        foreach ($sm[1] as $i => $name) {
+            $rid = $sm[2][$i];
+            if (isset($relMap[$rid])) $map[$name] = $relMap[$rid];
+        }
+        return $map;
+    }
+
+    private function xlsxParseCamSheet(string $xml, array $ss): array
+    {
+        // Build lookup: string value → shared-string index (for status matching)
+        $ssIndex = array_flip($ss);
+        $paidIdx    = array_values(array_filter(array_map(
+            fn($s) => ($ssIndex[$s] ?? null), self::PAID_STATUSES
+        )));
+        $dropoutIdx = array_values(array_filter(array_map(
+            fn($s) => ($ssIndex[$s] ?? null), self::DROPOUT_STATUSES
+        )));
+        $potentialIdx    = $ssIndex['Potential Collection'] ?? -1;
+        $totalCollectIdx = $ssIndex['Total Collected']      ?? -1;
+
+        $result          = [];
+        $retentionBase   = [];
+        $retentionActual = [];
+
+        preg_match_all('/<row\b[^>]*>(.*?)<\/row>/s', $xml, $rows);
+        foreach ($rows[1] as $rowContent) {
+
+            // ── Summary rows (label in column A as shared string) ──────────
+            if (preg_match('/<c r="A\d+"[^>]*t="s"[^>]*><v>(\d+)<\/v>/', $rowContent, $lm)) {
+                $labelIdx = (int)$lm[1];
+
+                if ($labelIdx === $potentialIdx || $labelIdx === $totalCollectIdx) {
+                    $field = ($labelIdx === $potentialIdx) ? 'base_target' : 'actual';
+                    preg_match_all('/<c r="([H-S])\d+"[^>]*><v>([^<]+)<\/v>/', $rowContent, $cm);
+                    foreach ($cm[1] as $j => $col) {
+                        $mn = self::COL_MONTH[$col] ?? null;
+                        if ($mn) $result[$mn]['revenue'][$field] = (float)$cm[2][$j];
+                    }
+                    continue;
+                }
+            }
+
+            // ── Client rows — count retention from payment statuses ─────────
+            // Client rows have a numeric Amount in column G
+            if (!preg_match('/<c r="G\d+"[^>]*><v>([0-9.]+)<\/v>/', $rowContent)) continue;
+
+            preg_match_all('/<c r="([H-S])\d+"[^>]*t="s"[^>]*><v>(\d+)<\/v>/', $rowContent, $sm);
+            foreach ($sm[1] as $j => $col) {
+                $mn        = self::COL_MONTH[$col] ?? null;
+                if (!$mn) continue;
+                $statusIdx = (int)$sm[2][$j];
+
+                if (!in_array($statusIdx, $dropoutIdx)) {
+                    $retentionBase[$mn] = ($retentionBase[$mn] ?? 0) + 1;
+                }
+                if (in_array($statusIdx, $paidIdx)) {
+                    $retentionActual[$mn] = ($retentionActual[$mn] ?? 0) + 1;
                 }
             }
         }
 
-        // Group client rows by CAM name (lowercase)
-        $dataRows = array_slice($rows, $headerIdx + 1);
-        $byCam    = [];
-        foreach ($dataRows as $row) {
-            $cam = strtolower(trim(str_replace("\n", '', $row[$camCol] ?? '')));
-            if ($cam !== '') $byCam[$cam][] = $row;
-        }
-
-        // Compute per-CAM, per-month Potential Collection (base) and Total Collected (actual)
-        $result = [];
-        foreach ($byCam as $camKey => $clientRows) {
-            // Potential Collection = sum of membership Amount for all clients with an Amount
-            $clientsWithAmt = array_filter($clientRows, fn($r) => trim($r[$amountCol] ?? '') !== '');
-            $baseRevenue    = 0.0;
-            foreach ($clientsWithAmt as $r) {
-                $baseRevenue += (float) preg_replace('/[^0-9.]/', '', $r[$amountCol]);
-            }
-            $baseRetention = count($clientsWithAmt);
-
-            foreach ($monthCols as $monthNum => $monthCol) {
-                $actualRevenue   = 0.0;
-                $actualRetention = 0;
-
-                foreach ($clientRows as $r) {
-                    $monthVal = trim($r[$monthCol] ?? '');
-                    if ($monthVal === '') continue;
-
-                    $monthAmount = (float) preg_replace('/[^0-9.]/', '', $monthVal);
-                    // Numeric amount → use directly; non-numeric mark (tick/✓) → use client's Amount
-                    $actualRevenue += $monthAmount > 0
-                        ? $monthAmount
-                        : (float) preg_replace('/[^0-9.]/', '', $r[$amountCol] ?? '0');
-                    $actualRetention++;
-                }
-
-                $result[$camKey][$monthNum]['revenue']   = ['actual' => $actualRevenue,   'base_target' => $baseRevenue];
-                $result[$camKey][$monthNum]['retention'] = ['actual' => $actualRetention, 'base_target' => $baseRetention];
-            }
+        foreach (array_keys(self::MONTHS) as $mn) {
+            $result[$mn]['retention']['actual']      = $retentionActual[$mn] ?? 0;
+            $result[$mn]['retention']['base_target'] = $retentionBase[$mn]   ?? 0;
         }
 
         return $result;
@@ -206,7 +269,7 @@ class TitanKpiController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | SYNC — pull data from Google Sheet and upsert
+    | SYNC (kept for route compatibility — index() already auto-syncs)
     |--------------------------------------------------------------------------
     */
 
@@ -216,124 +279,7 @@ class TitanKpiController extends Controller
         if (!$this->isTitanUser($user) || !in_array($user['role'], ['MANAGER', 'SLT'])) {
             return response()->json(['error' => 'Access denied.'], 403);
         }
-
-        $fy = $this->currentFY();
-
-        // All Titan staff (non-VP)
-        $employees = array_values(array_filter(
-            $supabase->get('employees', [
-                'company_code'    => 'eq.RCG',
-                'department_code' => 'eq.TITAN',
-                'is_active'       => 'eq.true',
-                'select'          => 'id,short_name',
-            ]) ?? [],
-            fn($e) => $e['role'] !== 'VP'
-        ));
-
-        // Fetch CSV from Google Sheet (first/only sheet)
-        $csvUrl  = 'https://docs.google.com/spreadsheets/d/' . self::SHEET_ID . '/export?format=csv';
-        $response = Http::timeout(30)->get($csvUrl);
-        if (!$response->successful()) {
-            return response()->json(['error' => 'Cannot reach Google Sheet.'], 502);
-        }
-
-        $lines = explode("\n", trim($response->body()));
-        $rows  = array_map('str_getcsv', $lines);
-
-        // Find header row containing "CAM" and "January"
-        $headerRow = null;
-        $headerIdx = 0;
-        foreach ($rows as $i => $row) {
-            if (in_array('CAM', $row) && in_array('January', $row)) {
-                $headerRow = $row;
-                $headerIdx = $i;
-                break;
-            }
-        }
-
-        if (!$headerRow) {
-            return response()->json(['error' => 'Header row not found in sheet.'], 500);
-        }
-
-        $camCol    = array_search('CAM',    $headerRow);
-        $amountCol = array_search('Amount', $headerRow);
-
-        // Month column indexes — take FIRST occurrence of each month name
-        $monthCols = [];
-        foreach (self::MONTHS as $num => $name) {
-            foreach ($headerRow as $col => $val) {
-                if ($val === $name && !isset($monthCols[$num])) {
-                    $monthCols[$num] = $col;
-                }
-            }
-        }
-
-        // Group data rows by CAM name (lowercase)
-        $dataRows = array_slice($rows, $headerIdx + 1);
-        $byCam    = [];
-        foreach ($dataRows as $row) {
-            $cam = strtolower(trim($row[$camCol] ?? ''));
-            if ($cam !== '') $byCam[$cam][] = $row;
-        }
-
-        $now    = now()->toDateTimeString();
-        $synced = 0;
-
-        foreach ($employees as $emp) {
-            $camKey     = strtolower(trim($emp['short_name'] ?? ''));
-            $clientRows = $byCam[$camKey] ?? [];
-
-            // Clients with a non-empty Amount
-            $clientsWithAmt = array_filter($clientRows, fn($r) => trim($r[$amountCol] ?? '') !== '');
-
-            $baseRetention = count($clientsWithAmt);
-            $baseRevenue   = 0;
-            foreach ($clientsWithAmt as $r) {
-                $baseRevenue += (float) preg_replace('/[^0-9.]/', '', $r[$amountCol]);
-            }
-
-            foreach ($monthCols as $monthNum => $monthCol) {
-                $actualRevenue   = 0.0;
-                $actualRetention = 0;
-
-                foreach ($clientRows as $r) {
-                    $monthVal = trim($r[$monthCol] ?? '');
-                    if ($monthVal === '') continue;
-
-                    $monthAmount = (float) preg_replace('/[^0-9.]/', '', $monthVal);
-                    if ($monthAmount > 0) {
-                        $actualRevenue += $monthAmount;
-                    } else {
-                        // Non-numeric mark (e.g. tick) — use contract amount
-                        $actualRevenue += (float) preg_replace('/[^0-9.]/', '', $r[$amountCol] ?? '0');
-                    }
-                    $actualRetention++;
-                }
-
-                foreach (['revenue' => [$actualRevenue, $baseRevenue], 'retention' => [$actualRetention, $baseRetention]] as $key => [$actual, $base]) {
-                    $supabase->upsert('titan_monthly_kpi', [
-                        'employee_id'    => $emp['id'],
-                        'company_code'   => 'RCG',
-                        'financial_year' => $fy,
-                        'kpi_key'        => $key,
-                        'month_number'   => $monthNum,
-                        'month_name'     => self::MONTHS[$monthNum],
-                        'actual'         => $actual,
-                        'base_target'    => $base,
-                        'weightage'      => 10,
-                        'synced_at'      => $now,
-                        'updated_at'     => $now,
-                    ], 'employee_id,financial_year,kpi_key,month_number');
-                    $synced++;
-                }
-            }
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Synced data for ' . count($employees) . ' staff across ' . count($monthCols) . ' months.',
-            'synced'  => $synced,
-        ]);
+        return response()->json(['success' => true, 'message' => 'Auto-sync runs on every page load.']);
     }
 
     /*
