@@ -373,13 +373,16 @@ class PerformanceController extends Controller
         ]) ?? [];
 
         $quarterScores = [];
+        $allQuarters   = [];
         foreach ($kpis as $kpi) {
             $qRows = $supabase->get('kpi_quarters', [
-                'kpi_id'  => 'eq.' . $kpi['id'],
-                'quarter' => 'eq.' . $qLabel,
-                'select'  => 'quarter,quarter_target,quarter_actual,status',
+                'kpi_id' => 'eq.' . $kpi['id'],
+                'select' => 'quarter,quarter_title,quarter_target,quarter_actual,status',
             ]);
-            $quarterScores[$kpi['id']] = $qRows[0] ?? null;
+            foreach ($qRows as $row) {
+                $allQuarters[$kpi['id']][$row['quarter']] = $row;
+            }
+            $quarterScores[$kpi['id']] = $allQuarters[$kpi['id']][$qLabel] ?? null;
         }
 
         // ── Attendance: aggregate quarter months from attendance_summary ────────
@@ -470,6 +473,7 @@ class PerformanceController extends Controller
             'windowEnd'            => $windowEnd,
             'kpis'                 => $kpis,
             'quarterScores'        => $quarterScores,
+            'allQuarters'          => $allQuarters,
             'assessmentAreas'      => $assessmentAreas,
             'attendanceSummary'    => $attendanceSummary,
             'attendanceYTD'        => $attendanceYTD,

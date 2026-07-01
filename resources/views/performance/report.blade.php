@@ -90,7 +90,8 @@
 
         .cat-hdr td    { background: #1a3d34; color: #fff; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .14em; padding: 8px 16px; }
         .subcat-hdr td { background: rgba(107,144,128,.08); color: #2d5548; font-size: 10px; font-weight: 700; padding: 7px 16px 7px 22px; border-bottom: 1px solid rgba(107,144,128,.18); letter-spacing: .03em; }
-        .kpi-title-row td { background: rgba(107,144,128,.04); border-bottom: 1px solid rgba(107,144,128,.14); }
+        .kpi-label-row td  { background: rgba(107,144,128,.03); border-top: 1px solid rgba(107,144,128,.10); border-bottom: none !important; padding: 5px 14px !important; }
+        .q-tag { display:inline-block; font-size:8px; font-weight:900; color:#6B9080; background:rgba(107,144,128,.10); border:1px solid rgba(107,144,128,.25); border-radius:4px; padding:1px 5px; margin-right:5px; letter-spacing:.06em; text-transform:uppercase; vertical-align:middle; }
 
         .sc-great { color: #059669; }
         .sc-good  { color: #6B9080; }
@@ -150,7 +151,7 @@
             .h-\[3px\] { background: linear-gradient(to right, #1a3d34, #6B9080, #A4C3B2) !important; }
             .cat-hdr td    { background: #1a3d34 !important; color: #fff !important; }
             .subcat-hdr td { background: rgba(107,144,128,.08) !important; }
-            .kpi-title-row td { background: rgba(107,144,128,.04) !important; }
+            .kpi-label-row td { background: rgba(107,144,128,.03) !important; }
 
             .rating-group input[type=radio]:checked + label {
                 background: #1a3d34 !important; border-color: #1a3d34 !important; color: #fff !important;
@@ -393,39 +394,46 @@
                         $sub = $kpi['sub_category'] ?? 'General';
                         $sec2Grouped[$cat][$sub][] = $kpi;
                     }
-                    $sec2No = 0;
+                    $subCatNo = 0;
                 @endphp
                 @foreach($sec2Grouped as $catName => $subCats)
                 <tr class="cat-hdr"><td colspan="7">{{ $catName }}</td></tr>
                 @foreach($subCats as $subName => $subKpis)
+                @php $subCatNo++; $subItemNo = 0; @endphp
                 <tr class="subcat-hdr"><td colspan="7">{{ $subName }}</td></tr>
                 @foreach($subKpis as $kpi)
                 @php
-                    $sec2No++;
-                    $qs    = $quarterScores[$kpi['id']] ?? null;
-                    $dbAct = isset($qs['quarter_actual']) ? (float)$qs['quarter_actual'] : '';
-                    $dbTgt = isset($qs['quarter_target']) ? (float)$qs['quarter_target'] : (float)($kpi['base_target'] ?? '');
+                    $kpiAllQ = $allQuarters[$kpi['id']] ?? [];
                 @endphp
-                <tr class="kpi-title-row">
-                    <td class="text-center font-black text-[#1a3d34] text-sm" style="padding:10px 12px;">{{ $sec2No }}</td>
-                    <td colspan="6" style="padding:10px 16px;">
-                        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-                            <span style="font-size:12px;font-weight:700;color:#1e293b;line-height:1.35;">{{ $kpi['kpi_title'] }}</span>
-                            <span style="flex-shrink:0;font-size:9px;font-weight:900;color:#6B9080;background:#fff;border:1px solid rgba(107,144,128,.30);padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;">{{ $kpi['weightage']??'—' }}% weight</span>
+                <tr class="kpi-label-row">
+                    <td colspan="7">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                            <span style="font-size:10px;font-weight:700;color:#1a3d34;">{{ $kpi['kpi_title'] }}</span>
+                            <span style="flex-shrink:0;font-size:8px;font-weight:900;color:#6B9080;background:#fff;border:1px solid rgba(107,144,128,.25);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;">{{ $kpi['weightage']??'—' }}% weight</span>
                         </div>
                     </td>
                 </tr>
-                @for($s=1;$s<=4;$s++)
-                <tr class="{{ $s%2===0?'':'bg-slate-50/40' }} sec2-row" data-kpi="{{ $sec2No }}">
-                    <td class="text-center text-[10px] font-bold text-slate-400">{{ $sec2No }}.{{ $s }}</td>
-                    <td><input type="text" placeholder="Describe initiative {{ $sec2No }}.{{ $s }}…" class="t-input"></td>
-                    <td class="text-center"><input type="number" step="any" min="0" value="{{ $s===1&&$dbAct!==''?$dbAct:'' }}" placeholder="—" class="n-input sec2-actual"></td>
-                    <td class="text-center"><input type="number" step="any" min="0" value="{{ $s===1&&$dbTgt!==''?$dbTgt:'' }}" placeholder="—" class="n-input sec2-target"></td>
+                @foreach(['Q1','Q2','Q3','Q4'] as $q)
+                @php
+                    $subItemNo++;
+                    $qData  = $kpiAllQ[$q] ?? null;
+                    $qTitle = $qData['quarter_title'] ?? '';
+                    $qAct   = isset($qData['quarter_actual']) ? (float)$qData['quarter_actual'] : '';
+                    $qTgt   = isset($qData['quarter_target']) ? (float)$qData['quarter_target'] : ($q === $qLabel ? (float)($kpi['base_target'] ?? '') : '');
+                    $isCurrent = ($q === $qLabel);
+                @endphp
+                <tr class="{{ $subItemNo%2===0?'':'bg-slate-50/40' }} sec2-row">
+                    <td class="text-center text-[10px] font-bold {{ $isCurrent ? 'text-[#1a3d34]' : 'text-slate-300' }}">{{ $subCatNo }}.{{ $subItemNo }}</td>
+                    <td>
+                        <span class="q-tag" style="{{ $isCurrent ? 'background:rgba(107,144,128,.18);color:#1a3d34;border-color:rgba(107,144,128,.4);' : 'opacity:.5;' }}">{{ $q }}</span><input type="text" value="{{ $qTitle }}" placeholder="{{ $q }} — Describe initiative…" class="t-input" style="{{ !$isCurrent ? 'color:#94a3b8;' : '' }}">
+                    </td>
+                    <td class="text-center"><input type="number" step="any" min="0" value="{{ $qAct !== '' ? $qAct : '' }}" placeholder="—" class="n-input sec2-actual" style="{{ !$isCurrent ? 'color:#cbd5e1;' : '' }}"></td>
+                    <td class="text-center"><input type="number" step="any" min="0" value="{{ $qTgt !== '' ? $qTgt : '' }}" placeholder="—" class="n-input sec2-target" style="{{ !$isCurrent ? 'color:#cbd5e1;' : '' }}"></td>
                     <td class="text-center"><span class="sec2-score font-black text-sm sc-none">—</span></td>
                     <td class="text-center"><input type="number" step="0.1" min="0" max="5" placeholder="—" class="n-input"></td>
                     <td class="text-center"><input type="number" step="0.1" min="0" max="5" placeholder="—" class="n-input"></td>
                 </tr>
-                @endfor
+                @endforeach
                 @endforeach
                 @endforeach
                 @endforeach
