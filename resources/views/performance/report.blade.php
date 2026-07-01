@@ -183,7 +183,7 @@
 </div>
 
 {{-- Print table: thead repeats logo+Q2 on every page --}}
-@php $phLogoMap=['RCG'=>'images/RCG-Logo.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $phLogo=$phLogoMap[session('company_code')]??null; @endphp
+@php $phLogoMap=['RCG'=>'images/RCG-Logo (black).png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $phLogo=$phLogoMap[session('company_code')]??null; @endphp
 <table id="print-table">
 <thead id="print-thead">
 <tr><td>
@@ -217,7 +217,7 @@
         {{-- Doc header (hidden in print — replaced by print-thead) --}}
         <div id="doc-hdr" class="flex items-start justify-between mb-7 pb-6 border-b border-slate-100">
             <div>
-                @php $logoMap=['RCG'=>'images/RCG-Logo.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $logo=$logoMap[session('company_code')]??null; @endphp
+                @php $logoMap=['RCG'=>'images/RCG-Logo (black).png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $logo=$logoMap[session('company_code')]??null; @endphp
                 @if($logo)<img src="{{ asset(ltrim($logo,'/')) }}" alt="Logo" class="h-10 object-contain mb-2">
                 @else<p class="text-xl font-black text-[#1a3d34]">{{ session('company_display_name') }}</p>@endif
                 <p class="text-[9px] text-slate-400 uppercase tracking-[.18em]">Accelerating Your Business Success</p>
