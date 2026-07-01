@@ -389,19 +389,10 @@
                 <tr class="okr-hdr">
                     <td class="text-center font-black text-[#1a3d34] text-xs align-top" style="padding-top:14px;">{{ $kpiNo }}</td>
                     <td colspan="8" style="padding:10px 14px;">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-                            <span style="font-size:8px;font-weight:900;color:#6B9080;text-transform:uppercase;letter-spacing:.1em;min-width:76px;">Category</span>
-                            <span style="font-size:11px;font-weight:700;color:#1a3d34;">{{ $kpi['category']??'—' }}</span>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-                            <span style="font-size:8px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;min-width:76px;">Sub Category</span>
-                            <span style="font-size:10px;font-weight:600;color:#475569;">{{ $kpi['sub_category']??'—' }}</span>
-                        </div>
+                        <p style="font-size:11px;font-weight:800;color:#6B9080;margin-bottom:3px;">{{ $kpi['category']??'—' }}</p>
+                        <p style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:5px;">{{ $kpi['sub_category']??'—' }}</p>
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                            <div style="display:flex;align-items:center;gap:8px;">
-                                <span style="font-size:8px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;min-width:76px;">{{ $qLabel }}</span>
-                                <span style="font-size:12px;font-weight:700;color:#1e293b;line-height:1.3;">{{ $kpi['kpi_title'] }}</span>
-                            </div>
+                            <p style="font-size:13px;font-weight:700;color:#1e293b;line-height:1.3;margin:0;">{{ $kpi['kpi_title'] }}</p>
                             <span style="flex-shrink:0;font-size:9px;font-weight:900;color:#6B9080;background:#fff;border:1px solid rgba(107,144,128,.30);padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;">
                                 {{ $kpi['weightage']??'—' }}% weight
                             </span>
