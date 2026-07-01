@@ -187,13 +187,11 @@
 <table id="print-table">
 <thead id="print-thead">
 <tr><td>
-    <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-            @if($phLogo)<img src="{{ asset($phLogo) }}" alt="Logo" style="height:28px;object-fit:contain;display:block">
-            @else<span style="font-size:12px;font-weight:900;color:#1a3d34">{{ session('company_display_name') }}</span>@endif
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
-            <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#1a3d34,#6B9080);display:flex;align-items:center;justify-content:center">
+    <div style="display:flex;align-items:center;gap:12px">
+        @if($phLogo)<img src="{{ asset($phLogo) }}" alt="Logo" style="height:40px;object-fit:contain;display:block">
+        @else<span style="font-size:12px;font-weight:900;color:#1a3d34">{{ session('company_display_name') }}</span>@endif
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+            <div style="width:40px;height:40px;border-radius:9px;background:linear-gradient(135deg,#1a3d34,#6B9080);display:flex;align-items:center;justify-content:center">
                 <span style="font-size:14px;font-weight:900;color:white;line-height:1">{{ $qLabel }}</span>
             </div>
             <span style="font-size:7px;font-weight:700;color:#6B9080;letter-spacing:.12em;text-transform:uppercase">{{ $currentFinancialYear }}</span>
@@ -214,15 +212,13 @@
     <div class="px-10 py-8">
 
         {{-- Doc header (hidden in print — replaced by print-thead) --}}
-        <div id="doc-hdr" class="flex items-start justify-between mb-7 pb-6 border-b border-slate-100">
-            <div>
-                @php $logoMap=['RCG'=>'images/RCG-Logo-black.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $logo=$logoMap[session('company_code')]??null; @endphp
-                @if($logo)<img src="{{ asset(ltrim($logo,'/')) }}" alt="Logo" class="h-10 object-contain mb-2">
-                @else<p class="text-xl font-black text-[#1a3d34]">{{ session('company_display_name') }}</p>@endif
-            </div>
-            <div class="flex flex-col items-end gap-1">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1a3d34] to-[#6B9080] flex items-center justify-center shadow-lg">
-                    <span class="text-2xl font-black text-white">{{ $qLabel }}</span>
+        <div id="doc-hdr" class="flex items-center gap-4 mb-7 pb-6 border-b border-slate-100">
+            @php $logoMap=['RCG'=>'images/RCG-Logo-black.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $logo=$logoMap[session('company_code')]??null; @endphp
+            @if($logo)<img src="{{ asset(ltrim($logo,'/')) }}" alt="Logo" class="h-12 object-contain">
+            @else<p class="text-xl font-black text-[#1a3d34]">{{ session('company_display_name') }}</p>@endif
+            <div class="flex flex-col items-center gap-0.5">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1a3d34] to-[#6B9080] flex items-center justify-center shadow-lg">
+                    <span class="text-xl font-black text-white">{{ $qLabel }}</span>
                 </div>
                 <span class="text-[9px] font-bold text-[#6B9080] uppercase tracking-widest">{{ $currentFinancialYear }}</span>
             </div>
