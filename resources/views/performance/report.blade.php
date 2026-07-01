@@ -88,7 +88,9 @@
         .doc-tbl td { padding: 8px 12px; border-bottom: 1px solid rgba(107,144,128,.10); vertical-align: middle; }
         .doc-tbl tbody tr:last-child td { border-bottom: none; }
 
-        .okr-hdr td { background: rgba(107,144,128,.10); padding: 10px 12px; border-bottom: 1px solid rgba(107,144,128,.2); }
+        .cat-hdr td    { background: #1a3d34; color: #fff; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .14em; padding: 8px 16px; }
+        .subcat-hdr td { background: rgba(107,144,128,.08); color: #2d5548; font-size: 10px; font-weight: 700; padding: 7px 16px 7px 22px; border-bottom: 1px solid rgba(107,144,128,.18); letter-spacing: .03em; }
+        .kpi-title-row td { background: rgba(107,144,128,.04); border-bottom: 1px solid rgba(107,144,128,.14); }
 
         .sc-great { color: #059669; }
         .sc-good  { color: #6B9080; }
@@ -146,7 +148,9 @@
             .doc-tbl th { background: #1a3d34 !important; color: #fff !important; }
             .part-label { color: #6B9080 !important; }
             .h-\[3px\] { background: linear-gradient(to right, #1a3d34, #6B9080, #A4C3B2) !important; }
-            .okr-hdr td { background: rgba(107,144,128,.10) !important; }
+            .cat-hdr td    { background: #1a3d34 !important; color: #fff !important; }
+            .subcat-hdr td { background: rgba(107,144,128,.08) !important; }
+            .kpi-title-row td { background: rgba(107,144,128,.04) !important; }
 
             .rating-group input[type=radio]:checked + label {
                 background: #1a3d34 !important; border-color: #1a3d34 !important; color: #fff !important;
@@ -369,12 +373,10 @@
             <div class="p-10 text-center"><p class="text-slate-400 text-sm">No KPIs found for {{ $currentFinancialYear }}.</p></div>
             @else
             <div class="overflow-x-auto">
-            <table class="doc-tbl" id="sec2Table" style="min-width:760px;">
+            <table class="doc-tbl" id="sec2Table" style="min-width:700px;">
                 <thead>
                     <tr>
-                        <th class="c" style="width:36px;">No.</th>
-                        <th class="l" style="width:160px;">OKR / KPI</th>
-                        <th class="c" style="width:36px;">Sub</th>
+                        <th class="c" style="width:44px;">No.</th>
                         <th class="l">Initiative</th>
                         <th class="c" style="width:68px;">A<br><span style="font-weight:500;text-transform:none;font-size:8px;">Actual</span></th>
                         <th class="c" style="width:68px;">B<br><span style="font-weight:500;text-transform:none;font-size:8px;">Target</span></th>
@@ -384,26 +386,39 @@
                     </tr>
                 </thead>
                 <tbody>
-                @foreach($kpis as $ki => $kpi)
-                @php $qs=$quarterScores[$kpi['id']]??null; $dbAct=isset($qs['quarter_actual'])?(float)$qs['quarter_actual']:''; $dbTgt=isset($qs['quarter_target'])?(float)$qs['quarter_target']:(float)($kpi['base_target']??''); $kpiNo=$ki+1; @endphp
-                <tr class="okr-hdr">
-                    <td class="text-center font-black text-[#1a3d34] text-xs align-top" style="padding-top:14px;">{{ $kpiNo }}</td>
-                    <td colspan="8" style="padding:10px 14px;">
-                        <p style="font-size:11px;font-weight:800;color:#6B9080;margin-bottom:3px;">{{ $kpi['category']??'—' }}</p>
-                        <p style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:5px;">{{ $kpi['sub_category']??'—' }}</p>
-                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                            <p style="font-size:13px;font-weight:700;color:#1e293b;line-height:1.3;margin:0;">{{ $kpi['kpi_title'] }}</p>
-                            <span style="flex-shrink:0;font-size:9px;font-weight:900;color:#6B9080;background:#fff;border:1px solid rgba(107,144,128,.30);padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;">
-                                {{ $kpi['weightage']??'—' }}% weight
-                            </span>
+                @php
+                    $sec2Grouped = [];
+                    foreach ($kpis as $kpi) {
+                        $cat = $kpi['category'] ?? 'Uncategorized';
+                        $sub = $kpi['sub_category'] ?? 'General';
+                        $sec2Grouped[$cat][$sub][] = $kpi;
+                    }
+                    $sec2No = 0;
+                @endphp
+                @foreach($sec2Grouped as $catName => $subCats)
+                <tr class="cat-hdr"><td colspan="7">{{ $catName }}</td></tr>
+                @foreach($subCats as $subName => $subKpis)
+                <tr class="subcat-hdr"><td colspan="7">{{ $subName }}</td></tr>
+                @foreach($subKpis as $kpi)
+                @php
+                    $sec2No++;
+                    $qs    = $quarterScores[$kpi['id']] ?? null;
+                    $dbAct = isset($qs['quarter_actual']) ? (float)$qs['quarter_actual'] : '';
+                    $dbTgt = isset($qs['quarter_target']) ? (float)$qs['quarter_target'] : (float)($kpi['base_target'] ?? '');
+                @endphp
+                <tr class="kpi-title-row">
+                    <td class="text-center font-black text-[#1a3d34] text-sm" style="padding:10px 12px;">{{ $sec2No }}</td>
+                    <td colspan="6" style="padding:10px 16px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                            <span style="font-size:12px;font-weight:700;color:#1e293b;line-height:1.35;">{{ $kpi['kpi_title'] }}</span>
+                            <span style="flex-shrink:0;font-size:9px;font-weight:900;color:#6B9080;background:#fff;border:1px solid rgba(107,144,128,.30);padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;">{{ $kpi['weightage']??'—' }}% weight</span>
                         </div>
                     </td>
                 </tr>
                 @for($s=1;$s<=4;$s++)
-                <tr class="{{ $s%2===0?'':'bg-slate-50/40' }} sec2-row" data-kpi="{{ $kpiNo }}">
-                    <td></td><td></td>
-                    <td class="text-center text-[10px] font-bold text-slate-400">{{ $kpiNo }}.{{ $s }}</td>
-                    <td><input type="text" placeholder="Describe initiative {{ $kpiNo }}.{{ $s }}…" class="t-input"></td>
+                <tr class="{{ $s%2===0?'':'bg-slate-50/40' }} sec2-row" data-kpi="{{ $sec2No }}">
+                    <td class="text-center text-[10px] font-bold text-slate-400">{{ $sec2No }}.{{ $s }}</td>
+                    <td><input type="text" placeholder="Describe initiative {{ $sec2No }}.{{ $s }}…" class="t-input"></td>
                     <td class="text-center"><input type="number" step="any" min="0" value="{{ $s===1&&$dbAct!==''?$dbAct:'' }}" placeholder="—" class="n-input sec2-actual"></td>
                     <td class="text-center"><input type="number" step="any" min="0" value="{{ $s===1&&$dbTgt!==''?$dbTgt:'' }}" placeholder="—" class="n-input sec2-target"></td>
                     <td class="text-center"><span class="sec2-score font-black text-sm sc-none">—</span></td>
@@ -412,16 +427,18 @@
                 </tr>
                 @endfor
                 @endforeach
+                @endforeach
+                @endforeach
                 </tbody>
                 <tfoot>
                     <tr style="background:rgba(26,61,52,.06);">
-                        <td colspan="6" class="text-right font-black text-xs text-[#1a3d34] uppercase tracking-wide px-4 py-3">Total Score Section 2</td>
+                        <td colspan="4" class="text-right font-black text-xs text-[#1a3d34] uppercase tracking-wide px-4 py-3">Total Score Section 2</td>
                         <td class="text-center py-3"><span id="sec2Total" class="font-black text-base sc-none">—</span></td>
                         <td class="text-center"><span id="sec2SelfPct" class="text-xs font-bold text-slate-400">—</span></td>
                         <td class="text-center"><span id="sec2AppPct" class="text-xs font-bold text-slate-400">—</span></td>
                     </tr>
                     <tr style="background:rgba(26,61,52,.03);">
-                        <td colspan="6" class="text-right text-[9px] font-bold text-slate-400 uppercase tracking-wide px-4 py-2">% Total (Score ÷ 30 × 70)</td>
+                        <td colspan="4" class="text-right text-[9px] font-bold text-slate-400 uppercase tracking-wide px-4 py-2">% Total (Score ÷ 30 × 70)</td>
                         <td colspan="3" class="text-center"><span id="sec2Pct" class="text-sm font-black text-slate-400">—</span></td>
                     </tr>
                 </tfoot>
