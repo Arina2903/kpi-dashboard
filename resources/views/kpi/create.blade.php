@@ -1777,7 +1777,7 @@
 
                                 <div class="metric-card metric-blue p-5">
 
-                                    <p class="text-xs font-bold text-[#8B5E4A] uppercase tracking-wide">
+                                    <p class="quarter-total-label text-xs font-bold text-[#8B5E4A] uppercase tracking-wide">
                                         Quarter Target Total
                                     </p>
 
@@ -1997,7 +1997,7 @@
                             border-[#6B3F2A]/20
                             p-4">
 
-                        <p class="text-xs text-[#8B5E4A]">
+                        <p class="quarter-total-label text-xs text-[#8B5E4A]">
                             Quarter Target Total
                         </p>
 
@@ -2366,16 +2366,24 @@
     */
 
     function updateQuarterTotals() {
+        const isPercentage = unitInput.value === 'percentage';
 
         let targetTotal = 0;
-
         quarterTargetInputs.forEach(input => {
             targetTotal += Number(input.value || 0);
         });
 
-        const base = Number(baseTarget.value || 0);
-        const matched = base > 0 && Math.abs(targetTotal - base) < 0.01;
-        const totalText = formatValue(targetTotal);
+        // For percentage: annual = average of quarters; for others: annual = sum
+        const displayValue = isPercentage ? targetTotal / 4 : targetTotal;
+
+        const base    = Number(baseTarget.value || 0);
+        const matched = base > 0 && Math.abs(displayValue - base) < 0.01;
+        const totalText = formatValue(displayValue);
+
+        // Update dynamic labels
+        document.querySelectorAll('.quarter-total-label').forEach(el => {
+            el.textContent = isPercentage ? 'Quarter Target Average' : 'Quarter Target Total';
+        });
 
         const summaryEl = document.getElementById('summaryQuarterTargetTotal');
         const sidebarEl = document.getElementById('sidebarQuarterTargetTotal');
@@ -2384,14 +2392,14 @@
             summaryEl.textContent = totalText;
             summaryEl.className = matched
                 ? 'text-2xl font-black mt-2 text-emerald-600'
-                : (targetTotal > 0 ? 'text-2xl font-black mt-2 text-red-500' : 'text-2xl font-black mt-2 text-[#1a3d34]');
+                : (displayValue > 0 ? 'text-2xl font-black mt-2 text-red-500' : 'text-2xl font-black mt-2 text-[#1a3d34]');
         }
 
         if(sidebarEl){
             sidebarEl.textContent = totalText;
             sidebarEl.className = matched
                 ? 'font-black text-emerald-600'
-                : (targetTotal > 0 ? 'font-black text-red-500' : 'font-black');
+                : (displayValue > 0 ? 'font-black text-red-500' : 'font-black');
         }
 
         const hintEl = document.getElementById('quarterTotalHint');
@@ -2399,10 +2407,12 @@
             if(base <= 0){
                 hintEl.textContent = '';
             } else if(matched){
-                hintEl.textContent = '✓ Matches Base Target';
+                hintEl.textContent = isPercentage ? '✓ Average matches Annual Target' : '✓ Matches Base Target';
                 hintEl.className = 'text-xs font-bold text-emerald-600 mt-1';
             } else {
-                hintEl.textContent = `Must equal Base Target (${formatValue(base)})`;
+                hintEl.textContent = isPercentage
+                    ? `Average must equal Annual Target (${formatValue(base)})`
+                    : `Must equal Base Target (${formatValue(base)})`;
                 hintEl.className = 'text-xs font-bold text-red-500 mt-1';
             }
         }
@@ -2508,22 +2518,20 @@
 
     function autoDivideQuarter() {
 
-        const base =
-            Number(baseTarget.value || 0);
+        const base = Number(baseTarget.value || 0);
+        const isPercentage = unitInput.value === 'percentage';
 
         if (base <= 0) {
-
             alert('Please fill Base Target first.');
-
             return;
         }
 
-        const perQuarter = (base / 4).toFixed(2);
+        // Percentage: each quarter = base target so average = base target
+        // Others: divide evenly across 4 quarters so sum = base target
+        const perQuarter = isPercentage ? base.toFixed(2) : (base / 4).toFixed(2);
 
         quarterTargetInputs.forEach(input => {
-
             input.value = perQuarter;
-
         });
 
         updateSummary();
@@ -2554,16 +2562,24 @@
             return;
         }
 
+        const isPercentage = unitInput.value === 'percentage';
         const quarterTotal = Array.from(quarterTargetInputs)
             .reduce((sum, i) => sum + Number(i.value || 0), 0);
+        const compareValue = isPercentage ? quarterTotal / 4 : quarterTotal;
 
-        if (base > 0 && Math.abs(quarterTotal - base) > 0.01) {
+        if (base > 0 && Math.abs(compareValue - base) > 0.01) {
 
             event.preventDefault();
 
-            alert(
-                `Quarter Target total (${quarterTotal.toFixed(2)}) must equal Base Target (${base.toFixed(2)}).\n\nPlease adjust your quarter targets or use Auto Fill Annual.`
-            );
+            if (isPercentage) {
+                alert(
+                    `Quarter Target average (${(quarterTotal / 4).toFixed(2)}%) must equal Annual Target (${base.toFixed(2)}%).\n\nPlease adjust your quarter targets or use Auto Fill Annual.`
+                );
+            } else {
+                alert(
+                    `Quarter Target total (${quarterTotal.toFixed(2)}) must equal Base Target (${base.toFixed(2)}).\n\nPlease adjust your quarter targets or use Auto Fill Annual.`
+                );
+            }
 
             return;
         }
