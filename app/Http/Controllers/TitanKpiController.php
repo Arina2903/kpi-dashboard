@@ -142,37 +142,45 @@ class TitanKpiController extends Controller
 
     private function fetchSheetData(): array
     {
+        if (!class_exists('ZipArchive')) return [];
+
         $xlsxUrl  = 'https://docs.google.com/spreadsheets/d/' . self::SHEET_ID . '/export?format=xlsx';
-        $response = Http::timeout(45)->get($xlsxUrl);
-        if (!$response->successful()) return [];
-
-        // ZipArchive needs a real file on disk
-        $tmp = sys_get_temp_dir() . '/titan_kpi_' . uniqid() . '.xlsx';
-        file_put_contents($tmp, $response->body());
-
-        $zip = new \ZipArchive();
-        if ($zip->open($tmp) !== true) { @unlink($tmp); return []; }
 
         try {
-            $ss         = $this->xlsxSharedStrings($zip->getFromName('xl/sharedStrings.xml') ?: '');
-            $sheetFiles = $this->xlsxSheetFileMap(
-                $zip->getFromName('xl/workbook.xml') ?: '',
-                $zip->getFromName('xl/_rels/workbook.xml.rels') ?: ''
-            );
+            $response = Http::timeout(45)->get($xlsxUrl);
+            if (!$response->successful()) return [];
 
-            $result = [];
-            foreach ($sheetFiles as $name => $path) {
-                if (in_array($name, ['MASTER', 'Sheet2'])) continue;
-                $camKey = strtolower($name);
-                $data   = $this->xlsxParseCamSheet($zip->getFromName($path) ?: '', $ss);
-                if (!empty($data)) $result[$camKey] = $data;
+            // ZipArchive needs a real file on disk
+            $tmp = sys_get_temp_dir() . '/titan_kpi_' . uniqid() . '.xlsx';
+            file_put_contents($tmp, $response->body());
+
+            $zip = new \ZipArchive();
+            if ($zip->open($tmp) !== true) { @unlink($tmp); return []; }
+
+            try {
+                $ss         = $this->xlsxSharedStrings($zip->getFromName('xl/sharedStrings.xml') ?: '');
+                $sheetFiles = $this->xlsxSheetFileMap(
+                    $zip->getFromName('xl/workbook.xml') ?: '',
+                    $zip->getFromName('xl/_rels/workbook.xml.rels') ?: ''
+                );
+
+                $result = [];
+                foreach ($sheetFiles as $name => $path) {
+                    if (in_array($name, ['MASTER', 'Sheet2'])) continue;
+                    $camKey = strtolower($name);
+                    $data   = $this->xlsxParseCamSheet($zip->getFromName($path) ?: '', $ss);
+                    if (!empty($data)) $result[$camKey] = $data;
+                }
+            } finally {
+                $zip->close();
+                @unlink($tmp);
             }
-        } finally {
-            $zip->close();
-            @unlink($tmp);
-        }
 
-        return $result;
+            return $result;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Titan KPI sheet sync failed: ' . $e->getMessage());
+            return [];
+        }
     }
 
     private function xlsxSharedStrings(string $xml): array
