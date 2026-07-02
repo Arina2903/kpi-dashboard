@@ -118,6 +118,27 @@ class AttendanceController extends Controller
             return back()->with('error', "No attendance data found for {$monthLabels[$month-1]} {$year}. Tried tab names: {$tried}. Make sure the sheet tab is named exactly as one of these, and that the sheet is shared publicly.");
         }
 
+        // Load any previously saved attendance for this month to pre-fill MC/AL/Other inputs
+        $savedRows = $supabase->get('attendance_summary', [
+            'company_code' => 'eq.' . $company,
+            'month'        => 'eq.' . $month,
+            'year'         => 'eq.' . $year,
+            'select'       => 'internal_id,mc_days,al_days,other_leave_days',
+        ]) ?? [];
+        $savedByEid = [];
+        foreach ($savedRows as $sr) {
+            $savedByEid[$sr['internal_id']] = $sr;
+        }
+        foreach ($results as $eid => &$emp) {
+            if (isset($savedByEid[$eid])) {
+                $emp['mc_days']          = (int) $savedByEid[$eid]['mc_days'];
+                $emp['al_days']          = (int) $savedByEid[$eid]['al_days'];
+                $emp['other_leave_days'] = (int) $savedByEid[$eid]['other_leave_days'];
+            }
+        }
+        unset($emp);
+        $hasSavedData = !empty($savedByEid);
+
         // Load current month status for the grid
         $existingData = $supabase->get('attendance_summary', [
             'company_code' => 'eq.' . $company,
@@ -146,6 +167,7 @@ class AttendanceController extends Controller
             'defaultCompany'   => $company,
             'monthStatus'      => $monthStatus,
             'statusYear'       => $year,
+            'hasSavedData'     => $hasSavedData,
         ]);
     }
 

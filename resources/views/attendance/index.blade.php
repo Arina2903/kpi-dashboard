@@ -178,9 +178,13 @@
 
 {{-- Period & legend --}}
 <div class="flex items-center justify-between flex-wrap gap-2 mb-3 no-print">
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 flex-wrap">
         <span class="text-xs font-black text-[#1a3d34]">{{ $monthLabel }}</span>
+        @if(!empty($hasSavedData))
+        <span class="text-[9px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">Re-import — existing MC / AL / Other values loaded. Edit if needed, then Save to update.</span>
+        @else
         <span class="text-[9px] bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full">Preview — enter MC / AL / Other then Save</span>
+        @endif
     </div>
     <div class="flex items-center gap-3 flex-wrap">
         @foreach([
@@ -254,9 +258,9 @@
             {{ floor($emp['total_late_minutes']/60) }}h {{ $emp['total_late_minutes']%60 }}m
             @else—@endif
         </td>
-        <td class="text-center"><input type="number" min="0" max="{{ $emp['absent_days'] }}" value="0" class="leaf-input mc-in" data-eid="{{ $eid }}"></td>
-        <td class="text-center"><input type="number" min="0" max="{{ $emp['absent_days'] }}" value="0" class="leaf-input al-in" data-eid="{{ $eid }}"></td>
-        <td class="text-center"><input type="number" min="0" max="{{ $emp['absent_days'] }}" value="0" class="leaf-input ot-in" data-eid="{{ $eid }}"></td>
+        <td class="text-center"><input type="number" min="0" max="{{ $emp['working_days'] }}" value="{{ $emp['mc_days'] }}" class="leaf-input mc-in" data-eid="{{ $eid }}"></td>
+        <td class="text-center"><input type="number" min="0" max="{{ $emp['working_days'] }}" value="{{ $emp['al_days'] }}" class="leaf-input al-in" data-eid="{{ $eid }}"></td>
+        <td class="text-center"><input type="number" min="0" max="{{ $emp['working_days'] }}" value="{{ $emp['other_leave_days'] }}" class="leaf-input ot-in" data-eid="{{ $eid }}"></td>
         @foreach($workingDays as $wd)
         @php $day = $emp['daily'][$wd] ?? ['status'=>'absent','clock_in'=>null,'is_late'=>false,'late_minutes'=>0]; @endphp
         <td class="text-center" style="padding:3px 2px;">
@@ -285,7 +289,7 @@
         Enter MC / AL / Other Leave days above, then save.<br>
         <span class="text-[10px] text-[#6B9080] font-semibold">{{ $totalEmp }} staff found in the <strong>{{ $monthLabel }}</strong> sheet tab.</span>
     </p>
-    <button onclick="saveMonth()" class="bg-[#1a3d34] hover:bg-[#2d5548] text-white px-8 py-3 rounded-xl font-black text-sm transition shadow-lg flex items-center gap-2">
+    <button id="saveBtn" onclick="saveMonth()" class="bg-[#1a3d34] hover:bg-[#2d5548] text-white px-8 py-3 rounded-xl font-black text-sm transition shadow-lg flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Save {{ \Carbon\Carbon::create(null,$month)->format('F') }} {{ $year }}
     </button>
@@ -313,6 +317,21 @@ document.getElementById('importForm')?.addEventListener('submit', function() {
     btn.classList.add('opacity-70');
 });
 
+// Toast notification
+function showToast(msg, isError) {
+    var t = document.getElementById('saveToast');
+    if (!t) return;
+    t.textContent = msg;
+    t.className = 'fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl font-bold text-sm shadow-xl transition-all ' +
+        (isError ? 'bg-red-600 text-white' : 'bg-[#1a3d34] text-white');
+    t.style.display = 'block';
+    t.style.opacity = '1';
+    setTimeout(function() {
+        t.style.opacity = '0';
+        setTimeout(function() { t.style.display = 'none'; }, 400);
+    }, 3500);
+}
+
 // Save month
 function saveMonth() {
     if (typeof RAW_RESULTS === 'undefined') return;
@@ -335,7 +354,10 @@ function saveMonth() {
         });
     });
 
-    if (records.length === 0) { alert('No records to save.'); return; }
+    if (records.length === 0) { showToast('No records to save.', true); return; }
+
+    var btn = document.getElementById('saveBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<svg class="w-4 h-4 animate-spin inline mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Saving…'; }
 
     fetch("{{ route('attendance.save') }}", {
         method: 'POST',
@@ -345,29 +367,38 @@ function saveMonth() {
         },
         body: JSON.stringify({ records, month: MONTH, year: YEAR, company: COMPANY, sheet_url: SHEET_URL }),
     })
-    .then(r => r.json())
-    .then(d => {
+    .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+    })
+    .then(function(d) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Saved!'; }
         if (d.success) {
-            alert('✅ Saved ' + d.count + ' staff records for ' + MONTH + '/' + YEAR);
-            // Update status grid
+            showToast('Saved ' + d.count + ' staff records for ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][MONTH-1] + ' ' + YEAR, false);
+            // Update status grid card
             var card  = document.getElementById('mc-' + MONTH);
             var check = document.getElementById('mc-chk-' + MONTH);
             var ts    = document.getElementById('mc-ts-' + MONTH);
-            if (card)  { card.className = 'm-card done'; card.querySelector('span').classList.remove('text-slate-400','text-slate-300'); card.querySelector('span').classList.add('text-[#1a3d34]'); }
+            if (card)  { card.className = 'm-card done'; }
             if (check) check.textContent = '✓';
             if (ts) {
                 var now = new Date();
                 var mn  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                 ts.textContent = now.getDate().toString().padStart(2,'0') + ' ' + mn[now.getMonth()] + ' · ' + now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
-                ts.classList.remove('text-slate-300');
-                ts.classList.add('text-[#6B9080]');
+                ts.className = 'text-[8px] font-medium text-[#6B9080]';
             }
         } else {
-            alert('❌ Error saving. Please try again.');
+            showToast('Error: ' + (d.error || 'Save failed. Try again.'), true);
+            if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
         }
     })
-    .catch(() => alert('❌ Network error.'));
+    .catch(function(err) {
+        showToast('Network error — please try again. (' + err.message + ')', true);
+        if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+    });
 }
 </script>
+{{-- Toast notification --}}
+<div id="saveToast" style="display:none;opacity:0;transition:opacity .4s;"></div>
 </body>
 </html>

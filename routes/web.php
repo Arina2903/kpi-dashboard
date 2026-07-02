@@ -294,6 +294,7 @@ Route::middleware(['kpi.auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::get('/attendance',             [\App\Http\Controllers\AttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('/attendance/import',      fn() => redirect()->route('attendance.index')); // GET fallback — prevents 405 on refresh/back
     Route::post('/attendance/import',     [\App\Http\Controllers\AttendanceController::class, 'import'])->name('attendance.import');
     Route::post('/attendance/save',       [\App\Http\Controllers\AttendanceController::class, 'save'])->name('attendance.save');
 
