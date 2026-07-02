@@ -297,6 +297,7 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::post('/attendance/import',         [\App\Http\Controllers\AttendanceController::class, 'import'])->name('attendance.import');
     Route::post('/attendance/import-all',     [\App\Http\Controllers\AttendanceController::class, 'importAll'])->name('attendance.import-all');
     Route::post('/attendance/save',           [\App\Http\Controllers\AttendanceController::class, 'save'])->name('attendance.save');
+    Route::post('/attendance/save-all',       [\App\Http\Controllers\AttendanceController::class, 'saveAll'])->name('attendance.save-all');
 
     Route::get('/performance/kpi',        [\App\Http\Controllers\PerformanceController::class, 'kpiAppraisal'])->name('performance.kpi');
     Route::get('/performance/attitude',   [\App\Http\Controllers\PerformanceController::class, 'attitude'])->name('performance.attitude');

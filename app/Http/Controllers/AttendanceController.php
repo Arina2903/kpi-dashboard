@@ -21,10 +21,7 @@ class AttendanceController extends Controller
         if (!session()->has('employee_uuid') || !session()->has('company_code')) {
             return redirect()->route('login');
         }
-
-        if (!$this->authorise()) {
-            abort(403, 'Access restricted to SLT and VP only.');
-        }
+        if (!$this->authorise()) abort(403, 'Access restricted to SLT and VP only.');
 
         $company = strtoupper(session('company_code'));
         $year    = now()->year;
@@ -44,10 +41,10 @@ class AttendanceController extends Controller
         }
 
         return view('attendance.index', [
-            'defaultMonth' => now()->month,
-            'defaultYear'  => $year,
-            'monthStatus'  => $monthStatus,
-            'statusYear'   => $year,
+            'defaultMonth'   => now()->month,
+            'defaultYear'    => $year,
+            'monthStatus'    => $monthStatus,
+            'statusYear'     => $year,
             'defaultCompany' => $company,
         ]);
     }
@@ -55,10 +52,7 @@ class AttendanceController extends Controller
     public function import(Request $request, SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid')) return redirect()->route('login');
-
-        if (!$this->authorise()) {
-            abort(403, 'Access restricted to SLT and VP only.');
-        }
+        if (!$this->authorise()) abort(403, 'Access restricted to SLT and VP only.');
 
         $request->validate([
             'sheet_url' => 'required|url',
@@ -74,9 +68,7 @@ class AttendanceController extends Controller
 
         preg_match('/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/', $sheetUrl, $m);
         $sheetId = $m[1] ?? null;
-        if (!$sheetId) {
-            return back()->with('error', 'Invalid Google Sheet URL.');
-        }
+        if (!$sheetId) return back()->with('error', 'Invalid Google Sheet URL.');
 
         $allPh = $supabase->get('public_holidays', ['select' => 'holiday_date']) ?? [];
         $publicHolidays = array_values(array_filter(
@@ -89,25 +81,20 @@ class AttendanceController extends Controller
         $workingDays = [];
         for ($d = $start->copy(); $d <= $end; $d->addDay()) {
             $ds = $d->toDateString();
-            if (!in_array($d->dayOfWeek, [Carbon::SATURDAY, Carbon::SUNDAY])
-                && !in_array($ds, $publicHolidays)) {
+            if (!in_array($d->dayOfWeek, [Carbon::SATURDAY, Carbon::SUNDAY]) && !in_array($ds, $publicHolidays)) {
                 $workingDays[] = $ds;
             }
         }
         $totalWorkingDays = count($workingDays);
 
-        // Determine sheet tab name from month name (default tab if not specified)
         $monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
         $tabName    = $monthNames[$month - 1];
         $csvUrl     = "https://docs.google.com/spreadsheets/d/{$sheetId}/export?format=csv&sheet={$tabName}";
         $response   = Http::timeout(30)->get($csvUrl);
-
-        // Fall back to first tab if named tab fails
         if (!$response->successful()) {
             $csvUrl   = "https://docs.google.com/spreadsheets/d/{$sheetId}/export?format=csv";
             $response = Http::timeout(30)->get($csvUrl);
         }
-
         if (!$response->successful()) {
             return back()->with('error', 'Could not fetch the Google Sheet. Make sure it is set to "Anyone with link can view".');
         }
@@ -118,7 +105,7 @@ class AttendanceController extends Controller
             'select'       => 'id,employee_id,full_name,short_name,email,department_code',
         ]) ?? [];
 
-        $results = $this->parseAttendanceCsv($response->body(), $month, $year, $company, $workingDays, $dbEmps);
+        $results = $this->parseAttendanceCsv($response->body(), $month, $year, $workingDays, $dbEmps);
 
         return view('attendance.index', [
             'results'          => $results,
@@ -137,6 +124,7 @@ class AttendanceController extends Controller
         ]);
     }
 
+    // Returns JSON preview data — does NOT auto-save
     public function importAll(Request $request, SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid')) return response()->json(['error' => 'Unauthenticated'], 401);
@@ -156,32 +144,26 @@ class AttendanceController extends Controller
         $sheetId = $m[1] ?? null;
         if (!$sheetId) return response()->json(['error' => 'Invalid Google Sheet URL.'], 422);
 
-        // Fetch all public holidays for the year once
         $allPh = $supabase->get('public_holidays', ['select' => 'holiday_date']) ?? [];
         $phByMonth = [];
         foreach ($allPh as $ph) {
             $d = Carbon::parse($ph['holiday_date']);
-            if ($d->year === $year) {
-                $phByMonth[$d->month][] = $ph['holiday_date'];
-            }
+            if ($d->year === $year) $phByMonth[$d->month][] = $ph['holiday_date'];
         }
 
-        // Fetch all active employees for this company once
+        // Pull all employees (no company filter — import everyone in the sheet)
         $dbEmps = $supabase->get('employees', [
-            'company_code' => 'eq.' . $company,
-            'is_active'    => 'eq.true',
-            'select'       => 'id,employee_id,full_name,short_name,email,department_code',
+            'is_active' => 'eq.true',
+            'select'    => 'id,employee_id,full_name,short_name,email,department_code,company_code',
         ]) ?? [];
 
-        $monthNames   = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-        $upToMonth    = ($year < now()->year) ? 12 : now()->month;
-        $importStatus = [];
-        $now          = now()->toISOString();
+        $monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        $upToMonth  = ($year < now()->year) ? 12 : now()->month;
+        $monthsData = [];
 
         for ($month = 1; $month <= $upToMonth; $month++) {
             $monthName = $monthNames[$month - 1];
 
-            // Build working days for this month
             $start = Carbon::create($year, $month, 1);
             $end   = $start->copy()->endOfMonth();
             $ph    = $phByMonth[$month] ?? [];
@@ -193,59 +175,100 @@ class AttendanceController extends Controller
                 }
             }
 
-            // Fetch CSV for this month tab
             $csvUrl   = "https://docs.google.com/spreadsheets/d/{$sheetId}/export?format=csv&sheet={$monthName}";
             $response = Http::timeout(30)->get($csvUrl);
 
             if (!$response->successful()) {
-                $importStatus[$month] = ['success' => false, 'month_name' => $monthName, 'error' => "Tab '{$monthName}' not found or sheet not accessible.", 'saved' => 0];
+                $monthsData[$month] = ['success' => false, 'month_name' => $monthName, 'error' => "Tab '{$monthName}' not found."];
                 continue;
             }
 
-            $results = $this->parseAttendanceCsv($response->body(), $month, $year, $company, $workingDays, $dbEmps);
+            $results = $this->parseAttendanceCsv($response->body(), $month, $year, $workingDays, $dbEmps);
 
             if (empty($results)) {
-                $importStatus[$month] = ['success' => false, 'month_name' => $monthName, 'error' => "No matching employees found for {$monthName}.", 'saved' => 0];
+                $monthsData[$month] = ['success' => false, 'month_name' => $monthName, 'error' => "No employees found in {$monthName}."];
                 continue;
             }
 
-            $saved = 0;
-            foreach ($results as $rec) {
+            // Strip daily records — only summary fields needed for preview
+            $employees = [];
+            foreach ($results as $eid => $emp) {
+                $employees[] = [
+                    'internal_id'        => $emp['internal_id'],
+                    'db_employee_id'     => $emp['db_employee_id'] ?? null,
+                    'name'               => $emp['name'],
+                    'preferred_name'     => $emp['preferred_name'],
+                    'department'         => $emp['department'],
+                    'working_days'       => $emp['working_days'],
+                    'present_days'       => $emp['present_days'],
+                    'absent_days'        => $emp['absent_days'],
+                    'late_count'         => $emp['late_count'],
+                    'total_late_minutes' => $emp['total_late_minutes'],
+                ];
+            }
+
+            $monthsData[$month] = [
+                'success'      => true,
+                'month_name'   => $monthName,
+                'working_days' => count($workingDays),
+                'employees'    => $employees,
+            ];
+        }
+
+        return response()->json(['success' => true, 'year' => $year, 'company' => $company, 'months' => $monthsData]);
+    }
+
+    // Save bulk preview data (all months)
+    public function saveAll(Request $request, SupabaseService $supabase)
+    {
+        if (!session()->has('employee_uuid')) return response()->json(['error' => 'Unauthenticated'], 401);
+        if (!$this->authorise()) return response()->json(['error' => 'Access restricted.'], 403);
+
+        $data = $request->validate([
+            'year'    => 'required|integer',
+            'company' => 'required|string',
+            'months'  => 'required|array',
+        ]);
+
+        $year    = (int) $data['year'];
+        $company = strtoupper($data['company']);
+        $now     = now()->toISOString();
+        $saved   = 0;
+
+        foreach ($data['months'] as $monthNum => $mData) {
+            foreach ($mData['employees'] as $rec) {
+                $mc    = (int) ($rec['mc_days']          ?? 0);
+                $al    = (int) ($rec['al_days']          ?? 0);
+                $other = (int) ($rec['other_leave_days'] ?? 0);
                 $payload = [
                     'internal_id'        => $rec['internal_id'],
                     'employee_id'        => $rec['db_employee_id'] ?: null,
                     'company_code'       => $company,
-                    'month'              => $month,
+                    'month'              => (int) $monthNum,
                     'year'               => $year,
                     'working_days'       => (int) $rec['working_days'],
                     'present_days'       => (int) $rec['present_days'],
-                    'absent_days'        => (int) $rec['absent_days'],
+                    'absent_days'        => max(0, (int) $rec['absent_days'] - $mc - $al - $other),
                     'late_count'         => (int) $rec['late_count'],
                     'total_late_minutes' => (int) $rec['total_late_minutes'],
-                    'mc_days'            => 0,
-                    'al_days'            => 0,
-                    'other_leave_days'   => 0,
-                    'sheet_url'          => $sheetUrl,
+                    'mc_days'            => $mc,
+                    'al_days'            => $al,
+                    'other_leave_days'   => $other,
                     'finalized'          => true,
                     'updated_at'         => $now,
                 ];
                 $supabase->upsert('attendance_summary', $payload, 'internal_id,month,year');
                 $saved++;
             }
-
-            $importStatus[$month] = ['success' => true, 'month_name' => $monthName, 'saved' => $saved, 'imported_at' => $now];
         }
 
-        return response()->json(['success' => true, 'year' => $year, 'status' => $importStatus]);
+        return response()->json(['success' => true, 'saved' => $saved]);
     }
 
     public function save(Request $request, SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid')) return response()->json(['error' => 'Unauthenticated'], 401);
-
-        if (!$this->authorise()) {
-            return response()->json(['error' => 'Access restricted to SLT and VP only.'], 403);
-        }
+        if (!$this->authorise()) return response()->json(['error' => 'Access restricted.'], 403);
 
         $data = $request->validate([
             'records'   => 'required|array',
@@ -274,19 +297,19 @@ class AttendanceController extends Controller
                 'finalized'          => true,
                 'updated_at'         => now()->toISOString(),
             ];
-
             $supabase->upsert('attendance_summary', $payload, 'internal_id,month,year');
         }
 
         return response()->json(['success' => true, 'count' => count($data['records'])]);
     }
 
-    private function parseAttendanceCsv(string $csvText, int $month, int $year, string $company, array $workingDays, array $dbEmps): array
+    // Parses CSV → employee summary. No company-prefix filter so all employees in sheet are included.
+    private function parseAttendanceCsv(string $csvText, int $month, int $year, array $workingDays, array $dbEmps): array
     {
-        $cutoff       = self::WORK_START;
-        $totalWD      = count($workingDays);
-        $lines        = array_filter(explode("\n", str_replace("\r", '', $csvText)));
-        $rows         = array_map('str_getcsv', $lines);
+        $cutoff  = self::WORK_START;
+        $totalWD = count($workingDays);
+        $lines   = array_filter(explode("\n", str_replace("\r", '', $csvText)));
+        $rows    = array_map('str_getcsv', $lines);
         array_shift($rows);
 
         $employees = [];
@@ -301,7 +324,6 @@ class AttendanceController extends Controller
             $clockInDate = trim($row[6] ?? '');
 
             if (empty($internalId) || empty($clockInDate) || empty($clockIn)) continue;
-            if (!str_starts_with($internalId, $company)) continue;
 
             try {
                 $dt = Carbon::parse($clockInDate);
@@ -317,7 +339,6 @@ class AttendanceController extends Controller
                     'dates'          => [],
                 ];
             }
-
             if (!isset($employees[$internalId]['dates'][$clockInDate])) {
                 $employees[$internalId]['dates'][$clockInDate] = $clockIn;
             } elseif ($clockIn < $employees[$internalId]['dates'][$clockInDate]) {
@@ -325,9 +346,10 @@ class AttendanceController extends Controller
             }
         }
 
+        // Merge DB employees (enrich with department; add if missing from CSV)
         foreach ($dbEmps as $emp) {
             $eid = $emp['employee_id'] ?? null;
-            if (!$eid || !str_starts_with($eid, $company)) continue;
+            if (!$eid) continue;
             if (!isset($employees[$eid])) {
                 $employees[$eid] = [
                     'internal_id'    => $eid,
@@ -388,7 +410,6 @@ class AttendanceController extends Controller
         }
 
         uasort($results, fn($a, $b) => strcmp($a['department'] . $a['name'], $b['department'] . $b['name']));
-
         return $results;
     }
 }
