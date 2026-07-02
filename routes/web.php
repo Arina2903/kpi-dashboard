@@ -298,9 +298,11 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::post('/attendance/import',     [\App\Http\Controllers\AttendanceController::class, 'import'])->name('attendance.import');
     Route::post('/attendance/save',       [\App\Http\Controllers\AttendanceController::class, 'save'])->name('attendance.save');
 
-    Route::get('/performance/kpi',        [\App\Http\Controllers\PerformanceController::class, 'kpiAppraisal'])->name('performance.kpi');
-    Route::get('/performance/attitude',   [\App\Http\Controllers\PerformanceController::class, 'attitude'])->name('performance.attitude');
-    Route::get('/performance/report',     [\App\Http\Controllers\PerformanceController::class, 'report'])->name('performance.report');
+    Route::get('/performance/kpi',                          [\App\Http\Controllers\PerformanceController::class, 'kpiAppraisal'])->name('performance.kpi');
+    Route::get('/performance/attitude',                     [\App\Http\Controllers\PerformanceController::class, 'attitude'])->name('performance.attitude');
+    Route::get('/performance/report',                       fn() => redirect('/performance/report/q2'))->name('performance.report');
+    Route::get('/performance/report/{quarter}',             [\App\Http\Controllers\PerformanceController::class, 'reportQuarter'])->name('performance.report.quarter');
+    Route::post('/performance/report/{quarter}/save',       [\App\Http\Controllers\PerformanceController::class, 'saveReport'])->name('performance.report.save');
 
     /*
     |--------------------------------------------------------------------------

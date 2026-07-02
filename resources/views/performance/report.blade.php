@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Performance Evaluation Report · {{ $qLabel }} · {{ $currentFinancialYear }}</title>
+    <title>{{ $qLabel }} Evaluation · {{ $currentFinancialYear }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -174,18 +174,22 @@
                 <span class="text-sm font-black">{{ $qLabel }}</span>
             </div>
             <div>
-                <h1 class="text-base font-black leading-tight">Complete Performance Evaluation Report</h1>
+                <h1 class="text-base font-black leading-tight">{{ $qLabel }} Performance Evaluation · {{ $currentFinancialYear }}</h1>
                 <p class="text-white/65 text-[10px] mt-0.5">{{ $currentUserName }} · {{ $userPosition }} · {{ $departmentName }}</p>
             </div>
         </div>
         <div class="flex items-center gap-2">
             @if($isWindowOpen)
             <span class="flex items-center gap-1.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-3 py-1.5 rounded-full">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Window Open
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ⚠️ Window Open · Until {{ $windowEnd }}
             </span>
+            <button id="saveBtn" onclick="saveEvaluation()" class="bg-emerald-500/30 hover:bg-emerald-500/50 text-emerald-100 px-4 py-2 rounded-xl font-bold text-xs transition border border-emerald-400/40 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save
+            </button>
             @else
-            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-amber-500/15 text-amber-200 border border-amber-400/30 px-3 py-1.5 rounded-full">
-                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> {{ $windowStart }} → {{ $windowEnd }}
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-white/10 text-white/60 border border-white/15 px-3 py-1.5 rounded-full">
+                🔒 Locked · {{ $windowStart }} – {{ $windowEnd }}
             </span>
             @endif
             <button onclick="window.print()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20 flex items-center gap-1.5">
@@ -194,6 +198,18 @@
             </button>
         </div>
     </div>
+    {{-- Window status banner --}}
+    @if($isWindowOpen)
+    <div class="mt-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2 flex items-center gap-2 text-xs text-emerald-700">
+        ⚠️ <span><strong>Evaluation window is open.</strong> Fill in and save before {{ $windowEnd }}.</span>
+        @if($submittedAt)<span class="ml-auto text-emerald-500 font-medium">Last saved: {{ \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Kuala_Lumpur')->format('d M Y, H:i') }}</span>@endif
+    </div>
+    @else
+    <div class="mt-2 rounded-xl bg-slate-100 border border-slate-200 px-4 py-2 flex items-center gap-2 text-xs text-slate-500">
+        🔒 <span><strong>Read-only.</strong> Editing window: {{ $windowStart }} – {{ $windowEnd }}.</span>
+        @if($submittedAt)<span class="ml-auto font-medium">Last saved: {{ \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Kuala_Lumpur')->format('d M Y, H:i') }}</span>@endif
+    </div>
+    @endif
 </div>
 
 {{-- Print table: thead repeats logo+Q2 on every page --}}
@@ -258,14 +274,14 @@
                 <div class="flex items-center gap-5">
                     @foreach([['id'=>'por_confirmation','label'=>'Confirmation'],['id'=>'por_quarterly','label'=>'Quarterly Review'],['id'=>'por_others','label'=>'Others']] as $opt)
                     <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <span class="w-4 h-4 rounded border-2 border-[#6B9080]/50 flex items-center justify-center"><input type="checkbox" {{ $opt['id']==='por_quarterly'?'checked':'' }} class="sr-only peer"><span class="w-2.5 h-2.5 rounded-sm bg-[#6B9080] hidden peer-checked:block"></span></span>
+                        <span class="w-4 h-4 rounded border-2 border-[#6B9080]/50 flex items-center justify-center"><input type="checkbox" id="{{ $opt['id'] }}" name="{{ $opt['id'] }}" {{ $opt['id']==='por_quarterly'?'checked':'' }} class="sr-only peer"><span class="w-2.5 h-2.5 rounded-sm bg-[#6B9080] hidden peer-checked:block"></span></span>
                         <span class="text-[11px] font-semibold text-slate-700">{{ $opt['label'] }}</span>
                     </label>
                     @endforeach
                 </div>
                 <div class="flex-1 min-w-48">
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Please specify (if Others)</p>
-                    <input type="text" placeholder="Describe purpose…" class="f-input">
+                    <input type="text" name="por_other_text" placeholder="Describe purpose…" class="f-input">
                 </div>
                 <div class="text-right">
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Year / Period</p>
@@ -300,7 +316,7 @@
                     <div class="part-label">Part A &nbsp;·&nbsp; Employee's Particulars</div>
                     <div class="grid grid-cols-2 gap-x-10 gap-y-5">
                         <div><p class="f-label">Name</p><p class="f-val">{{ $currentUserName }}</p><div class="mt-1 h-px bg-slate-200"></div></div>
-                        <div><p class="f-label">Start Date</p><input type="text" value="{{ $joinDate !== '—' ? $joinDate : '' }}" placeholder="DD MMM YYYY" class="f-input"></div>
+                        <div><p class="f-label">Start Date</p><input type="text" name="start_date" value="{{ $joinDate !== '—' ? $joinDate : '' }}" placeholder="DD MMM YYYY" class="f-input"></div>
                         <div><p class="f-label">Current Position</p><p class="f-val">{{ $userPosition }}</p><div class="mt-1 h-px bg-slate-200"></div></div>
                         <div><p class="f-label">Department / Division</p><p class="f-val">{{ $departmentName }}</p><div class="mt-1 h-px bg-slate-200"></div></div>
                         <div><p class="f-label">Date Joined</p><p class="f-val">{{ $joinDate }}</p><div class="mt-1 h-px bg-slate-200"></div></div>
@@ -336,7 +352,7 @@
                 <div>
                     <div class="part-label">Part B &nbsp;·&nbsp; Summary of Duties &amp; Achievements</div>
                     <p class="text-[11px] text-slate-400 italic mb-3">Summarize present duties and indicate if any key tasks set for the year / period have been achieved.</p>
-                    <textarea class="f-area" placeholder="Write your summary here…" rows="4"></textarea>
+                    <textarea name="part_b" class="f-area" placeholder="Write your summary here…" rows="4"></textarea>
                 </div>
 
                 <div class="border-t border-dashed border-[#6B9080]/20"></div>
@@ -344,7 +360,7 @@
                 <div>
                     <div class="part-label">Part C &nbsp;·&nbsp; Key Tasks for Forthcoming Period</div>
                     <p class="text-[11px] text-slate-400 italic mb-3"><em>[Where applicable]</em> List what you see as your key tasks for the forthcoming year / period.</p>
-                    <textarea class="f-area" placeholder="List your key tasks…" rows="4"></textarea>
+                    <textarea name="part_c" class="f-area" placeholder="List your key tasks…" rows="4"></textarea>
                 </div>
 
                 <div class="border-t border-dashed border-[#6B9080]/20"></div>
@@ -360,12 +376,12 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                                 </span>
                                 <button type="button" id="partd-clr" class="partd-clr" onclick="clearPartDDate()" title="Clear date">×</button>
-                                <input type="date" id="partd-date" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;" onchange="setPartDDate(this.value)">
+                                <input type="date" id="partd-date" name="partd_date" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;" onchange="setPartDDate(this.value)">
                             </span>.
                         </p>
                         <div class="grid grid-cols-2 gap-6">
-                            <div><p class="f-label">Appraiser Name</p><input type="text" value="{{ $reportsToName !== '-' ? $reportsToName : '' }}" placeholder="Full name" class="f-input"></div>
-                            <div><p class="f-label">Designation</p><input type="text" value="{{ $reportsToPosition !== '-' ? $reportsToPosition : '' }}" placeholder="Job title" class="f-input"></div>
+                            <div><p class="f-label">Appraiser Name</p><input type="text" name="part_d_name" value="{{ $reportsToName !== '-' ? $reportsToName : '' }}" placeholder="Full name" class="f-input"></div>
+                            <div><p class="f-label">Designation</p><input type="text" name="part_d_designation" value="{{ $reportsToPosition !== '-' ? $reportsToPosition : '' }}" placeholder="Job title" class="f-input"></div>
                         </div>
                     </div>
                 </div>
@@ -427,14 +443,14 @@
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
                             <span class="q-tag">{{ $qLabel }}</span>
-                            <input type="text" value="{{ $qTitle }}" placeholder="Describe initiative for {{ $qLabel }}…" class="t-input">
+                            <input type="text" name="kpi_title_{{ $kpi['id'] }}" value="{{ $qTitle }}" placeholder="Describe initiative for {{ $qLabel }}…" class="t-input">
                         </div>
                     </td>
-                    <td class="text-center"><input type="number" step="any" min="0" value="{{ $qAct !== '' ? $qAct : '' }}" placeholder="—" class="n-input sec2-actual"></td>
-                    <td class="text-center"><input type="number" step="any" min="0" value="{{ $qTgt !== '' ? $qTgt : '' }}" placeholder="—" class="n-input sec2-target"></td>
+                    <td class="text-center"><input type="number" name="kpi_actual_{{ $kpi['id'] }}" step="any" min="0" value="{{ $qAct !== '' ? $qAct : '' }}" placeholder="—" class="n-input sec2-actual"></td>
+                    <td class="text-center"><input type="number" name="kpi_target_{{ $kpi['id'] }}" step="any" min="0" value="{{ $qTgt !== '' ? $qTgt : '' }}" placeholder="—" class="n-input sec2-target"></td>
                     <td class="text-center"><span class="sec2-score font-black text-sm sc-none">—</span></td>
-                    <td class="text-center"><input type="number" step="0.1" min="0" max="5" placeholder="—" class="n-input"></td>
-                    <td class="text-center"><input type="number" step="0.1" min="0" max="5" placeholder="—" class="n-input"></td>
+                    <td class="text-center"><input type="number" name="kpi_self_{{ $kpi['id'] }}" step="0.1" min="0" max="5" placeholder="—" class="n-input"></td>
+                    <td class="text-center"><input type="number" name="kpi_app_{{ $kpi['id'] }}" step="0.1" min="0" max="5" placeholder="—" class="n-input"></td>
                 </tr>
                 @endforeach
                 @endforeach
@@ -514,7 +530,7 @@
                             @foreach([1,2,3,4,5] as $sc)<input type="radio" id="sup_{{ $area['no'] }}_{{ $sc }}" name="sup_{{ $area['no'] }}" value="{{ $sc }}"><label for="sup_{{ $area['no'] }}_{{ $sc }}">{{ $sc }}</label>@endforeach
                         </div>
                     </td>
-                    <td style="padding:10px 12px;vertical-align:top;"><input type="text" placeholder="Comment…" class="t-input" style="margin-top:6px;"></td>
+                    <td style="padding:10px 12px;vertical-align:top;"><input type="text" name="att_comment_{{ $area['no'] }}" placeholder="Comment…" class="t-input" style="margin-top:6px;"></td>
                 </tr>
                 @endforeach
                 </tbody>
@@ -569,7 +585,7 @@
                 @endif
                 <div>
                     <p class="f-label mb-2">Remarks</p>
-                    <textarea rows="3" placeholder="Enter attendance remarks or notes…" class="f-area"></textarea>
+                    <textarea name="att_remarks" rows="3" placeholder="Enter attendance remarks or notes…" class="f-area"></textarea>
                 </div>
             </div>
         </div>
@@ -605,14 +621,14 @@
                                 @foreach([1,2,3,4,5] as $sc)<input type="radio" id="cv_a_{{ $ci }}_{{ $sc }}" name="cv_app_{{ $ci }}" value="{{ $sc }}"><label for="cv_a_{{ $ci }}_{{ $sc }}">{{ $sc }}</label>@endforeach
                             </div>
                         </td>
-                        <td style="padding:10px 12px;"><input type="text" placeholder="Remarks…" class="t-input"></td>
+                        <td style="padding:10px 12px;"><input type="text" name="cv_remark_{{ $ci }}" placeholder="Remarks…" class="t-input"></td>
                     </tr>
                     @endforeach
                     </tbody>
                 </table>
                 <div>
                     <p class="f-label mb-2">Overall Culture Remarks</p>
-                    <textarea rows="3" placeholder="Enter overall remarks on culture and values…" class="f-area"></textarea>
+                    <textarea name="cv_overall" rows="3" placeholder="Enter overall remarks on culture and values…" class="f-area"></textarea>
                 </div>
             </div>
         </div>
@@ -634,23 +650,23 @@
                                 <tbody>
                                     <tr class="bg-white" style="border-bottom:1px solid rgba(107,144,128,.10);">
                                         <td style="padding:12px 14px;"><p style="font-size:11px;font-weight:700;color:#334155;">Section 2</p><p style="font-size:9px;color:#94a3b8;">KPI Performance (70%)</p></td>
-                                        <td class="text-center"><input type="number" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
-                                        <td class="text-center"><input type="number" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
+                                        <td class="text-center"><input type="number" name="s6_s2_self" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
+                                        <td class="text-center"><input type="number" name="s6_s2_app"  min="0" max="100" placeholder="—" class="n-input s6-input"></td>
                                     </tr>
                                     <tr class="bg-slate-50/50" style="border-bottom:1px solid rgba(107,144,128,.10);">
                                         <td style="padding:12px 14px;"><p style="font-size:11px;font-weight:700;color:#334155;">Section 3</p><p style="font-size:9px;color:#94a3b8;">Attitude &amp; Competency (25%)</p></td>
-                                        <td class="text-center"><input type="number" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
-                                        <td class="text-center"><input type="number" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
+                                        <td class="text-center"><input type="number" name="s6_s3_self" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
+                                        <td class="text-center"><input type="number" name="s6_s3_app"  min="0" max="100" placeholder="—" class="n-input s6-input"></td>
                                     </tr>
                                     <tr class="bg-white" style="border-bottom:1px solid rgba(107,144,128,.10);">
                                         <td style="padding:12px 14px;"><p style="font-size:11px;font-weight:700;color:#334155;">Section 4</p><p style="font-size:9px;color:#94a3b8;">Attendance</p></td>
-                                        <td class="text-center"><input type="number" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
-                                        <td class="text-center"><input type="number" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
+                                        <td class="text-center"><input type="number" name="s6_s4_self" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
+                                        <td class="text-center"><input type="number" name="s6_s4_app"  min="0" max="100" placeholder="—" class="n-input s6-input"></td>
                                     </tr>
                                     <tr class="bg-slate-50/50" style="border-bottom:1px solid rgba(107,144,128,.10);">
                                         <td style="padding:12px 14px;"><p style="font-size:11px;font-weight:700;color:#334155;">Section 5</p><p style="font-size:9px;color:#94a3b8;">Culture &amp; Values (5%)</p></td>
-                                        <td class="text-center"><input type="number" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
-                                        <td class="text-center"><input type="number" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
+                                        <td class="text-center"><input type="number" name="s6_s5_self" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
+                                        <td class="text-center"><input type="number" name="s6_s5_app"  min="0" max="100" placeholder="—" class="n-input s6-input"></td>
                                     </tr>
                                     <tr style="background:linear-gradient(90deg,rgba(26,61,52,.06),rgba(107,144,128,.04));">
                                         <td style="padding:12px 14px;"><p style="font-size:12px;font-weight:900;color:#1a3d34;text-transform:uppercase;letter-spacing:.05em;">Total Rating</p><p style="font-size:9px;color:#94a3b8;">Combined score</p></td>
@@ -682,10 +698,10 @@
                     <div class="part-label">B &nbsp;·&nbsp; Performance Analysis</div>
                     <p class="text-[11px] text-slate-400 italic mb-5">To be completed by Appraiser.</p>
                     <div class="grid grid-cols-2 gap-5">
-                        @foreach(['Strengths','Work Ethics / Attitude','Areas Need Improvement','Training Required'] as $pf)
+                        @foreach([['label'=>'Strengths','name'=>'s6_strengths'],['label'=>'Work Ethics / Attitude','name'=>'s6_ethics'],['label'=>'Areas Need Improvement','name'=>'s6_improvement'],['label'=>'Training Required','name'=>'s6_training']] as $pf)
                         <div>
-                            <div class="flex items-center gap-2 mb-2"><span class="w-1.5 h-1.5 rounded-full bg-[#6B9080] flex-shrink-0"></span><p class="f-label">{{ $pf }}</p></div>
-                            <input type="text" placeholder="Enter here…" class="f-input">
+                            <div class="flex items-center gap-2 mb-2"><span class="w-1.5 h-1.5 rounded-full bg-[#6B9080] flex-shrink-0"></span><p class="f-label">{{ $pf['label'] }}</p></div>
+                            <input type="text" name="{{ $pf['name'] }}" placeholder="Enter here…" class="f-input">
                         </div>
                         @endforeach
                     </div>
@@ -709,7 +725,7 @@
 
                 <div>
                     <p class="text-[11px] text-slate-500 italic leading-relaxed mb-3">I hereby confirm that I have read, understood and accept/disagree with the foregoing appraisal. <span class="text-[#6B9080] font-semibold not-italic">(If you disagree please specify below)</span></p>
-                    <textarea rows="4" placeholder="Write your response here…" class="f-area mb-6"></textarea>
+                    <textarea name="s6_response" rows="4" placeholder="Write your response here…" class="f-area mb-6"></textarea>
                     <div class="flex justify-end">
                         <div class="text-center w-64">
                             <div class="sig-line mx-2"></div>
@@ -734,13 +750,14 @@
                 @if($idx>0)<div class="border-t border-dashed border-[#6B9080]/20 pt-7"></div>@endif
                 <div>
                     <div class="part-label">{{ $blk['label'] }} &nbsp;·&nbsp; {{ $blk['title'] }}</div>
-                    <textarea rows="4" placeholder="Write remarks here…" class="f-area mb-5"></textarea>
+                    <textarea name="s7_{{ $blk['key'] }}_remarks" rows="4" placeholder="Write remarks here…" class="f-area mb-5"></textarea>
                     <div class="flex items-end justify-between gap-6 flex-wrap">
                         <div class="flex items-center gap-6">
-                            @foreach(['Confirmation','Salary Review','Promotion'] as $opt)
+                            @foreach(['confirmation','salary_review','promotion'] as $oi => $okey)
+                            @php $olabel = ['Confirmation','Salary Review','Promotion'][$oi]; @endphp
                             <label class="flex items-center gap-2 cursor-pointer select-none">
-                                <span class="w-4 h-4 rounded border-2 border-[#6B9080]/40 flex items-center justify-center"><input type="checkbox" class="sr-only peer"><span class="w-2.5 h-2.5 rounded-sm bg-[#6B9080] hidden peer-checked:block"></span></span>
-                                <span class="text-[11px] font-semibold text-slate-700">{{ $opt }}</span>
+                                <span class="w-4 h-4 rounded border-2 border-[#6B9080]/40 flex items-center justify-center"><input type="checkbox" name="s7_{{ $blk['key'] }}_{{ $okey }}" id="s7_{{ $blk['key'] }}_{{ $okey }}" class="sr-only peer"><span class="w-2.5 h-2.5 rounded-sm bg-[#6B9080] hidden peer-checked:block"></span></span>
+                                <span class="text-[11px] font-semibold text-slate-700">{{ $olabel }}</span>
                             </label>
                             @endforeach
                         </div>
@@ -749,7 +766,7 @@
                             <p class="f-label mt-1">Signature</p>
                             <div class="flex items-center gap-2 mt-2 justify-center">
                                 <span class="f-label">Date</span>
-                                <input type="date" class="border border-[#6B9080]/25 rounded-lg px-2 py-1 text-xs text-slate-600 bg-white outline-none focus:border-[#6B9080] transition">
+                                <input type="date" name="s7_{{ $blk['key'] }}_date" class="border border-[#6B9080]/25 rounded-lg px-2 py-1 text-xs text-slate-600 bg-white outline-none focus:border-[#6B9080] transition">
                             </div>
                         </div>
                     </div>
@@ -822,6 +839,109 @@
         });
     });
 })();
+</script>
+
+{{-- ─── Save / Restore / Lock ─────────────────────────────────────────────── --}}
+<div id="toast" style="display:none;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:9999;padding:10px 22px;border-radius:12px;font-size:12px;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.18);transition:opacity .3s;"></div>
+
+<script>
+const _savedData    = @json($savedData ?? null);
+const _quarter      = '{{ $quarter }}';
+const _isWindowOpen = @json($isWindowOpen ?? false);
+const _saveUrl      = '{{ route('performance.report.save', $quarter) }}';
+const _csrfToken    = '{{ csrf_token() }}';
+
+// ── collect all named inputs into a plain object ─────────────────────────────
+function collectFormData() {
+    const data = {};
+    document.querySelectorAll('[name]').forEach(function(el) {
+        const n = el.name;
+        if (!n) return;
+        if (el.type === 'checkbox') {
+            data[n] = el.checked;
+        } else {
+            data[n] = el.value;
+        }
+    });
+    return data;
+}
+
+// ── restore all named inputs from saved object ────────────────────────────────
+function restoreFormData(saved) {
+    if (!saved || typeof saved !== 'object') return;
+    Object.keys(saved).forEach(function(n) {
+        const els = document.querySelectorAll('[name="' + n + '"]');
+        els.forEach(function(el) {
+            if (el.type === 'checkbox') {
+                el.checked = !!saved[n];
+                // trigger visual update for custom checkbox spans
+                el.dispatchEvent(new Event('change'));
+            } else {
+                el.value = saved[n] ?? '';
+                // restore Part D date display
+                if (n === 'partd_date' && saved[n]) {
+                    window.setPartDDate(saved[n]);
+                }
+            }
+        });
+    });
+    // re-trigger S6 sum
+    const firstS6 = document.querySelector('.s6-input');
+    if (firstS6) firstS6.dispatchEvent(new Event('input'));
+    // re-trigger S2 scores
+    document.querySelectorAll('.sec2-actual').forEach(function(el) {
+        el.dispatchEvent(new Event('input'));
+    });
+}
+
+// ── lock all inputs when window is closed ─────────────────────────────────────
+function lockForm() {
+    const main = document.querySelector('main');
+    if (!main) return;
+    main.style.pointerEvents = 'none';
+    main.style.userSelect    = 'none';
+    main.style.opacity       = '0.7';
+    const btn = document.getElementById('saveBtn');
+    if (btn) { btn.disabled = true; btn.style.display = 'none'; }
+}
+
+// ── toast helper ──────────────────────────────────────────────────────────────
+function showToast(msg, ok) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background   = ok ? '#059669' : '#dc2626';
+    t.style.color        = '#fff';
+    t.style.display      = 'block';
+    t.style.opacity      = '1';
+    setTimeout(function(){ t.style.opacity='0'; setTimeout(function(){ t.style.display='none'; },300); }, 3000);
+}
+
+// ── save ──────────────────────────────────────────────────────────────────────
+window.saveEvaluation = function() {
+    if (!_isWindowOpen) { showToast('Evaluation window is closed.', false); return; }
+    const data = collectFormData();
+    const btn  = document.getElementById('saveBtn');
+    if (btn) btn.disabled = true;
+    fetch(_saveUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrfToken },
+        body: JSON.stringify({ form_data: data }),
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+        if (res && res.success) {
+            showToast('Saved ✓', true);
+        } else {
+            showToast(res.error || 'Save failed.', false);
+        }
+    })
+    .catch(function(){ showToast('Network error.', false); })
+    .finally(function(){ if (btn) btn.disabled = false; });
+};
+
+// ── on page load ──────────────────────────────────────────────────────────────
+if (_savedData) restoreFormData(_savedData);
+if (!_isWindowOpen) lockForm();
 </script>
 </body>
 </html>

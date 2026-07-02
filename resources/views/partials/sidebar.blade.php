@@ -203,12 +203,10 @@
             [
                 'title' => 'Performance Evaluation',
                 'items' => [
-                    [
-                        'label' => 'Overall Report',
-                        'href' => '/performance/report',
-                        'match' => 'performance/report*',
-                        'icon' => 'report',
-                    ],
+                    ['label' => 'Q1 Evaluation', 'href' => '/performance/report/q1', 'match' => 'performance/report/q1*', 'icon' => 'report'],
+                    ['label' => 'Q2 Evaluation', 'href' => '/performance/report/q2', 'match' => 'performance/report/q2*', 'icon' => 'report'],
+                    ['label' => 'Q3 Evaluation', 'href' => '/performance/report/q3', 'match' => 'performance/report/q3*', 'icon' => 'report'],
+                    ['label' => 'Q4 Evaluation', 'href' => '/performance/report/q4', 'match' => 'performance/report/q4*', 'icon' => 'report'],
                 ],
             ],
             [

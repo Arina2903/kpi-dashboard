@@ -282,11 +282,14 @@ class PerformanceController extends Controller
         ]);
     }
 
-    public function report(SupabaseService $supabase)
+    public function reportQuarter(string $quarter, SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid') || !session()->has('company_code')) {
             return redirect()->route('login');
         }
+
+        $q = strtoupper($quarter);
+        if (!in_array($q, ['Q1','Q2','Q3','Q4'])) abort(404);
 
         $employees = $supabase->get('employees', [
             'id'        => 'eq.' . session('employee_uuid'),
@@ -294,13 +297,9 @@ class PerformanceController extends Controller
             'select'    => '*',
         ]);
         $user = $employees[0] ?? null;
+        if (!$user) { session()->flush(); return redirect()->route('login'); }
 
-        if (!$user) {
-            session()->flush();
-            return redirect()->route('login');
-        }
-
-        // ── Tenure ─────────────────────────────────────────────────────────────
+        // Tenure
         $joinDate = $user['join_date'] ?? null;
         $tenure   = '—';
         if ($joinDate) {
@@ -311,61 +310,44 @@ class PerformanceController extends Controller
             $tenure = $parts ? implode(' ', $parts) : 'Less than 1 month';
         }
 
-        // ── Reports-to ─────────────────────────────────────────────────────────
+        // Reports-to
         $reportsTo = null;
         if (!empty($user['reports_to_id'])) {
-            $managers  = $supabase->get('employees', [
-                'id'     => 'eq.' . $user['reports_to_id'],
-                'select' => 'id,short_name,full_name,role,position',
-            ]);
-            $reportsTo = $managers[0] ?? null;
+            $mgr = $supabase->get('employees', ['id' => 'eq.' . $user['reports_to_id'], 'select' => 'id,short_name,full_name,role,position']);
+            $reportsTo = $mgr[0] ?? null;
         }
 
-        // ── Department ─────────────────────────────────────────────────────────
+        // Department
         $department = null;
         if (!empty($user['department_code'])) {
-            $depts      = $supabase->get('departments', [
-                'code'   => 'eq.' . $user['department_code'],
-                'select' => '*',
-            ]);
+            $depts      = $supabase->get('departments', ['code' => 'eq.' . $user['department_code'], 'select' => '*']);
             $department = $depts[0] ?? null;
         }
 
-        // ── Quarter logic ──────────────────────────────────────────────────────
-        $now   = now();
-        $month = (int) $now->format('n');
-        $year  = (int) $now->format('Y');
-
-        $quarterOfMonth = match(true) {
-            $month <= 3 => 1,
-            $month <= 6 => 2,
-            $month <= 9 => 3,
-            default     => 4,
-        };
+        // Window for THIS specific quarter
+        $now  = now()->timezone('Asia/Kuala_Lumpur');
+        $year = (int) $now->year;
+        $mon  = (int) $now->month;
 
         $windows = [
-            1 => ['start' => "{$year}-03-24", 'end' => "{$year}-04-07"],
-            2 => ['start' => "{$year}-06-23", 'end' => "{$year}-07-07"],
-            3 => ['start' => "{$year}-09-22", 'end' => "{$year}-10-06"],
-            4 => ['start' => "{$year}-12-23", 'end' => ($year + 1) . "-01-06"],
+            'Q1' => ['start' => "{$year}-03-24", 'end' => "{$year}-04-07"],
+            'Q2' => ['start' => "{$year}-06-23", 'end' => "{$year}-07-07"],
+            'Q3' => ['start' => "{$year}-09-22", 'end' => "{$year}-10-06"],
+            'Q4' => ['start' => "{$year}-12-23", 'end' => ($year + 1) . "-01-06"],
         ];
-
-        $displayQuarter = $quarterOfMonth;
-        $isWindowOpen   = false;
-        foreach ($windows as $q => $win) {
-            if ($now->toDateString() >= $win['start'] && $now->toDateString() <= $win['end']) {
-                $displayQuarter = $q;
-                $isWindowOpen   = true;
-                break;
-            }
+        // Q4 window bleeds into January — if it's Jan 1-6, reference last year's Q4
+        if ($q === 'Q4' && $mon === 1 && $now->day <= 6) {
+            $py = $year - 1;
+            $windows['Q4'] = ['start' => "{$py}-12-23", 'end' => "{$year}-01-06"];
         }
 
-        $window      = $windows[$displayQuarter];
-        $windowStart = \Carbon\Carbon::parse($window['start'])->format('d M Y');
-        $windowEnd   = \Carbon\Carbon::parse($window['end'])->format('d M Y');
-        $qLabel      = 'Q' . $displayQuarter;
+        $window       = $windows[$q];
+        $today        = $now->toDateString();
+        $isWindowOpen = $today >= $window['start'] && $today <= $window['end'];
+        $windowStart  = \Carbon\Carbon::parse($window['start'])->format('d M Y');
+        $windowEnd    = \Carbon\Carbon::parse($window['end'])->format('d M Y');
 
-        // ── KPIs ───────────────────────────────────────────────────────────────
+        // KPIs
         $kpis = $supabase->get('kpis', [
             'employee_id'    => 'eq.' . $user['id'],
             'financial_year' => 'eq.' . $this->currentFinancialYear,
@@ -382,36 +364,28 @@ class PerformanceController extends Controller
             foreach ($qRows as $row) {
                 $allQuarters[$kpi['id']][$row['quarter']] = $row;
             }
-            $quarterScores[$kpi['id']] = $allQuarters[$kpi['id']][$qLabel] ?? null;
+            $quarterScores[$kpi['id']] = $allQuarters[$kpi['id']][$q] ?? null;
         }
 
-        // ── Attendance: aggregate quarter months from attendance_summary ────────
-        $quarterMonths = match($displayQuarter) {
-            1 => [1, 2, 3],
-            2 => [4, 5, 6],
-            3 => [7, 8, 9],
-            4 => [10, 11, 12],
+        // Attendance — aggregate months for this quarter
+        $quarterMonths = match($q) {
+            'Q1' => [1, 2, 3], 'Q2' => [4, 5, 6],
+            'Q3' => [7, 8, 9], 'Q4' => [10, 11, 12],
         };
+        $attYear = ($q === 'Q4' && $mon === 1 && $now->day <= 6) ? ($year - 1) : $year;
 
         $allAttendance = $supabase->get('attendance_summary', [
             'employee_id' => 'eq.' . $user['id'],
-            'year'        => 'eq.' . $year,
+            'year'        => 'eq.' . $attYear,
             'select'      => 'month,working_days,present_days,absent_days,late_count,total_late_minutes,mc_days,al_days,other_leave_days',
         ]) ?? [];
 
         $qAttendance = array_filter($allAttendance, fn($r) => in_array((int)$r['month'], $quarterMonths));
 
         $attendanceSummary = [
-            'has_data'           => !empty($qAttendance),
-            'working_days'       => 0,
-            'present_days'       => 0,
-            'absent_days'        => 0,
-            'late_count'         => 0,
-            'total_late_minutes' => 0,
-            'mc_days'            => 0,
-            'al_days'            => 0,
-            'other_leave_days'   => 0,
-            'months'             => [],
+            'has_data' => !empty($qAttendance), 'working_days' => 0, 'present_days' => 0,
+            'absent_days' => 0, 'late_count' => 0, 'total_late_minutes' => 0,
+            'mc_days' => 0, 'al_days' => 0, 'other_leave_days' => 0, 'months' => [],
         ];
         foreach ($qAttendance as $ar) {
             $attendanceSummary['working_days']       += (int)($ar['working_days'] ?? 0);
@@ -422,10 +396,9 @@ class PerformanceController extends Controller
             $attendanceSummary['mc_days']            += (int)($ar['mc_days'] ?? 0);
             $attendanceSummary['al_days']            += (int)($ar['al_days'] ?? 0);
             $attendanceSummary['other_leave_days']   += (int)($ar['other_leave_days'] ?? 0);
-            $attendanceSummary['months'][]           = \Carbon\Carbon::create($year, (int)$ar['month'], 1)->format('M Y');
+            $attendanceSummary['months'][]           = \Carbon\Carbon::create($attYear, (int)$ar['month'], 1)->format('M Y');
         }
 
-        // ── YTD totals (all uploaded months this year) for Part A ─────────────
         $attendanceYTD = ['has_data' => !empty($allAttendance), 'mc_days' => 0, 'other_leave_days' => 0, 'late_count' => 0];
         foreach ($allAttendance as $ar) {
             $attendanceYTD['mc_days']          += (int)($ar['mc_days'] ?? 0);
@@ -433,9 +406,8 @@ class PerformanceController extends Controller
             $attendanceYTD['late_count']       += (int)($ar['late_count'] ?? 0);
         }
 
-        // ── Assessment areas (attitude) ────────────────────────────────────────
+        // Assessment areas
         $isExecutive = strtolower($user['role'] ?? '') === 'executive';
-
         $assessmentAreas = $isExecutive ? [
             ['no' =>  1, 'title' => 'Knowledge of Job Requirements',  'description' => 'Knowledge of job requirements, methods, techniques and skills involved in doing the job, and applying these to perform efficiently.'],
             ['no' =>  2, 'title' => 'Quality of Work Done',           'description' => 'Degree to which quality expectations of the job were fulfilled — accuracy, reliability, and excellence of end results.'],
@@ -464,6 +436,16 @@ class PerformanceController extends Controller
             ['no' => 12, 'title' => 'Values',                         'description' => 'Does the appraisee understand and demonstrate organisation values all the time?'],
         ];
 
+        // Saved data for this quarter
+        $savedRows   = $supabase->get('performance_reports', [
+            'employee_id'    => 'eq.' . $user['id'],
+            'financial_year' => 'eq.' . $this->currentFinancialYear,
+            'quarter'        => 'eq.' . $q,
+            'select'         => 'form_data,updated_at',
+        ]) ?? [];
+        $savedData   = !empty($savedRows) ? ($savedRows[0]['form_data'] ?? null) : null;
+        $submittedAt = !empty($savedRows) ? ($savedRows[0]['updated_at'] ?? null) : null;
+
         return view('performance.report', [
             'user'                 => $user,
             'currentUserName'      => $user['full_name'] ?? $user['short_name'] ?? 'User',
@@ -474,8 +456,9 @@ class PerformanceController extends Controller
             'joinDate'             => $joinDate ? \Carbon\Carbon::parse($joinDate)->format('d M Y') : '—',
             'tenure'               => $tenure,
             'currentFinancialYear' => $this->currentFinancialYear,
-            'displayQuarter'       => $displayQuarter,
-            'qLabel'               => $qLabel,
+            'quarter'              => $q,
+            'displayQuarter'       => (int) substr($q, 1),
+            'qLabel'               => $q,
             'isWindowOpen'         => $isWindowOpen,
             'windowStart'          => $windowStart,
             'windowEnd'            => $windowEnd,
@@ -485,6 +468,32 @@ class PerformanceController extends Controller
             'assessmentAreas'      => $assessmentAreas,
             'attendanceSummary'    => $attendanceSummary,
             'attendanceYTD'        => $attendanceYTD,
+            'savedData'            => $savedData,
+            'submittedAt'          => $submittedAt,
         ]);
+    }
+
+    public function saveReport(string $quarter, \Illuminate\Http\Request $request, SupabaseService $supabase)
+    {
+        if (!session()->has('employee_uuid')) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
+        $q = strtoupper($quarter);
+        if (!in_array($q, ['Q1','Q2','Q3','Q4'])) {
+            return response()->json(['error' => 'Invalid quarter'], 422);
+        }
+
+        $supabase->upsert('performance_reports', [
+            'employee_id'    => session('employee_uuid'),
+            'company_code'   => session('company_code'),
+            'financial_year' => $this->currentFinancialYear,
+            'quarter'        => $q,
+            'form_data'      => $request->input('form_data', []),
+            'submitted_at'   => now()->toISOString(),
+            'updated_at'     => now()->toISOString(),
+        ], 'employee_id,financial_year,quarter');
+
+        return response()->json(['success' => true, 'quarter' => $q]);
     }
 }
