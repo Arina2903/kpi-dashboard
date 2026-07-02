@@ -102,7 +102,7 @@ class AttendanceController extends Controller
         $results = null;
 
         foreach ($tabCandidates as $tabName) {
-            $csvUrl   = "https://docs.google.com/spreadsheets/d/{$sheetId}/export?format=csv&sheet=" . urlencode($tabName);
+            $csvUrl   = "https://docs.google.com/spreadsheets/d/{$sheetId}/gviz/tq?tqx=out:csv&sheet=" . urlencode($tabName);
             $response = Http::timeout(30)->get($csvUrl);
             if (!$response->successful()) continue;
 
@@ -240,7 +240,7 @@ class AttendanceController extends Controller
             // then ISO, then American M/D/Y as last resort. Order matters — j/n/Y must come before n/j/Y
             // so that 1/2/2026 is read as Feb 1 (Malaysian) not Jan 2 (American).
             $dt = null;
-            foreach (['d/m/Y', 'j/n/Y', 'Y-m-d', 'd-m-Y', 'Y/m/d', 'n/j/Y'] as $fmt) {
+            foreach (['Y-m-d', 'd/m/Y', 'j/n/Y', 'd-m-Y', 'Y/m/d', 'n/j/Y'] as $fmt) {
                 try {
                     $candidate = Carbon::createFromFormat($fmt, $clockInDate);
                     if ($candidate !== false) { $dt = $candidate; break; }
