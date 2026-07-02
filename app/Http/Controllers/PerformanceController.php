@@ -406,35 +406,52 @@ class PerformanceController extends Controller
             $attendanceYTD['late_count']       += (int)($ar['late_count'] ?? 0);
         }
 
-        // Assessment areas
-        $isExecutive = strtolower($user['role'] ?? '') === 'executive';
-        $assessmentAreas = $isExecutive ? [
-            ['no' =>  1, 'title' => 'Knowledge of Job Requirements',  'description' => 'Knowledge of job requirements, methods, techniques and skills involved in doing the job, and applying these to perform efficiently.'],
-            ['no' =>  2, 'title' => 'Quality of Work Done',           'description' => 'Degree to which quality expectations of the job were fulfilled — accuracy, reliability, and excellence of end results.'],
-            ['no' =>  3, 'title' => 'Planning & Organising Skills',   'description' => 'Degree to which the appraisee anticipated needs, forecast conditions, set goals and standards, planned and scheduled work.'],
-            ['no' =>  4, 'title' => 'Decision Making',                'description' => 'Able to analyse problems effectively, make sound decisions, and commit to those decisions to achieve an acceptable result.'],
-            ['no' =>  5, 'title' => 'Communication Skills',           'description' => 'Communicated effectively — verbal and written — with superiors and peers.'],
-            ['no' =>  6, 'title' => 'Teamwork',                       'description' => 'Able to adopt and adapt in work conditions/situations and work with others toward a common objective.'],
-            ['no' =>  7, 'title' => 'Interpersonal Relationships',    'description' => 'How well the appraisee related to associates, superiors, and external contacts to get the desired cooperation and assistance.'],
-            ['no' =>  8, 'title' => 'Attitude Towards Work',          'description' => 'Able to work independently without direct supervision; adapted well to new tasks/changes; showed commitment in discharge of duties.'],
-            ['no' =>  9, 'title' => 'Time Management / Tardiness',    'description' => 'Able to plan, execute and complete assigned tasks within deadline; conformed to company rules; punctual in attendance and timekeeping.'],
-            ['no' => 10, 'title' => 'Appearance',                     'description' => 'Well-groomed; made an excellent impression.'],
-            ['no' => 11, 'title' => 'Dependability / Accountability', 'description' => 'Carries out work with limited/minimum supervision, follows instructions; shows initiative to complete tasks efficiently and effectively.'],
-            ['no' => 12, 'title' => 'Values',                         'description' => 'Understands and demonstrates organisation values at all times.'],
-        ] : [
-            ['no' =>  1, 'title' => 'Knowledge of Job Requirements',  'description' => 'Knowledge of job requirements, methods, techniques and skills involved in doing the job, and in applying these to perform efficiently.'],
-            ['no' =>  2, 'title' => 'Quality of Work Done',           'description' => 'To what degree did the appraisee fulfil the quality expectations of the job? Was the work completed accurate and reliable? What is the degree of excellence of end results?'],
-            ['no' =>  3, 'title' => 'Planning and Organising Skills', 'description' => 'To what degree did the appraisee anticipate needs, forecast conditions, set goals and standards, plan and schedule work?'],
-            ['no' =>  4, 'title' => 'Decision Making',                'description' => 'Was the appraisee able to analyse problems effectively and make sound decisions and commit to those decisions to achieve an acceptable result?'],
-            ['no' =>  5, 'title' => 'Communication Skills',           'description' => 'Did the appraisee communicate effectively verbal and written, with superiors and peers?'],
-            ['no' =>  6, 'title' => 'Teamwork',                       'description' => 'Was the appraisee able to adopt and adapt in work conditions/situations and work with others toward a common objective?'],
-            ['no' =>  7, 'title' => 'Interpersonal Relationships',    'description' => 'How well did the appraisee relate to associates, superiors, and external contacts to get the desired cooperation and assistance?'],
-            ['no' =>  8, 'title' => 'Attitude Towards Work',          'description' => 'Was the appraisee able to work independently without need for direct supervision? How well did the appraisee adapt to new tasks and to changes in the work environment? Did the appraisee show commitment in discharge of his/her duties?'],
-            ['no' =>  9, 'title' => 'Time Management / Tardiness',    'description' => "Is the appraisee able to plan, execute and complete assigned tasks within the deadline given? Did the appraisee conform to Company's rules and regulations at all times? Was the appraisee punctual in attendance and timekeeping?"],
-            ['no' => 10, 'title' => 'Appearance',                     'description' => 'Was the appraisee well groomed? Did the appraisee make an excellent impression?'],
-            ['no' => 11, 'title' => 'Dependability / Accountability', 'description' => 'Able to carry out work with limited or minimum supervision and able to follow work instructions. Demonstrates high level of commitment to complete tasks assigned and shows initiative in ensuring job is completed efficiently and effectively.'],
-            ['no' => 12, 'title' => 'Values',                         'description' => 'Does the appraisee understand and demonstrate organisation values all the time?'],
-        ];
+        // Assessment areas — vary by role
+        $role = strtolower($user['role'] ?? '');
+        $assessmentAreas = match(true) {
+            $role === 'executive' => [
+                ['no' =>  1, 'title' => 'Knowledge of Job Requirements',  'description' => 'Knowledge of job requirements, methods, techniques and skills involved in doing the job, and applying these to perform efficiently.'],
+                ['no' =>  2, 'title' => 'Quality of Work Done',           'description' => 'Degree to which quality expectations of the job were fulfilled — accuracy, reliability, and excellence of end results.'],
+                ['no' =>  3, 'title' => 'Planning & Organising Skills',   'description' => 'Degree to which the appraisee anticipated needs, forecast conditions, set goals and standards, planned and scheduled work.'],
+                ['no' =>  4, 'title' => 'Decision Making',                'description' => 'Able to analyse problems effectively, make sound decisions, and commit to those decisions to achieve an acceptable result.'],
+                ['no' =>  5, 'title' => 'Communication Skills',           'description' => 'Communicated effectively — verbal and written — with superiors and peers.'],
+                ['no' =>  6, 'title' => 'Teamwork',                       'description' => 'Able to adopt and adapt in work conditions/situations and work with others toward a common objective.'],
+                ['no' =>  7, 'title' => 'Interpersonal Relationships',    'description' => 'How well the appraisee related to associates, superiors, and external contacts to get the desired cooperation and assistance.'],
+                ['no' =>  8, 'title' => 'Attitude Towards Work',          'description' => 'Able to work independently without direct supervision; adapted well to new tasks/changes; showed commitment in discharge of duties.'],
+                ['no' =>  9, 'title' => 'Time Management / Tardiness',    'description' => 'Able to plan, execute and complete assigned tasks within deadline; conformed to company rules; punctual in attendance and timekeeping.'],
+                ['no' => 10, 'title' => 'Appearance',                     'description' => 'Well-groomed; made an excellent impression.'],
+                ['no' => 11, 'title' => 'Dependability / Accountability', 'description' => 'Carries out work with limited/minimum supervision, follows instructions; shows initiative to complete tasks efficiently and effectively.'],
+                ['no' => 12, 'title' => 'Values',                         'description' => 'Understands and demonstrates organisation values at all times.'],
+            ],
+            $role === 'manager' => [
+                ['no' =>  1, 'title' => 'Quality of Work',                        'description' => 'Consistently promotes quality awareness and continuous improvement without decreasing productivity or increasing cost.'],
+                ['no' =>  2, 'title' => 'Dependability / Accountability / Ownership', 'description' => 'Works with minimal supervision, follows instructions clearly, and shows initiative to complete tasks efficiently.'],
+                ['no' =>  3, 'title' => 'Problem-Solving & Decision Making',      'description' => 'Identifies and rectifies work problems independently; provides solutions and recommendations.'],
+                ['no' =>  4, 'title' => 'Time Management',                        'description' => 'Plans, executes and completes assigned tasks within the required deadline.'],
+                ['no' =>  5, 'title' => 'Work Relationship / Service Orientation','description' => 'Builds cordial, positive relationships with colleagues and external parties; strong client rapport.'],
+                ['no' =>  6, 'title' => 'Performance Target',                     'description' => 'Has achieved the expected KPIs set by the superior and/or Management.'],
+                ['no' =>  7, 'title' => 'Leadership',                             'description' => 'Able to lead, develop, guide and motivate others toward a common objective.'],
+                ['no' =>  8, 'title' => 'Multi-Tasking Capabilities',             'description' => 'Willing to accept more tasks without complaint; works well under pressure.'],
+                ['no' =>  9, 'title' => 'Discipline (Attendance & Punctuality)',  'description' => 'Conforms to company rules at all times; punctual in attendance and timekeeping.'],
+                ['no' => 10, 'title' => 'Appearance',                             'description' => 'Well-groomed; makes an excellent impression.'],
+                ['no' => 11, 'title' => 'Communication / Interpersonal Skills',   'description' => 'Communicates effectively — verbal and written — with superiors, peers and subordinates.'],
+                ['no' => 12, 'title' => 'Values',                                 'description' => 'Understands and demonstrates organisation values at all times.'],
+            ],
+            default => [
+                ['no' =>  1, 'title' => 'Knowledge of Job Requirements',  'description' => 'Knowledge of job requirements, methods, techniques and skills involved in doing the job, and in applying these to perform efficiently.'],
+                ['no' =>  2, 'title' => 'Quality of Work Done',           'description' => 'To what degree did the appraisee fulfil the quality expectations of the job? Was the work completed accurate and reliable? What is the degree of excellence of end results?'],
+                ['no' =>  3, 'title' => 'Planning and Organising Skills', 'description' => 'To what degree did the appraisee anticipate needs, forecast conditions, set goals and standards, plan and schedule work?'],
+                ['no' =>  4, 'title' => 'Decision Making',                'description' => 'Was the appraisee able to analyse problems effectively and make sound decisions and commit to those decisions to achieve an acceptable result?'],
+                ['no' =>  5, 'title' => 'Communication Skills',           'description' => 'Did the appraisee communicate effectively verbal and written, with superiors and peers?'],
+                ['no' =>  6, 'title' => 'Teamwork',                       'description' => 'Was the appraisee able to adopt and adapt in work conditions/situations and work with others toward a common objective?'],
+                ['no' =>  7, 'title' => 'Interpersonal Relationships',    'description' => 'How well did the appraisee relate to associates, superiors, and external contacts to get the desired cooperation and assistance?'],
+                ['no' =>  8, 'title' => 'Attitude Towards Work',          'description' => 'Was the appraisee able to work independently without need for direct supervision? How well did the appraisee adapt to new tasks and to changes in the work environment? Did the appraisee show commitment in discharge of his/her duties?'],
+                ['no' =>  9, 'title' => 'Time Management / Tardiness',    'description' => "Is the appraisee able to plan, execute and complete assigned tasks within the deadline given? Did the appraisee conform to Company's rules and regulations at all times? Was the appraisee punctual in attendance and timekeeping?"],
+                ['no' => 10, 'title' => 'Appearance',                     'description' => 'Was the appraisee well groomed? Did the appraisee make an excellent impression?'],
+                ['no' => 11, 'title' => 'Dependability / Accountability', 'description' => 'Able to carry out work with limited or minimum supervision and able to follow work instructions. Demonstrates high level of commitment to complete tasks assigned and shows initiative in ensuring job is completed efficiently and effectively.'],
+                ['no' => 12, 'title' => 'Values',                         'description' => 'Does the appraisee understand and demonstrate organisation values all the time?'],
+            ],
+        };
 
         // Saved data for this quarter
         $savedRows   = $supabase->get('performance_reports', [
