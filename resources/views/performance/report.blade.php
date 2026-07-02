@@ -462,8 +462,8 @@
                     <td class="text-center"><input type="number" name="kpi_actual_{{ $kpi['id'] }}" step="any" min="0" value="{{ $qAct !== '' ? $qAct : '' }}" placeholder="—" class="n-input sec2-actual"></td>
                     <td class="text-center"><input type="number" name="kpi_target_{{ $kpi['id'] }}" step="any" min="0" value="{{ $qTgt !== '' ? $qTgt : '' }}" placeholder="—" class="n-input sec2-target"></td>
                     <td class="text-center"><span class="sec2-score font-black text-sm sc-none">—</span></td>
-                    <td class="text-center"><input type="number" name="kpi_self_{{ $kpi['id'] }}" step="0.1" min="0" max="5" placeholder="—" class="n-input"></td>
-                    <td class="text-center"><input type="number" name="kpi_app_{{ $kpi['id'] }}" step="0.1" min="0" max="5" placeholder="—" class="n-input"></td>
+                    <td class="text-center"><input type="number" name="kpi_self_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" step="0.1" min="0" max="5" placeholder="—" class="n-input"></td>
+                    <td class="text-center"><input type="number" name="kpi_app_{{ $kpi['id'] }}"  data-wt="{{ $kpi['weightage'] ?? 0 }}" step="0.1" min="0" max="5" placeholder="—" class="n-input"></td>
                 </tr>
                 @endforeach
                 @endforeach
@@ -664,27 +664,33 @@
                         <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden">
                             <table class="doc-tbl">
                                 <thead><tr><th class="l">Section</th><th class="c" style="width:100px;">Self Score</th><th class="c" style="width:100px;">Appraiser</th></tr></thead>
+                                @php
+                                    $s4ScoreVal = null;
+                                    if (($attendanceSummary['has_data'] ?? false) && ($attendanceSummary['working_days'] ?? 0) > 0) {
+                                        $s4ScoreVal = round($attendanceSummary['present_days'] / $attendanceSummary['working_days'] * 100, 1);
+                                    }
+                                @endphp
                                 <tbody>
                                     <tr class="bg-white" style="border-bottom:1px solid rgba(107,144,128,.10);">
                                         <td style="padding:12px 14px;"><p style="font-size:11px;font-weight:700;color:#334155;">Section 2</p><p style="font-size:9px;color:#94a3b8;">KPI Performance (70%)</p></td>
-                                        <td class="text-center"><input type="number" name="s6_s2_self" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
-                                        <td class="text-center"><input type="number" name="s6_s2_app"  min="0" max="100" placeholder="—" class="n-input s6-input"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s2_self" style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s2_self" id="hid_s6_s2_self"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s2_app"  style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s2_app"  id="hid_s6_s2_app"></td>
                                     </tr>
                                     <tr class="bg-slate-50/50" style="border-bottom:1px solid rgba(107,144,128,.10);">
                                         <td style="padding:12px 14px;"><p style="font-size:11px;font-weight:700;color:#334155;">Section 3</p><p style="font-size:9px;color:#94a3b8;">Attitude &amp; Competency (25%)</p></td>
-                                        <td class="text-center"><input type="number" name="s6_s3_self" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
-                                        <td class="text-center"><input type="number" name="s6_s3_app"  min="0" max="100" placeholder="—" class="n-input s6-input"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s3_self" style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s3_self" id="hid_s6_s3_self"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s3_app"  style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s3_app"  id="hid_s6_s3_app"></td>
                                     </tr>
                                     <tr class="bg-white" style="border-bottom:1px solid rgba(107,144,128,.10);">
                                         <td style="padding:12px 14px;"><p style="font-size:11px;font-weight:700;color:#334155;">Section 4</p><p style="font-size:9px;color:#94a3b8;">Attendance</p></td>
-                                        <td class="text-center"><input type="number" name="s6_s4_self" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
-                                        <td class="text-center"><input type="number" name="s6_s4_app"  min="0" max="100" placeholder="—" class="n-input s6-input"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s4_self" style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s4_self" id="hid_s6_s4_self"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s4_app"  style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s4_app"  id="hid_s6_s4_app"></td>
                                     </tr>
                                     @if($quarter === 'Q4')
                                     <tr class="bg-slate-50/50" style="border-bottom:1px solid rgba(107,144,128,.10);">
                                         <td style="padding:12px 14px;"><p style="font-size:11px;font-weight:700;color:#334155;">Section 5</p><p style="font-size:9px;color:#94a3b8;">Culture &amp; Values (5%)</p></td>
-                                        <td class="text-center"><input type="number" name="s6_s5_self" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
-                                        <td class="text-center"><input type="number" name="s6_s5_app"  min="0" max="100" placeholder="—" class="n-input s6-input"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s5_self" style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s5_self" id="hid_s6_s5_self"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s5_app"  style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s5_app"  id="hid_s6_s5_app"></td>
                                     </tr>
                                     @endif
                                     <tr style="background:linear-gradient(90deg,rgba(26,61,52,.06),rgba(107,144,128,.04));">
@@ -866,22 +872,74 @@
         }
     }
     document.querySelectorAll('input[name^="self_"], input[name^="sup_"]').forEach(function(r) {
-        r.addEventListener('change', updateS3);
+        r.addEventListener('change', function(){ updateS3(); updateS6(); });
     });
 
-    // Section 6 live sum
-    document.querySelectorAll('.s6-input').forEach(function(inp){
-        inp.addEventListener('input',function(){
-            const inputs=[...document.querySelectorAll('.s6-input')];
-            const selfVals=inputs.filter((_,i)=>i%2===0).map(i=>parseFloat(i.value)).filter(v=>!isNaN(v));
-            const appVals=inputs.filter((_,i)=>i%2!==0).map(i=>parseFloat(i.value)).filter(v=>!isNaN(v));
-            const selfEl=document.getElementById('s6SelfTotal'),appEl=document.getElementById('s6AppTotal');
-            if(selfVals.length){const t=selfVals.reduce((a,b)=>a+b,0);selfEl.textContent=t.toFixed(1);selfEl.style='font-size:20px;font-weight:900;color:'+(t>=90?'#059669':t>=70?'#6B9080':t>=50?'#d97706':'#dc2626');}
-            else{selfEl.textContent='—';selfEl.style='font-size:20px;font-weight:900;color:#cbd5e1';}
-            if(appVals.length){const t=appVals.reduce((a,b)=>a+b,0);appEl.textContent=t.toFixed(1);appEl.style='font-size:20px;font-weight:900;color:'+(t>=90?'#059669':t>=70?'#6B9080':t>=50?'#d97706':'#dc2626');}
-            else{appEl.textContent='—';appEl.style='font-size:20px;font-weight:900;color:#cbd5e1';}
+    // ── Section 6 auto-compute ────────────────────────────────────────────────
+    var _s4Score = @json($s4ScoreVal ?? null);
+    var _isQ4    = '{{ $quarter }}' === 'Q4';
+
+    function s6Clr(v){ return v>=90?'#059669':v>=70?'#6B9080':v>=50?'#d97706':'#dc2626'; }
+    function setS6(key, val) {
+        var num = (val !== null && !isNaN(parseFloat(val))) ? parseFloat(val) : null;
+        var d = document.getElementById('disp_' + key);
+        var h = document.getElementById('hid_'  + key);
+        if (d) { d.textContent = num !== null ? num.toFixed(1) : '—'; d.style.color = num !== null ? s6Clr(num) : '#cbd5e1'; }
+        if (h) h.value = num !== null ? num : '';
+    }
+    function updateS6() {
+        // S2: weighted sum of kpi_self / kpi_app → scale to 70
+        var s2Self = 0, s2App = 0, s2Wt = 0;
+        document.querySelectorAll('[name^="kpi_self_"]').forEach(function(el){
+            var v = parseFloat(el.value), wt = parseFloat(el.dataset.wt||0);
+            if (!isNaN(v) && wt > 0) { s2Self += v * wt; s2Wt += wt; }
         });
-    });
+        document.querySelectorAll('[name^="kpi_app_"]').forEach(function(el){
+            var v = parseFloat(el.value), wt = parseFloat(el.dataset.wt||0);
+            if (!isNaN(v) && wt > 0) s2App += v * wt;
+        });
+        setS6('s6_s2_self', s2Wt > 0 ? (s2Self / s2Wt / 5 * 70) : null);
+        setS6('s6_s2_app',  s2Wt > 0 ? (s2App  / s2Wt / 5 * 70) : null);
+
+        // S3: from live s3Self / s3Sup spans
+        var s3ST = document.getElementById('s3Self')?.textContent;
+        var s3AT = document.getElementById('s3Sup')?.textContent;
+        setS6('s6_s3_self', s3ST && s3ST !== '—' ? parseFloat(s3ST) : null);
+        setS6('s6_s3_app',  s3AT && s3AT !== '—' ? parseFloat(s3AT) : null);
+
+        // S4: attendance % from PHP (same value for self and appraiser)
+        setS6('s6_s4_self', _s4Score);
+        setS6('s6_s4_app',  _s4Score);
+
+        // S5 (Q4): culture values radio sums → scale to 5
+        if (_isQ4) {
+            var cv5S = 0, cv5A = 0, cvN = 0;
+            for (var ci = 0; ci <= 5; ci++) {
+                var csvS = document.querySelector('input[name="cv_self_'+ci+'"]:checked');
+                var csvA = document.querySelector('input[name="cv_app_'+ci+'"]:checked');
+                if (csvS) { cv5S += parseInt(csvS.value); cvN++; }
+                if (csvA)   cv5A += parseInt(csvA.value);
+            }
+            setS6('s6_s5_self', cvN > 0 ? (cv5S / 30 * 5) : null);
+            setS6('s6_s5_app',  cvN > 0 ? (cv5A / 30 * 5) : null);
+        }
+
+        // Total
+        var selfKeys = ['s6_s2_self','s6_s3_self','s6_s4_self'];
+        var appKeys  = ['s6_s2_app', 's6_s3_app', 's6_s4_app'];
+        if (_isQ4) { selfKeys.push('s6_s5_self'); appKeys.push('s6_s5_app'); }
+        var sSum=0,sCnt=0,aSum=0,aCnt=0;
+        selfKeys.forEach(function(k){ var v=parseFloat(document.getElementById('hid_'+k)?.value); if(!isNaN(v)){sSum+=v;sCnt++;} });
+        appKeys.forEach(function(k){  var v=parseFloat(document.getElementById('hid_'+k)?.value); if(!isNaN(v)){aSum+=v;aCnt++;} });
+        var sEl=document.getElementById('s6SelfTotal'), aEl=document.getElementById('s6AppTotal');
+        if(sEl){sEl.textContent=sCnt>0?sSum.toFixed(1):'—';sEl.style.color=sCnt>0?s6Clr(sSum):'#cbd5e1';}
+        if(aEl){aEl.textContent=aCnt>0?aSum.toFixed(1):'—';aEl.style.color=aCnt>0?s6Clr(aSum):'#cbd5e1';}
+    }
+
+    // Wire: Section 2 self/app inputs → updateS6
+    document.querySelectorAll('[name^="kpi_self_"],[name^="kpi_app_"]').forEach(function(el){ el.addEventListener('input', updateS6); });
+    // Wire: culture values radios (Q4) → updateS6
+    document.querySelectorAll('[name^="cv_self_"],[name^="cv_app_"]').forEach(function(r){ r.addEventListener('change', updateS6); });
 })();
 </script>
 
@@ -999,6 +1057,7 @@ window.saveEvaluation = function() {
 
 // ── on page load ──────────────────────────────────────────────────────────────
 if (_savedData) { restoreFormData(_savedData); updateS3(); }
+updateS6();
 if (!_isWindowOpen) lockForm();
 </script>
 </body>
