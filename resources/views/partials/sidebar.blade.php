@@ -1,6 +1,16 @@
 @include('partials.ai-chat-widget')
 
 <style>
+    /* Remove text-selection cursor from all non-interactive elements */
+    * { cursor: default; }
+    a, button, [role="button"], label, select,
+    .cursor-pointer, [onclick],
+    input[type="submit"], input[type="button"],
+    input[type="reset"], input[type="checkbox"],
+    input[type="radio"] { cursor: pointer !important; }
+    input:not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]),
+    textarea { cursor: text !important; }
+
     #sidebar, #sidebar * {
         font-family: 'Inter', sans-serif;
     }
