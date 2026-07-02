@@ -209,52 +209,24 @@
                     ['label' => 'Q4 Evaluation', 'href' => '/performance/report/q4', 'match' => 'performance/report/q4*', 'icon' => 'report'],
                 ],
             ],
-            [
-                'title' => 'Daily Execution',
-                'items' => [
-                    [
-                        'label' => 'Initiatives',
-                        'href' => '/initiatives',
-                        'match' => 'initiatives*',
-                        'icon' => 'initiative',
-                    ],
-                    [
-                        'label' => 'Tasks',
-                        'href' => '/tasks',
-                        'match' => 'tasks*',
-                        'icon' => 'task',
-                    ],
-                    [
-                        'label' => 'Calendar',
-                        'href' => '/calendar',
-                        'match' => 'calendar*',
-                        'icon' => 'calendar',
-                    ],
-                ],
-            ],
-            [
-                'title' => 'Review & Insights',
-                'items' => [
-                    [
-                        'label' => 'Reports',
-                        'href' => '/reports',
-                        'match' => 'reports*',
-                        'icon' => 'report',
-                    ],
-                    [
-                        'label' => 'Analytics',
-                        'href' => '/analytics',
-                        'match' => 'analytics*',
-                        'icon' => 'analytics',
-                    ],
-                    [
-                        'label' => 'Leaderboard',
-                        'href' => '/leaderboard',
-                        'match' => 'leaderboard*',
-                        'icon' => 'leaderboard',
-                    ],
-                ],
-            ],
+            // ── Daily Execution (coming soon) ─────────────────────────────────
+            // [
+            //     'title' => 'Daily Execution',
+            //     'items' => [
+            //         ['label' => 'Initiatives', 'href' => '/initiatives', 'match' => 'initiatives*', 'icon' => 'initiative'],
+            //         ['label' => 'Tasks',        'href' => '/tasks',       'match' => 'tasks*',       'icon' => 'task'],
+            //         ['label' => 'Calendar',     'href' => '/calendar',    'match' => 'calendar*',    'icon' => 'calendar'],
+            //     ],
+            // ],
+            // ── Review & Insights (coming soon) ───────────────────────────────
+            // [
+            //     'title' => 'Review & Insights',
+            //     'items' => [
+            //         ['label' => 'Reports',     'href' => '/reports',     'match' => 'reports*',     'icon' => 'report'],
+            //         ['label' => 'Analytics',   'href' => '/analytics',   'match' => 'analytics*',   'icon' => 'analytics'],
+            //         ['label' => 'Leaderboard', 'href' => '/leaderboard', 'match' => 'leaderboard*', 'icon' => 'leaderboard'],
+            //     ],
+            // ],
             [
                 'title' => 'Admin Setup',
                 'items' => [
