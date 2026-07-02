@@ -306,20 +306,28 @@
                         <div><p class="f-label">Date Joined</p><p class="f-val">{{ $joinDate }}</p><div class="mt-1 h-px bg-slate-200"></div></div>
                         <div><p class="f-label">Months / Years of Service</p><p class="f-val">{{ $tenure }}</p><div class="mt-1 h-px bg-slate-200"></div></div>
                     </div>
-                    <div class="mt-5 grid grid-cols-3 gap-6">
-                        @php
-                            $partAFields = [
-                                'Medical Leave (Days)'   => $attendanceYTD['mc_days'],
-                                'Emergency Leave (Days)' => $attendanceYTD['other_leave_days'],
-                                'No. of Lateness'        => $attendanceYTD['late_count'],
-                            ];
-                        @endphp
+                    @php
+                        $ytdYear  = now()->year;
+                        $ytdMonth = \Carbon\Carbon::create()->month(now()->month)->format('M');
+                        $partAFields = [
+                            'Medical Leave (Days)'   => $attendanceYTD['mc_days'],
+                            'Emergency Leave (Days)' => $attendanceYTD['other_leave_days'],
+                            'No. of Lateness'        => $attendanceYTD['late_count'],
+                        ];
+                    @endphp
+                    <div class="mt-5">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                            <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;color:#6B9080;">Annual Attendance</span>
+                            <span style="font-size:9px;font-weight:700;color:#94a3b8;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:999px;padding:2px 8px;">Jan – {{ $ytdMonth }} {{ $ytdYear }}</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-6">
                         @foreach($partAFields as $lf => $lv)
                         <div>
-                            <p class="f-label">{{ $lf }}</p>
+                            <p class="f-label">{{ $lf }}<br><span style="font-size:8px;font-weight:700;color:#6B9080;letter-spacing:.06em;">ANNUAL</span></p>
                             <p class="f-val" style="padding:5px 0;border-bottom:1.5px solid rgba(107,144,128,.30);max-width:80px;cursor:none;user-select:none;-webkit-user-select:none;">{{ $attendanceYTD['has_data'] ? $lv : '0' }}</p>
                         </div>
                         @endforeach
+                        </div>
                     </div>
                 </div>
 
