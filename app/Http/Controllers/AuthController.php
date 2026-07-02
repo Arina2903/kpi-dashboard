@@ -80,15 +80,10 @@ class AuthController extends Controller
             $user['id']
         );
 
-        // Auto-select if only one dashboard, or if one is marked as default
+        // Auto-select only when there is exactly one dashboard.
+        // With 2+ companies always show the chooser so the user can pick.
         if (count($dashboards) === 1) {
             $this->setDashboardSession($dashboards[0]);
-            return redirect()->route('dashboard');
-        }
-
-        $default = collect($dashboards)->first(fn($d) => !empty($d['is_default']));
-        if ($default) {
-            $this->setDashboardSession($default);
             return redirect()->route('dashboard');
         }
 
