@@ -715,6 +715,54 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- ── Score Gauge ───────────────────────────────────────────────── --}}
+                    <div class="mt-5 rounded-2xl overflow-hidden border border-[#6B9080]/20" style="background:linear-gradient(135deg,#f8faf9 0%,#f0f7f4 100%);">
+                        <div class="px-5 py-4">
+                            <p class="f-label mb-4">Your Performance Position</p>
+                            <div class="flex items-center gap-6">
+
+                                {{-- Big score + grade --}}
+                                <div class="text-center shrink-0" style="min-width:100px;">
+                                    <div id="gaugeScore" style="font-size:44px;font-weight:900;line-height:1;color:#cbd5e1;transition:color .4s;">—</div>
+                                    <div id="gaugeGrade" style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.10em;color:#94a3b8;margin-top:5px;transition:color .4s;">No score yet</div>
+                                </div>
+
+                                {{-- Gauge bar + needle --}}
+                                <div class="flex-1 min-w-0">
+                                    <div class="relative" style="height:40px;margin-bottom:6px;">
+                                        {{-- Color zones --}}
+                                        <div class="absolute inset-0 rounded-xl overflow-hidden flex" style="box-shadow:inset 0 2px 6px rgba(0,0,0,.08);">
+                                            <div style="width:49%;background:linear-gradient(90deg,#fecaca,#f87171);"></div>
+                                            <div style="width:20%;background:linear-gradient(90deg,#fde68a,#f59e0b);"></div>
+                                            <div style="width:20%;background:linear-gradient(90deg,#a7c4b5,#6B9080);"></div>
+                                            <div style="width:11%;background:linear-gradient(90deg,#6ee7b7,#059669);"></div>
+                                        </div>
+                                        {{-- Divider lines --}}
+                                        <div style="position:absolute;left:49%;top:4px;bottom:4px;width:2px;background:rgba(255,255,255,0.7);border-radius:1px;"></div>
+                                        <div style="position:absolute;left:69%;top:4px;bottom:4px;width:2px;background:rgba(255,255,255,0.7);border-radius:1px;"></div>
+                                        <div style="position:absolute;left:89%;top:4px;bottom:4px;width:2px;background:rgba(255,255,255,0.7);border-radius:1px;"></div>
+                                        {{-- Score labels on bar --}}
+                                        <div style="position:absolute;left:49%;top:50%;transform:translate(-50%,-50%);font-size:8px;font-weight:900;color:rgba(255,255,255,0.9);">50</div>
+                                        <div style="position:absolute;left:69%;top:50%;transform:translate(-50%,-50%);font-size:8px;font-weight:900;color:rgba(255,255,255,0.9);">70</div>
+                                        <div style="position:absolute;left:89%;top:50%;transform:translate(-50%,-50%);font-size:8px;font-weight:900;color:rgba(255,255,255,0.9);">90</div>
+                                        {{-- Needle --}}
+                                        <div id="gaugeNeedle" style="display:none;position:absolute;top:-8px;bottom:-8px;left:0%;transform:translateX(-50%);width:4px;background:#1a3d34;border-radius:999px;transition:left .9s cubic-bezier(.34,1.56,.64,1);z-index:10;">
+                                            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:16px;height:16px;background:#1a3d34;border-radius:50%;border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,.3);"></div>
+                                        </div>
+                                    </div>
+                                    {{-- Zone labels --}}
+                                    <div class="flex" style="font-size:8px;font-weight:700;color:#94a3b8;letter-spacing:.04em;">
+                                        <div style="width:49%;color:#ef4444;">Unsatisfactory &nbsp;·&nbsp; 1–49</div>
+                                        <div style="width:20%;text-align:center;color:#d97706;">Below Avg&nbsp;·&nbsp;50–69</div>
+                                        <div style="width:20%;text-align:center;color:#6B9080;">Meets Exp&nbsp;·&nbsp;70–89</div>
+                                        <div style="width:11%;text-align:right;color:#059669;">O/S&nbsp;90+</div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="border-t border-dashed border-[#6B9080]/20"></div>
@@ -880,6 +928,26 @@
     var _isQ4    = '{{ $quarter }}' === 'Q4';
 
     function s6Clr(v){ return v>=90?'#059669':v>=70?'#6B9080':v>=50?'#d97706':'#dc2626'; }
+
+    function updateGauge(score) {
+        var scoreEl  = document.getElementById('gaugeScore');
+        var gradeEl  = document.getElementById('gaugeGrade');
+        var needle   = document.getElementById('gaugeNeedle');
+        if (score === null || isNaN(score)) {
+            if (scoreEl) { scoreEl.textContent = '—'; scoreEl.style.color = '#cbd5e1'; }
+            if (gradeEl) { gradeEl.textContent = 'No score yet'; gradeEl.style.color = '#94a3b8'; }
+            if (needle)    needle.style.display = 'none';
+            return;
+        }
+        var grade, clr;
+        if (score >= 90)      { grade = 'Outstanding';        clr = '#059669'; }
+        else if (score >= 70) { grade = 'Meets Expectations'; clr = '#6B9080'; }
+        else if (score >= 50) { grade = 'Below Average';      clr = '#d97706'; }
+        else                  { grade = 'Unsatisfactory';     clr = '#dc2626'; }
+        if (scoreEl) { scoreEl.textContent = score.toFixed(1); scoreEl.style.color = clr; }
+        if (gradeEl) { gradeEl.textContent = grade; gradeEl.style.color = clr; }
+        if (needle)  { needle.style.display = 'block'; needle.style.left = Math.min(Math.max(score,0),100) + '%'; }
+    }
     function setS6(key, val) {
         var num = (val !== null && !isNaN(parseFloat(val))) ? parseFloat(val) : null;
         var d = document.getElementById('disp_' + key);
@@ -934,6 +1002,7 @@
         var sEl=document.getElementById('s6SelfTotal'), aEl=document.getElementById('s6AppTotal');
         if(sEl){sEl.textContent=sCnt>0?sSum.toFixed(1):'—';sEl.style.color=sCnt>0?s6Clr(sSum):'#cbd5e1';}
         if(aEl){aEl.textContent=aCnt>0?aSum.toFixed(1):'—';aEl.style.color=aCnt>0?s6Clr(aSum):'#cbd5e1';}
+        updateGauge(sCnt > 0 ? sSum : null);
     }
 
     // Wire: Section 2 self/app inputs → updateS6
