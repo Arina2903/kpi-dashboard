@@ -413,12 +413,25 @@
                 </thead>
                 <tbody>
                 @php
-                    $sec2Grouped = [];
+                    $categoryOrder = ['Financial', 'Growth & Customer', 'Initiatives', 'People'];
+                    $sec2Raw = [];
                     foreach ($kpis as $kpi) {
                         $cat = $kpi['category'] ?? 'Uncategorized';
                         $sub = $kpi['sub_category'] ?? 'General';
-                        $sec2Grouped[$cat][$sub][] = $kpi;
+                        $sec2Raw[$cat][$sub][] = $kpi;
                     }
+                    // Sort categories: defined order first, then alphabetical for any extras
+                    $sec2Grouped = [];
+                    foreach ($categoryOrder as $co) {
+                        if (isset($sec2Raw[$co])) {
+                            $sec2Grouped[$co] = $sec2Raw[$co];
+                            unset($sec2Raw[$co]);
+                        }
+                    }
+                    foreach ($sec2Raw as $co => $subs) { $sec2Grouped[$co] = $subs; }
+                    // Sort sub-categories within each category alphabetically
+                    foreach ($sec2Grouped as $cat => &$subs) { ksort($subs); }
+                    unset($subs);
                     $subCatNo = 0;
                 @endphp
                 @foreach($sec2Grouped as $catName => $subCats)
