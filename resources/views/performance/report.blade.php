@@ -591,8 +591,9 @@
         </div>
 
         {{-- ═══════════════════════════════════════════════════════
-             SECTION 5 — CULTURE & VALUES
+             SECTION 5 — CULTURE & VALUES (Q4 only)
         ═══════════════════════════════════════════════════════ --}}
+        @if($quarter === 'q4')
         <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6">
             <div class="sec-bar"><div class="sec-num">5</div><span class="sec-title">Culture &amp; Values Assessment</span></div>
             <div class="px-6 py-6">
@@ -632,6 +633,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         {{-- ═══════════════════════════════════════════════════════
              SECTION 6 — PERFORMANCE SUMMARY
@@ -663,11 +665,13 @@
                                         <td class="text-center"><input type="number" name="s6_s4_self" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
                                         <td class="text-center"><input type="number" name="s6_s4_app"  min="0" max="100" placeholder="—" class="n-input s6-input"></td>
                                     </tr>
+                                    @if($quarter === 'q4')
                                     <tr class="bg-slate-50/50" style="border-bottom:1px solid rgba(107,144,128,.10);">
                                         <td style="padding:12px 14px;"><p style="font-size:11px;font-weight:700;color:#334155;">Section 5</p><p style="font-size:9px;color:#94a3b8;">Culture &amp; Values (5%)</p></td>
                                         <td class="text-center"><input type="number" name="s6_s5_self" min="0" max="100" placeholder="—" class="n-input s6-input"></td>
                                         <td class="text-center"><input type="number" name="s6_s5_app"  min="0" max="100" placeholder="—" class="n-input s6-input"></td>
                                     </tr>
+                                    @endif
                                     <tr style="background:linear-gradient(90deg,rgba(26,61,52,.06),rgba(107,144,128,.04));">
                                         <td style="padding:12px 14px;"><p style="font-size:12px;font-weight:900;color:#1a3d34;text-transform:uppercase;letter-spacing:.05em;">Total Rating</p><p style="font-size:9px;color:#94a3b8;">Combined score</p></td>
                                         <td class="text-center" style="padding:12px;"><span id="s6SelfTotal" style="font-size:20px;font-weight:900;color:#cbd5e1;">—</span></td>
