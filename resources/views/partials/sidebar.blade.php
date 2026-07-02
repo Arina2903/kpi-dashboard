@@ -209,39 +209,30 @@
                     ['label' => 'Q4 Evaluation', 'href' => '/performance/report/q4', 'match' => 'performance/report/q4*', 'icon' => 'report'],
                 ],
             ],
-            // ── Daily Execution (coming soon) ─────────────────────────────────
-            // [
-            //     'title' => 'Daily Execution',
-            //     'items' => [
-            //         ['label' => 'Initiatives', 'href' => '/initiatives', 'match' => 'initiatives*', 'icon' => 'initiative'],
-            //         ['label' => 'Tasks',        'href' => '/tasks',       'match' => 'tasks*',       'icon' => 'task'],
-            //         ['label' => 'Calendar',     'href' => '/calendar',    'match' => 'calendar*',    'icon' => 'calendar'],
-            //     ],
-            // ],
-            // ── Review & Insights (coming soon) ───────────────────────────────
-            // [
-            //     'title' => 'Review & Insights',
-            //     'items' => [
-            //         ['label' => 'Reports',     'href' => '/reports',     'match' => 'reports*',     'icon' => 'report'],
-            //         ['label' => 'Analytics',   'href' => '/analytics',   'match' => 'analytics*',   'icon' => 'analytics'],
-            //         ['label' => 'Leaderboard', 'href' => '/leaderboard', 'match' => 'leaderboard*', 'icon' => 'leaderboard'],
-            //     ],
-            // ],
             [
-                'title' => 'Admin Setup',
-                'items' => [
-                    [
-                        'label' => 'Staff Access',
-                        'href' => '/users-access',
-                        'match' => 'users-access*',
-                        'icon' => 'users',
-                    ],
-                    [
-                        'label' => 'System Settings',
-                        'href' => '/settings',
-                        'match' => 'settings*',
-                        'icon' => 'settings',
-                    ],
+                'title'    => 'Daily Execution',
+                'bts_only' => true,
+                'items'    => [
+                    ['label' => 'Initiatives', 'href' => '/initiatives', 'match' => 'initiatives*', 'icon' => 'initiative'],
+                    ['label' => 'Tasks',        'href' => '/tasks',       'match' => 'tasks*',       'icon' => 'task'],
+                    ['label' => 'Calendar',     'href' => '/calendar',    'match' => 'calendar*',    'icon' => 'calendar'],
+                ],
+            ],
+            [
+                'title'    => 'Review & Insights',
+                'bts_only' => true,
+                'items'    => [
+                    ['label' => 'Reports',     'href' => '/reports',     'match' => 'reports*',     'icon' => 'report'],
+                    ['label' => 'Analytics',   'href' => '/analytics',   'match' => 'analytics*',   'icon' => 'analytics'],
+                    ['label' => 'Leaderboard', 'href' => '/leaderboard', 'match' => 'leaderboard*', 'icon' => 'leaderboard'],
+                ],
+            ],
+            [
+                'title'    => 'Admin Setup',
+                'bts_only' => true,
+                'items'    => [
+                    ['label' => 'Staff Access',    'href' => '/users-access', 'match' => 'users-access*', 'icon' => 'users'],
+                    ['label' => 'System Settings', 'href' => '/settings',     'match' => 'settings*',     'icon' => 'settings'],
                 ],
             ],
         ];
@@ -249,8 +240,12 @@
 
     <!-- NAVIGATION -->
     <nav class="flex-1 overflow-y-auto text-[12px] space-y-5 pr-1 min-h-0 custom-scroll">
+        @php $isBts = session('department_code') === 'BTS'; @endphp
         @foreach($navSections as $section)
             @if(($section['hr_only'] ?? false) && !session('hr_access'))
+                @continue
+            @endif
+            @if(($section['bts_only'] ?? false) && !$isBts)
                 @continue
             @endif
             <div>
