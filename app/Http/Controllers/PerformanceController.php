@@ -423,7 +423,7 @@ class PerformanceController extends Controller
                 ['no' => 11, 'title' => 'Dependability / Accountability', 'description' => 'Carries out work with limited/minimum supervision, follows instructions; shows initiative to complete tasks efficiently and effectively.'],
                 ['no' => 12, 'title' => 'Values',                         'description' => 'Understands and demonstrates organisation values at all times.'],
             ],
-            $role === 'manager' => [
+            $role === 'manager' || $role === 'vp' => [
                 ['no' =>  1, 'title' => 'Quality of Work',                        'description' => 'Consistently promotes quality awareness and continuous improvement without decreasing productivity or increasing cost.'],
                 ['no' =>  2, 'title' => 'Dependability / Accountability / Ownership', 'description' => 'Works with minimal supervision, follows instructions clearly, and shows initiative to complete tasks efficiently.'],
                 ['no' =>  3, 'title' => 'Problem-Solving & Decision Making',      'description' => 'Identifies and rectifies work problems independently; provides solutions and recommendations.'],
