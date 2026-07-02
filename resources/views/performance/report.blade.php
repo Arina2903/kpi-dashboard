@@ -317,7 +317,7 @@
                         @foreach($partAFields as $lf => $lv)
                         <div>
                             <p class="f-label">{{ $lf }}</p>
-                            <p class="f-val" style="padding:5px 0;border-bottom:1.5px solid rgba(107,144,128,.30);max-width:80px;cursor:default;user-select:none;-webkit-user-select:none;">{{ $attendanceYTD['has_data'] ? $lv : '0' }}</p>
+                            <p class="f-val" style="padding:5px 0;border-bottom:1.5px solid rgba(107,144,128,.30);max-width:80px;cursor:none;user-select:none;-webkit-user-select:none;">{{ $attendanceYTD['has_data'] ? $lv : '0' }}</p>
                         </div>
                         @endforeach
                     </div>
