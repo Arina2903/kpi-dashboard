@@ -524,13 +524,15 @@
                             @foreach([1,2,3,4,5] as $sc)<input type="radio" id="s_{{ $area['no'] }}_{{ $sc }}" name="self_{{ $area['no'] }}" value="{{ $sc }}"><label for="s_{{ $area['no'] }}_{{ $sc }}">{{ $sc }}</label>@endforeach
                         </div>
                     </td>
-                    <td style="padding:10px 8px;vertical-align:top;" class="text-center">
+                    <td style="padding:10px 8px;vertical-align:top;background:rgba(107,144,128,.03);" class="text-center">
                         <p style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Superior</p>
-                        <div class="rating-group justify-center">
+                        <div class="rating-group justify-center" style="pointer-events:none;opacity:0.5;">
                             @foreach([1,2,3,4,5] as $sc)<input type="radio" id="sup_{{ $area['no'] }}_{{ $sc }}" name="sup_{{ $area['no'] }}" value="{{ $sc }}"><label for="sup_{{ $area['no'] }}_{{ $sc }}">{{ $sc }}</label>@endforeach
                         </div>
                     </td>
-                    <td style="padding:10px 12px;vertical-align:top;"><input type="text" name="att_comment_{{ $area['no'] }}" placeholder="Comment…" class="t-input" style="margin-top:6px;"></td>
+                    <td style="padding:10px 12px;vertical-align:top;background:rgba(107,144,128,.03);">
+                        <input type="text" name="att_comment_{{ $area['no'] }}" placeholder="Filled by appraiser…" class="t-input" style="margin-top:6px;pointer-events:none;opacity:0.5;" readonly>
+                    </td>
                 </tr>
                 @endforeach
                 </tbody>
@@ -829,6 +831,31 @@
         window.setPartDDate('');
     };
 
+    // Section 3 live sum (self + superior)
+    function updateS3() {
+        var selfTotal = 0, selfCount = 0, supTotal = 0, supCount = 0;
+        for (var i = 1; i <= 12; i++) {
+            var selfVal = document.querySelector('input[name="self_' + i + '"]:checked');
+            var supVal  = document.querySelector('input[name="sup_'  + i + '"]:checked');
+            if (selfVal) { selfTotal += parseInt(selfVal.value); selfCount++; }
+            if (supVal)  { supTotal  += parseInt(supVal.value);  supCount++; }
+        }
+        var selfEl = document.getElementById('s3Self');
+        var supEl  = document.getElementById('s3Sup');
+        function scoreColor(v) { return v >= 50 ? '#059669' : v >= 40 ? '#6B9080' : v >= 30 ? '#d97706' : '#dc2626'; }
+        if (selfEl) {
+            if (selfCount > 0) { var s = (selfTotal / 60 * 25).toFixed(1); selfEl.textContent = s; selfEl.style.color = scoreColor(parseFloat(s)); }
+            else { selfEl.textContent = '—'; selfEl.style.color = '#cbd5e1'; }
+        }
+        if (supEl) {
+            if (supCount > 0) { var s2 = (supTotal / 60 * 25).toFixed(1); supEl.textContent = s2; supEl.style.color = scoreColor(parseFloat(s2)); }
+            else { supEl.textContent = '—'; supEl.style.color = '#cbd5e1'; }
+        }
+    }
+    document.querySelectorAll('input[name^="self_"], input[name^="sup_"]').forEach(function(r) {
+        r.addEventListener('change', updateS3);
+    });
+
     // Section 6 live sum
     document.querySelectorAll('.s6-input').forEach(function(inp){
         inp.addEventListener('input',function(){
@@ -923,6 +950,20 @@ function showToast(msg, ok) {
 // ── save ──────────────────────────────────────────────────────────────────────
 window.saveEvaluation = function() {
     if (!_isWindowOpen) { showToast('Evaluation window is closed.', false); return; }
+    // Validate Section 3: all 12 self ratings required
+    var missing = [];
+    for (var i = 1; i <= 12; i++) {
+        if (!document.querySelector('input[name="self_' + i + '"]:checked')) missing.push(i);
+    }
+    if (missing.length > 0) {
+        showToast('Section 3: Please rate all ' + missing.length + ' remaining area(s).', false);
+        // highlight missing rows
+        missing.forEach(function(n) {
+            var row = document.querySelector('input[name="self_' + n + '"]')?.closest('tr');
+            if (row) { row.style.background = 'rgba(239,68,68,.08)'; setTimeout(function(){ row.style.background = ''; }, 2500); }
+        });
+        return;
+    }
     const data = collectFormData();
     const btn  = document.getElementById('saveBtn');
     if (btn) btn.disabled = true;
@@ -944,7 +985,7 @@ window.saveEvaluation = function() {
 };
 
 // ── on page load ──────────────────────────────────────────────────────────────
-if (_savedData) restoreFormData(_savedData);
+if (_savedData) { restoreFormData(_savedData); updateS3(); }
 if (!_isWindowOpen) lockForm();
 </script>
 </body>
