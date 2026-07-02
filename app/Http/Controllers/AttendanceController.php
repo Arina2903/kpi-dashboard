@@ -65,6 +65,7 @@ class AttendanceController extends Controller
         $year     = (int) $request->year;
         $company  = strtoupper($request->company);
         $sheetUrl = $request->sheet_url;
+        $monthLabels = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
         preg_match('/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/', $sheetUrl, $m);
         $sheetId = $m[1] ?? null;
@@ -89,31 +90,35 @@ class AttendanceController extends Controller
         }
         $totalWorkingDays = count($workingDays);
 
-        // Fetch CSV from the month-named tab
-        $monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-        $tabName    = $monthNames[$month - 1];
-        $csvUrl     = "https://docs.google.com/spreadsheets/d/{$sheetId}/export?format=csv&sheet={$tabName}";
-        $response   = Http::timeout(30)->get($csvUrl);
-
-        // Fallback to default (first) tab
-        if (!$response->successful()) {
-            $csvUrl   = "https://docs.google.com/spreadsheets/d/{$sheetId}/export?format=csv";
-            $response = Http::timeout(30)->get($csvUrl);
-        }
-
-        if (!$response->successful()) {
-            return back()->with('error', 'Could not fetch the Google Sheet. Make sure it is set to "Anyone with link can view".');
-        }
-
         // DB employees — used only to enrich department info, NOT to add zero-data employees
         $dbEmps = $supabase->get('employees', [
             'is_active' => 'eq.true',
             'select'    => 'id,employee_id,full_name,short_name,department_code',
         ]) ?? [];
 
-        $results = $this->parseAttendanceCsv($response->body(), $month, $year, $workingDays, $dbEmps);
+        // Try multiple tab name conventions (English, Malay, abbreviated, numeric)
+        // so the import works regardless of how the user named their sheet tabs
+        $tabCandidates = $this->monthTabNames($month);
+        $results = null;
 
-        // Also load current month status for the grid
+        foreach ($tabCandidates as $tabName) {
+            $csvUrl   = "https://docs.google.com/spreadsheets/d/{$sheetId}/export?format=csv&sheet=" . urlencode($tabName);
+            $response = Http::timeout(30)->get($csvUrl);
+            if (!$response->successful()) continue;
+
+            $parsed = $this->parseAttendanceCsv($response->body(), $month, $year, $workingDays, $dbEmps);
+            if (!empty($parsed)) {
+                $results = $parsed;
+                break;
+            }
+        }
+
+        if ($results === null) {
+            $tried = implode(', ', $tabCandidates);
+            return back()->with('error', "No attendance data found for {$monthLabels[$month-1]} {$year}. Tried tab names: {$tried}. Make sure the sheet tab is named exactly as one of these, and that the sheet is shared publicly.");
+        }
+
+        // Load current month status for the grid
         $existingData = $supabase->get('attendance_summary', [
             'company_code' => 'eq.' . $company,
             'year'         => 'eq.' . $year,
@@ -210,11 +215,24 @@ class AttendanceController extends Controller
 
             if (empty($internalId) || empty($clockInDate) || empty($clockIn)) continue;
 
-            // Filter to this month/year only
-            try {
-                $dt = Carbon::parse($clockInDate);
-                if ($dt->month !== $month || $dt->year !== $year) continue;
-            } catch (\Exception $e) { continue; }
+            // Robust date parsing: try DD/MM/YYYY (Malaysian), then YYYY-MM-DD, then M/D/YYYY, then generic
+            $dt = null;
+            foreach (['d/m/Y', 'Y-m-d', 'n/j/Y', 'd-m-Y', 'Y/m/d'] as $fmt) {
+                try {
+                    $candidate = Carbon::createFromFormat($fmt, $clockInDate);
+                    if ($candidate !== false) { $dt = $candidate; break; }
+                } catch (\Exception $e) { continue; }
+            }
+            if ($dt === null) {
+                try { $dt = Carbon::parse($clockInDate); } catch (\Exception $e) { continue; }
+            }
+            if ($dt === null) continue;
+
+            // Only keep dates that belong to the requested month/year
+            if ($dt->month !== $month || $dt->year !== $year) continue;
+
+            // Normalise the date key to YYYY-MM-DD so it matches working days array
+            $dateKey = $dt->toDateString();
 
             if (!isset($employees[$internalId])) {
                 $employees[$internalId] = [
@@ -229,10 +247,10 @@ class AttendanceController extends Controller
             }
 
             // Earliest clock-in per day
-            if (!isset($employees[$internalId]['dates'][$clockInDate])) {
-                $employees[$internalId]['dates'][$clockInDate] = $clockIn;
-            } elseif ($clockIn < $employees[$internalId]['dates'][$clockInDate]) {
-                $employees[$internalId]['dates'][$clockInDate] = $clockIn;
+            if (!isset($employees[$internalId]['dates'][$dateKey])) {
+                $employees[$internalId]['dates'][$dateKey] = $clockIn;
+            } elseif ($clockIn < $employees[$internalId]['dates'][$dateKey]) {
+                $employees[$internalId]['dates'][$dateKey] = $clockIn;
             }
         }
 
@@ -296,5 +314,23 @@ class AttendanceController extends Controller
 
         uasort($results, fn($a, $b) => strcmp($a['department'] . $a['name'], $b['department'] . $b['name']));
         return $results;
+    }
+
+    /**
+     * Returns tab name candidates for a given month number, in priority order.
+     * Covers English full, Malay full, English abbreviated, Malay abbreviated, and numeric.
+     */
+    private function monthTabNames(int $month): array
+    {
+        $en = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        $ms = ['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember'];
+        $ab = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        $mab= ['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogs','Sep','Okt','Nov','Dis'];
+        $i  = $month - 1;
+        return array_unique([
+            $en[$i], $ms[$i], $ab[$i], $mab[$i],
+            strtoupper($en[$i]), strtolower($en[$i]),
+            (string) $month, str_pad((string) $month, 2, '0', STR_PAD_LEFT),
+        ]);
     }
 }

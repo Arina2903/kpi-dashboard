@@ -424,13 +424,6 @@ class PerformanceController extends Controller
             $attendanceSummary['other_leave_days']   += (int)($ar['other_leave_days'] ?? 0);
             $attendanceSummary['months'][]           = \Carbon\Carbon::create($year, (int)$ar['month'], 1)->format('M Y');
         }
-        $attendanceSummary['awol'] = max(
-            0,
-            $attendanceSummary['absent_days']
-            - $attendanceSummary['mc_days']
-            - $attendanceSummary['al_days']
-            - $attendanceSummary['other_leave_days']
-        );
 
         // ── YTD totals (all uploaded months this year) for Part A ─────────────
         $attendanceYTD = ['has_data' => !empty($allAttendance), 'mc_days' => 0, 'other_leave_days' => 0, 'late_count' => 0];

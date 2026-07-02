@@ -542,14 +542,13 @@
                     </p>
                     <div class="grid grid-cols-4 gap-4 mb-5">
                         @foreach([
-                            ['label' => 'Working Days',      'value' => $attendanceSummary['working_days'],      'color' => 'text-slate-700'],
-                            ['label' => 'Days Present',      'value' => $attendanceSummary['present_days'],      'color' => 'text-emerald-700'],
-                            ['label' => 'Days Absent',       'value' => $attendanceSummary['absent_days'],       'color' => 'text-red-600'],
-                            ['label' => 'Late Incidents',    'value' => $attendanceSummary['late_count'],        'color' => 'text-amber-600'],
-                            ['label' => 'Medical Leave',     'value' => $attendanceSummary['mc_days'],           'color' => 'text-blue-600'],
-                            ['label' => 'Annual Leave',      'value' => $attendanceSummary['al_days'],           'color' => 'text-violet-600'],
-                            ['label' => 'Other Leave',       'value' => $attendanceSummary['other_leave_days'],  'color' => 'text-slate-500'],
-                            ['label' => 'AWOL',              'value' => $attendanceSummary['awol'],              'color' => $attendanceSummary['awol'] > 0 ? 'text-red-700 font-black' : 'text-slate-400'],
+                            ['label' => 'Working Days',   'value' => $attendanceSummary['working_days'],     'color' => 'text-slate-700'],
+                            ['label' => 'Days Present',   'value' => $attendanceSummary['present_days'],     'color' => 'text-emerald-700'],
+                            ['label' => 'Days Absent',    'value' => $attendanceSummary['absent_days'],      'color' => 'text-red-600'],
+                            ['label' => 'Late Incidents', 'value' => $attendanceSummary['late_count'],       'color' => 'text-amber-600'],
+                            ['label' => 'Medical Leave',  'value' => $attendanceSummary['mc_days'],          'color' => 'text-blue-600'],
+                            ['label' => 'Annual Leave',   'value' => $attendanceSummary['al_days'],          'color' => 'text-violet-600'],
+                            ['label' => 'Other Leave',    'value' => $attendanceSummary['other_leave_days'], 'color' => 'text-slate-500'],
                         ] as $af)
                         <div class="border border-[#6B9080]/20 rounded-xl px-4 py-3 bg-slate-50/60 text-center">
                             <p class="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{{ $af['label'] }}</p>

@@ -210,7 +210,6 @@
             <th class="text-center">MC<br><span class="font-normal text-[8px] normal-case tracking-normal opacity-70">key in</span></th>
             <th class="text-center">AL<br><span class="font-normal text-[8px] normal-case tracking-normal opacity-70">key in</span></th>
             <th class="text-center">Other<br><span class="font-normal text-[8px] normal-case tracking-normal opacity-70">key in</span></th>
-            <th class="text-center">AWOL<br><span class="font-normal text-[8px] normal-case tracking-normal opacity-70">auto</span></th>
             @foreach($workingDays as $wd)
             <th class="text-center" style="min-width:30px;font-size:8px;padding:6px 2px;">
                 {{ \Carbon\Carbon::parse($wd)->format('d') }}<br>
@@ -258,7 +257,6 @@
         <td class="text-center"><input type="number" min="0" max="{{ $emp['absent_days'] }}" value="0" class="leaf-input mc-in" data-eid="{{ $eid }}"></td>
         <td class="text-center"><input type="number" min="0" max="{{ $emp['absent_days'] }}" value="0" class="leaf-input al-in" data-eid="{{ $eid }}"></td>
         <td class="text-center"><input type="number" min="0" max="{{ $emp['absent_days'] }}" value="0" class="leaf-input ot-in" data-eid="{{ $eid }}"></td>
-        <td class="text-center font-bold text-red-600 awol-cell" data-absent="{{ $emp['absent_days'] }}">{{ $emp['absent_days'] }}</td>
         @foreach($workingDays as $wd)
         @php $day = $emp['daily'][$wd] ?? ['status'=>'absent','clock_in'=>null,'is_late'=>false,'late_minutes'=>0]; @endphp
         <td class="text-center" style="padding:3px 2px;">
@@ -306,19 +304,6 @@ const SHEET_URL   = "{{ addslashes($sheetUrl ?? '') }}";
 </main>
 
 <script>
-// AWOL auto-recalculate
-document.querySelectorAll('.mc-in,.al-in,.ot-in').forEach(function(inp) {
-    inp.addEventListener('input', function() {
-        var row   = document.querySelector('tr[data-eid="' + this.dataset.eid + '"]');
-        var mc    = parseInt(row.querySelector('.mc-in').value) || 0;
-        var al    = parseInt(row.querySelector('.al-in').value) || 0;
-        var ot    = parseInt(row.querySelector('.ot-in').value) || 0;
-        var cell  = row.querySelector('.awol-cell');
-        var awol  = Math.max(0, parseInt(cell.dataset.absent) - mc - al - ot);
-        cell.textContent = awol;
-        cell.className = 'text-center font-bold awol-cell ' + (awol > 0 ? 'text-red-600' : 'text-emerald-600');
-    });
-});
 
 // Import button loading state
 document.getElementById('importForm')?.addEventListener('submit', function() {
