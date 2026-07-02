@@ -237,9 +237,11 @@ class AttendanceController extends Controller
 
             if (empty($internalId) || empty($clockInDate) || empty($clockIn)) continue;
 
-            // Robust date parsing: try DD/MM/YYYY (Malaysian), then YYYY-MM-DD, then M/D/YYYY, then generic
+            // Robust date parsing: try DD/MM/YYYY first (Malaysian), then D/M/YYYY without leading zeros,
+            // then ISO, then American M/D/Y as last resort. Order matters — j/n/Y must come before n/j/Y
+            // so that 1/2/2026 is read as Feb 1 (Malaysian) not Jan 2 (American).
             $dt = null;
-            foreach (['d/m/Y', 'Y-m-d', 'n/j/Y', 'd-m-Y', 'Y/m/d'] as $fmt) {
+            foreach (['d/m/Y', 'j/n/Y', 'Y-m-d', 'd-m-Y', 'Y/m/d', 'n/j/Y'] as $fmt) {
                 try {
                     $candidate = Carbon::createFromFormat($fmt, $clockInDate);
                     if ($candidate !== false) { $dt = $candidate; break; }
