@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Attendance Import</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,6 +15,10 @@
         .badge { display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:6px;font-size:10px;font-weight:800;padding:0 5px; }
         .leaf-input { width:52px;border:1.5px solid rgba(107,144,128,.3);border-radius:7px;padding:3px 6px;font-size:11px;font-weight:600;color:#334155;text-align:center;background:#fff;outline:none; }
         .leaf-input:focus { border-color:#6B9080; }
+        .month-card { border-radius:12px;padding:10px 12px;border:1.5px solid;display:flex;flex-direction:column;gap:4px;transition:all .15s; }
+        .month-card.imported { background:#edf7f1;border-color:#6B9080; }
+        .month-card.empty    { background:#f8f9fa;border-color:#e2e8f0; }
+        .month-card.future   { background:#f1f5f9;border-color:#e2e8f0;opacity:.5; }
         @media print {
             .no-print { display:none!important; }
             body { background:#fff!important; }
@@ -35,7 +40,7 @@
             </div>
             <div>
                 <h1 class="text-base font-black">Attendance Import & Analysis</h1>
-                <p class="text-white/65 text-[10px] mt-0.5">Import from Google Sheet · Calculate lateness, absent, MC, AL</p>
+                <p class="text-white/65 text-[10px] mt-0.5">Multi-month import from Google Sheet · Calculate lateness, MC, AL</p>
             </div>
         </div>
         @if(isset($results))
@@ -49,9 +54,101 @@
 
 <div class="px-4 py-4 max-w-full">
 
-{{-- Import Form --}}
+@php
+    $monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    $mStatus    = $monthStatus ?? [];
+    $sYear      = $statusYear ?? now()->year;
+    $curMonth   = now()->month;
+    $defCompany = $defaultCompany ?? 'RCG';
+@endphp
+
+{{-- ═══ IMPORT ALL MONTHS ══════════════════════════════════════════════════ --}}
 <div class="bg-white rounded-2xl border border-[#6B9080]/25 shadow-sm p-6 mb-5 no-print">
-    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest mb-4">Import Attendance Data</p>
+    <div class="flex items-center gap-2 mb-4">
+        <span class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest">Import All Months</span>
+        <span class="text-[9px] bg-[#1a3d34]/10 text-[#1a3d34] font-bold px-2 py-0.5 rounded-full">{{ $sYear }}</span>
+    </div>
+
+    <div class="grid grid-cols-3 gap-3 mb-4">
+        <div>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Company</p>
+            <select id="all-company" class="w-full border border-[#6B9080]/30 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 bg-white outline-none focus:border-[#6B9080]">
+                @foreach(['RCG','RGHB','RCT'] as $co)
+                <option value="{{ $co }}" {{ $defCompany===$co?'selected':'' }}>{{ $co }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Year</p>
+            <select id="all-year" class="w-full border border-[#6B9080]/30 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 bg-white outline-none focus:border-[#6B9080]">
+                @foreach([2025,2026,2027] as $y)
+                <option value="{{ $y }}" {{ $sYear==$y?'selected':'' }}>{{ $y }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="flex flex-col justify-end">
+            <button onclick="importAllMonths()" id="importAllBtn"
+                class="bg-[#1a3d34] hover:bg-[#2d5548] text-white px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 justify-center">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                Import All Months
+            </button>
+        </div>
+    </div>
+
+    <div>
+        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Google Sheet URL</p>
+        <input type="url" id="all-sheet-url" placeholder="https://docs.google.com/spreadsheets/d/…"
+            value="{{ $sheetUrl ?? 'https://docs.google.com/spreadsheets/d/1idaGU_UfJ7tyoQtB65muFC5jKGYXZRshqUxb6ig5BbQ/edit' }}"
+            class="w-full border border-[#6B9080]/30 rounded-xl px-4 py-2.5 text-sm text-slate-700 bg-white outline-none focus:border-[#6B9080]">
+        <p class="text-[9px] text-slate-400 mt-1.5">Sheet must have tabs named <strong>January, February, March …</strong> with clock-in data. Set sharing to <strong>"Anyone with link can view"</strong>.</p>
+    </div>
+
+    {{-- Progress area --}}
+    <div id="importAllProgress" class="hidden mt-4">
+        <div class="flex items-center gap-2 mb-3">
+            <div id="importAllSpinner" class="w-4 h-4 border-2 border-[#6B9080] border-t-transparent rounded-full animate-spin"></div>
+            <span id="importAllMsg" class="text-[11px] font-semibold text-[#1a3d34]">Importing…</span>
+        </div>
+        <div id="importAllLog" class="bg-slate-50 rounded-xl border border-slate-200 p-3 text-[10px] font-mono text-slate-600 max-h-40 overflow-y-auto space-y-1"></div>
+    </div>
+</div>
+
+{{-- ═══ MONTH STATUS GRID ══════════════════════════════════════════════════ --}}
+<div class="bg-white rounded-2xl border border-[#6B9080]/25 shadow-sm p-6 mb-5 no-print" id="monthStatusGrid">
+    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest mb-4">Import Status — {{ $sYear }}</p>
+    <div class="grid grid-cols-6 gap-3" id="monthGrid">
+        @for($mi = 1; $mi <= 12; $mi++)
+        @php
+            $isImported = isset($mStatus[$mi]);
+            $isFuture   = ($sYear == now()->year && $mi > $curMonth) || ($sYear > now()->year);
+            $cardClass  = $isFuture ? 'future' : ($isImported ? 'imported' : 'empty');
+            $lastImport = $isImported ? \Carbon\Carbon::parse($mStatus[$mi])->format('d M H:i') : null;
+        @endphp
+        <div class="month-card {{ $cardClass }}" id="month-card-{{ $mi }}" data-month="{{ $mi }}">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-black {{ $isImported ? 'text-[#1a3d34]' : ($isFuture ? 'text-slate-300' : 'text-slate-400') }}">
+                    {{ substr($monthNames[$mi-1], 0, 3) }}
+                </span>
+                @if($isImported)
+                <span class="text-[8px] text-emerald-600">✓</span>
+                @elseif(!$isFuture)
+                <span class="text-[8px] text-slate-300">—</span>
+                @endif
+            </div>
+            @if($isImported)
+            <div class="text-[8px] text-[#6B9080] font-medium leading-tight" id="month-ts-{{ $mi }}">{{ $lastImport }}</div>
+            @else
+            <div class="text-[8px] text-slate-300 font-medium" id="month-ts-{{ $mi }}">{{ $isFuture ? 'Future' : 'Not imported' }}</div>
+            @endif
+        </div>
+        @endfor
+    </div>
+</div>
+
+{{-- ═══ SINGLE-MONTH IMPORT ════════════════════════════════════════════════ --}}
+<div class="bg-white rounded-2xl border border-[#6B9080]/25 shadow-sm p-6 mb-5 no-print">
+    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest mb-1">Single Month Import</p>
+    <p class="text-[9px] text-slate-400 mb-4">Import one specific month and review daily attendance detail before saving.</p>
 
     @if(session('error'))
     <div class="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">{{ session('error') }}</div>
@@ -64,7 +161,7 @@
                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Company</p>
                 <select name="company" class="w-full border border-[#6B9080]/30 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 bg-white outline-none focus:border-[#6B9080]">
                     @foreach(['RCG','RGHB','RCT'] as $co)
-                    <option value="{{ $co }}" {{ (isset($company)&&$company===$co)?'selected':'' }}>{{ $co }}</option>
+                    <option value="{{ $co }}" {{ (isset($company)&&$company===$co)||(!isset($company)&&$defCompany===$co)?'selected':'' }}>{{ $co }}</option>
                     @endforeach
                 </select>
             </div>
@@ -88,14 +185,13 @@
                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Google Sheet URL</p>
                 <div class="flex gap-2">
                     <input type="url" name="sheet_url" required placeholder="https://docs.google.com/spreadsheets/d/…"
-                        value="{{ $sheetUrl ?? '' }}"
+                        value="{{ $sheetUrl ?? 'https://docs.google.com/spreadsheets/d/1idaGU_UfJ7tyoQtB65muFC5jKGYXZRshqUxb6ig5BbQ/edit' }}"
                         class="flex-1 border border-[#6B9080]/30 rounded-xl px-4 py-2.5 text-sm text-slate-700 bg-white outline-none focus:border-[#6B9080]">
-                    <button type="submit" id="importBtn" class="bg-[#1a3d34] hover:bg-[#2d5548] text-white px-6 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2">
+                    <button type="submit" id="importBtn" class="bg-[#6B9080] hover:bg-[#5a7a6d] text-white px-6 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                        Import & Calculate
+                        Preview Month
                     </button>
                 </div>
-                <p class="text-[9px] text-slate-400 mt-1.5">Make sure the sheet is set to <strong>"Anyone with link can view"</strong>. Columns needed: Internal Id, First Name, Last Name, Preferred Name, Email, Clock In Time, Clock In Date.</p>
             </div>
         </div>
     </form>
@@ -106,7 +202,6 @@
 {{-- Summary Cards --}}
 @php
     $totalEmp     = count($results);
-    $totalPresent = collect($results)->avg('present_days');
     $totalLate    = collect($results)->sum('late_count');
     $totalAbsent  = collect($results)->sum('absent_days');
     $monthName    = \Carbon\Carbon::create(null, $month)->format('F');
@@ -129,13 +224,19 @@
     @endforeach
 </div>
 
+{{-- Period label --}}
+<div class="flex items-center gap-3 mb-3 no-print">
+    <span class="text-xs font-black text-[#1a3d34]">{{ $monthName }} {{ $year }}</span>
+    <span class="text-[9px] bg-[#1a3d34]/10 text-[#1a3d34] font-bold px-2 py-0.5 rounded-full">Preview — enter MC / AL / Other Leave then Save</span>
+</div>
+
 {{-- Legend --}}
 <div class="flex items-center gap-4 mb-3 no-print flex-wrap">
     <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Legend:</p>
     @foreach([['bg-emerald-100 text-emerald-700','Present'],['bg-amber-100 text-amber-700','Late'],['bg-red-100 text-red-700','Absent'],['bg-blue-100 text-blue-700','MC'],['bg-purple-100 text-purple-700','AL'],['bg-slate-100 text-slate-500','PH/Weekend']] as [$cls,$lbl])
     <span class="badge {{ $cls }}">{{ $lbl }}</span>
     @endforeach
-    <p class="text-[9px] text-slate-400 ml-auto">Working hours: 8:30 AM – 5:30 PM · Late = clock-in after 8:30</p>
+    <p class="text-[9px] text-slate-400 ml-auto">Working hours: 8:30 AM · Late = clock-in after 8:30</p>
 </div>
 
 {{-- Main Table --}}
@@ -219,7 +320,6 @@
             <td class="text-center awol-cell font-bold text-red-600" data-absent="{{ $emp['absent_days'] }}">
                 {{ $emp['absent_days'] }}
             </td>
-            {{-- Daily cells --}}
             @foreach($workingDays as $wd)
             @php $day = $emp['daily'][$wd] ?? ['status'=>'absent','clock_in'=>null,'is_late'=>false,'late_minutes'=>0]; @endphp
             <td class="text-center" style="padding:4px 2px;">
@@ -251,7 +351,6 @@
     </button>
 </div>
 
-{{-- Hidden data for JS --}}
 <script>
 const RAW_RESULTS = @json($results);
 const MONTH       = {{ $month }};
@@ -266,7 +365,7 @@ const SHEET_URL   = "{{ $sheetUrl ?? '' }}";
 </main>
 
 <script>
-// ── Auto-compute AWOL when MC/AL/Other changes ───────────────────────────
+// ── AWOL auto-compute ─────────────────────────────────────────────────────
 document.querySelectorAll('.mc-input, .al-input, .other-input').forEach(function(inp) {
     inp.addEventListener('input', function() {
         var eid   = this.dataset.eid;
@@ -282,10 +381,10 @@ document.querySelectorAll('.mc-input, .al-input, .other-input').forEach(function
     });
 });
 
-// ── Import button loading state ───────────────────────────────────────────
+// ── Single-month import loading state ────────────────────────────────────
 document.getElementById('importForm')?.addEventListener('submit', function() {
     var btn = document.getElementById('importBtn');
-    btn.textContent = 'Importing…';
+    btn.textContent = 'Loading…';
     btn.disabled = true;
     btn.classList.add('opacity-70');
 });
@@ -333,15 +432,101 @@ function saveAttendance() {
     .then(function(r) { return r.json(); })
     .then(function(d) {
         if (d.success) {
-            alert('✅ Saved ' + d.count + ' records successfully!');
+            alert('✅ Saved ' + d.count + ' records for ' + MONTH + '/' + YEAR);
         } else {
             alert('❌ Error saving data. Please try again.');
         }
     })
     .catch(function() { alert('❌ Network error. Please try again.'); });
 }
+
+// ── Import All Months ─────────────────────────────────────────────────────
+function importAllMonths() {
+    var url     = document.getElementById('all-sheet-url').value.trim();
+    var company = document.getElementById('all-company').value;
+    var year    = document.getElementById('all-year').value;
+    var csrf    = document.querySelector('meta[name=csrf-token]')?.content || '';
+
+    if (!url) { alert('Please enter the Google Sheet URL.'); return; }
+
+    var btn = document.getElementById('importAllBtn');
+    btn.disabled = true;
+    btn.classList.add('opacity-60');
+
+    var progress = document.getElementById('importAllProgress');
+    var spinner  = document.getElementById('importAllSpinner');
+    var msg      = document.getElementById('importAllMsg');
+    var log      = document.getElementById('importAllLog');
+    progress.classList.remove('hidden');
+    log.innerHTML = '';
+    msg.textContent = 'Connecting to Google Sheet…';
+
+    fetch("{{ route('attendance.import-all') }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrf,
+        },
+        body: JSON.stringify({ sheet_url: url, company: company, year: parseInt(year) }),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        spinner.classList.add('hidden');
+        if (!d.success) {
+            msg.textContent = '❌ ' + (d.error || 'Import failed.');
+            msg.classList.add('text-red-600');
+            btn.disabled = false;
+            btn.classList.remove('opacity-60');
+            return;
+        }
+
+        var successCount = 0;
+        var failCount    = 0;
+        var monthNames   = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+        Object.entries(d.status).forEach(function([monthNum, info]) {
+            var mi   = parseInt(monthNum);
+            var name = info.month_name || monthNames[mi - 1];
+            if (info.success) {
+                successCount++;
+                log.innerHTML += '<div class="text-emerald-700">✓ ' + name + ' — ' + info.saved + ' employees saved</div>';
+                // Update the month card in the grid
+                var card = document.getElementById('month-card-' + mi);
+                var ts   = document.getElementById('month-ts-' + mi);
+                if (card) {
+                    card.classList.remove('empty','future');
+                    card.classList.add('imported');
+                    card.querySelector('span').classList.remove('text-slate-400','text-slate-300');
+                    card.querySelector('span').classList.add('text-[#1a3d34]');
+                    var chk = card.querySelector('.text-\\[8px\\]');
+                    if (chk) chk.textContent = '✓';
+                }
+                if (ts) {
+                    var now = new Date();
+                    ts.textContent = now.getDate().toString().padStart(2,'0') + ' ' + name.substring(0,3) + ' ' + now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+                    ts.classList.remove('text-slate-300');
+                    ts.classList.add('text-[#6B9080]');
+                }
+            } else {
+                failCount++;
+                log.innerHTML += '<div class="text-red-500">✗ ' + name + ' — ' + (info.error || 'Failed') + '</div>';
+            }
+        });
+
+        msg.textContent = '✅ Done — ' + successCount + ' months imported' + (failCount > 0 ? ', ' + failCount + ' skipped' : '') + '.';
+        msg.classList.add(failCount > 0 ? 'text-amber-600' : 'text-emerald-700');
+        btn.disabled = false;
+        btn.classList.remove('opacity-60');
+    })
+    .catch(function(err) {
+        spinner.classList.add('hidden');
+        msg.textContent = '❌ Network error. Check sheet URL and try again.';
+        msg.classList.add('text-red-600');
+        btn.disabled = false;
+        btn.classList.remove('opacity-60');
+    });
+}
 </script>
 
-<meta name="csrf-token" content="{{ csrf_token() }}">
 </body>
 </html>

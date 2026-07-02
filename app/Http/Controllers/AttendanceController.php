@@ -9,7 +9,6 @@ use Carbon\Carbon;
 
 class AttendanceController extends Controller
 {
-    // Working hours: 08:30 MY time
     const WORK_START = '08:30';
 
     private function authorise(): bool
@@ -17,7 +16,7 @@ class AttendanceController extends Controller
         return session('hr_access') === true;
     }
 
-    public function index()
+    public function index(SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid') || !session()->has('company_code')) {
             return redirect()->route('login');
@@ -27,9 +26,29 @@ class AttendanceController extends Controller
             abort(403, 'Access restricted to SLT and VP only.');
         }
 
+        $company = strtoupper(session('company_code'));
+        $year    = now()->year;
+
+        $existingData = $supabase->get('attendance_summary', [
+            'company_code' => 'eq.' . $company,
+            'year'         => 'eq.' . $year,
+            'select'       => 'month,updated_at',
+        ]) ?? [];
+
+        $monthStatus = [];
+        foreach ($existingData as $row) {
+            $m = (int) $row['month'];
+            if (!isset($monthStatus[$m]) || $row['updated_at'] > $monthStatus[$m]) {
+                $monthStatus[$m] = $row['updated_at'];
+            }
+        }
+
         return view('attendance.index', [
             'defaultMonth' => now()->month,
-            'defaultYear'  => now()->year,
+            'defaultYear'  => $year,
+            'monthStatus'  => $monthStatus,
+            'statusYear'   => $year,
+            'defaultCompany' => $company,
         ]);
     }
 
@@ -53,38 +72,18 @@ class AttendanceController extends Controller
         $company  = strtoupper($request->company);
         $sheetUrl = $request->sheet_url;
 
-        // Extract Google Sheet ID
         preg_match('/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/', $sheetUrl, $m);
         $sheetId = $m[1] ?? null;
         if (!$sheetId) {
-            return back()->with('error', 'Invalid Google Sheet URL. Please check and try again.');
+            return back()->with('error', 'Invalid Google Sheet URL.');
         }
 
-        // Fetch CSV export
-        $csvUrl  = "https://docs.google.com/spreadsheets/d/{$sheetId}/export?format=csv";
-        $response = Http::timeout(30)->get($csvUrl);
-
-        if (!$response->successful()) {
-            return back()->with('error', 'Could not fetch the Google Sheet. Make sure it is set to "Anyone with link can view".');
-        }
-
-        $csvText = $response->body();
-        $lines   = array_filter(explode("\n", str_replace("\r", '', $csvText)));
-        $rows    = array_map('str_getcsv', $lines);
-        array_shift($rows); // remove header
-
-        // ── Public holidays (fetch whole year, filter by month in PHP) ────
-        // Cannot use duplicate array keys for gte+lte in one call
-        $allPh = $supabase->get('public_holidays', [
-            'select' => 'holiday_date',
-        ]) ?? [];
+        $allPh = $supabase->get('public_holidays', ['select' => 'holiday_date']) ?? [];
         $publicHolidays = array_values(array_filter(
             array_column($allPh, 'holiday_date'),
-            fn($d) => \Carbon\Carbon::parse($d)->year === $year
-                   && \Carbon\Carbon::parse($d)->month === $month
+            fn($d) => Carbon::parse($d)->year === $year && Carbon::parse($d)->month === $month
         ));
 
-        // ── Build all working days in the month ────────────────────────────
         $start       = Carbon::create($year, $month, 1);
         $end         = $start->copy()->endOfMonth();
         $workingDays = [];
@@ -97,147 +96,29 @@ class AttendanceController extends Controller
         }
         $totalWorkingDays = count($workingDays);
 
-        // ── Parse rows → group by employee → group by date ─────────────────
-        $employees = []; // internal_id → { meta, dates: { date → earliest_clock_in } }
+        // Determine sheet tab name from month name (default tab if not specified)
+        $monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        $tabName    = $monthNames[$month - 1];
+        $csvUrl     = "https://docs.google.com/spreadsheets/d/{$sheetId}/export?format=csv&sheet={$tabName}";
+        $response   = Http::timeout(30)->get($csvUrl);
 
-        foreach ($rows as $row) {
-            if (count($row) < 7) continue;
-
-            $internalId = trim($row[0] ?? '');
-            $firstName  = trim($row[1] ?? '');
-            $lastName   = trim($row[2] ?? '');
-            $preferred  = trim($row[3] ?? '');
-            $email      = trim($row[4] ?? '');
-            $clockIn    = trim($row[5] ?? '');
-            $clockInDate= trim($row[6] ?? '');
-
-            if (empty($internalId) || empty($clockInDate) || empty($clockIn)) continue;
-
-            // Only include this company
-            if (!str_starts_with($internalId, $company)) continue;
-
-            // Only include dates in this month/year
-            try {
-                $dt = Carbon::parse($clockInDate);
-                if ($dt->month !== $month || $dt->year !== $year) continue;
-            } catch (\Exception $e) {
-                continue;
-            }
-
-            if (!isset($employees[$internalId])) {
-                $employees[$internalId] = [
-                    'internal_id'   => $internalId,
-                    'name'          => trim("{$firstName} {$lastName}"),
-                    'preferred_name'=> $preferred ?: $firstName,
-                    'email'         => $email,
-                    'dates'         => [],
-                ];
-            }
-
-            // Take earliest clock-in for each date
-            if (!isset($employees[$internalId]['dates'][$clockInDate])) {
-                $employees[$internalId]['dates'][$clockInDate] = $clockIn;
-            } else {
-                $existing = $employees[$internalId]['dates'][$clockInDate];
-                if ($clockIn < $existing) {
-                    $employees[$internalId]['dates'][$clockInDate] = $clockIn;
-                }
-            }
+        // Fall back to first tab if named tab fails
+        if (!$response->successful()) {
+            $csvUrl   = "https://docs.google.com/spreadsheets/d/{$sheetId}/export?format=csv";
+            $response = Http::timeout(30)->get($csvUrl);
         }
 
-        // ── Also pull employees from DB who have NO clock-in at all ────────
+        if (!$response->successful()) {
+            return back()->with('error', 'Could not fetch the Google Sheet. Make sure it is set to "Anyone with link can view".');
+        }
+
         $dbEmps = $supabase->get('employees', [
             'company_code' => 'eq.' . $company,
             'is_active'    => 'eq.true',
             'select'       => 'id,employee_id,full_name,short_name,email,department_code',
         ]) ?? [];
 
-        foreach ($dbEmps as $emp) {
-            $eid = $emp['employee_id'] ?? null;
-            if (!$eid || !str_starts_with($eid, $company)) continue;
-            if (!isset($employees[$eid])) {
-                $employees[$eid] = [
-                    'internal_id'    => $eid,
-                    'name'           => $emp['full_name'] ?? $emp['short_name'] ?? '—',
-                    'preferred_name' => $emp['short_name'] ?? '',
-                    'email'          => $emp['email'] ?? '',
-                    'dates'          => [],
-                    'db_employee_id' => $emp['id'],
-                    'department'     => $emp['department_code'] ?? '',
-                ];
-            } else {
-                $employees[$eid]['db_employee_id'] = $emp['id'];
-                $employees[$eid]['department']     = $emp['department_code'] ?? '';
-            }
-        }
-
-        // ── Calculate stats per employee ────────────────────────────────────
-        $cutoff = self::WORK_START; // '08:30'
-        $results = [];
-
-        foreach ($employees as $eid => $emp) {
-            $presentDays      = 0;
-            $lateCount        = 0;
-            $totalLateMinutes = 0;
-            $dailyRecords     = [];
-
-            foreach ($workingDays as $wd) {
-                if (isset($emp['dates'][$wd])) {
-                    $ci = $emp['dates'][$wd]; // e.g. "8:32"
-                    $presentDays++;
-
-                    // Normalise time: "8:32" → "08:32"
-                    $ciNorm = strlen($ci) === 4 ? "0{$ci}" : $ci;
-                    $isLate = $ciNorm > $cutoff;
-                    $lateMins = 0;
-                    if ($isLate) {
-                        $lateCount++;
-                        $ciCarbon   = Carbon::parse($wd . ' ' . $ciNorm);
-                        $cutCarbon  = Carbon::parse($wd . ' ' . $cutoff);
-                        $lateMins   = (int) $ciCarbon->diffInMinutes($cutCarbon);
-                        $totalLateMinutes += $lateMins;
-                    }
-                    $dailyRecords[$wd] = [
-                        'status'       => 'present',
-                        'clock_in'     => $ciNorm,
-                        'is_late'      => $isLate,
-                        'late_minutes' => $lateMins,
-                    ];
-                } else {
-                    $dailyRecords[$wd] = [
-                        'status'       => 'absent',
-                        'clock_in'     => null,
-                        'is_late'      => false,
-                        'late_minutes' => 0,
-                    ];
-                }
-            }
-
-            $absentDays = $totalWorkingDays - $presentDays;
-
-            $results[$eid] = [
-                'internal_id'        => $eid,
-                'db_employee_id'     => $emp['db_employee_id'] ?? null,
-                'name'               => $emp['name'],
-                'preferred_name'     => $emp['preferred_name'],
-                'email'              => $emp['email'],
-                'department'         => $emp['department'] ?? '',
-                'working_days'       => $totalWorkingDays,
-                'present_days'       => $presentDays,
-                'absent_days'        => $absentDays,
-                'late_count'         => $lateCount,
-                'total_late_minutes' => $totalLateMinutes,
-                'mc_days'            => 0,
-                'al_days'            => 0,
-                'other_leave_days'   => 0,
-                'daily'              => $dailyRecords,
-            ];
-        }
-
-        // Sort by department then name
-        uasort($results, fn($a, $b) =>
-            strcmp($a['department'] . $a['name'], $b['department'] . $b['name'])
-        );
+        $results = $this->parseAttendanceCsv($response->body(), $month, $year, $company, $workingDays, $dbEmps);
 
         return view('attendance.index', [
             'results'          => $results,
@@ -250,7 +131,112 @@ class AttendanceController extends Controller
             'sheetUrl'         => $sheetUrl,
             'defaultMonth'     => $month,
             'defaultYear'      => $year,
+            'defaultCompany'   => $company,
+            'monthStatus'      => [],
+            'statusYear'       => $year,
         ]);
+    }
+
+    public function importAll(Request $request, SupabaseService $supabase)
+    {
+        if (!session()->has('employee_uuid')) return response()->json(['error' => 'Unauthenticated'], 401);
+        if (!$this->authorise()) return response()->json(['error' => 'Access restricted.'], 403);
+
+        $request->validate([
+            'sheet_url' => 'required|url',
+            'company'   => 'required|string',
+            'year'      => 'nullable|integer',
+        ]);
+
+        $company  = strtoupper($request->company);
+        $year     = (int) ($request->year ?? now()->year);
+        $sheetUrl = $request->sheet_url;
+
+        preg_match('/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/', $sheetUrl, $m);
+        $sheetId = $m[1] ?? null;
+        if (!$sheetId) return response()->json(['error' => 'Invalid Google Sheet URL.'], 422);
+
+        // Fetch all public holidays for the year once
+        $allPh = $supabase->get('public_holidays', ['select' => 'holiday_date']) ?? [];
+        $phByMonth = [];
+        foreach ($allPh as $ph) {
+            $d = Carbon::parse($ph['holiday_date']);
+            if ($d->year === $year) {
+                $phByMonth[$d->month][] = $ph['holiday_date'];
+            }
+        }
+
+        // Fetch all active employees for this company once
+        $dbEmps = $supabase->get('employees', [
+            'company_code' => 'eq.' . $company,
+            'is_active'    => 'eq.true',
+            'select'       => 'id,employee_id,full_name,short_name,email,department_code',
+        ]) ?? [];
+
+        $monthNames   = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        $upToMonth    = ($year < now()->year) ? 12 : now()->month;
+        $importStatus = [];
+        $now          = now()->toISOString();
+
+        for ($month = 1; $month <= $upToMonth; $month++) {
+            $monthName = $monthNames[$month - 1];
+
+            // Build working days for this month
+            $start = Carbon::create($year, $month, 1);
+            $end   = $start->copy()->endOfMonth();
+            $ph    = $phByMonth[$month] ?? [];
+            $workingDays = [];
+            for ($d = $start->copy(); $d <= $end; $d->addDay()) {
+                $ds = $d->toDateString();
+                if (!in_array($d->dayOfWeek, [Carbon::SATURDAY, Carbon::SUNDAY]) && !in_array($ds, $ph)) {
+                    $workingDays[] = $ds;
+                }
+            }
+
+            // Fetch CSV for this month tab
+            $csvUrl   = "https://docs.google.com/spreadsheets/d/{$sheetId}/export?format=csv&sheet={$monthName}";
+            $response = Http::timeout(30)->get($csvUrl);
+
+            if (!$response->successful()) {
+                $importStatus[$month] = ['success' => false, 'month_name' => $monthName, 'error' => "Tab '{$monthName}' not found or sheet not accessible.", 'saved' => 0];
+                continue;
+            }
+
+            $results = $this->parseAttendanceCsv($response->body(), $month, $year, $company, $workingDays, $dbEmps);
+
+            if (empty($results)) {
+                $importStatus[$month] = ['success' => false, 'month_name' => $monthName, 'error' => "No matching employees found for {$monthName}.", 'saved' => 0];
+                continue;
+            }
+
+            $saved = 0;
+            foreach ($results as $rec) {
+                $payload = [
+                    'internal_id'        => $rec['internal_id'],
+                    'employee_id'        => $rec['db_employee_id'] ?: null,
+                    'company_code'       => $company,
+                    'month'              => $month,
+                    'year'               => $year,
+                    'working_days'       => (int) $rec['working_days'],
+                    'present_days'       => (int) $rec['present_days'],
+                    'absent_days'        => (int) $rec['absent_days'],
+                    'late_count'         => (int) $rec['late_count'],
+                    'total_late_minutes' => (int) $rec['total_late_minutes'],
+                    'mc_days'            => 0,
+                    'al_days'            => 0,
+                    'other_leave_days'   => 0,
+                    'sheet_url'          => $sheetUrl,
+                    'finalized'          => true,
+                    'updated_at'         => $now,
+                ];
+                $supabase->upsert('attendance_summary', $payload, 'internal_id,month,year');
+                $saved++;
+            }
+
+            $importStatus[$month] = ['success' => true, 'month_name' => $monthName, 'saved' => $saved, 'imported_at' => $now];
+        }
+
+        return response()->json(['success' => true, 'year' => $year, 'status' => $importStatus]);
     }
 
     public function save(Request $request, SupabaseService $supabase)
@@ -289,10 +275,120 @@ class AttendanceController extends Controller
                 'updated_at'         => now()->toISOString(),
             ];
 
-            // Upsert via Supabase REST API
             $supabase->upsert('attendance_summary', $payload, 'internal_id,month,year');
         }
 
         return response()->json(['success' => true, 'count' => count($data['records'])]);
+    }
+
+    private function parseAttendanceCsv(string $csvText, int $month, int $year, string $company, array $workingDays, array $dbEmps): array
+    {
+        $cutoff       = self::WORK_START;
+        $totalWD      = count($workingDays);
+        $lines        = array_filter(explode("\n", str_replace("\r", '', $csvText)));
+        $rows         = array_map('str_getcsv', $lines);
+        array_shift($rows);
+
+        $employees = [];
+        foreach ($rows as $row) {
+            if (count($row) < 7) continue;
+            $internalId  = trim($row[0] ?? '');
+            $firstName   = trim($row[1] ?? '');
+            $lastName    = trim($row[2] ?? '');
+            $preferred   = trim($row[3] ?? '');
+            $email       = trim($row[4] ?? '');
+            $clockIn     = trim($row[5] ?? '');
+            $clockInDate = trim($row[6] ?? '');
+
+            if (empty($internalId) || empty($clockInDate) || empty($clockIn)) continue;
+            if (!str_starts_with($internalId, $company)) continue;
+
+            try {
+                $dt = Carbon::parse($clockInDate);
+                if ($dt->month !== $month || $dt->year !== $year) continue;
+            } catch (\Exception $e) { continue; }
+
+            if (!isset($employees[$internalId])) {
+                $employees[$internalId] = [
+                    'internal_id'    => $internalId,
+                    'name'           => trim("{$firstName} {$lastName}"),
+                    'preferred_name' => $preferred ?: $firstName,
+                    'email'          => $email,
+                    'dates'          => [],
+                ];
+            }
+
+            if (!isset($employees[$internalId]['dates'][$clockInDate])) {
+                $employees[$internalId]['dates'][$clockInDate] = $clockIn;
+            } elseif ($clockIn < $employees[$internalId]['dates'][$clockInDate]) {
+                $employees[$internalId]['dates'][$clockInDate] = $clockIn;
+            }
+        }
+
+        foreach ($dbEmps as $emp) {
+            $eid = $emp['employee_id'] ?? null;
+            if (!$eid || !str_starts_with($eid, $company)) continue;
+            if (!isset($employees[$eid])) {
+                $employees[$eid] = [
+                    'internal_id'    => $eid,
+                    'name'           => $emp['full_name'] ?? $emp['short_name'] ?? '—',
+                    'preferred_name' => $emp['short_name'] ?? '',
+                    'email'          => $emp['email'] ?? '',
+                    'dates'          => [],
+                    'db_employee_id' => $emp['id'],
+                    'department'     => $emp['department_code'] ?? '',
+                ];
+            } else {
+                $employees[$eid]['db_employee_id'] = $emp['id'];
+                $employees[$eid]['department']     = $emp['department_code'] ?? '';
+            }
+        }
+
+        $results = [];
+        foreach ($employees as $eid => $emp) {
+            $presentDays = $lateCount = $totalLateMinutes = 0;
+            $dailyRecords = [];
+
+            foreach ($workingDays as $wd) {
+                if (isset($emp['dates'][$wd])) {
+                    $ci     = $emp['dates'][$wd];
+                    $presentDays++;
+                    $ciNorm = strlen($ci) === 4 ? "0{$ci}" : $ci;
+                    $isLate = $ciNorm > $cutoff;
+                    $lateMins = 0;
+                    if ($isLate) {
+                        $lateCount++;
+                        $lateMins = (int) Carbon::parse($wd . ' ' . $ciNorm)
+                                        ->diffInMinutes(Carbon::parse($wd . ' ' . $cutoff));
+                        $totalLateMinutes += $lateMins;
+                    }
+                    $dailyRecords[$wd] = ['status' => 'present', 'clock_in' => $ciNorm, 'is_late' => $isLate, 'late_minutes' => $lateMins];
+                } else {
+                    $dailyRecords[$wd] = ['status' => 'absent', 'clock_in' => null, 'is_late' => false, 'late_minutes' => 0];
+                }
+            }
+
+            $results[$eid] = [
+                'internal_id'        => $eid,
+                'db_employee_id'     => $emp['db_employee_id'] ?? null,
+                'name'               => $emp['name'],
+                'preferred_name'     => $emp['preferred_name'],
+                'email'              => $emp['email'],
+                'department'         => $emp['department'] ?? '',
+                'working_days'       => $totalWD,
+                'present_days'       => $presentDays,
+                'absent_days'        => $totalWD - $presentDays,
+                'late_count'         => $lateCount,
+                'total_late_minutes' => $totalLateMinutes,
+                'mc_days'            => 0,
+                'al_days'            => 0,
+                'other_leave_days'   => 0,
+                'daily'              => $dailyRecords,
+            ];
+        }
+
+        uasort($results, fn($a, $b) => strcmp($a['department'] . $a['name'], $b['department'] . $b['name']));
+
+        return $results;
     }
 }
