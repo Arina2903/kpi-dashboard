@@ -315,7 +315,10 @@
                             ];
                         @endphp
                         @foreach($partAFields as $lf => $lv)
-                        <div><p class="f-label">{{ $lf }}</p><input type="number" min="0" placeholder="0" value="{{ $attendanceYTD['has_data'] ? $lv : '' }}" class="f-input" style="max-width:80px;"></div>
+                        <div>
+                            <p class="f-label">{{ $lf }}</p>
+                            <p class="f-val" style="padding:5px 0;border-bottom:1.5px solid rgba(107,144,128,.30);max-width:80px;">{{ $attendanceYTD['has_data'] ? $lv : '0' }}</p>
+                        </div>
                         @endforeach
                     </div>
                 </div>
