@@ -114,8 +114,7 @@ class AttendanceController extends Controller
         }
 
         if ($results === null) {
-            $tried = implode(', ', $tabCandidates);
-            return back()->with('error', "No attendance data found for {$monthLabels[$month-1]} {$year}. Tried tab names: {$tried}. Make sure the sheet tab is named exactly as one of these, and that the sheet is shared publicly.");
+            return back()->with('error', "No clock-in records found for {$monthLabels[$month-1]} {$year}. Check: (1) sheet is shared as 'Anyone with the link can view', (2) the tab for {$monthLabels[$month-1]} exists (e.g. FEBRUARY, February, or Feb), (3) the Year selected matches the dates in the sheet.");
         }
 
         // Load any previously saved attendance for this month to pre-fill MC/AL/Other inputs
