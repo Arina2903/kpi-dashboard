@@ -780,11 +780,18 @@
                 <div>
                     <p class="text-[11px] text-slate-500 italic leading-relaxed mb-6">I hereby confirm that the foregoing appraisal is a fair and objective evaluation of the appraisee's performance during the period under review.</p>
                     <div class="flex justify-end">
-                        <div class="text-center w-64">
-                            <div class="sig-line mx-2"></div>
-                            <p class="text-xs font-bold text-slate-700">{{ $reportsToName !== '-' ? $reportsToName : '_______________' }}</p>
-                            <p class="f-label mt-1">Signature of Appraiser – Manager / VP</p>
-                            <p class="text-[9px] text-slate-400 mt-2">Date: _______________</p>
+                        <div style="width:280px;">
+                            {{-- Appraiser signature — locked for appraisee --}}
+                            <div class="sig-pad-wrap" data-sig-id="sig_appraiser" style="pointer-events:none;opacity:0.55;">
+                                <div style="border:2px dashed rgba(107,144,128,.3);border-radius:10px;background:#f8fafc;position:relative;overflow:hidden;">
+                                    <canvas class="sig-canvas" width="560" height="110" style="width:100%;height:110px;display:block;"></canvas>
+                                    <div class="sig-hint" style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:11px;font-weight:600;">Appraiser signature</div>
+                                </div>
+                                <input type="hidden" name="sig_appraiser" class="sig-hidden">
+                            </div>
+                            <p class="text-xs font-bold text-slate-700 text-center mt-2">{{ $reportsToName !== '-' ? $reportsToName : '_______________' }}</p>
+                            <p class="f-label text-center mt-1">Signature of Appraiser – Manager / VP</p>
+                            <p class="text-[9px] text-slate-400 text-center mt-2">Date: _______________</p>
                         </div>
                     </div>
                 </div>
@@ -795,11 +802,24 @@
                     <p class="text-[11px] text-slate-500 italic leading-relaxed mb-3">I hereby confirm that I have read, understood and accept/disagree with the foregoing appraisal. <span class="text-[#6B9080] font-semibold not-italic">(If you disagree please specify below)</span></p>
                     <textarea name="s6_response" rows="4" placeholder="Write your response here…" class="f-area mb-6"></textarea>
                     <div class="flex justify-end">
-                        <div class="text-center w-64">
-                            <div class="sig-line mx-2"></div>
-                            <p class="text-xs font-bold text-slate-700">{{ $currentUserName }}</p>
-                            <p class="f-label mt-1">Signature of Appraisee</p>
-                            <p class="text-[9px] text-slate-400 mt-2">Date: _______________</p>
+                        <div style="width:280px;">
+                            {{-- Appraisee signature — editable --}}
+                            <div class="sig-pad-wrap" data-sig-id="sig_appraisee">
+                                <div style="border:2px dashed rgba(107,144,128,.5);border-radius:10px;background:#f9fafb;position:relative;overflow:hidden;cursor:crosshair;">
+                                    <canvas class="sig-canvas" width="560" height="110" style="width:100%;height:110px;display:block;touch-action:none;"></canvas>
+                                    <div class="sig-hint" style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:11px;font-weight:600;">✍&nbsp; Draw signature here</div>
+                                </div>
+                                <div style="display:flex;gap:6px;margin-top:6px;justify-content:center;">
+                                    <button type="button" onclick="sigClear(this)" style="font-size:10px;padding:3px 12px;border-radius:6px;border:1px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;font-weight:600;">Clear</button>
+                                    <label style="font-size:10px;padding:3px 12px;border-radius:6px;border:1px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;font-weight:600;display:inline-block;">
+                                        📎 Upload<input type="file" accept="image/*" class="sr-only sig-file-input" onchange="sigUpload(this)">
+                                    </label>
+                                </div>
+                                <input type="hidden" name="sig_appraisee" class="sig-hidden">
+                            </div>
+                            <p class="text-xs font-bold text-slate-700 text-center mt-2">{{ $currentUserName }}</p>
+                            <p class="f-label text-center mt-1">Signature of Appraisee</p>
+                            <p class="text-[9px] text-slate-400 text-center mt-2">Date: _______________</p>
                         </div>
                     </div>
                 </div>
@@ -829,9 +849,14 @@
                             </label>
                             @endforeach
                         </div>
-                        <div class="text-center min-w-56">
-                            <div class="sig-line mx-2"></div>
-                            <p class="f-label mt-1">Signature</p>
+                        <div style="min-width:224px;">
+                            <div class="sig-pad-wrap" data-sig-id="s7_{{ $blk['key'] }}_sig" style="pointer-events:none;opacity:0.55;">
+                                <div style="border:2px dashed rgba(107,144,128,.3);border-radius:10px;background:#f8fafc;position:relative;overflow:hidden;">
+                                    <canvas class="sig-canvas" width="448" height="90" style="width:100%;height:90px;display:block;"></canvas>
+                                    <div class="sig-hint" style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:11px;font-weight:600;">Signature</div>
+                                </div>
+                                <input type="hidden" name="s7_{{ $blk['key'] }}_sig" class="sig-hidden">
+                            </div>
                             <div class="flex items-center gap-2 mt-2 justify-center">
                                 <span class="f-label">Date</span>
                                 <input type="date" name="s7_{{ $blk['key'] }}_date" class="border border-[#6B9080]/25 rounded-lg px-2 py-1 text-xs text-slate-600 bg-white outline-none" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;">
@@ -1136,8 +1161,122 @@ window.saveEvaluation = function() {
     .finally(function(){ if (btn) btn.disabled = false; });
 };
 
+// ── signature pad ─────────────────────────────────────────────────────────────
+function sigInit(wrap) {
+    var canvas  = wrap.querySelector('.sig-canvas');
+    var hint    = wrap.querySelector('.sig-hint');
+    var hidden  = wrap.querySelector('.sig-hidden');
+    if (!canvas) return;
+    var ctx  = canvas.getContext('2d');
+    var drawing = false;
+    var lastX = 0, lastY = 0;
+
+    function pt(e) {
+        var r = canvas.getBoundingClientRect();
+        var src = e.touches ? e.touches[0] : e;
+        return {
+            x: (src.clientX - r.left) * (canvas.width  / r.width),
+            y: (src.clientY - r.top)  * (canvas.height / r.height)
+        };
+    }
+    function startDraw(e) {
+        e.preventDefault();
+        drawing = true;
+        var p = pt(e);
+        lastX = p.x; lastY = p.y;
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+    }
+    function draw(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        var p = pt(e);
+        ctx.lineWidth   = 2.5;
+        ctx.lineCap     = 'round';
+        ctx.lineJoin    = 'round';
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        lastX = p.x; lastY = p.y;
+    }
+    function endDraw(e) {
+        if (!drawing) return;
+        drawing = false;
+        if (hint) hint.style.display = 'none';
+        if (hidden) hidden.value = canvas.toDataURL('image/png');
+    }
+
+    canvas.addEventListener('mousedown',  startDraw);
+    canvas.addEventListener('mousemove',  draw);
+    canvas.addEventListener('mouseup',    endDraw);
+    canvas.addEventListener('mouseleave', endDraw);
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove',  draw,      { passive: false });
+    canvas.addEventListener('touchend',   endDraw);
+}
+
+function sigClear(btn) {
+    var wrap   = btn.closest('.sig-pad-wrap');
+    var canvas = wrap.querySelector('.sig-canvas');
+    var hint   = wrap.querySelector('.sig-hint');
+    var hidden = wrap.querySelector('.sig-hidden');
+    if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    if (hint)   hint.style.display = '';
+    if (hidden) hidden.value = '';
+}
+
+function sigUpload(input) {
+    var wrap   = input.closest('.sig-pad-wrap');
+    var canvas = wrap.querySelector('.sig-canvas');
+    var hint   = wrap.querySelector('.sig-hint');
+    var hidden = wrap.querySelector('.sig-hidden');
+    if (!input.files || !input.files[0] || !canvas) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+        var img = new Image();
+        img.onload = function() {
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // fit image inside canvas preserving aspect ratio
+            var scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+            var w = img.width * scale, h = img.height * scale;
+            ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+            if (hint)   hint.style.display = 'none';
+            if (hidden) hidden.value = canvas.toDataURL('image/png');
+        };
+        img.src = ev.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+    input.value = '';
+}
+
+function restoreAllSigs() {
+    document.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
+        var hidden = wrap.querySelector('.sig-hidden');
+        var canvas = wrap.querySelector('.sig-canvas');
+        var hint   = wrap.querySelector('.sig-hint');
+        if (!hidden || !canvas || !hidden.value) return;
+        var img = new Image();
+        img.onload = function() {
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            if (hint) hint.style.display = 'none';
+        };
+        img.src = hidden.value;
+    });
+}
+
+// Auto-init editable signature pads (those without pointer-events:none on the wrap itself)
+document.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
+    if (wrap.style.pointerEvents !== 'none') {
+        sigInit(wrap);
+    }
+});
+
 // ── on page load ──────────────────────────────────────────────────────────────
-if (_savedData) { restoreFormData(_savedData); updateS3(); }
+if (_savedData) { restoreFormData(_savedData); restoreAllSigs(); updateS3(); }
 updateS6();
 if (!_isWindowOpen) lockForm();
 </script>
