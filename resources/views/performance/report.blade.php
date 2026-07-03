@@ -726,12 +726,6 @@
                                 <line x1="280" y1="157" x2="280" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
                                 <line x1="720" y1="157" x2="720" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
                                 <line x1="870" y1="248" x2="870" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
-                                {{-- Percentage labels --}}
-                                <text x="65"  y="290" text-anchor="middle" fill="rgba(255,255,255,.92)" style="font-size:20px;font-weight:900;">2%</text>
-                                <text x="205" y="255" text-anchor="middle" fill="white" style="font-size:26px;font-weight:900;">14%</text>
-                                <text x="500" y="165" text-anchor="middle" fill="white" style="font-size:38px;font-weight:900;">68%</text>
-                                <text x="795" y="255" text-anchor="middle" fill="white" style="font-size:26px;font-weight:900;">14%</text>
-                                <text x="935" y="290" text-anchor="middle" fill="rgba(255,255,255,.92)" style="font-size:20px;font-weight:900;">2%</text>
                                 {{-- Baseline --}}
                                 <line x1="0" y1="300" x2="1000" y2="300" stroke="#e2e8f0" stroke-width="1"/>
                                 {{-- Zone names --}}
