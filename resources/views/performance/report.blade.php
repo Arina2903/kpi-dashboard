@@ -701,66 +701,63 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div>
-                            <p class="f-label mb-3">Scoring Matrix</p>
-                            <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden">
-                                <div class="bg-[#1a3d34] px-4 py-2 text-center"><span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.85);">Performance Grade</span></div>
-                                @php $matrix=[['range'=>'90 – 100','label'=>'Outstanding','bg'=>'bg-emerald-50','border'=>'border-emerald-100','text'=>'text-emerald-700','badge'=>'bg-emerald-100'],['range'=>'70 – 89','label'=>'Meets Expectations','bg'=>'bg-[#6B9080]/5','border'=>'border-[#6B9080]/15','text'=>'text-[#1a3d34]','badge'=>'bg-[#6B9080]/15'],['range'=>'50 – 69','label'=>'Below Average','bg'=>'bg-amber-50','border'=>'border-amber-100','text'=>'text-amber-700','badge'=>'bg-amber-100'],['range'=>'1 – 49','label'=>'Unsatisfactory','bg'=>'bg-red-50','border'=>'border-red-100','text'=>'text-red-700','badge'=>'bg-red-100']]; @endphp
-                                @foreach($matrix as $m)
-                                <div class="flex items-center justify-between {{ $m['bg'] }} border-b {{ $m['border'] }} px-4 py-2.5">
-                                    <span style="font-size:11px;font-weight:800;color:#475569;">{{ $m['range'] }}</span>
-                                    <span class="text-[10px] font-black px-3 py-1 rounded-full {{ $m['badge'] }} {{ $m['text'] }}">{{ $m['label'] }}</span>
-                                </div>
-                                @endforeach
-                            </div>
-                        </div>
                     </div>
 
-                    {{-- ── Score Gauge ───────────────────────────────────────────────── --}}
-                    <div class="mt-5 rounded-2xl overflow-hidden border border-[#6B9080]/20" style="background:linear-gradient(135deg,#f8faf9 0%,#f0f7f4 100%);">
-                        <div class="px-5 py-4">
-                            <p class="f-label mb-4">Your Performance Position</p>
-                            <div class="flex items-center gap-6">
-
-                                {{-- Big score + grade --}}
-                                <div class="text-center shrink-0" style="min-width:100px;">
-                                    <div id="gaugeScore" style="font-size:44px;font-weight:900;line-height:1;color:#cbd5e1;transition:color .4s;">—</div>
-                                    <div id="gaugeGrade" style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.10em;color:#94a3b8;margin-top:5px;transition:color .4s;">No score yet</div>
-                                </div>
-
-                                {{-- Gauge bar + needle --}}
-                                <div class="flex-1 min-w-0">
-                                    <div class="relative" style="height:40px;margin-bottom:6px;">
-                                        {{-- Color zones --}}
-                                        <div class="absolute inset-0 rounded-xl overflow-hidden flex" style="box-shadow:inset 0 2px 6px rgba(0,0,0,.08);">
-                                            <div style="width:49%;background:linear-gradient(90deg,#fecaca,#f87171);"></div>
-                                            <div style="width:20%;background:linear-gradient(90deg,#fde68a,#f59e0b);"></div>
-                                            <div style="width:20%;background:linear-gradient(90deg,#a7c4b5,#6B9080);"></div>
-                                            <div style="width:11%;background:linear-gradient(90deg,#6ee7b7,#059669);"></div>
-                                        </div>
-                                        {{-- Divider lines --}}
-                                        <div style="position:absolute;left:49%;top:4px;bottom:4px;width:2px;background:rgba(255,255,255,0.7);border-radius:1px;"></div>
-                                        <div style="position:absolute;left:69%;top:4px;bottom:4px;width:2px;background:rgba(255,255,255,0.7);border-radius:1px;"></div>
-                                        <div style="position:absolute;left:89%;top:4px;bottom:4px;width:2px;background:rgba(255,255,255,0.7);border-radius:1px;"></div>
-                                        {{-- Score labels on bar --}}
-                                        <div style="position:absolute;left:49%;top:50%;transform:translate(-50%,-50%);font-size:8px;font-weight:900;color:rgba(255,255,255,0.9);">50</div>
-                                        <div style="position:absolute;left:69%;top:50%;transform:translate(-50%,-50%);font-size:8px;font-weight:900;color:rgba(255,255,255,0.9);">70</div>
-                                        <div style="position:absolute;left:89%;top:50%;transform:translate(-50%,-50%);font-size:8px;font-weight:900;color:rgba(255,255,255,0.9);">90</div>
-                                        {{-- Needle --}}
-                                        <div id="gaugeNeedle" style="display:none;position:absolute;top:-8px;bottom:-8px;left:0%;transform:translateX(-50%);width:4px;background:#1a3d34;border-radius:999px;transition:left .9s cubic-bezier(.34,1.56,.64,1);z-index:10;">
-                                            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:16px;height:16px;background:#1a3d34;border-radius:50%;border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,.3);"></div>
-                                        </div>
-                                    </div>
-                                    {{-- Zone labels --}}
-                                    <div class="flex" style="font-size:8px;font-weight:700;color:#94a3b8;letter-spacing:.04em;">
-                                        <div style="width:49%;color:#ef4444;">Unsatisfactory &nbsp;·&nbsp; 1–49</div>
-                                        <div style="width:20%;text-align:center;color:#d97706;">Below Avg&nbsp;·&nbsp;50–69</div>
-                                        <div style="width:20%;text-align:center;color:#6B9080;">Meets Exp&nbsp;·&nbsp;70–89</div>
-                                        <div style="width:11%;text-align:right;color:#059669;">O/S&nbsp;90+</div>
-                                    </div>
-                                </div>
-
-                            </div>
+                    {{-- ── Bell Curve: Performance Distribution ──────────────────── --}}
+                    <div class="mt-6">
+                        <p class="f-label mb-3">Performance Distribution</p>
+                        <div style="background:linear-gradient(180deg,#f7faf9 0%,#ffffff 100%);border-radius:16px;padding:40px 20px 16px;border:1px solid rgba(107,144,128,.15);">
+                            <svg viewBox="0 0 1000 370" style="width:100%;display:block;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <clipPath id="bc_clip">
+                                        <path d="M 0,300 L 0,278 C 40,275 90,252 130,248 C 175,243 240,170 280,157 C 310,148 355,100 380,90 C 415,78 465,43 500,40 C 535,43 585,78 620,90 C 645,100 690,148 720,157 C 760,170 825,243 870,248 C 910,252 960,275 1000,278 L 1000,300 Z"/>
+                                    </clipPath>
+                                    <filter id="bc_shadow" x="-30%" y="-80%" width="160%" height="280%">
+                                        <feDropShadow dx="0" dy="2" stdDeviation="5" flood-opacity="0.18"/>
+                                    </filter>
+                                </defs>
+                                {{-- Colored zone fills --}}
+                                <rect x="0"   y="0" width="130" height="300" fill="#ef4444" clip-path="url(#bc_clip)" opacity="0.9"/>
+                                <rect x="130" y="0" width="150" height="300" fill="#f59e0b" clip-path="url(#bc_clip)" opacity="0.9"/>
+                                <rect x="280" y="0" width="440" height="300" fill="#22c55e" clip-path="url(#bc_clip)" opacity="0.9"/>
+                                <rect x="720" y="0" width="150" height="300" fill="#3b82f6" clip-path="url(#bc_clip)" opacity="0.9"/>
+                                <rect x="870" y="0" width="130" height="300" fill="#8b5cf6" clip-path="url(#bc_clip)" opacity="0.9"/>
+                                {{-- Zone dividers --}}
+                                <line x1="130" y1="248" x2="130" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
+                                <line x1="280" y1="157" x2="280" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
+                                <line x1="720" y1="157" x2="720" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
+                                <line x1="870" y1="248" x2="870" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
+                                {{-- Percentage labels --}}
+                                <text x="65"  y="290" text-anchor="middle" fill="rgba(255,255,255,.92)" style="font-size:20px;font-weight:900;">2%</text>
+                                <text x="205" y="255" text-anchor="middle" fill="white" style="font-size:26px;font-weight:900;">14%</text>
+                                <text x="500" y="165" text-anchor="middle" fill="white" style="font-size:38px;font-weight:900;">68%</text>
+                                <text x="795" y="255" text-anchor="middle" fill="white" style="font-size:26px;font-weight:900;">14%</text>
+                                <text x="935" y="290" text-anchor="middle" fill="rgba(255,255,255,.92)" style="font-size:20px;font-weight:900;">2%</text>
+                                {{-- Baseline --}}
+                                <line x1="0" y1="300" x2="1000" y2="300" stroke="#e2e8f0" stroke-width="1"/>
+                                {{-- Zone names --}}
+                                <text x="65"  y="317" text-anchor="middle" fill="#dc2626" style="font-size:12px;font-weight:800;">Unacceptable</text>
+                                <text x="205" y="315" text-anchor="middle" fill="#b45309" style="font-size:12px;font-weight:800;">Room for</text>
+                                <text x="205" y="329" text-anchor="middle" fill="#b45309" style="font-size:12px;font-weight:800;">Improvement</text>
+                                <text x="500" y="317" text-anchor="middle" fill="#15803d" style="font-size:13px;font-weight:800;">Meets Expectations</text>
+                                <text x="795" y="315" text-anchor="middle" fill="#1d4ed8" style="font-size:12px;font-weight:800;">Exceeds</text>
+                                <text x="795" y="329" text-anchor="middle" fill="#1d4ed8" style="font-size:12px;font-weight:800;">Expectations</text>
+                                <text x="935" y="317" text-anchor="middle" fill="#6d28d9" style="font-size:12px;font-weight:800;">Outstanding</text>
+                                {{-- Score ranges --}}
+                                <text x="65"  y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">1 – 34</text>
+                                <text x="205" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">35 – 49</text>
+                                <text x="500" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">50 – 79</text>
+                                <text x="795" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">80 – 89</text>
+                                <text x="935" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">90 – 100</text>
+                                {{-- Indicator: vertical line + dot + floating score label --}}
+                                <g id="bellIndicator" style="display:none;">
+                                    <line id="bellLine" x1="500" y1="0" x2="500" y2="300" stroke="#1e293b" stroke-width="3" stroke-dasharray="8,5" stroke-linecap="round"/>
+                                    <circle id="bellDot" cx="500" cy="100" r="9" fill="#1e293b" stroke="white" stroke-width="3"/>
+                                    <rect id="bellBg" x="440" y="-58" width="120" height="48" rx="10" ry="10" fill="white" stroke="#1e293b" stroke-width="1.5" filter="url(#bc_shadow)"/>
+                                    <text id="bellScoreNum" x="500" y="-25" text-anchor="middle" fill="#1e293b" style="font-size:22px;font-weight:900;"></text>
+                                    <text id="bellGradeName" x="500" y="-11" text-anchor="middle" fill="#6B9080" style="font-size:10px;font-weight:700;"></text>
+                                </g>
+                            </svg>
                         </div>
                     </div>
                 </div>
@@ -927,26 +924,43 @@
     var _s4Score = @json($s4ScoreVal ?? null);
     var _isQ4    = '{{ $quarter }}' === 'Q4';
 
-    function s6Clr(v){ return v>=90?'#059669':v>=70?'#6B9080':v>=50?'#d97706':'#dc2626'; }
+    function s6Clr(v){ return v>=90?'#6d28d9':v>=80?'#1d4ed8':v>=50?'#15803d':v>=35?'#b45309':'#dc2626'; }
 
+    function scoreToX(s) {
+        if (s <= 34)  return (s - 1)  / 33 * 130;
+        if (s <= 49)  return 130 + (s - 35) / 14 * 150;
+        if (s <= 79)  return 280 + (s - 50) / 29 * 440;
+        if (s <= 89)  return 720 + (s - 80) / 9  * 150;
+        return 870 + (s - 90) / 10 * 130;
+    }
+    function bellY(x) {
+        return 300 - 260 * Math.exp(-(x - 500) * (x - 500) / 51200);
+    }
     function updateGauge(score) {
-        var scoreEl  = document.getElementById('gaugeScore');
-        var gradeEl  = document.getElementById('gaugeGrade');
-        var needle   = document.getElementById('gaugeNeedle');
-        if (score === null || isNaN(score)) {
-            if (scoreEl) { scoreEl.textContent = '—'; scoreEl.style.color = '#cbd5e1'; }
-            if (gradeEl) { gradeEl.textContent = 'No score yet'; gradeEl.style.color = '#94a3b8'; }
-            if (needle)    needle.style.display = 'none';
-            return;
-        }
+        var g = document.getElementById('bellIndicator');
+        if (!g) return;
+        if (score === null || isNaN(score)) { g.style.display = 'none'; return; }
         var grade, clr;
-        if (score >= 90)      { grade = 'Outstanding';        clr = '#059669'; }
-        else if (score >= 70) { grade = 'Meets Expectations'; clr = '#6B9080'; }
-        else if (score >= 50) { grade = 'Below Average';      clr = '#d97706'; }
-        else                  { grade = 'Unsatisfactory';     clr = '#dc2626'; }
-        if (scoreEl) { scoreEl.textContent = score.toFixed(1); scoreEl.style.color = clr; }
-        if (gradeEl) { gradeEl.textContent = grade; gradeEl.style.color = clr; }
-        if (needle)  { needle.style.display = 'block'; needle.style.left = Math.min(Math.max(score,0),100) + '%'; }
+        if (score >= 90)      { grade = 'Outstanding';          clr = '#6d28d9'; }
+        else if (score >= 80) { grade = 'Exceeds Expectations'; clr = '#1d4ed8'; }
+        else if (score >= 50) { grade = 'Meets Expectations';   clr = '#15803d'; }
+        else if (score >= 35) { grade = 'Room for Improvement'; clr = '#b45309'; }
+        else                  { grade = 'Unacceptable';         clr = '#dc2626'; }
+        var bx = scoreToX(score);
+        var by = bellY(bx);
+        var lx = Math.max(60, Math.min(940, bx));
+        g.style.display = '';
+        document.getElementById('bellLine').setAttribute('x1', bx);
+        document.getElementById('bellLine').setAttribute('x2', bx);
+        document.getElementById('bellDot').setAttribute('cx', bx);
+        document.getElementById('bellDot').setAttribute('cy', by);
+        document.getElementById('bellDot').setAttribute('fill', clr);
+        document.getElementById('bellBg').setAttribute('x', lx - 60);
+        document.getElementById('bellScoreNum').setAttribute('x', lx);
+        document.getElementById('bellScoreNum').textContent = score.toFixed(1);
+        document.getElementById('bellScoreNum').setAttribute('fill', clr);
+        document.getElementById('bellGradeName').setAttribute('x', lx);
+        document.getElementById('bellGradeName').textContent = grade;
     }
     function setS6(key, val) {
         var num = (val !== null && !isNaN(parseFloat(val))) ? parseFloat(val) : null;
