@@ -1159,19 +1159,30 @@
         if (d) { d.textContent = num !== null ? num.toFixed(1) : '—'; d.style.color = num !== null ? s6Clr(num) : '#cbd5e1'; }
         if (h) h.value = num !== null ? num : '';
     }
+    function s2Clr(v){ return v>=4.5?'#059669':v>=3.5?'#6B9080':v>=2.5?'#d97706':'#dc2626'; }
     function updateS6() {
         // S2: weighted sum of kpi_self / kpi_app → scale to 70
-        var s2Self = 0, s2App = 0, s2Wt = 0;
+        var s2Self = 0, s2App = 0, s2Wt = 0, s2AppWt = 0;
         document.querySelectorAll('[name^="kpi_self_"]').forEach(function(el){
             var v = parseFloat(el.value), wt = parseFloat(el.dataset.wt||0);
             if (!isNaN(v) && wt > 0) { s2Self += v * wt; s2Wt += wt; }
         });
         document.querySelectorAll('[name^="kpi_app_"]').forEach(function(el){
             var v = parseFloat(el.value), wt = parseFloat(el.dataset.wt||0);
-            if (!isNaN(v) && wt > 0) s2App += v * wt;
+            if (!isNaN(v) && wt > 0) { s2App += v * wt; s2AppWt += wt; }
         });
         setS6('s6_s2_self', s2Wt > 0 ? (s2Self / s2Wt / 5 * 70) : null);
-        setS6('s6_s2_app',  s2Wt > 0 ? (s2App  / s2Wt / 5 * 70) : null);
+        setS6('s6_s2_app',  s2AppWt > 0 ? (s2App / s2AppWt / 5 * 70) : null);
+
+        // Update Section 2 tfoot totals
+        var selfAvg = s2Wt    > 0 ? s2Self   / s2Wt    : null;
+        var appAvg  = s2AppWt > 0 ? s2App    / s2AppWt : null;
+        var totEl   = document.getElementById('sec2Total');
+        var appEl   = document.getElementById('sec2AppPct');
+        var pctEl   = document.getElementById('sec2Pct');
+        if (totEl) { if (selfAvg!==null){totEl.textContent=selfAvg.toFixed(2);totEl.style.color=s2Clr(selfAvg);} else {totEl.textContent='—';totEl.style.color='#cbd5e1';} }
+        if (appEl)  { if (appAvg!==null){appEl.textContent=appAvg.toFixed(2);appEl.style.color=s2Clr(appAvg);} else {appEl.textContent='—';appEl.style.color='#cbd5e1';} }
+        if (pctEl)  { var pct=selfAvg!==null?(selfAvg/5*70):null; if(pct!==null){pctEl.textContent=pct.toFixed(1)+'%';pctEl.style.color=s2Clr(pct/14);} else {pctEl.textContent='—';pctEl.style.color='#cbd5e1';} }
 
         // S3: from live s3Self / s3Sup spans
         var s3ST = document.getElementById('s3Self')?.textContent;
