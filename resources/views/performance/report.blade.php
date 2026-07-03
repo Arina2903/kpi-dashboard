@@ -760,13 +760,16 @@
                 <div class="border-t border-dashed border-[#6B9080]/20"></div>
 
                 <div>
-                    <div class="part-label">B &nbsp;·&nbsp; Performance Analysis</div>
-                    <p class="text-[11px] text-slate-400 italic mb-5">To be completed by Appraiser.</p>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="part-label">B &nbsp;·&nbsp; Performance Analysis</div>
+                        <span style="font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:.08em;display:flex;align-items:center;gap:4px;">🔒 APPRAISER ONLY</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 italic mb-5">To be completed by Appraiser. Read-only for appraisee.</p>
                     <div class="grid grid-cols-2 gap-5">
                         @foreach([['label'=>'Strengths','name'=>'s6_strengths'],['label'=>'Work Ethics / Attitude','name'=>'s6_ethics'],['label'=>'Areas Need Improvement','name'=>'s6_improvement'],['label'=>'Training Required','name'=>'s6_training']] as $pf)
                         <div>
                             <div class="flex items-center gap-2 mb-2"><span class="w-1.5 h-1.5 rounded-full bg-[#6B9080] flex-shrink-0"></span><p class="f-label">{{ $pf['label'] }}</p></div>
-                            <input type="text" name="{{ $pf['name'] }}" placeholder="Enter here…" class="f-input">
+                            <input type="text" name="{{ $pf['name'] }}" placeholder="—" class="f-input" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;">
                         </div>
                         @endforeach
                     </div>
@@ -808,19 +811,19 @@
              SECTION 7 — RECOMMENDATIONS & DECISIONS
         ═══════════════════════════════════════════════════════ --}}
         <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-2">
-            <div class="sec-bar"><div class="sec-num">7</div><span class="sec-title">Recommendations &amp; Decisions</span></div>
+            <div class="sec-bar"><div class="sec-num">7</div><span class="sec-title">Recommendations &amp; Decisions</span><span style="margin-left:auto;font-size:10px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.08em;">🔒 APPRAISER ONLY</span></div>
             <div class="px-6 py-6 space-y-7">
                 @php $sec7=[['key'=>'manager','label'=>'A','title'=>'Promotability and Other Remarks and Recommendations by the Appraiser (Manager)'],['key'=>'vp','label'=>'B','title'=>'Remarks and/or Recommendations by VP'],['key'=>'slt','label'=>'C','title'=>'Remarks by SLT']]; @endphp
                 @foreach($sec7 as $idx => $blk)
                 @if($idx>0)<div class="border-t border-dashed border-[#6B9080]/20 pt-7"></div>@endif
                 <div>
                     <div class="part-label">{{ $blk['label'] }} &nbsp;·&nbsp; {{ $blk['title'] }}</div>
-                    <textarea name="s7_{{ $blk['key'] }}_remarks" rows="4" placeholder="Write remarks here…" class="f-area mb-5"></textarea>
+                    <textarea name="s7_{{ $blk['key'] }}_remarks" rows="4" placeholder="—" class="f-area mb-5" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;resize:none;"></textarea>
                     <div class="flex items-end justify-between gap-6 flex-wrap">
                         <div class="flex items-center gap-6">
                             @foreach(['confirmation','salary_review','promotion'] as $oi => $okey)
                             @php $olabel = ['Confirmation','Salary Review','Promotion'][$oi]; @endphp
-                            <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <label class="flex items-center gap-2 select-none" style="pointer-events:none;opacity:0.55;cursor:not-allowed;">
                                 <span class="w-4 h-4 rounded border-2 border-[#6B9080]/40 flex items-center justify-center"><input type="checkbox" name="s7_{{ $blk['key'] }}_{{ $okey }}" id="s7_{{ $blk['key'] }}_{{ $okey }}" class="sr-only peer"><span class="w-2.5 h-2.5 rounded-sm bg-[#6B9080] hidden peer-checked:block"></span></span>
                                 <span class="text-[11px] font-semibold text-slate-700">{{ $olabel }}</span>
                             </label>
@@ -831,7 +834,7 @@
                             <p class="f-label mt-1">Signature</p>
                             <div class="flex items-center gap-2 mt-2 justify-center">
                                 <span class="f-label">Date</span>
-                                <input type="date" name="s7_{{ $blk['key'] }}_date" class="border border-[#6B9080]/25 rounded-lg px-2 py-1 text-xs text-slate-600 bg-white outline-none focus:border-[#6B9080] transition">
+                                <input type="date" name="s7_{{ $blk['key'] }}_date" class="border border-[#6B9080]/25 rounded-lg px-2 py-1 text-xs text-slate-600 bg-white outline-none" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;">
                             </div>
                         </div>
                     </div>
