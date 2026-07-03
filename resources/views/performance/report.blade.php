@@ -179,13 +179,38 @@
             </div>
         </div>
         <div class="flex items-center gap-2">
-            @if($isWindowOpen)
+            @if($isAppraiserView ?? false)
+            {{-- ── Appraiser buttons ── --}}
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-blue-500/20 text-blue-200 border border-blue-400/30 px-3 py-1.5 rounded-full">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span> Appraiser View · {{ $currentUserName }}
+            </span>
+            <button id="saveBtn" onclick="saveEvaluation('save')" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save Notes
+            </button>
+            <button id="appraiseBtn" onclick="confirmAppraised()" class="bg-emerald-500/30 hover:bg-emerald-500/50 text-emerald-100 px-4 py-2 rounded-xl font-bold text-xs transition border border-emerald-400/40 flex items-center gap-1.5">
+                ✓ Mark as Appraised
+            </button>
+            @elseif(($status ?? 'draft') === 'submitted')
+            {{-- ── Submitted — awaiting appraiser ── --}}
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-blue-500/20 text-blue-200 border border-blue-400/30 px-3 py-1.5 rounded-full">
+                ✓ Submitted · Awaiting Appraiser
+            </span>
+            @elseif(($status ?? 'draft') === 'appraised')
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-3 py-1.5 rounded-full">
+                ✓ Appraised
+            </span>
+            @elseif($isWindowOpen)
+            {{-- ── Appraisee draft buttons ── --}}
             <span class="flex items-center gap-1.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-3 py-1.5 rounded-full">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ⚠️ Window Open · Until {{ $windowEnd }}
             </span>
-            <button id="saveBtn" onclick="saveEvaluation()" class="bg-emerald-500/30 hover:bg-emerald-500/50 text-emerald-100 px-4 py-2 rounded-xl font-bold text-xs transition border border-emerald-400/40 flex items-center gap-1.5">
+            <button id="draftBtn" onclick="saveEvaluation('draft')" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20 flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                Save
+                Save Draft
+            </button>
+            <button id="submitBtn" onclick="confirmSubmit()" class="bg-emerald-500/30 hover:bg-emerald-500/50 text-emerald-100 px-4 py-2 rounded-xl font-bold text-xs transition border border-emerald-400/40 flex items-center gap-1.5">
+                ↑ Submit to Appraiser
             </button>
             @else
             <span class="flex items-center gap-1.5 text-[10px] font-bold bg-white/10 text-white/60 border border-white/15 px-3 py-1.5 rounded-full">
@@ -198,10 +223,25 @@
             </button>
         </div>
     </div>
-    {{-- Window status banner --}}
-    @if($isWindowOpen)
+    {{-- Status banner --}}
+    @if($isAppraiserView ?? false)
+    <div class="mt-2 rounded-xl bg-blue-50 border border-blue-200 px-4 py-2 flex items-center gap-2 text-xs text-blue-700">
+        👁 <span><strong>Appraiser view.</strong> Fill in Section 6B and Section 7, then mark as Appraised.</span>
+        @if($submittedAt)<span class="ml-auto text-blue-500 font-medium">Submitted: {{ \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Kuala_Lumpur')->format('d M Y, H:i') }}</span>@endif
+    </div>
+    @elseif(($status ?? 'draft') === 'submitted')
+    <div class="mt-2 rounded-xl bg-blue-50 border border-blue-200 px-4 py-2 flex items-center gap-2 text-xs text-blue-700">
+        ✓ <span><strong>Submitted.</strong> Awaiting appraiser review. Form is now read-only.</span>
+        @if($submittedAt)<span class="ml-auto text-blue-500 font-medium">Submitted: {{ \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Kuala_Lumpur')->format('d M Y, H:i') }}</span>@endif
+    </div>
+    @elseif(($status ?? 'draft') === 'appraised')
     <div class="mt-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2 flex items-center gap-2 text-xs text-emerald-700">
-        ⚠️ <span><strong>Evaluation window is open.</strong> Fill in and save before {{ $windowEnd }}.</span>
+        ✓ <span><strong>Appraised.</strong> Your appraisal has been completed by your appraiser.</span>
+        @if($submittedAt)<span class="ml-auto text-emerald-500 font-medium">Updated: {{ \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Kuala_Lumpur')->format('d M Y, H:i') }}</span>@endif
+    </div>
+    @elseif($isWindowOpen)
+    <div class="mt-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2 flex items-center gap-2 text-xs text-emerald-700">
+        ⚠️ <span><strong>Evaluation window is open.</strong> Save draft anytime. Submit when ready — you cannot edit after submitting.</span>
         @if($submittedAt)<span class="ml-auto text-emerald-500 font-medium">Last saved: {{ \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Kuala_Lumpur')->format('d M Y, H:i') }}</span>@endif
     </div>
     @else
@@ -759,7 +799,7 @@
 
                 <div class="border-t border-dashed border-[#6B9080]/20"></div>
 
-                <div>
+                <div id="sec6b">
                     <div class="flex items-center justify-between mb-1">
                         <div class="part-label">B &nbsp;·&nbsp; Performance Analysis</div>
                         <span style="font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:.08em;display:flex;align-items:center;gap:4px;">🔒 APPRAISER ONLY</span>
@@ -777,7 +817,7 @@
 
                 <div class="border-t border-dashed border-[#6B9080]/20"></div>
 
-                <div>
+                <div id="sec6b_sig">
                     <p class="text-[11px] text-slate-500 italic leading-relaxed mb-6">I hereby confirm that the foregoing appraisal is a fair and objective evaluation of the appraisee's performance during the period under review.</p>
                     <div class="flex justify-end">
                         <div style="width:280px;">
@@ -830,7 +870,7 @@
         {{-- ═══════════════════════════════════════════════════════
              SECTION 7 — RECOMMENDATIONS & DECISIONS
         ═══════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-2">
+        <div id="sec7" class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-2">
             <div class="sec-bar"><div class="sec-num">7</div><span class="sec-title">Recommendations &amp; Decisions</span><span style="margin-left:auto;font-size:10px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.08em;">🔒 APPRAISER ONLY</span></div>
             <div class="px-6 py-6 space-y-7">
                 @php $sec7=[['key'=>'manager','label'=>'A','title'=>'Promotability and Other Remarks and Recommendations by the Appraiser (Manager)'],['key'=>'vp','label'=>'B','title'=>'Remarks and/or Recommendations by VP'],['key'=>'slt','label'=>'C','title'=>'Remarks by SLT']]; @endphp
@@ -1053,11 +1093,16 @@
 <div id="toast" style="display:none;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:9999;padding:10px 22px;border-radius:12px;font-size:12px;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.18);transition:opacity .3s;"></div>
 
 <script>
-const _savedData    = @json($savedData ?? null);
-const _quarter      = '{{ $quarter }}';
-const _isWindowOpen = @json($isWindowOpen ?? false);
-const _saveUrl      = '{{ route('performance.report.save', $quarter) }}';
-const _csrfToken    = '{{ csrf_token() }}';
+const _savedData       = @json($savedData ?? null);
+const _quarter         = '{{ $quarter }}';
+const _isWindowOpen    = @json($isWindowOpen ?? false);
+const _status          = '{{ $status ?? "draft" }}';
+const _isSubmitted     = _status === 'submitted' || _status === 'appraised';
+const _isAppraiserView = @json($isAppraiserView ?? false);
+const _saveUrl         = _isAppraiserView
+    ? '{{ $appraiserSaveUrl ?? "" }}'
+    : '{{ route('performance.report.save', $quarter) }}';
+const _csrfToken       = '{{ csrf_token() }}';
 
 // ── collect all named inputs into a plain object ─────────────────────────────
 function collectFormData() {
@@ -1125,41 +1170,91 @@ function showToast(msg, ok) {
 }
 
 // ── save ──────────────────────────────────────────────────────────────────────
-window.saveEvaluation = function() {
-    if (!_isWindowOpen) { showToast('Evaluation window is closed.', false); return; }
-    // Validate Section 3: all 12 self ratings required
-    var missing = [];
-    for (var i = 1; i <= 12; i++) {
-        if (!document.querySelector('input[name="self_' + i + '"]:checked')) missing.push(i);
-    }
-    if (missing.length > 0) {
-        showToast('Section 3: Please rate all ' + missing.length + ' remaining area(s).', false);
-        // highlight missing rows
-        missing.forEach(function(n) {
-            var row = document.querySelector('input[name="self_' + n + '"]')?.closest('tr');
-            if (row) { row.style.background = 'rgba(239,68,68,.08)'; setTimeout(function(){ row.style.background = ''; }, 2500); }
-        });
-        return;
+window.saveEvaluation = function(action) {
+    action = action || 'draft';
+    if (!_isAppraiserView && !_isWindowOpen) { showToast('Evaluation window is closed.', false); return; }
+    // Validate Section 3 only for appraisee submit
+    if (!_isAppraiserView && action === 'submit') {
+        var missing = [];
+        for (var i = 1; i <= 12; i++) {
+            if (!document.querySelector('input[name="self_' + i + '"]:checked')) missing.push(i);
+        }
+        if (missing.length > 0) {
+            showToast('Section 3: Please rate all ' + missing.length + ' remaining area(s).', false);
+            missing.forEach(function(n) {
+                var row = document.querySelector('input[name="self_' + n + '"]')?.closest('tr');
+                if (row) { row.style.background = 'rgba(239,68,68,.08)'; setTimeout(function(){ row.style.background = ''; }, 2500); }
+            });
+            return;
+        }
     }
     const data = collectFormData();
-    const btn  = document.getElementById('saveBtn');
-    if (btn) btn.disabled = true;
+    var activeBtn = document.getElementById(action === 'draft' ? 'draftBtn' : (action === 'save' ? 'saveBtn' : 'submitBtn'));
+    if (!activeBtn) activeBtn = document.getElementById('saveBtn');
+    if (activeBtn) activeBtn.disabled = true;
     fetch(_saveUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrfToken },
-        body: JSON.stringify({ form_data: data }),
+        body: JSON.stringify({ form_data: data, action: action }),
     })
     .then(function(r){ return r.json(); })
     .then(function(res){
         if (res && res.success) {
-            showToast('Saved ✓', true);
+            if (action === 'submit') {
+                showToast('Submitted to appraiser ✓', true);
+                setTimeout(function(){ location.reload(); }, 1200);
+            } else if (action === 'appraised') {
+                showToast('Marked as Appraised ✓', true);
+                setTimeout(function(){ window.location.href = '/performance/appraise'; }, 1200);
+            } else {
+                showToast('Draft saved ✓', true);
+            }
         } else {
             showToast(res.error || 'Save failed.', false);
         }
     })
     .catch(function(){ showToast('Network error.', false); })
-    .finally(function(){ if (btn) btn.disabled = false; });
+    .finally(function(){ if (activeBtn) activeBtn.disabled = false; });
 };
+
+function confirmSubmit() {
+    if (confirm('Submit this evaluation to your appraiser?\n\nYou will not be able to edit it after submitting.')) {
+        saveEvaluation('submit');
+    }
+}
+
+function confirmAppraised() {
+    if (confirm('Mark this appraisal as complete?\n\nThis will lock the form and notify the appraisee.')) {
+        saveEvaluation('appraised');
+    }
+}
+
+function unlockAppraiserSections() {
+    ['sec6b', 'sec6b_sig', 'sec7'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.style.pointerEvents = 'auto';
+        el.style.opacity = '1';
+        el.querySelectorAll('input:not([type="file"]):not([type="hidden"]), textarea, select').forEach(function(inp) {
+            inp.removeAttribute('readonly');
+            inp.style.pointerEvents = 'auto';
+            inp.style.opacity = '';
+            inp.style.background = '';
+            inp.style.cursor = '';
+            inp.style.resize = '';
+        });
+        el.querySelectorAll('label').forEach(function(lbl) {
+            lbl.style.pointerEvents = 'auto';
+            lbl.style.opacity = '';
+            lbl.style.cursor = '';
+        });
+        el.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
+            wrap.style.pointerEvents = 'auto';
+            wrap.style.opacity = '1';
+            if (!wrap._sigInited) { sigInit(wrap); wrap._sigInited = true; }
+        });
+    });
+}
 
 // ── signature pad ─────────────────────────────────────────────────────────────
 function sigInit(wrap) {
@@ -1278,7 +1373,14 @@ document.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
 // ── on page load ──────────────────────────────────────────────────────────────
 if (_savedData) { restoreFormData(_savedData); restoreAllSigs(); updateS3(); }
 updateS6();
-if (!_isWindowOpen) lockForm();
+if (_isAppraiserView) {
+    // Lock whole page then unlock appraiser sections
+    var mainEl = document.querySelector('main');
+    if (mainEl) { mainEl.style.pointerEvents = 'none'; mainEl.style.opacity = '0.85'; }
+    unlockAppraiserSections();
+} else if (!_isWindowOpen || _isSubmitted) {
+    lockForm();
+}
 </script>
 </body>
 </html>

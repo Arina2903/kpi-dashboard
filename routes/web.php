@@ -303,6 +303,9 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::get('/performance/report',                       fn() => redirect('/performance/report/q2'))->name('performance.report');
     Route::get('/performance/report/{quarter}',             [\App\Http\Controllers\PerformanceController::class, 'reportQuarter'])->name('performance.report.quarter');
     Route::post('/performance/report/{quarter}/save',       [\App\Http\Controllers\PerformanceController::class, 'saveReport'])->name('performance.report.save');
+    Route::get('/performance/appraise',                     [\App\Http\Controllers\PerformanceController::class, 'appraiserInbox'])->name('performance.appraise.inbox');
+    Route::get('/performance/appraise/{employeeId}/{quarter}', [\App\Http\Controllers\PerformanceController::class, 'appraiserReport'])->name('performance.appraise.report');
+    Route::post('/performance/appraise/{employeeId}/{quarter}/save', [\App\Http\Controllers\PerformanceController::class, 'appraiserSave'])->name('performance.appraise.save');
 
     /*
     |--------------------------------------------------------------------------

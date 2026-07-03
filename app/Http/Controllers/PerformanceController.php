@@ -454,14 +454,15 @@ class PerformanceController extends Controller
         };
 
         // Saved data for this quarter
-        $savedRows   = $supabase->get('performance_reports', [
+        $savedRows    = $supabase->get('performance_reports', [
             'employee_id'    => 'eq.' . $user['id'],
             'financial_year' => 'eq.' . $this->currentFinancialYear,
             'quarter'        => 'eq.' . $q,
-            'select'         => 'form_data,updated_at',
+            'select'         => 'form_data,status,updated_at',
         ]) ?? [];
-        $savedData   = !empty($savedRows) ? ($savedRows[0]['form_data'] ?? null) : null;
-        $submittedAt = !empty($savedRows) ? ($savedRows[0]['updated_at'] ?? null) : null;
+        $savedData    = !empty($savedRows) ? ($savedRows[0]['form_data'] ?? null) : null;
+        $reportStatus = !empty($savedRows) ? ($savedRows[0]['status'] ?? 'draft') : 'draft';
+        $submittedAt  = !empty($savedRows) ? ($savedRows[0]['updated_at'] ?? null) : null;
 
         return view('performance.report', [
             'user'                 => $user,
@@ -487,6 +488,8 @@ class PerformanceController extends Controller
             'attendanceYTD'        => $attendanceYTD,
             'savedData'            => $savedData,
             'submittedAt'          => $submittedAt,
+            'status'               => $reportStatus,
+            'isAppraiserView'      => false,
         ]);
     }
 
@@ -501,16 +504,307 @@ class PerformanceController extends Controller
             return response()->json(['error' => 'Invalid quarter'], 422);
         }
 
+        $action = $request->input('action', 'draft');
+        $status = $action === 'submit' ? 'submitted' : 'draft';
+
         $supabase->upsert('performance_reports', [
             'employee_id'    => session('employee_uuid'),
             'company_code'   => session('company_code'),
             'financial_year' => $this->currentFinancialYear,
             'quarter'        => $q,
             'form_data'      => $request->input('form_data', []),
+            'status'         => $status,
             'submitted_at'   => now()->toISOString(),
             'updated_at'     => now()->toISOString(),
         ], 'employee_id,financial_year,quarter');
 
-        return response()->json(['success' => true, 'quarter' => $q]);
+        return response()->json(['success' => true, 'quarter' => $q, 'status' => $status]);
+    }
+
+    public function appraiserInbox(SupabaseService $supabase)
+    {
+        if (!session()->has('employee_uuid')) {
+            return redirect()->route('login');
+        }
+
+        $subordinates = $supabase->get('employees', [
+            'reports_to_id' => 'eq.' . session('employee_uuid'),
+            'is_active'     => 'eq.true',
+            'select'        => 'id,short_name,full_name,position,department_code',
+        ]) ?? [];
+
+        $reportMap = [];
+        if (!empty($subordinates)) {
+            $subIds  = array_column($subordinates, 'id');
+            $reports = $supabase->get('performance_reports', [
+                'employee_id'    => 'in.(' . implode(',', $subIds) . ')',
+                'financial_year' => 'eq.' . $this->currentFinancialYear,
+                'select'         => 'employee_id,quarter,status,updated_at',
+            ]) ?? [];
+            foreach ($reports as $r) {
+                $reportMap[$r['employee_id']][$r['quarter']] = $r;
+            }
+        }
+
+        return view('performance.appraise-inbox', [
+            'subordinates'         => $subordinates,
+            'reportMap'            => $reportMap,
+            'currentFinancialYear' => $this->currentFinancialYear,
+            'quarters'             => ['Q1','Q2','Q3','Q4'],
+        ]);
+    }
+
+    public function appraiserReport(string $employeeId, string $quarter, SupabaseService $supabase)
+    {
+        if (!session()->has('employee_uuid')) {
+            return redirect()->route('login');
+        }
+
+        $q = strtoupper($quarter);
+        if (!in_array($q, ['Q1','Q2','Q3','Q4'])) abort(404);
+
+        // Verify subordinate reports to current user
+        $employees = $supabase->get('employees', [
+            'id'            => 'eq.' . $employeeId,
+            'reports_to_id' => 'eq.' . session('employee_uuid'),
+            'is_active'     => 'eq.true',
+            'select'        => '*',
+        ]);
+        if (empty($employees)) abort(403);
+        $user = $employees[0];
+
+        // Tenure
+        $joinDate = $user['join_date'] ?? null;
+        $tenure   = '—';
+        if ($joinDate) {
+            $diff  = \Carbon\Carbon::parse($joinDate)->diff(now());
+            $parts = [];
+            if ($diff->y > 0) $parts[] = $diff->y . ' year' . ($diff->y !== 1 ? 's' : '');
+            if ($diff->m > 0) $parts[] = $diff->m . ' month' . ($diff->m !== 1 ? 's' : '');
+            $tenure = $parts ? implode(' ', $parts) : 'Less than 1 month';
+        }
+
+        // Reports-to (the current appraiser)
+        $appraiserEmployee = $supabase->get('employees', [
+            'id'     => 'eq.' . session('employee_uuid'),
+            'select' => 'id,short_name,full_name,role,position',
+        ]);
+        $reportsTo = $appraiserEmployee[0] ?? null;
+
+        // Department
+        $department = null;
+        if (!empty($user['department_code'])) {
+            $depts      = $supabase->get('departments', ['code' => 'eq.' . $user['department_code'], 'select' => '*']);
+            $department = $depts[0] ?? null;
+        }
+
+        // Window dates
+        $now  = now()->timezone('Asia/Kuala_Lumpur');
+        $year = (int) $now->year;
+        $mon  = (int) $now->month;
+        $windows = [
+            'Q1' => ['start' => "{$year}-03-24", 'end' => "{$year}-04-07"],
+            'Q2' => ['start' => "{$year}-06-23", 'end' => "{$year}-07-07"],
+            'Q3' => ['start' => "{$year}-09-22", 'end' => "{$year}-10-06"],
+            'Q4' => ['start' => "{$year}-12-23", 'end' => ($year + 1) . "-01-06"],
+        ];
+        if ($q === 'Q4' && $mon === 1 && $now->day <= 6) {
+            $py = $year - 1;
+            $windows['Q4'] = ['start' => "{$py}-12-23", 'end' => "{$year}-01-06"];
+        }
+        $window      = $windows[$q];
+        $windowStart = \Carbon\Carbon::parse($window['start'])->format('d M Y');
+        $windowEnd   = \Carbon\Carbon::parse($window['end'])->format('d M Y');
+
+        // KPIs for the subordinate
+        $kpis = $supabase->get('kpis', [
+            'employee_id'    => 'eq.' . $user['id'],
+            'financial_year' => 'eq.' . $this->currentFinancialYear,
+            'select'         => 'id,kpi_title,category,sub_category,unit,base_target,actual_value,status,weightage',
+        ]) ?? [];
+
+        $quarterScores = [];
+        $allQuarters   = [];
+        foreach ($kpis as $kpi) {
+            $qRows = $supabase->get('kpi_quarters', [
+                'kpi_id' => 'eq.' . $kpi['id'],
+                'select' => 'quarter,quarter_title,quarter_target,quarter_actual,status',
+            ]);
+            foreach ($qRows as $row) {
+                $allQuarters[$kpi['id']][$row['quarter']] = $row;
+            }
+            $quarterScores[$kpi['id']] = $allQuarters[$kpi['id']][$q] ?? null;
+        }
+
+        // Attendance
+        $quarterMonths = match($q) {
+            'Q1' => [1, 2, 3], 'Q2' => [4, 5, 6],
+            'Q3' => [7, 8, 9], 'Q4' => [10, 11, 12],
+        };
+        $attYear = ($q === 'Q4' && $mon === 1 && $now->day <= 6) ? ($year - 1) : $year;
+        $allAttendance = $supabase->get('attendance_summary', [
+            'employee_id' => 'eq.' . $user['id'],
+            'year'        => 'eq.' . $attYear,
+            'select'      => 'month,working_days,present_days,absent_days,late_count,total_late_minutes,mc_days,al_days,other_leave_days',
+        ]) ?? [];
+        $qAttendance = array_filter($allAttendance, fn($r) => in_array((int)$r['month'], $quarterMonths));
+        $attendanceSummary = [
+            'has_data' => !empty($qAttendance), 'working_days' => 0, 'present_days' => 0,
+            'absent_days' => 0, 'late_count' => 0, 'total_late_minutes' => 0,
+            'mc_days' => 0, 'al_days' => 0, 'other_leave_days' => 0, 'months' => [],
+        ];
+        foreach ($qAttendance as $ar) {
+            $attendanceSummary['working_days']       += (int)($ar['working_days'] ?? 0);
+            $attendanceSummary['present_days']       += (int)($ar['present_days'] ?? 0);
+            $attendanceSummary['absent_days']        += (int)($ar['absent_days'] ?? 0);
+            $attendanceSummary['late_count']         += (int)($ar['late_count'] ?? 0);
+            $attendanceSummary['total_late_minutes'] += (int)($ar['total_late_minutes'] ?? 0);
+            $attendanceSummary['mc_days']            += (int)($ar['mc_days'] ?? 0);
+            $attendanceSummary['al_days']            += (int)($ar['al_days'] ?? 0);
+            $attendanceSummary['other_leave_days']   += (int)($ar['other_leave_days'] ?? 0);
+            $attendanceSummary['months'][]           = \Carbon\Carbon::create($attYear, (int)$ar['month'], 1)->format('M Y');
+        }
+        $attendanceYTD = ['has_data' => !empty($allAttendance), 'mc_days' => 0, 'other_leave_days' => 0, 'late_count' => 0];
+        foreach ($allAttendance as $ar) {
+            $attendanceYTD['mc_days']          += (int)($ar['mc_days'] ?? 0);
+            $attendanceYTD['other_leave_days'] += (int)($ar['other_leave_days'] ?? 0);
+            $attendanceYTD['late_count']       += (int)($ar['late_count'] ?? 0);
+        }
+
+        // Assessment areas — same logic as reportQuarter
+        $role = strtolower($user['role'] ?? '');
+        $assessmentAreas = match(true) {
+            $role === 'executive' => [
+                ['no' =>  1, 'title' => 'Knowledge of Job Requirements',  'description' => 'Knowledge of job requirements, methods, techniques and skills involved in doing the job, and applying these to perform efficiently.'],
+                ['no' =>  2, 'title' => 'Quality of Work Done',           'description' => 'Degree to which quality expectations of the job were fulfilled — accuracy, reliability, and excellence of end results.'],
+                ['no' =>  3, 'title' => 'Planning & Organising Skills',   'description' => 'Degree to which the appraisee anticipated needs, forecast conditions, set goals and standards, planned and scheduled work.'],
+                ['no' =>  4, 'title' => 'Decision Making',                'description' => 'Able to analyse problems effectively, make sound decisions, and commit to those decisions to achieve an acceptable result.'],
+                ['no' =>  5, 'title' => 'Communication Skills',           'description' => 'Communicated effectively — verbal and written — with superiors and peers.'],
+                ['no' =>  6, 'title' => 'Teamwork',                       'description' => 'Able to adopt and adapt in work conditions/situations and work with others toward a common objective.'],
+                ['no' =>  7, 'title' => 'Interpersonal Relationships',    'description' => 'How well the appraisee related to associates, superiors, and external contacts to get the desired cooperation and assistance.'],
+                ['no' =>  8, 'title' => 'Attitude Towards Work',          'description' => 'Able to work independently without direct supervision; adapted well to new tasks/changes; showed commitment in discharge of duties.'],
+                ['no' =>  9, 'title' => 'Time Management / Tardiness',    'description' => 'Able to plan, execute and complete assigned tasks within deadline; conformed to company rules; punctual in attendance and timekeeping.'],
+                ['no' => 10, 'title' => 'Appearance',                     'description' => 'Well-groomed; made an excellent impression.'],
+                ['no' => 11, 'title' => 'Dependability / Accountability', 'description' => 'Carries out work with limited/minimum supervision, follows instructions; shows initiative to complete tasks efficiently and effectively.'],
+                ['no' => 12, 'title' => 'Values',                         'description' => 'Understands and demonstrates organisation values at all times.'],
+            ],
+            $role === 'manager' || $role === 'vp' => [
+                ['no' =>  1, 'title' => 'Quality of Work',                        'description' => 'Consistently promotes quality awareness and continuous improvement without decreasing productivity or increasing cost.'],
+                ['no' =>  2, 'title' => 'Dependability / Accountability / Ownership', 'description' => 'Works with minimal supervision, follows instructions clearly, and shows initiative to complete tasks efficiently.'],
+                ['no' =>  3, 'title' => 'Problem-Solving & Decision Making',      'description' => 'Identifies and rectifies work problems independently; provides solutions and recommendations.'],
+                ['no' =>  4, 'title' => 'Time Management',                        'description' => 'Plans, executes and completes assigned tasks within the required deadline.'],
+                ['no' =>  5, 'title' => 'Work Relationship / Service Orientation','description' => 'Builds cordial, positive relationships with colleagues and external parties; strong client rapport.'],
+                ['no' =>  6, 'title' => 'Performance Target',                     'description' => 'Has achieved the expected KPIs set by the superior and/or Management.'],
+                ['no' =>  7, 'title' => 'Leadership',                             'description' => 'Able to lead, develop, guide and motivate others toward a common objective.'],
+                ['no' =>  8, 'title' => 'Multi-Tasking Capabilities',             'description' => 'Willing to accept more tasks without complaint; works well under pressure.'],
+                ['no' =>  9, 'title' => 'Discipline (Attendance & Punctuality)',  'description' => 'Conforms to company rules at all times; punctual in attendance and timekeeping.'],
+                ['no' => 10, 'title' => 'Appearance',                             'description' => 'Well-groomed; makes an excellent impression.'],
+                ['no' => 11, 'title' => 'Communication / Interpersonal Skills',   'description' => 'Communicates effectively — verbal and written — with superiors, peers and subordinates.'],
+                ['no' => 12, 'title' => 'Values',                                 'description' => 'Understands and demonstrates organisation values at all times.'],
+            ],
+            default => [
+                ['no' =>  1, 'title' => 'Knowledge of Job Requirements',  'description' => 'Knowledge of job requirements, methods, techniques and skills involved in doing the job, and in applying these to perform efficiently.'],
+                ['no' =>  2, 'title' => 'Quality of Work Done',           'description' => 'To what degree did the appraisee fulfil the quality expectations of the job? Was the work completed accurate and reliable? What is the degree of excellence of end results?'],
+                ['no' =>  3, 'title' => 'Planning and Organising Skills', 'description' => 'To what degree did the appraisee anticipate needs, forecast conditions, set goals and standards, plan and schedule work?'],
+                ['no' =>  4, 'title' => 'Decision Making',                'description' => 'Was the appraisee able to analyse problems effectively and make sound decisions and commit to those decisions to achieve an acceptable result?'],
+                ['no' =>  5, 'title' => 'Communication Skills',           'description' => 'Did the appraisee communicate effectively verbal and written, with superiors and peers?'],
+                ['no' =>  6, 'title' => 'Teamwork',                       'description' => 'Was the appraisee able to adopt and adapt in work conditions/situations and work with others toward a common objective?'],
+                ['no' =>  7, 'title' => 'Interpersonal Relationships',    'description' => 'How well did the appraisee relate to associates, superiors, and external contacts to get the desired cooperation and assistance?'],
+                ['no' =>  8, 'title' => 'Attitude Towards Work',          'description' => 'Was the appraisee able to work independently without need for direct supervision? How well did the appraisee adapt to new tasks and to changes in the work environment? Did the appraisee show commitment in discharge of his/her duties?'],
+                ['no' =>  9, 'title' => 'Time Management / Tardiness',    'description' => "Is the appraisee able to plan, execute and complete assigned tasks within the deadline given? Did the appraisee conform to Company's rules and regulations at all times? Was the appraisee punctual in attendance and timekeeping?"],
+                ['no' => 10, 'title' => 'Appearance',                     'description' => 'Was the appraisee well groomed? Did the appraisee make an excellent impression?'],
+                ['no' => 11, 'title' => 'Dependability / Accountability', 'description' => 'Able to carry out work with limited or minimum supervision and able to follow work instructions. Demonstrates high level of commitment to complete tasks assigned and shows initiative in ensuring job is completed efficiently and effectively.'],
+                ['no' => 12, 'title' => 'Values',                         'description' => 'Does the appraisee understand and demonstrate organisation values all the time?'],
+            ],
+        };
+
+        // Saved data
+        $savedRows = $supabase->get('performance_reports', [
+            'employee_id'    => 'eq.' . $user['id'],
+            'financial_year' => 'eq.' . $this->currentFinancialYear,
+            'quarter'        => 'eq.' . $q,
+            'select'         => 'form_data,status,updated_at',
+        ]) ?? [];
+        $savedData    = !empty($savedRows) ? ($savedRows[0]['form_data'] ?? null) : null;
+        $reportStatus = !empty($savedRows) ? ($savedRows[0]['status'] ?? 'draft') : 'draft';
+        $submittedAt  = !empty($savedRows) ? ($savedRows[0]['updated_at'] ?? null) : null;
+
+        return view('performance.report', [
+            'user'                 => $user,
+            'currentUserName'      => $user['full_name'] ?? $user['short_name'] ?? 'User',
+            'userPosition'         => $user['position'] ?? $user['role'] ?? '-',
+            'departmentName'       => $department['name'] ?? $user['department_code'] ?? '-',
+            'reportsToName'        => $reportsTo ? ($reportsTo['full_name'] ?? $reportsTo['short_name'] ?? '-') : '-',
+            'reportsToPosition'    => $reportsTo['position'] ?? $reportsTo['role'] ?? '-',
+            'joinDate'             => $joinDate ? \Carbon\Carbon::parse($joinDate)->format('d M Y') : '—',
+            'tenure'               => $tenure,
+            'currentFinancialYear' => $this->currentFinancialYear,
+            'quarter'              => $q,
+            'displayQuarter'       => (int) substr($q, 1),
+            'qLabel'               => $q,
+            'isWindowOpen'         => in_array($reportStatus, ['submitted', 'appraised']),
+            'windowStart'          => $windowStart,
+            'windowEnd'            => $windowEnd,
+            'kpis'                 => $kpis,
+            'quarterScores'        => $quarterScores,
+            'allQuarters'          => $allQuarters,
+            'assessmentAreas'      => $assessmentAreas,
+            'attendanceSummary'    => $attendanceSummary,
+            'attendanceYTD'        => $attendanceYTD,
+            'savedData'            => $savedData,
+            'submittedAt'          => $submittedAt,
+            'status'               => $reportStatus,
+            'isAppraiserView'      => true,
+            'appraiseeId'          => $employeeId,
+            'appraiserSaveUrl'     => route('performance.appraise.save', [$employeeId, $q]),
+        ]);
+    }
+
+    public function appraiserSave(string $employeeId, string $quarter, \Illuminate\Http\Request $request, SupabaseService $supabase)
+    {
+        if (!session()->has('employee_uuid')) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
+        $q = strtoupper($quarter);
+        if (!in_array($q, ['Q1','Q2','Q3','Q4'])) {
+            return response()->json(['error' => 'Invalid quarter'], 422);
+        }
+
+        // Verify manager relationship
+        $employees = $supabase->get('employees', [
+            'id'            => 'eq.' . $employeeId,
+            'reports_to_id' => 'eq.' . session('employee_uuid'),
+            'is_active'     => 'eq.true',
+            'select'        => 'id',
+        ]);
+        if (empty($employees)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $action = $request->input('action', 'save');
+        $status = $action === 'appraised' ? 'appraised' : 'submitted';
+
+        // Merge appraiser data onto existing form_data
+        $existing     = $supabase->get('performance_reports', [
+            'employee_id'    => 'eq.' . $employeeId,
+            'financial_year' => 'eq.' . $this->currentFinancialYear,
+            'quarter'        => 'eq.' . $q,
+            'select'         => 'form_data',
+        ]) ?? [];
+        $existingData = !empty($existing) ? ($existing[0]['form_data'] ?? []) : [];
+        $newData      = array_merge($existingData, $request->input('form_data', []));
+
+        $supabase->upsert('performance_reports', [
+            'employee_id'    => $employeeId,
+            'company_code'   => session('company_code'),
+            'financial_year' => $this->currentFinancialYear,
+            'quarter'        => $q,
+            'form_data'      => $newData,
+            'status'         => $status,
+            'updated_at'     => now()->toISOString(),
+        ], 'employee_id,financial_year,quarter');
+
+        return response()->json(['success' => true, 'status' => $status]);
     }
 }
