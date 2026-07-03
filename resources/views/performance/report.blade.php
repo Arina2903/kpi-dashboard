@@ -680,51 +680,59 @@
                 @endif
 
                 {{-- ── Attendance Score Assessment ── --}}
+                @php
+                $attPrefill = [
+                    1 => (int)($attendanceSummary['late_count']       ?? 0),
+                    2 => (int)($attendanceSummary['absent_days']       ?? 0),
+                    3 => 0,
+                    4 => (int)($attendanceSummary['other_leave_days']  ?? 0),
+                    5 => 0,
+                ];
+                $attCriteria = [
+                    1 => ['label' => 'Lateness',             'desc' => 'Arriving to work up to 30 minutes after start of official work hours.'],
+                    2 => ['label' => 'Absent',               'desc' => 'No clock-in record.'],
+                    3 => ['label' => 'Insufficient',         'desc' => 'Early departure — before end of official work hours.'],
+                    4 => ['label' => 'EL / Unpaid Leave',    'desc' => 'Unplanned leave, especially delayed or unauthorised.'],
+                    5 => ['label' => 'Disciplinary Matters', 'desc' => 'Issuance of Reminder, Warning, or Showcause Letters.'],
+                ];
+                @endphp
                 <div class="mt-5 overflow-hidden rounded-xl border border-[#6B9080]/25">
                     <div style="background:rgba(26,61,52,.06);padding:10px 16px;border-bottom:1px solid rgba(107,144,128,.15);display:flex;align-items:center;justify-content:space-between;">
                         <span style="font-size:10px;font-weight:900;color:#1a3d34;text-transform:uppercase;letter-spacing:.1em;">Attendance Score Assessment · {{ $qLabel }}</span>
-                        <span style="font-size:9px;font-weight:700;color:#6B9080;">Appraiser scored · Max 30 pts → 5% of overall</span>
+                        <span style="font-size:9px;font-weight:700;color:#6B9080;">Auto-scored · Max 5 pts → 5% of overall &nbsp;·&nbsp; 0=1pt · 1–5=0.7 · 6–10=0.3 · ≥11=0</span>
                     </div>
                     <table style="width:100%;border-collapse:collapse;">
                         <thead>
                             <tr style="background:rgba(107,144,128,.08);border-bottom:1px solid rgba(107,144,128,.15);">
                                 <th style="padding:8px 14px;text-align:left;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#6B9080;width:145px;">Category</th>
                                 <th style="padding:8px 14px;text-align:left;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#6B9080;">Description</th>
-                                <th style="padding:8px 14px;text-align:center;font-size:13px;font-weight:900;color:#059669;width:64px;">6</th>
-                                <th style="padding:8px 14px;text-align:center;font-size:13px;font-weight:900;color:#d97706;width:64px;">3</th>
-                                <th style="padding:8px 14px;text-align:center;font-size:13px;font-weight:900;color:#dc2626;width:64px;">1</th>
+                                <th style="padding:8px 14px;text-align:center;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#6B9080;width:90px;">Count</th>
+                                <th style="padding:8px 14px;text-align:center;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#6B9080;width:80px;">Score</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach([
-                                ['id'=>'att_1','label'=>'Lateness',             'desc'=>'Arriving to work up to 30 minutes after start of official work hours.'],
-                                ['id'=>'att_2','label'=>'Absent',               'desc'=>'No clock-in record.'],
-                                ['id'=>'att_3','label'=>'Insufficient',         'desc'=>'Early departure — before end of official work hours.'],
-                                ['id'=>'att_4','label'=>'EL / Unpaid Leave',    'desc'=>'Unplanned leave, especially delayed or unauthorised.'],
-                                ['id'=>'att_5','label'=>'Disciplinary Matters', 'desc'=>'Issuance of Reminder, Warning, or Showcause Letters.'],
-                            ] as $ai => $ac)
+                            @foreach($attCriteria as $ai => $ac)
                             <tr style="border-bottom:1px solid rgba(107,144,128,.08);{{ $ai%2===0 ? 'background:#fff;' : 'background:rgba(107,144,128,.03);' }}">
                                 <td style="padding:10px 14px;font-size:11px;font-weight:700;color:#1e293b;white-space:nowrap;">{{ $ac['label'] }}</td>
                                 <td style="padding:10px 14px;font-size:11px;color:#64748b;">{{ $ac['desc'] }}</td>
-                                @foreach([6, 3, 1] as $sc)
-                                <td style="padding:10px;text-align:center;">
-                                    <input type="radio" name="{{ $ac['id'] }}_score" value="{{ $sc }}"
-                                        class="att-score-radio w-4 h-4 accent-[#1a3d34]"
-                                        style="pointer-events:none;opacity:0.55;cursor:not-allowed;">
+                                <td style="padding:8px 10px;text-align:center;">
+                                    <input type="number" name="att_count_{{ $ai }}" value="{{ $attPrefill[$ai] }}"
+                                        min="0" step="1"
+                                        class="att-count-input"
+                                        style="width:60px;padding:4px 6px;text-align:center;font-size:13px;font-weight:700;border:1px solid #d1d5db;border-radius:6px;pointer-events:none;opacity:0.7;cursor:not-allowed;background:#f8fafc;">
                                 </td>
-                                @endforeach
+                                <td style="padding:10px 14px;text-align:center;">
+                                    <span id="att-row-score-{{ $ai }}" style="font-size:14px;font-weight:900;color:#cbd5e1;">—</span>
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
                         <tfoot>
                             <tr style="background:rgba(26,61,52,.06);border-top:1px solid rgba(107,144,128,.15);">
-                                <td colspan="2" style="padding:10px 14px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#1a3d34;text-align:right;">Score Total</td>
-                                <td colspan="3" style="padding:10px 14px;text-align:center;">
-                                    <span id="att-score-display" style="font-size:15px;font-weight:900;color:#cbd5e1;">—</span>
-                                    <span style="font-size:9px;font-weight:600;color:#94a3b8;margin-left:4px;">/ 30</span>
-                                    <span style="margin-left:12px;font-size:9px;font-weight:600;color:#94a3b8;">= </span>
-                                    <span id="att-score-pct" style="font-size:13px;font-weight:900;color:#cbd5e1;">—</span>
-                                    <span style="font-size:9px;font-weight:600;color:#94a3b8;"> / 5 pts</span>
+                                <td colspan="3" style="padding:10px 14px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#1a3d34;text-align:right;">Score Total</td>
+                                <td style="padding:10px 14px;text-align:center;">
+                                    <span id="att-score-total" style="font-size:15px;font-weight:900;color:#cbd5e1;">—</span>
+                                    <span style="font-size:9px;font-weight:600;color:#94a3b8;margin-left:3px;">/ 5 pts</span>
                                 </td>
                             </tr>
                         </tfoot>
@@ -1110,24 +1118,37 @@
     // ── Section 6 auto-compute ────────────────────────────────────────────────
     var _isQ4 = '{{ $quarter }}' === 'Q4';
 
+    function attScoreFromCount(n) {
+        n = parseInt(n); if (isNaN(n) || n < 0) n = 0;
+        if (n === 0)  return 1.00;
+        if (n <= 5)   return 0.70;
+        if (n <= 10)  return 0.30;
+        return 0.00;
+    }
     function calcAttScore() {
-        var total = 0, count = 0;
+        var total = 0, found = false;
         for (var i = 1; i <= 5; i++) {
-            var checked = document.querySelector('input[name="att_' + i + '_score"]:checked');
-            if (checked) { total += parseInt(checked.value); count++; }
+            var inp = document.querySelector('input[name="att_count_' + i + '"]');
+            if (!inp) continue;
+            found = true;
+            var cnt   = inp.value === '' ? 0 : parseInt(inp.value);
+            var score = attScoreFromCount(cnt);
+            var rowEl = document.getElementById('att-row-score-' + i);
+            if (rowEl) {
+                var clr = score >= 1 ? '#059669' : score >= 0.7 ? '#6B9080' : score >= 0.3 ? '#d97706' : '#dc2626';
+                rowEl.textContent = score.toFixed(2);
+                rowEl.style.color = clr;
+            }
+            total += score;
         }
-        var disp = document.getElementById('att-score-display');
-        var pct  = document.getElementById('att-score-pct');
-        if (count === 0) {
-            if (disp) { disp.textContent = '—'; disp.style.color = '#cbd5e1'; }
-            if (pct)  { pct.textContent  = '—'; pct.style.color  = '#cbd5e1'; }
-            return null;
+        if (!found) return null;
+        var totalEl = document.getElementById('att-score-total');
+        if (totalEl) {
+            var clr = total >= 4.5 ? '#059669' : total >= 3 ? '#6B9080' : total >= 2 ? '#d97706' : '#dc2626';
+            totalEl.textContent = total.toFixed(2);
+            totalEl.style.color = clr;
         }
-        var score = total / 30 * 5;
-        var clr = score >= 4 ? '#059669' : score >= 3 ? '#6B9080' : score >= 2 ? '#d97706' : '#dc2626';
-        if (disp) { disp.textContent = total; disp.style.color = clr; }
-        if (pct)  { pct.textContent  = score.toFixed(2); pct.style.color = clr; }
-        return score;
+        return total;
     }
 
     function s6Clr(v){ return v>=90?'#15803d':v>=80?'#16a34a':v>=50?'#d97706':v>=35?'#ea6f00':'#e85d04'; }
@@ -1206,7 +1227,7 @@
         setS6('s6_s3_self', s3ST && s3ST !== '—' ? parseFloat(s3ST) : null);
         setS6('s6_s3_app',  s3AT && s3AT !== '—' ? parseFloat(s3AT) : null);
 
-        // S4: attendance score from rubric table (appraiser scored, max 30 → scaled to 5)
+        // S4: attendance score — sum of 5 category scores (0/0.3/0.7/1 each), max 5 pts
         var s4 = calcAttScore();
         setS6('s6_s4_self', s4);
         setS6('s6_s4_app',  s4);
@@ -1241,8 +1262,8 @@
     document.querySelectorAll('[name^="kpi_self_"],[name^="kpi_app_"]').forEach(function(el){ el.addEventListener('input', updateS6); });
     // Wire: culture values radios (Q4) → updateS6
     document.querySelectorAll('[name^="cv_self_"],[name^="cv_app_"]').forEach(function(r){ r.addEventListener('change', updateS6); });
-    // Wire: attendance score radios → updateS6
-    document.querySelectorAll('.att-score-radio').forEach(function(r){ r.addEventListener('change', updateS6); });
+    // Wire: attendance count inputs → updateS6
+    document.querySelectorAll('.att-count-input').forEach(function(inp){ inp.addEventListener('input', updateS6); });
 })();
 </script>
 
@@ -1428,11 +1449,13 @@ function unlockAppraiserSections() {
         inp.style.background = '';
         inp.style.cursor = '';
     });
-    // Unlock attendance score radios
-    document.querySelectorAll('.att-score-radio').forEach(function(inp) {
+    // Unlock attendance count inputs for appraiser
+    document.querySelectorAll('.att-count-input').forEach(function(inp) {
         inp.style.pointerEvents = 'auto';
-        inp.style.opacity = '';
-        inp.style.cursor = '';
+        inp.style.opacity       = '1';
+        inp.style.cursor        = 'text';
+        inp.style.background    = '#fff';
+        inp.removeAttribute('readonly');
     });
 }
 
