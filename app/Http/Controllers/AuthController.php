@@ -84,6 +84,7 @@ class AuthController extends Controller
         // With 2+ companies always show the chooser so the user can pick.
         if (count($dashboards) === 1) {
             $this->setDashboardSession($dashboards[0]);
+            $this->setSubordinateSession($supabase, $dashboards[0]);
             return redirect()->route('dashboard');
         }
 
@@ -137,19 +138,7 @@ class AuthController extends Controller
         }
 
         $this->setDashboardSession($selectedDashboard);
-
-        // Check if employee has anyone reporting to them
-        try {
-            $subs = $supabase->get('employees', [
-                'reports_to_id' => 'eq.' . $selectedDashboard['employee_uuid'],
-                'company_code'  => 'eq.' . $selectedDashboard['company_code'],
-                'select'        => 'id',
-                'limit'         => '1',
-            ]) ?? [];
-            session(['has_subordinates' => !empty($subs)]);
-        } catch (\Throwable) {
-            session(['has_subordinates' => false]);
-        }
+        $this->setSubordinateSession($supabase, $selectedDashboard);
 
         // Clear bulky available_dashboards to keep session cookie small
         session()->forget('available_dashboards');
@@ -248,6 +237,21 @@ class AuthController extends Controller
             'company_display_name' => $dashboard['company_display_name'],
             'company_logo'         => $dashboard['company_logo'],
         ]);
+    }
+
+    private function setSubordinateSession(SupabaseService $supabase, array $dashboard): void
+    {
+        try {
+            $subs = $supabase->get('employees', [
+                'reports_to_id' => 'eq.' . $dashboard['employee_uuid'],
+                'company_code'  => 'eq.' . $dashboard['company_code'],
+                'select'        => 'id',
+                'limit'         => '1',
+            ]) ?? [];
+            session(['has_subordinates' => !empty($subs)]);
+        } catch (\Throwable) {
+            session(['has_subordinates' => false]);
+        }
     }
 
     private function updateLastLogin(SupabaseService $supabase, string $userId): void
