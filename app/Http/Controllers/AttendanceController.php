@@ -10,6 +10,7 @@ use Carbon\Carbon;
 class AttendanceController extends Controller
 {
     const WORK_START = '08:30';
+    const WORK_END   = '17:30';
 
     private function authorise(): bool
     {
@@ -198,6 +199,7 @@ class AttendanceController extends Controller
                 'absent_days'        => max(0, (int) $rec['absent_days'] - $mc - $al - $other),
                 'late_count'         => (int) $rec['late_count'],
                 'total_late_minutes' => (int) $rec['total_late_minutes'],
+                'insufficient_count' => (int) ($rec['insufficient_count'] ?? 0),
                 'mc_days'            => $mc,
                 'al_days'            => $al,
                 'other_leave_days'   => $other,
@@ -269,12 +271,11 @@ class AttendanceController extends Controller
                 ];
             }
 
-            // Earliest clock-in per day
+            // Collect all punches per day (earliest = clock-in, latest = clock-out)
             if (!isset($employees[$internalId]['dates'][$dateKey])) {
-                $employees[$internalId]['dates'][$dateKey] = $clockIn;
-            } elseif ($clockIn < $employees[$internalId]['dates'][$dateKey]) {
-                $employees[$internalId]['dates'][$dateKey] = $clockIn;
+                $employees[$internalId]['dates'][$dateKey] = [];
             }
+            $employees[$internalId]['dates'][$dateKey][] = $clockIn;
         }
 
         // Enrich with DB info (department, UUID) — only for employees already found in CSV
@@ -294,14 +295,18 @@ class AttendanceController extends Controller
         // Calculate stats
         $results = [];
         foreach ($employees as $eid => $emp) {
-            $presentDays = $lateCount = $totalLateMinutes = 0;
+            $presentDays = $lateCount = $totalLateMinutes = $insufficientCount = 0;
             $dailyRecords = [];
 
             foreach ($workingDays as $wd) {
-                if (isset($emp['dates'][$wd])) {
-                    $ci     = $emp['dates'][$wd];
+                $punches = $emp['dates'][$wd] ?? [];
+                if (!empty($punches)) {
+                    sort($punches); // chronological order — earliest = clock-in, latest = clock-out
+                    $ci = $punches[0];
+                    $co = count($punches) > 1 ? end($punches) : null;
                     $presentDays++;
                     $ciNorm = strlen($ci) === 4 ? "0{$ci}" : $ci;
+                    $coNorm = $co ? (strlen($co) === 4 ? "0{$co}" : $co) : null;
                     $isLate = $ciNorm > $cutoff;
                     $lateMins = 0;
                     if ($isLate) {
@@ -310,9 +315,26 @@ class AttendanceController extends Controller
                                         ->diffInMinutes(Carbon::parse($wd . ' ' . $cutoff));
                         $totalLateMinutes += $lateMins;
                     }
-                    $dailyRecords[$wd] = ['status' => 'present', 'clock_in' => $ciNorm, 'is_late' => $isLate, 'late_minutes' => $lateMins];
+                    // Insufficient: no clock-out (1 punch only) OR clock-out before end of work
+                    $isInsufficient = ($coNorm === null) || ($coNorm < self::WORK_END);
+                    if ($isInsufficient) $insufficientCount++;
+                    $dailyRecords[$wd] = [
+                        'status'          => 'present',
+                        'clock_in'        => $ciNorm,
+                        'clock_out'       => $coNorm,
+                        'is_late'         => $isLate,
+                        'late_minutes'    => $lateMins,
+                        'is_insufficient' => $isInsufficient,
+                    ];
                 } else {
-                    $dailyRecords[$wd] = ['status' => 'absent', 'clock_in' => null, 'is_late' => false, 'late_minutes' => 0];
+                    $dailyRecords[$wd] = [
+                        'status'          => 'absent',
+                        'clock_in'        => null,
+                        'clock_out'       => null,
+                        'is_late'         => false,
+                        'late_minutes'    => 0,
+                        'is_insufficient' => false,
+                    ];
                 }
             }
 
@@ -328,6 +350,7 @@ class AttendanceController extends Controller
                 'absent_days'        => $totalWD - $presentDays,
                 'late_count'         => $lateCount,
                 'total_late_minutes' => $totalLateMinutes,
+                'insufficient_count' => $insufficientCount,
                 'mc_days'            => 0,
                 'al_days'            => 0,
                 'other_leave_days'   => 0,

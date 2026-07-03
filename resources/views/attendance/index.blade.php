@@ -152,19 +152,21 @@
 @isset($results)
 
 @php
-    $totalEmp    = count($results);
-    $totalLate   = collect($results)->sum('late_count');
-    $totalAbsent = collect($results)->sum('absent_days');
-    $monthLabel  = \Carbon\Carbon::create(null, $month)->format('F') . ' ' . $year;
+    $totalEmp          = count($results);
+    $totalLate         = collect($results)->sum('late_count');
+    $totalAbsent       = collect($results)->sum('absent_days');
+    $totalInsufficient = collect($results)->sum('insufficient_count');
+    $monthLabel        = \Carbon\Carbon::create(null, $month)->format('F') . ' ' . $year;
 @endphp
 
 {{-- Summary cards --}}
-<div class="grid grid-cols-4 gap-3 mb-4 no-print">
+<div class="grid grid-cols-5 gap-3 mb-4 no-print">
     @foreach([
         ['Staff in Sheet','👤',$totalEmp,'#1a3d34'],
         ['Working Days','📅',$totalWorkingDays,'#6B9080'],
         ['Late Incidents','⏰',$totalLate,'#d97706'],
         ['Absent Days','❌',$totalAbsent,'#dc2626'],
+        ['Insufficient','⚠️',$totalInsufficient,'#7c3aed'],
     ] as [$lbl,$ico,$val,$clr])
     <div class="bg-white rounded-2xl border border-[#6B9080]/20 px-5 py-4 flex items-center gap-3">
         <span class="text-2xl">{{ $ico }}</span>
@@ -191,6 +193,7 @@
             ['bg-emerald-100 text-emerald-700','Present'],
             ['bg-amber-100 text-amber-700','Late'],
             ['bg-red-100 text-red-700','Absent'],
+            ['bg-purple-100 text-purple-700','Insufficient'],
         ] as [$cls,$lbl])
         <span class="badge {{ $cls }}">{{ $lbl }}</span>
         @endforeach
@@ -211,6 +214,7 @@
             <th class="text-center">Absent</th>
             <th class="text-center">Late</th>
             <th class="text-center">Late Duration</th>
+            <th class="text-center">Insuffic.</th>
             <th class="text-center">MC<br><span class="font-normal text-[8px] normal-case tracking-normal opacity-70">key in</span></th>
             <th class="text-center">AL<br><span class="font-normal text-[8px] normal-case tracking-normal opacity-70">key in</span></th>
             <th class="text-center">Other<br><span class="font-normal text-[8px] normal-case tracking-normal opacity-70">key in</span></th>
@@ -228,7 +232,7 @@
     @if($emp['department'] !== $prevDept)
     @php $prevDept = $emp['department']; @endphp
     <tr>
-        <td colspan="{{ 11 + count($workingDays) }}" class="bg-[#e4f0eb] py-2 px-4">
+        <td colspan="{{ 12 + count($workingDays) }}" class="bg-[#e4f0eb] py-2 px-4">
             <span class="text-[9px] font-black text-[#1a3d34] uppercase tracking-widest">▸ {{ $emp['department'] ?: 'No Department' }}</span>
         </td>
     </tr>
@@ -258,15 +262,26 @@
             {{ floor($emp['total_late_minutes']/60) }}h {{ $emp['total_late_minutes']%60 }}m
             @else—@endif
         </td>
+        <td class="text-center">
+            @if(($emp['insufficient_count'] ?? 0) > 0)
+            <span class="badge bg-purple-100 text-purple-700">{{ $emp['insufficient_count'] }}</span>
+            @else<span class="text-slate-300">—</span>@endif
+        </td>
         <td class="text-center"><input type="number" min="0" max="{{ $emp['working_days'] }}" value="{{ $emp['mc_days'] }}" class="leaf-input mc-in" data-eid="{{ $eid }}"></td>
         <td class="text-center"><input type="number" min="0" max="{{ $emp['working_days'] }}" value="{{ $emp['al_days'] }}" class="leaf-input al-in" data-eid="{{ $eid }}"></td>
         <td class="text-center"><input type="number" min="0" max="{{ $emp['working_days'] }}" value="{{ $emp['other_leave_days'] }}" class="leaf-input ot-in" data-eid="{{ $eid }}"></td>
         @foreach($workingDays as $wd)
-        @php $day = $emp['daily'][$wd] ?? ['status'=>'absent','clock_in'=>null,'is_late'=>false,'late_minutes'=>0]; @endphp
+        @php
+            $day = $emp['daily'][$wd] ?? ['status'=>'absent','clock_in'=>null,'clock_out'=>null,'is_late'=>false,'late_minutes'=>0,'is_insufficient'=>false];
+            $dayInsuf = $day['is_insufficient'] ?? false;
+        @endphp
         <td class="text-center" style="padding:3px 2px;">
             @if($day['status'] === 'present')
-            <div class="mx-auto w-7 h-7 rounded-lg flex items-center justify-center text-[8px] font-bold {{ $day['is_late'] ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }}"
-                 title="{{ $day['clock_in'] }}{{ $day['is_late'] ? ' · Late '.floor($day['late_minutes']/60).'h'.($day['late_minutes']%60).'m' : '' }}">
+            @php
+                $dayCls = $dayInsuf ? 'bg-purple-100 text-purple-700' : ($day['is_late'] ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700');
+                $dayTip = $day['clock_in'] . ($day['clock_out'] ? ' → '.$day['clock_out'] : ' → ?') . ($day['is_late'] ? ' · Late '.floor($day['late_minutes']/60).'h'.($day['late_minutes']%60).'m' : '') . ($dayInsuf ? ' · Insufficient' : '');
+            @endphp
+            <div class="mx-auto w-7 h-7 rounded-lg flex items-center justify-center text-[8px] font-bold {{ $dayCls }}" title="{{ $dayTip }}">
                 {{ $day['clock_in'] }}
             </div>
             @else
@@ -348,6 +363,7 @@ function saveMonth() {
             absent_days:        emp.absent_days,
             late_count:         emp.late_count,
             total_late_minutes: emp.total_late_minutes,
+            insufficient_count: emp.insufficient_count || 0,
             mc_days:            parseInt(row.querySelector('.mc-in')?.value) || 0,
             al_days:            parseInt(row.querySelector('.al-in')?.value) || 0,
             other_leave_days:   parseInt(row.querySelector('.ot-in')?.value) || 0,

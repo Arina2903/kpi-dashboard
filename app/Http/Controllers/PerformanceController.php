@@ -386,18 +386,19 @@ class PerformanceController extends Controller
         $attendanceSummary = [
             'has_data' => !empty($qAttendance), 'working_days' => 0, 'present_days' => 0,
             'absent_days' => 0, 'late_count' => 0, 'total_late_minutes' => 0,
-            'mc_days' => 0, 'al_days' => 0, 'other_leave_days' => 0, 'months' => [],
+            'mc_days' => 0, 'al_days' => 0, 'other_leave_days' => 0, 'insufficient_count' => 0, 'months' => [],
         ];
         foreach ($qAttendance as $ar) {
-            $attendanceSummary['working_days']       += (int)($ar['working_days'] ?? 0);
-            $attendanceSummary['present_days']       += (int)($ar['present_days'] ?? 0);
-            $attendanceSummary['absent_days']        += (int)($ar['absent_days'] ?? 0);
-            $attendanceSummary['late_count']         += (int)($ar['late_count'] ?? 0);
-            $attendanceSummary['total_late_minutes'] += (int)($ar['total_late_minutes'] ?? 0);
-            $attendanceSummary['mc_days']            += (int)($ar['mc_days'] ?? 0);
-            $attendanceSummary['al_days']            += (int)($ar['al_days'] ?? 0);
-            $attendanceSummary['other_leave_days']   += (int)($ar['other_leave_days'] ?? 0);
-            $attendanceSummary['months'][]           = \Carbon\Carbon::create($attYear, (int)$ar['month'], 1)->format('M Y');
+            $attendanceSummary['working_days']        += (int)($ar['working_days'] ?? 0);
+            $attendanceSummary['present_days']        += (int)($ar['present_days'] ?? 0);
+            $attendanceSummary['absent_days']         += (int)($ar['absent_days'] ?? 0);
+            $attendanceSummary['late_count']          += (int)($ar['late_count'] ?? 0);
+            $attendanceSummary['total_late_minutes']  += (int)($ar['total_late_minutes'] ?? 0);
+            $attendanceSummary['mc_days']             += (int)($ar['mc_days'] ?? 0);
+            $attendanceSummary['al_days']             += (int)($ar['al_days'] ?? 0);
+            $attendanceSummary['other_leave_days']    += (int)($ar['other_leave_days'] ?? 0);
+            $attendanceSummary['insufficient_count']  += (int)($ar['insufficient_count'] ?? 0);
+            $attendanceSummary['months'][]            = \Carbon\Carbon::create($attYear, (int)$ar['month'], 1)->format('M Y');
         }
 
         $attendanceYTD = ['has_data' => !empty($allAttendance), 'mc_days' => 0, 'other_leave_days' => 0, 'late_count' => 0];
@@ -653,18 +654,19 @@ class PerformanceController extends Controller
         $attendanceSummary = [
             'has_data' => !empty($qAttendance), 'working_days' => 0, 'present_days' => 0,
             'absent_days' => 0, 'late_count' => 0, 'total_late_minutes' => 0,
-            'mc_days' => 0, 'al_days' => 0, 'other_leave_days' => 0, 'months' => [],
+            'mc_days' => 0, 'al_days' => 0, 'other_leave_days' => 0, 'insufficient_count' => 0, 'months' => [],
         ];
         foreach ($qAttendance as $ar) {
-            $attendanceSummary['working_days']       += (int)($ar['working_days'] ?? 0);
-            $attendanceSummary['present_days']       += (int)($ar['present_days'] ?? 0);
-            $attendanceSummary['absent_days']        += (int)($ar['absent_days'] ?? 0);
-            $attendanceSummary['late_count']         += (int)($ar['late_count'] ?? 0);
-            $attendanceSummary['total_late_minutes'] += (int)($ar['total_late_minutes'] ?? 0);
-            $attendanceSummary['mc_days']            += (int)($ar['mc_days'] ?? 0);
-            $attendanceSummary['al_days']            += (int)($ar['al_days'] ?? 0);
-            $attendanceSummary['other_leave_days']   += (int)($ar['other_leave_days'] ?? 0);
-            $attendanceSummary['months'][]           = \Carbon\Carbon::create($attYear, (int)$ar['month'], 1)->format('M Y');
+            $attendanceSummary['working_days']        += (int)($ar['working_days'] ?? 0);
+            $attendanceSummary['present_days']        += (int)($ar['present_days'] ?? 0);
+            $attendanceSummary['absent_days']         += (int)($ar['absent_days'] ?? 0);
+            $attendanceSummary['late_count']          += (int)($ar['late_count'] ?? 0);
+            $attendanceSummary['total_late_minutes']  += (int)($ar['total_late_minutes'] ?? 0);
+            $attendanceSummary['mc_days']             += (int)($ar['mc_days'] ?? 0);
+            $attendanceSummary['al_days']             += (int)($ar['al_days'] ?? 0);
+            $attendanceSummary['other_leave_days']    += (int)($ar['other_leave_days'] ?? 0);
+            $attendanceSummary['insufficient_count']  += (int)($ar['insufficient_count'] ?? 0);
+            $attendanceSummary['months'][]            = \Carbon\Carbon::create($attYear, (int)$ar['month'], 1)->format('M Y');
         }
         $attendanceYTD = ['has_data' => !empty($allAttendance), 'mc_days' => 0, 'other_leave_days' => 0, 'late_count' => 0];
         foreach ($allAttendance as $ar) {
