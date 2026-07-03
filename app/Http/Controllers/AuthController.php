@@ -110,7 +110,7 @@ class AuthController extends Controller
         return view('auth.choose-dashboard', compact('dashboards'));
     }
 
-    public function selectDashboard(Request $request)
+    public function selectDashboard(Request $request, SupabaseService $supabase)
     {
         $request->validate([
             'employee_uuid' => 'required|string',
@@ -137,6 +137,19 @@ class AuthController extends Controller
         }
 
         $this->setDashboardSession($selectedDashboard);
+
+        // Check if employee has anyone reporting to them
+        try {
+            $subs = $supabase->get('employees', [
+                'reports_to_id' => 'eq.' . $selectedDashboard['employee_uuid'],
+                'company_code'  => 'eq.' . $selectedDashboard['company_code'],
+                'select'        => 'id',
+                'limit'         => '1',
+            ]) ?? [];
+            session(['has_subordinates' => !empty($subs)]);
+        } catch (\Throwable) {
+            session(['has_subordinates' => false]);
+        }
 
         // Clear bulky available_dashboards to keep session cookie small
         session()->forget('available_dashboards');

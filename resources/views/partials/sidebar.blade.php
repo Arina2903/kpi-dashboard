@@ -265,7 +265,7 @@
                         @if(($item['titan_only'] ?? false) && !$hasTitanAccess)
                             @continue
                         @endif
-                        @if(($item['manager_vp_only'] ?? false) && !in_array(session('role'), ['manager', 'vp']) && session('department_code') !== 'BTS')
+                        @if(($item['manager_vp_only'] ?? false) && !session('has_subordinates') && session('department_code') !== 'BTS')
                             @continue
                         @endif
                         @php

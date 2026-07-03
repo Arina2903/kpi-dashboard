@@ -635,7 +635,7 @@
                 {{-- ── Attendance Score Assessment ── --}}
                 <div class="mt-5 overflow-hidden rounded-xl border border-[#6B9080]/25">
                     <div style="background:rgba(26,61,52,.06);padding:10px 16px;border-bottom:1px solid rgba(107,144,128,.15);display:flex;align-items:center;justify-content:space-between;">
-                        <span style="font-size:10px;font-weight:900;color:#1a3d34;text-transform:uppercase;letter-spacing:.1em;">Attendance Score Assessment</span>
+                        <span style="font-size:10px;font-weight:900;color:#1a3d34;text-transform:uppercase;letter-spacing:.1em;">Attendance Score Assessment · {{ $qLabel }}</span>
                         <span style="font-size:9px;font-weight:700;color:#6B9080;">Appraiser scored · Max 30 pts → 5% of overall</span>
                     </div>
                     <table style="width:100%;border-collapse:collapse;">
