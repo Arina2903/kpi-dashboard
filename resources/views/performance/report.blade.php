@@ -287,6 +287,7 @@
 
 {{-- Print table: thead repeats logo+Q2 on every page --}}
 @php $phLogoMap=['RCG'=>'images/RCG-Logo-black.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $phLogo=$phLogoMap[session('company_code')]??null; @endphp
+<div id="form-body">
 <table id="print-table">
 <thead id="print-thead">
 <tr><td>
@@ -1018,6 +1019,7 @@
 </td></tr>
 </tbody>
 </table>
+</div>{{-- /form-body --}}
 </main>
 
 <script>
@@ -1303,14 +1305,19 @@ function restoreFormData(saved) {
 
 // ── lock all inputs when window is closed ─────────────────────────────────────
 function lockForm() {
-    // Lock only the form table — keeps Print button and header accessible
-    const formBody = document.getElementById('print-table') || document.querySelector('main');
+    // Target #form-body div — keeps page header (Print, badges) accessible
+    const formBody = document.getElementById('form-body') || document.querySelector('main');
     if (!formBody) return;
+    // inert: blocks all interaction in modern browsers (mouse + keyboard + touch)
     formBody.setAttribute('inert', '');
-    formBody.style.opacity = '0.7';
+    // CSS fallback: pointer-events blocks mouse/touch even without inert
+    formBody.style.pointerEvents = 'none';
+    formBody.style.userSelect    = 'none';
+    formBody.style.opacity       = '0.7';
+    // Element-level fallback: disabled works on ALL input types incl. radio/checkbox
     formBody.querySelectorAll('input:not([type="hidden"]), textarea, select, button').forEach(function(el) {
-        if (el.tagName === 'BUTTON') el.disabled = true;
-        else { el.setAttribute('readonly', ''); el.setAttribute('tabindex', '-1'); }
+        el.disabled = true;
+        el.setAttribute('tabindex', '-1');
     });
 }
 
@@ -1560,8 +1567,8 @@ document.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
 if (_savedData) { restoreFormData(_savedData); restoreAllSigs(); updateS3(); }
 updateS6();
 if (_isAppraiserView) {
-    // Lock form table then unlock appraiser sections — keeps header buttons accessible
-    var formBody = document.getElementById('print-table') || document.querySelector('main');
+    // Lock form body then unlock appraiser sections — keeps header buttons accessible
+    var formBody = document.getElementById('form-body') || document.querySelector('main');
     if (formBody) { formBody.style.pointerEvents = 'none'; formBody.style.opacity = '0.85'; }
     unlockAppraiserSections();
 } else if (!_isWindowOpen || _isSubmitted) {
