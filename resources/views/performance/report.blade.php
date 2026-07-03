@@ -1133,7 +1133,11 @@ function collectFormData() {
     document.querySelectorAll('[name]').forEach(function(el) {
         const n = el.name;
         if (!n) return;
-        if (el.type === 'checkbox') {
+        if (el.type === 'radio') {
+            // only capture the checked radio; initialise to null so unchecked groups are still saved
+            if (el.checked) data[n] = el.value;
+            else if (!(n in data)) data[n] = null;
+        } else if (el.type === 'checkbox') {
             data[n] = el.checked;
         } else {
             data[n] = el.value;
@@ -1148,7 +1152,10 @@ function restoreFormData(saved) {
     Object.keys(saved).forEach(function(n) {
         const els = document.querySelectorAll('[name="' + n + '"]');
         els.forEach(function(el) {
-            if (el.type === 'checkbox') {
+            if (el.type === 'radio') {
+                el.checked = (saved[n] !== null && el.value == saved[n]);
+                if (el.checked) el.dispatchEvent(new Event('change'));
+            } else if (el.type === 'checkbox') {
                 el.checked = !!saved[n];
                 // trigger visual update for custom checkbox spans
                 el.dispatchEvent(new Event('change'));
