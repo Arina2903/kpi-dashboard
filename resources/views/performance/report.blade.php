@@ -155,8 +155,25 @@
                 background: #1a3d34 !important; border-color: #1a3d34 !important; color: #fff !important;
             }
 
-            .border.border-\[#6B9080\]\/25.rounded-xl { page-break-inside: avoid; }
-            tr, p { page-break-inside: avoid; }
+            /* Each section starts on a new page (except the first) */
+            .print-sec + .print-sec {
+                break-before: page;
+                page-break-before: always;
+            }
+            /* Section header must stay with its content — never orphaned at bottom of page */
+            .sec-bar {
+                break-after: avoid;
+                page-break-after: avoid;
+            }
+            /* Part/sub-section labels stay with their content */
+            .part-label, .f-label {
+                break-after: avoid;
+                page-break-after: avoid;
+            }
+            /* Prevent rows, paragraphs, and sub-cards from splitting */
+            tr, p, .f-area { break-inside: avoid; page-break-inside: avoid; }
+            /* Attendance scoring rows and rating cards stay whole */
+            .print-sec > div > div { break-inside: avoid; page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -341,7 +358,7 @@
         {{-- ═══════════════════════════════════════════════════════
              SECTION 1 — EMPLOYEE PARTICULARS
         ═══════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6">
+        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
             <div class="sec-bar"><div class="sec-num">1</div><span class="sec-title">To Be Completed by Employee Under Review</span></div>
             <div class="px-6 py-6 space-y-7">
 
@@ -425,7 +442,7 @@
         {{-- ═══════════════════════════════════════════════════════
              SECTION 2 — OKR / KPI
         ═══════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6">
+        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
             <div class="sec-bar"><div class="sec-num">2</div><span class="sec-title">OKR / KPI Quarterly Performance Review &nbsp;·&nbsp; {{ $qLabel }}</span></div>
 
             @if(empty($kpis))
@@ -522,7 +539,7 @@
         {{-- ═══════════════════════════════════════════════════════
              SECTION 3 — ATTITUDE & COMPETENCY
         ═══════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6">
+        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
             <div class="sec-bar"><div class="sec-num">3</div><span class="sec-title">Attitude &amp; Competency Assessment</span></div>
 
             <div class="px-6 pt-5 pb-4 border-b border-slate-100">
@@ -597,7 +614,7 @@
         {{-- ═══════════════════════════════════════════════════════
              SECTION 4 — ATTENDANCE
         ═══════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6">
+        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
             <div class="sec-bar"><div class="sec-num">4</div><span class="sec-title">Attendance Record</span></div>
             <div class="px-6 py-6">
                 @if($attendanceSummary['has_data'])
@@ -695,7 +712,7 @@
              SECTION 5 — CULTURE & VALUES (Q4 only)
         ═══════════════════════════════════════════════════════ --}}
         @if($quarter === 'Q4')
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6">
+        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
             <div class="sec-bar"><div class="sec-num">5</div><span class="sec-title">Culture &amp; Values Assessment</span></div>
             <div class="px-6 py-6">
                 <p class="text-[11px] text-slate-400 italic mb-5">Rate how consistently the employee demonstrates the company's core values.</p>
@@ -739,7 +756,7 @@
         {{-- ═══════════════════════════════════════════════════════
              SECTION 6 — PERFORMANCE SUMMARY
         ═══════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6">
+        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
             <div class="sec-bar"><div class="sec-num">6</div><span class="sec-title">Performance Summary &amp; Analysis</span></div>
             <div class="px-6 py-6 space-y-6">
 
@@ -916,7 +933,7 @@
         {{-- ═══════════════════════════════════════════════════════
              SECTION 7 — RECOMMENDATIONS & DECISIONS
         ═══════════════════════════════════════════════════════ --}}
-        <div id="sec7" class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-2">
+        <div id="sec7" class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-2 print-sec">
             <div class="sec-bar"><div class="sec-num">7</div><span class="sec-title">Recommendations &amp; Decisions</span><span style="margin-left:auto;font-size:10px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.08em;">🔒 APPRAISER ONLY</span></div>
             <div class="px-6 py-6 space-y-7">
                 @php $sec7=[['key'=>'manager','label'=>'A','title'=>'Promotability and Other Remarks and Recommendations by the Appraiser (Manager)'],['key'=>'vp','label'=>'B','title'=>'Remarks and/or Recommendations by VP'],['key'=>'slt','label'=>'C','title'=>'Remarks by SLT']]; @endphp
