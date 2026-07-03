@@ -378,7 +378,7 @@ class PerformanceController extends Controller
         $allAttendance = $supabase->get('attendance_summary', [
             'employee_id' => 'eq.' . $user['id'],
             'year'        => 'eq.' . $attYear,
-            'select'      => 'month,working_days,present_days,absent_days,late_count,total_late_minutes,mc_days,al_days,other_leave_days',
+            'select'      => 'month,working_days,present_days,absent_days,late_count,total_late_minutes,mc_days,al_days,other_leave_days,insufficient_count',
         ]) ?? [];
 
         $qAttendance = array_filter($allAttendance, fn($r) => in_array((int)$r['month'], $quarterMonths));
@@ -648,7 +648,7 @@ class PerformanceController extends Controller
         $allAttendance = $supabase->get('attendance_summary', [
             'employee_id' => 'eq.' . $user['id'],
             'year'        => 'eq.' . $attYear,
-            'select'      => 'month,working_days,present_days,absent_days,late_count,total_late_minutes,mc_days,al_days,other_leave_days',
+            'select'      => 'month,working_days,present_days,absent_days,late_count,total_late_minutes,mc_days,al_days,other_leave_days,insufficient_count',
         ]) ?? [];
         $qAttendance = array_filter($allAttendance, fn($r) => in_array((int)$r['month'], $quarterMonths));
         $attendanceSummary = [
