@@ -1297,9 +1297,14 @@ function restoreFormData(saved) {
 function lockForm() {
     const main = document.querySelector('main');
     if (!main) return;
-    main.style.pointerEvents = 'none';
-    main.style.userSelect    = 'none';
-    main.style.opacity       = '0.7';
+    // inert blocks ALL interaction: mouse, keyboard, tab focus
+    main.setAttribute('inert', '');
+    main.style.opacity = '0.7';
+    // Fallback for older browsers: explicitly disable/readonly everything
+    main.querySelectorAll('input:not([type="hidden"]), textarea, select, button').forEach(function(el) {
+        if (el.tagName === 'BUTTON') { el.disabled = true; }
+        else { el.setAttribute('readonly', ''); el.setAttribute('tabindex', '-1'); }
+    });
     const btn = document.getElementById('saveBtn');
     if (btn) { btn.disabled = true; btn.style.display = 'none'; }
 }
@@ -1461,6 +1466,14 @@ function sigInit(wrap) {
         drawing = false;
         if (hint) hint.style.display = 'none';
         if (hidden) hidden.value = canvas.toDataURL('image/png');
+        // Appraisee signed → prompt to submit (signing is the final step)
+        if (wrap.dataset.sigId === 'sig_appraisee' && _isWindowOpen && !_isSubmitted && !_isAppraiserView) {
+            setTimeout(function() {
+                if (confirm('Evaluation signed.\n\nSubmit to your appraiser now?\n\nYou will not be able to edit after submitting.')) {
+                    saveEvaluation('submit');
+                }
+            }, 400);
+        }
     }
 
     canvas.addEventListener('mousedown',  startDraw);
@@ -1500,6 +1513,14 @@ function sigUpload(input) {
             ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
             if (hint)   hint.style.display = 'none';
             if (hidden) hidden.value = canvas.toDataURL('image/png');
+            // Appraisee uploaded signature → prompt to submit
+            if (wrap.dataset.sigId === 'sig_appraisee' && _isWindowOpen && !_isSubmitted && !_isAppraiserView) {
+                setTimeout(function() {
+                    if (confirm('Evaluation signed.\n\nSubmit to your appraiser now?\n\nYou will not be able to edit after submitting.')) {
+                        saveEvaluation('submit');
+                    }
+                }, 400);
+            }
         };
         img.src = ev.target.result;
     };
