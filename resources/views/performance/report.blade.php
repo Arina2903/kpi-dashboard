@@ -237,9 +237,13 @@
             <span class="flex items-center gap-1.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-3 py-1.5 rounded-full">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ⚠️ Window Open · Until {{ $windowEnd }}
             </span>
+            @elseif($isFuture ?? false)
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-sky-500/20 text-sky-200 border border-sky-400/25 px-3 py-1.5 rounded-full">
+                ⏳ Not Yet Open · Opens {{ $windowStart }}
+            </span>
             @else
             <span class="flex items-center gap-1.5 text-[10px] font-bold bg-white/10 text-white/60 border border-white/15 px-3 py-1.5 rounded-full">
-                🔒 Locked · {{ $windowStart }} – {{ $windowEnd }}
+                🔒 Window Closed · {{ $windowStart }} – {{ $windowEnd }}
             </span>
             @endif
             <button onclick="window.print()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20 flex items-center gap-1.5">
@@ -269,9 +273,13 @@
         ⚠️ <span><strong>Evaluation window is open.</strong> Save draft anytime. Submit when ready — you cannot edit after submitting.</span>
         @if($submittedAt)<span class="ml-auto text-emerald-500 font-medium">Last saved: {{ \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Kuala_Lumpur')->format('d M Y, H:i') }}</span>@endif
     </div>
+    @elseif($isFuture ?? false)
+    <div class="mt-2 rounded-xl bg-sky-50 border border-sky-200 px-4 py-2 flex items-center gap-2 text-xs text-sky-700">
+        ⏳ <span><strong>Evaluation not yet open.</strong> This quarter's window opens {{ $windowStart }} – {{ $windowEnd }}. Form is read-only until then.</span>
+    </div>
     @else
     <div class="mt-2 rounded-xl bg-slate-100 border border-slate-200 px-4 py-2 flex items-center gap-2 text-xs text-slate-500">
-        🔒 <span><strong>Read-only.</strong> Editing window: {{ $windowStart }} – {{ $windowEnd }}.</span>
+        🔒 <span><strong>Window closed.</strong> Evaluation period was {{ $windowStart }} – {{ $windowEnd }}.</span>
         @if($submittedAt)<span class="ml-auto font-medium">Last saved: {{ \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Kuala_Lumpur')->format('d M Y, H:i') }}</span>@endif
     </div>
     @endif

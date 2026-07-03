@@ -344,6 +344,7 @@ class PerformanceController extends Controller
         $window       = $windows[$q];
         $today        = $now->toDateString();
         $isWindowOpen = $today >= $window['start'] && $today <= $window['end'];
+        $isFuture     = $today < $window['start'];
         $windowStart  = \Carbon\Carbon::parse($window['start'])->format('d M Y');
         $windowEnd    = \Carbon\Carbon::parse($window['end'])->format('d M Y');
 
@@ -478,6 +479,7 @@ class PerformanceController extends Controller
             'displayQuarter'       => (int) substr($q, 1),
             'qLabel'               => $q,
             'isWindowOpen'         => $isWindowOpen,
+            'isFuture'             => $isFuture,
             'windowStart'          => $windowStart,
             'windowEnd'            => $windowEnd,
             'kpis'                 => $kpis,
