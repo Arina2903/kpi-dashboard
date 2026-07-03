@@ -1303,18 +1303,15 @@ function restoreFormData(saved) {
 
 // ── lock all inputs when window is closed ─────────────────────────────────────
 function lockForm() {
-    const main = document.querySelector('main');
-    if (!main) return;
-    // inert blocks ALL interaction: mouse, keyboard, tab focus
-    main.setAttribute('inert', '');
-    main.style.opacity = '0.7';
-    // Fallback for older browsers: explicitly disable/readonly everything
-    main.querySelectorAll('input:not([type="hidden"]), textarea, select, button').forEach(function(el) {
-        if (el.tagName === 'BUTTON') { el.disabled = true; }
+    // Lock only the form table — keeps Print button and header accessible
+    const formBody = document.getElementById('print-table') || document.querySelector('main');
+    if (!formBody) return;
+    formBody.setAttribute('inert', '');
+    formBody.style.opacity = '0.7';
+    formBody.querySelectorAll('input:not([type="hidden"]), textarea, select, button').forEach(function(el) {
+        if (el.tagName === 'BUTTON') el.disabled = true;
         else { el.setAttribute('readonly', ''); el.setAttribute('tabindex', '-1'); }
     });
-    const btn = document.getElementById('saveBtn');
-    if (btn) { btn.disabled = true; btn.style.display = 'none'; }
 }
 
 // ── toast helper ──────────────────────────────────────────────────────────────
@@ -1563,9 +1560,9 @@ document.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
 if (_savedData) { restoreFormData(_savedData); restoreAllSigs(); updateS3(); }
 updateS6();
 if (_isAppraiserView) {
-    // Lock whole page then unlock appraiser sections
-    var mainEl = document.querySelector('main');
-    if (mainEl) { mainEl.style.pointerEvents = 'none'; mainEl.style.opacity = '0.85'; }
+    // Lock form table then unlock appraiser sections — keeps header buttons accessible
+    var formBody = document.getElementById('print-table') || document.querySelector('main');
+    if (formBody) { formBody.style.pointerEvents = 'none'; formBody.style.opacity = '0.85'; }
     unlockAppraiserSections();
 } else if (!_isWindowOpen || _isSubmitted) {
     lockForm();
