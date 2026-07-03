@@ -715,12 +715,12 @@
                                         <feDropShadow dx="0" dy="2" stdDeviation="5" flood-opacity="0.18"/>
                                     </filter>
                                 </defs>
-                                {{-- Colored zone fills --}}
-                                <rect x="0"   y="0" width="130" height="300" fill="#ef4444" clip-path="url(#bc_clip)" opacity="0.9"/>
-                                <rect x="130" y="0" width="150" height="300" fill="#f59e0b" clip-path="url(#bc_clip)" opacity="0.9"/>
-                                <rect x="280" y="0" width="440" height="300" fill="#22c55e" clip-path="url(#bc_clip)" opacity="0.9"/>
-                                <rect x="720" y="0" width="150" height="300" fill="#3b82f6" clip-path="url(#bc_clip)" opacity="0.9"/>
-                                <rect x="870" y="0" width="130" height="300" fill="#8b5cf6" clip-path="url(#bc_clip)" opacity="0.9"/>
+                                {{-- Colored zone fills (spectrum: red-orange → orange → yellow → lime → green) --}}
+                                <rect x="0"   y="0" width="130" height="300" fill="#e85d04" clip-path="url(#bc_clip)"/>
+                                <rect x="130" y="0" width="150" height="300" fill="#fb923c" clip-path="url(#bc_clip)"/>
+                                <rect x="280" y="0" width="440" height="300" fill="#fbbf24" clip-path="url(#bc_clip)"/>
+                                <rect x="720" y="0" width="150" height="300" fill="#86efac" clip-path="url(#bc_clip)"/>
+                                <rect x="870" y="0" width="130" height="300" fill="#22c55e" clip-path="url(#bc_clip)"/>
                                 {{-- Zone dividers --}}
                                 <line x1="130" y1="248" x2="130" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
                                 <line x1="280" y1="157" x2="280" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
@@ -729,13 +729,13 @@
                                 {{-- Baseline --}}
                                 <line x1="0" y1="300" x2="1000" y2="300" stroke="#e2e8f0" stroke-width="1"/>
                                 {{-- Zone names --}}
-                                <text x="65"  y="317" text-anchor="middle" fill="#dc2626" style="font-size:12px;font-weight:800;">Unacceptable</text>
-                                <text x="205" y="315" text-anchor="middle" fill="#b45309" style="font-size:12px;font-weight:800;">Room for</text>
-                                <text x="205" y="329" text-anchor="middle" fill="#b45309" style="font-size:12px;font-weight:800;">Improvement</text>
-                                <text x="500" y="317" text-anchor="middle" fill="#15803d" style="font-size:13px;font-weight:800;">Meets Expectations</text>
-                                <text x="795" y="315" text-anchor="middle" fill="#1d4ed8" style="font-size:12px;font-weight:800;">Exceeds</text>
-                                <text x="795" y="329" text-anchor="middle" fill="#1d4ed8" style="font-size:12px;font-weight:800;">Expectations</text>
-                                <text x="935" y="317" text-anchor="middle" fill="#6d28d9" style="font-size:12px;font-weight:800;">Outstanding</text>
+                                <text x="65"  y="317" text-anchor="middle" fill="#e85d04" style="font-size:12px;font-weight:800;">Unacceptable</text>
+                                <text x="205" y="315" text-anchor="middle" fill="#ea6f00" style="font-size:12px;font-weight:800;">Room for</text>
+                                <text x="205" y="329" text-anchor="middle" fill="#ea6f00" style="font-size:12px;font-weight:800;">Improvement</text>
+                                <text x="500" y="317" text-anchor="middle" fill="#d97706" style="font-size:13px;font-weight:800;">Meets Expectations</text>
+                                <text x="795" y="315" text-anchor="middle" fill="#16a34a" style="font-size:12px;font-weight:800;">Exceeds</text>
+                                <text x="795" y="329" text-anchor="middle" fill="#16a34a" style="font-size:12px;font-weight:800;">Expectations</text>
+                                <text x="935" y="317" text-anchor="middle" fill="#15803d" style="font-size:12px;font-weight:800;">Outstanding</text>
                                 {{-- Score ranges --}}
                                 <text x="65"  y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">1 – 34</text>
                                 <text x="205" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">35 – 49</text>
@@ -918,7 +918,7 @@
     var _s4Score = @json($s4ScoreVal ?? null);
     var _isQ4    = '{{ $quarter }}' === 'Q4';
 
-    function s6Clr(v){ return v>=90?'#6d28d9':v>=80?'#1d4ed8':v>=50?'#15803d':v>=35?'#b45309':'#dc2626'; }
+    function s6Clr(v){ return v>=90?'#15803d':v>=80?'#16a34a':v>=50?'#d97706':v>=35?'#ea6f00':'#e85d04'; }
 
     function scoreToX(s) {
         if (s <= 34)  return (s - 1)  / 33 * 130;
@@ -935,11 +935,11 @@
         if (!g) return;
         if (score === null || isNaN(score)) { g.style.display = 'none'; return; }
         var grade, clr;
-        if (score >= 90)      { grade = 'Outstanding';          clr = '#6d28d9'; }
-        else if (score >= 80) { grade = 'Exceeds Expectations'; clr = '#1d4ed8'; }
-        else if (score >= 50) { grade = 'Meets Expectations';   clr = '#15803d'; }
-        else if (score >= 35) { grade = 'Room for Improvement'; clr = '#b45309'; }
-        else                  { grade = 'Unacceptable';         clr = '#dc2626'; }
+        if (score >= 90)      { grade = 'Outstanding';          clr = '#15803d'; }
+        else if (score >= 80) { grade = 'Exceeds Expectations'; clr = '#16a34a'; }
+        else if (score >= 50) { grade = 'Meets Expectations';   clr = '#d97706'; }
+        else if (score >= 35) { grade = 'Room for Improvement'; clr = '#ea6f00'; }
+        else                  { grade = 'Unacceptable';         clr = '#e85d04'; }
         var bx = scoreToX(score);
         var by = bellY(bx);
         var lx = Math.max(60, Math.min(940, bx));
