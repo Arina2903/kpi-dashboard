@@ -286,8 +286,14 @@
 </div>
 
 {{-- Print table: thead repeats logo+Q2 on every page --}}
-@php $phLogoMap=['RCG'=>'images/RCG-Logo-black.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $phLogo=$phLogoMap[session('company_code')]??null; @endphp
-<div id="form-body">
+@php
+    $phLogoMap   = ['RCG'=>'images/RCG-Logo-black.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png'];
+    $phLogo      = $phLogoMap[session('company_code')] ?? null;
+    // Lock form body server-side — appraiser view is unlocked here and handled by JS
+    $formLocked  = !($isAppraiserView ?? false)
+                && (!$isWindowOpen || in_array($status ?? 'draft', ['submitted','appraised']));
+@endphp
+<div id="form-body"@if($formLocked) inert style="pointer-events:none;opacity:.7;user-select:none;"@endif>
 <table id="print-table">
 <thead id="print-thead">
 <tr><td>
@@ -1303,18 +1309,15 @@ function restoreFormData(saved) {
     if (typeof calcAllSec2Scores === 'function') calcAllSec2Scores();
 }
 
-// ── lock all inputs when window is closed ─────────────────────────────────────
+// ── lock form body (JS fallback — PHP already renders inert for closed quarters) ──
 function lockForm() {
-    // Target #form-body div — keeps page header (Print, badges) accessible
     const formBody = document.getElementById('form-body') || document.querySelector('main');
     if (!formBody) return;
-    // inert: blocks all interaction in modern browsers (mouse + keyboard + touch)
     formBody.setAttribute('inert', '');
-    // CSS fallback: pointer-events blocks mouse/touch even without inert
     formBody.style.pointerEvents = 'none';
     formBody.style.userSelect    = 'none';
     formBody.style.opacity       = '0.7';
-    // Element-level fallback: disabled works on ALL input types incl. radio/checkbox
+    // disabled covers radio/checkbox which readonly ignores
     formBody.querySelectorAll('input:not([type="hidden"]), textarea, select, button').forEach(function(el) {
         el.disabled = true;
         el.setAttribute('tabindex', '-1');
