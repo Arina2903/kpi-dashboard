@@ -660,7 +660,7 @@
                 <div>
                     <div class="part-label">A &nbsp;·&nbsp; Rating Summary</div>
                     <p class="text-[11px] text-slate-400 italic mb-5">Combined score from all sections of this appraisal review.</p>
-                    <div class="grid grid-cols-2 gap-6">
+                    <div class="grid grid-cols-2 gap-6 items-start">
                         <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden">
                             <table class="doc-tbl">
                                 <thead><tr><th class="l">Section</th><th class="c" style="width:100px;">Self Score</th><th class="c" style="width:100px;">Appraiser</th></tr></thead>
@@ -701,12 +701,11 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
 
-                    {{-- ── Bell Curve: Performance Distribution ──────────────────── --}}
-                    <div class="mt-6">
-                        <p class="f-label mb-3">Performance Distribution</p>
-                        <div style="background:linear-gradient(180deg,#f7faf9 0%,#ffffff 100%);border-radius:16px;padding:40px 20px 16px;border:1px solid rgba(107,144,128,.15);">
+                        {{-- Bell curve: right column, side-by-side with rating table --}}
+                        <div>
+                            <p class="f-label mb-3">Performance Distribution</p>
+                            <div style="background:linear-gradient(180deg,#f7faf9 0%,#ffffff 100%);border-radius:16px;padding:20px 12px 12px;border:1px solid rgba(107,144,128,.15);">
                             <svg viewBox="0 0 1000 370" style="width:100%;display:block;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
                                 <defs>
                                     <clipPath id="bc_clip">
@@ -758,6 +757,7 @@
                                     <text id="bellGradeName" x="500" y="-11" text-anchor="middle" fill="#6B9080" style="font-size:10px;font-weight:700;"></text>
                                 </g>
                             </svg>
+                            </div>
                         </div>
                     </div>
                 </div>
