@@ -708,40 +708,41 @@
                             <div style="background:linear-gradient(180deg,#f7faf9 0%,#ffffff 100%);border-radius:16px;padding:20px 12px 12px;border:1px solid rgba(107,144,128,.15);">
                             <svg viewBox="0 0 1000 370" style="width:100%;display:block;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
                                 <defs>
+                                    {{-- Symmetric Gaussian bell: σ=170, peak at x=500, y=40, baseline y=300 --}}
                                     <clipPath id="bc_clip">
-                                        <path d="M 0,300 L 0,278 C 40,275 90,252 130,248 C 175,243 240,170 280,157 C 310,148 355,100 380,90 C 415,78 465,43 500,40 C 535,43 585,78 620,90 C 645,100 690,148 720,157 C 760,170 825,243 870,248 C 910,252 960,275 1000,278 L 1000,300 Z"/>
+                                        <path d="M 0,300 L 0,297 C 50,296 130,268 170,261 C 215,253 295,155 340,133 C 380,110 455,46 500,40 C 545,46 620,110 660,133 C 705,155 785,253 830,261 C 870,268 950,296 1000,297 L 1000,300 Z"/>
                                     </clipPath>
                                     <filter id="bc_shadow" x="-30%" y="-80%" width="160%" height="280%">
                                         <feDropShadow dx="0" dy="2" stdDeviation="5" flood-opacity="0.18"/>
                                     </filter>
                                 </defs>
-                                {{-- Colored zone fills (spectrum: red-orange → orange → yellow → lime → green) --}}
-                                <rect x="0"   y="0" width="130" height="300" fill="#e85d04" clip-path="url(#bc_clip)"/>
-                                <rect x="130" y="0" width="150" height="300" fill="#fb923c" clip-path="url(#bc_clip)"/>
-                                <rect x="280" y="0" width="440" height="300" fill="#fbbf24" clip-path="url(#bc_clip)"/>
-                                <rect x="720" y="0" width="150" height="300" fill="#86efac" clip-path="url(#bc_clip)"/>
-                                <rect x="870" y="0" width="130" height="300" fill="#22c55e" clip-path="url(#bc_clip)"/>
-                                {{-- Zone dividers --}}
-                                <line x1="130" y1="248" x2="130" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
-                                <line x1="280" y1="157" x2="280" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
-                                <line x1="720" y1="157" x2="720" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
-                                <line x1="870" y1="248" x2="870" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
+                                {{-- Symmetric zones: each ±σ band is 170px wide --}}
+                                <rect x="0"   y="0" width="170" height="300" fill="#e85d04" clip-path="url(#bc_clip)"/>
+                                <rect x="170" y="0" width="170" height="300" fill="#f97316" clip-path="url(#bc_clip)"/>
+                                <rect x="340" y="0" width="320" height="300" fill="#fbbf24" clip-path="url(#bc_clip)"/>
+                                <rect x="660" y="0" width="170" height="300" fill="#4ade80" clip-path="url(#bc_clip)"/>
+                                <rect x="830" y="0" width="170" height="300" fill="#16a34a" clip-path="url(#bc_clip)"/>
+                                {{-- Zone dividers at σ boundaries --}}
+                                <line x1="170" y1="261" x2="170" y2="300" stroke="rgba(255,255,255,.7)" stroke-width="2.5"/>
+                                <line x1="340" y1="133" x2="340" y2="300" stroke="rgba(255,255,255,.7)" stroke-width="2.5"/>
+                                <line x1="660" y1="133" x2="660" y2="300" stroke="rgba(255,255,255,.7)" stroke-width="2.5"/>
+                                <line x1="830" y1="261" x2="830" y2="300" stroke="rgba(255,255,255,.7)" stroke-width="2.5"/>
                                 {{-- Baseline --}}
                                 <line x1="0" y1="300" x2="1000" y2="300" stroke="#e2e8f0" stroke-width="1"/>
                                 {{-- Zone names --}}
-                                <text x="65"  y="317" text-anchor="middle" fill="#e85d04" style="font-size:12px;font-weight:800;">Unacceptable</text>
-                                <text x="205" y="315" text-anchor="middle" fill="#ea6f00" style="font-size:12px;font-weight:800;">Room for</text>
-                                <text x="205" y="329" text-anchor="middle" fill="#ea6f00" style="font-size:12px;font-weight:800;">Improvement</text>
-                                <text x="500" y="317" text-anchor="middle" fill="#d97706" style="font-size:13px;font-weight:800;">Meets Expectations</text>
-                                <text x="795" y="315" text-anchor="middle" fill="#16a34a" style="font-size:12px;font-weight:800;">Exceeds</text>
-                                <text x="795" y="329" text-anchor="middle" fill="#16a34a" style="font-size:12px;font-weight:800;">Expectations</text>
-                                <text x="935" y="317" text-anchor="middle" fill="#15803d" style="font-size:12px;font-weight:800;">Outstanding</text>
+                                <text x="85"  y="317" text-anchor="middle" fill="#e85d04" style="font-size:12px;font-weight:800;">Unacceptable</text>
+                                <text x="255" y="315" text-anchor="middle" fill="#c2410c" style="font-size:12px;font-weight:800;">Room for</text>
+                                <text x="255" y="329" text-anchor="middle" fill="#c2410c" style="font-size:12px;font-weight:800;">Improvement</text>
+                                <text x="500" y="317" text-anchor="middle" fill="#b45309" style="font-size:13px;font-weight:800;">Meets Expectations</text>
+                                <text x="745" y="315" text-anchor="middle" fill="#16a34a" style="font-size:12px;font-weight:800;">Exceeds</text>
+                                <text x="745" y="329" text-anchor="middle" fill="#16a34a" style="font-size:12px;font-weight:800;">Expectations</text>
+                                <text x="915" y="317" text-anchor="middle" fill="#15803d" style="font-size:12px;font-weight:800;">Outstanding</text>
                                 {{-- Score ranges --}}
-                                <text x="65"  y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">1 – 34</text>
-                                <text x="205" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">35 – 49</text>
+                                <text x="85"  y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">1 – 34</text>
+                                <text x="255" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">35 – 49</text>
                                 <text x="500" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">50 – 79</text>
-                                <text x="795" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">80 – 89</text>
-                                <text x="935" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">90 – 100</text>
+                                <text x="745" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">80 – 89</text>
+                                <text x="915" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">90 – 100</text>
                                 {{-- Indicator: vertical line + dot + floating score label --}}
                                 <g id="bellIndicator" style="display:none;">
                                     <line id="bellLine" x1="500" y1="0" x2="500" y2="300" stroke="#1e293b" stroke-width="3" stroke-dasharray="8,5" stroke-linecap="round"/>
@@ -921,14 +922,14 @@
     function s6Clr(v){ return v>=90?'#15803d':v>=80?'#16a34a':v>=50?'#d97706':v>=35?'#ea6f00':'#e85d04'; }
 
     function scoreToX(s) {
-        if (s <= 34)  return (s - 1)  / 33 * 130;
-        if (s <= 49)  return 130 + (s - 35) / 14 * 150;
-        if (s <= 79)  return 280 + (s - 50) / 29 * 440;
-        if (s <= 89)  return 720 + (s - 80) / 9  * 150;
-        return 870 + (s - 90) / 10 * 130;
+        if (s <= 34)  return (s - 1)  / 33 * 170;
+        if (s <= 49)  return 170 + (s - 35) / 14 * 170;
+        if (s <= 79)  return 340 + (s - 50) / 29 * 320;
+        if (s <= 89)  return 660 + (s - 80) / 9  * 170;
+        return 830 + (s - 90) / 10 * 170;
     }
     function bellY(x) {
-        return 300 - 260 * Math.exp(-(x - 500) * (x - 500) / 51200);
+        return 300 - 260 * Math.exp(-(x - 500) * (x - 500) / 57800);
     }
     function updateGauge(score) {
         var g = document.getElementById('bellIndicator');
@@ -937,8 +938,8 @@
         var grade, clr;
         if (score >= 90)      { grade = 'Outstanding';          clr = '#15803d'; }
         else if (score >= 80) { grade = 'Exceeds Expectations'; clr = '#16a34a'; }
-        else if (score >= 50) { grade = 'Meets Expectations';   clr = '#d97706'; }
-        else if (score >= 35) { grade = 'Room for Improvement'; clr = '#ea6f00'; }
+        else if (score >= 50) { grade = 'Meets Expectations';   clr = '#b45309'; }
+        else if (score >= 35) { grade = 'Room for Improvement'; clr = '#c2410c'; }
         else                  { grade = 'Unacceptable';         clr = '#e85d04'; }
         var bx = scoreToX(score);
         var by = bellY(bx);
