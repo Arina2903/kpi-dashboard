@@ -440,7 +440,6 @@
                         <th class="c" style="width:68px;">A<br><span style="font-weight:500;text-transform:none;font-size:8px;">Actual</span></th>
                         <th class="c" style="width:68px;">B<br><span style="font-weight:500;text-transform:none;font-size:8px;">Target</span></th>
                         <th class="c" style="width:72px;">C · Score<br><span style="font-weight:400;text-transform:none;font-size:8px;">(A÷B)×5</span></th>
-                        <th class="c" style="width:72px;">D · Self<br><span style="font-weight:400;text-transform:none;font-size:8px;">Pro-Rated</span></th>
                         <th class="c" style="width:72px;">Appraiser<br><span style="font-weight:400;text-transform:none;font-size:8px;">Score</span></th>
                     </tr>
                 </thead>
@@ -468,10 +467,10 @@
                     $subCatNo = 0;
                 @endphp
                 @foreach($sec2Grouped as $catName => $subCats)
-                <tr class="cat-hdr"><td colspan="7">{{ $catName }}</td></tr>
+                <tr class="cat-hdr"><td colspan="6">{{ $catName }}</td></tr>
                 @foreach($subCats as $subName => $subKpis)
                 @php $subCatNo++; $subItemNo = 0; @endphp
-                <tr class="subcat-hdr"><td colspan="7">{{ $subName }}</td></tr>
+                <tr class="subcat-hdr"><td colspan="6">{{ $subName }}</td></tr>
                 @foreach($subKpis as $kpi)
                 @php
                     $subItemNo++;
@@ -492,11 +491,13 @@
                             <input type="text" name="kpi_title_{{ $kpi['id'] }}" value="{{ $qTitle }}" placeholder="Describe initiative for {{ $qLabel }}…" class="t-input">
                         </div>
                     </td>
-                    <td class="text-center"><input type="number" name="kpi_actual_{{ $kpi['id'] }}" step="any" min="0" value="{{ $qAct !== '' ? $qAct : '' }}" placeholder="—" class="n-input sec2-actual"></td>
-                    <td class="text-center"><input type="number" name="kpi_target_{{ $kpi['id'] }}" step="any" min="0" value="{{ $qTgt !== '' ? $qTgt : '' }}" placeholder="—" class="n-input sec2-target"></td>
-                    <td class="text-center"><span class="sec2-score font-black text-sm sc-none">—</span></td>
-                    <td class="text-center"><input type="number" name="kpi_self_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" step="0.1" min="0" max="5" placeholder="—" class="n-input"></td>
-                    <td class="text-center"><input type="number" name="kpi_app_{{ $kpi['id'] }}"  data-wt="{{ $kpi['weightage'] ?? 0 }}" step="0.1" min="0" max="5" placeholder="—" class="n-input"></td>
+                    <td class="text-center"><span class="sec2-actual font-bold text-sm text-slate-700" data-val="{{ $qAct !== '' ? $qAct : '' }}">{{ $qAct !== '' ? $qAct : '—' }}</span></td>
+                    <td class="text-center"><span class="sec2-target font-bold text-sm text-slate-500" data-val="{{ $qTgt !== '' ? $qTgt : '' }}">{{ $qTgt !== '' ? $qTgt : '—' }}</span></td>
+                    <td class="text-center">
+                        <span class="sec2-score font-black text-sm sc-none">—</span>
+                        <input type="hidden" name="kpi_self_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" class="kpi-self-hidden">
+                    </td>
+                    <td class="text-center"><input type="number" name="kpi_app_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" step="0.1" min="0" max="5" placeholder="—" class="n-input kpi-app-input" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;"></td>
                 </tr>
                 @endforeach
                 @endforeach
@@ -506,12 +507,11 @@
                     <tr style="background:rgba(26,61,52,.06);">
                         <td colspan="4" class="text-right font-black text-xs text-[#1a3d34] uppercase tracking-wide px-4 py-3">Total Score Section 2</td>
                         <td class="text-center py-3"><span id="sec2Total" class="font-black text-base sc-none">—</span></td>
-                        <td class="text-center"><span id="sec2SelfPct" class="text-xs font-bold text-slate-400">—</span></td>
                         <td class="text-center"><span id="sec2AppPct" class="text-xs font-bold text-slate-400">—</span></td>
                     </tr>
                     <tr style="background:rgba(26,61,52,.03);">
                         <td colspan="4" class="text-right text-[9px] font-bold text-slate-400 uppercase tracking-wide px-4 py-2">% Total (Score ÷ 30 × 70)</td>
-                        <td colspan="3" class="text-center"><span id="sec2Pct" class="text-sm font-black text-slate-400">—</span></td>
+                        <td colspan="2" class="text-center"><span id="sec2Pct" class="text-sm font-black text-slate-400">—</span></td>
                     </tr>
                 </tfoot>
             </table>
@@ -931,15 +931,29 @@
 (function(){
     // Section 2 OKR score calc
     function sc(v,mx){ if(v>=mx*.9)return'sc-great'; if(v>=mx*.7)return'sc-good'; if(v>=mx*.5)return'sc-warn'; return'sc-poor'; }
-    document.getElementById('sec2Table')?.addEventListener('input',function(e){
-        if(!e.target.classList.contains('sec2-actual')&&!e.target.classList.contains('sec2-target'))return;
-        const row=e.target.closest('tr');
-        const a=parseFloat(row.querySelector('.sec2-actual')?.value),b=parseFloat(row.querySelector('.sec2-target')?.value);
-        const scoreEl=row.querySelector('.sec2-score');
-        if(!scoreEl)return;
-        if(!isNaN(a)&&!isNaN(b)&&b>0){const s=(a/b)*5;scoreEl.textContent=s.toFixed(2);scoreEl.className='sec2-score font-black text-sm '+sc(s,5);}
-        else{scoreEl.textContent='—';scoreEl.className='sec2-score font-black text-sm sc-none';}
-    });
+    window.calcAllSec2Scores = function() {
+        document.querySelectorAll('.sec2-row').forEach(function(row) {
+            var aEl = row.querySelector('.sec2-actual');
+            var bEl = row.querySelector('.sec2-target');
+            var scoreEl = row.querySelector('.sec2-score');
+            var selfHid = row.querySelector('.kpi-self-hidden');
+            if (!scoreEl) return;
+            var a = parseFloat(aEl?.dataset?.val);
+            var b = parseFloat(bEl?.dataset?.val);
+            if (!isNaN(a) && !isNaN(b) && b > 0) {
+                var s = Math.min((a / b) * 5, 5);
+                scoreEl.textContent = s.toFixed(2);
+                scoreEl.className = 'sec2-score font-black text-sm ' + sc(s, 5);
+                if (selfHid) selfHid.value = s.toFixed(4);
+            } else {
+                scoreEl.textContent = '—';
+                scoreEl.className = 'sec2-score font-black text-sm sc-none';
+                if (selfHid) selfHid.value = '';
+            }
+        });
+        updateS6();
+    };
+    calcAllSec2Scores();
 
     // Part D optional date
     window.openPartDPicker = function() {
@@ -1151,9 +1165,7 @@ function restoreFormData(saved) {
     const firstS6 = document.querySelector('.s6-input');
     if (firstS6) firstS6.dispatchEvent(new Event('input'));
     // re-trigger S2 scores
-    document.querySelectorAll('.sec2-actual').forEach(function(el) {
-        el.dispatchEvent(new Event('input'));
-    });
+    if (typeof calcAllSec2Scores === 'function') calcAllSec2Scores();
 }
 
 // ── lock all inputs when window is closed ─────────────────────────────────────
@@ -1262,6 +1274,14 @@ function unlockAppraiserSections() {
             wrap.style.opacity = '1';
             if (!wrap._sigInited) { sigInit(wrap); wrap._sigInited = true; }
         });
+    });
+    // Unlock appraiser score inputs in Section 2
+    document.querySelectorAll('.kpi-app-input').forEach(function(inp) {
+        inp.removeAttribute('readonly');
+        inp.style.pointerEvents = 'auto';
+        inp.style.opacity = '';
+        inp.style.background = '';
+        inp.style.cursor = '';
     });
 }
 
