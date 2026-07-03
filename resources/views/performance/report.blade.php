@@ -155,6 +155,21 @@
                 background: #1a3d34 !important; border-color: #1a3d34 !important; color: #fff !important;
             }
 
+            /* ── Signature pads ──────────────────────────────── */
+            /* Hide the placeholder hint text */
+            .sig-hint { display: none !important; }
+            /* Remove the dashed border box — only the drawn content shows */
+            .sig-pad-wrap > div:first-child {
+                border: none !important;
+                background: transparent !important;
+                border-radius: 0 !important;
+                overflow: visible !important;
+            }
+            /* Hide Clear / Upload buttons */
+            .sig-pad-wrap > div + div { display: none !important; }
+            /* Hide entire pad when no signature was drawn (set by beforeprint JS) */
+            .sig-pad-wrap.no-sig { display: none !important; }
+
             /* Each section starts on a new page (except the first) */
             .print-sec + .print-sec {
                 break-before: page;
@@ -1515,6 +1530,21 @@ if (_isAppraiserView) {
 } else if (!_isWindowOpen || _isSubmitted) {
     lockForm();
 }
+
+// ── Print: hide empty signature pads ──────────────────────────────────────────
+window.addEventListener('beforeprint', function() {
+    document.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
+        var hidden = wrap.querySelector('.sig-hidden');
+        if (!hidden || !hidden.value.trim()) {
+            wrap.classList.add('no-sig');
+        }
+    });
+});
+window.addEventListener('afterprint', function() {
+    document.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
+        wrap.classList.remove('no-sig');
+    });
+});
 </script>
 </body>
 </html>
