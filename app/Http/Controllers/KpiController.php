@@ -2991,6 +2991,15 @@ class KpiController extends Controller
                 ], 409);
             }
 
+            $quarterRow = $this->supabase->first(
+                'kpi_quarters',
+                [
+                    'kpi_id' => 'eq.' . $validated['kpi_id'],
+                    'quarter' => 'eq.' . $validated['quarter'],
+                    'select' => '*',
+                ]
+            );
+
             $approverId =
                 $this->hierarchyService
                     ->getApproverId($user);
@@ -3015,6 +3024,9 @@ class KpiController extends Controller
                     [
                         'kpi_id' => $validated['kpi_id'],
                         'quarter' => $validated['quarter'],
+                        'quarter_id' => $quarterRow['id'] ?? null,
+                        'old_actual' => $quarterRow['quarter_actual'] ?? 0,
+                        'quarter_target' => $quarterRow['quarter_target'] ?? 0,
                         'requested_actual' => $validated['actual'] ?? 0,
                         'request_remark' => $validated['remark'] ?? null,
                         'requested_by' => $user['id'] ?? null,
@@ -3347,6 +3359,9 @@ class KpiController extends Controller
                 'old_actual'
                     => $currentActual,
 
+                'quarter_target'
+                    => $quarter['quarter_target'] ?? 0,
+
                 'requested_actual'
                     => $validated['requested_actual'],
 
@@ -3434,6 +3449,9 @@ class KpiController extends Controller
             'old_actual'
                 => $currentActual,
 
+            'quarter_target'
+                => $quarter['quarter_target'] ?? 0,
+
             'requested_actual'
                 => $validated['requested_actual'],
 
@@ -3467,6 +3485,9 @@ class KpiController extends Controller
 
                     'old_actual'
                         => $currentActual,
+
+                    'quarter_target'
+                        => $quarter['quarter_target'] ?? 0,
 
                     'requested_actual'
                         => $validated['requested_actual'],
