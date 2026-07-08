@@ -508,14 +508,39 @@ class PerformanceController extends Controller
         }
 
         $action = $request->input('action', 'draft');
-        $status = $action === 'submit' ? 'submitted' : 'draft';
+
+        $existing      = $supabase->get('performance_reports', [
+            'employee_id'    => session('employee_uuid'),
+            'financial_year' => $this->currentFinancialYear,
+            'quarter'        => $q,
+            'select'         => 'form_data,status',
+        ]) ?? [];
+        $currentStatus = !empty($existing) ? ($existing[0]['status'] ?? 'draft') : 'draft';
+
+        // Appraisee can only sign the final acknowledgment after the appraiser
+        // has reviewed and signed (status = appraised). Enforced server-side
+        // so it can't be bypassed by tampering with the client.
+        if ($action === 'acknowledge' && $currentStatus !== 'appraised') {
+            return response()->json([
+                'error' => 'You can only sign after your appraiser has reviewed and signed the appraisal.',
+            ], 422);
+        }
+
+        $status = match ($action) {
+            'submit'      => 'submitted',
+            'acknowledge' => 'completed',
+            default       => 'draft',
+        };
+
+        $existingData = !empty($existing) ? ($existing[0]['form_data'] ?? []) : [];
+        $newData      = array_merge($existingData, $request->input('form_data', []));
 
         $supabase->upsert('performance_reports', [
             'employee_id'    => session('employee_uuid'),
             'company_code'   => session('company_code'),
             'financial_year' => $this->currentFinancialYear,
             'quarter'        => $q,
-            'form_data'      => $request->input('form_data', []),
+            'form_data'      => $newData,
             'status'         => $status,
             'submitted_at'   => now()->toISOString(),
             'updated_at'     => now()->toISOString(),
@@ -787,17 +812,23 @@ class PerformanceController extends Controller
         }
 
         $action = $request->input('action', 'save');
-        $status = $action === 'appraised' ? 'appraised' : 'submitted';
 
         // Merge appraiser data onto existing form_data
-        $existing     = $supabase->get('performance_reports', [
+        $existing      = $supabase->get('performance_reports', [
             'employee_id'    => 'eq.' . $employeeId,
             'financial_year' => 'eq.' . $this->currentFinancialYear,
             'quarter'        => 'eq.' . $q,
-            'select'         => 'form_data',
+            'select'         => 'form_data,status',
         ]) ?? [];
-        $existingData = !empty($existing) ? ($existing[0]['form_data'] ?? []) : [];
-        $newData      = array_merge($existingData, $request->input('form_data', []));
+        $existingData  = !empty($existing) ? ($existing[0]['form_data'] ?? []) : [];
+        $currentStatus = !empty($existing) ? ($existing[0]['status'] ?? 'submitted') : 'submitted';
+        $newData       = array_merge($existingData, $request->input('form_data', []));
+
+        // Once the appraisee has signed off (completed), the appraiser editing notes
+        // afterwards must not regress the status back to appraised/submitted.
+        $status = $currentStatus === 'completed'
+            ? 'completed'
+            : ($action === 'appraised' ? 'appraised' : 'submitted');
 
         $supabase->upsert('performance_reports', [
             'employee_id'    => $employeeId,

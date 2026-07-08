@@ -229,8 +229,12 @@
                 ✓ Submitted · Awaiting Appraiser
             </span>
             @elseif(($status ?? 'draft') === 'appraised')
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-amber-500/20 text-amber-200 border border-amber-400/30 px-3 py-1.5 rounded-full">
+                ✍ Appraised · Your Signature Needed
+            </span>
+            @elseif(($status ?? 'draft') === 'completed')
             <span class="flex items-center gap-1.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-3 py-1.5 rounded-full">
-                ✓ Appraised
+                ✓ Completed
             </span>
             @elseif($isWindowOpen)
             {{-- ── Appraisee — window badge only; buttons are at page bottom ── --}}
@@ -264,8 +268,13 @@
         @if($submittedAt)<span class="ml-auto text-blue-500 font-medium">Submitted: {{ \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Kuala_Lumpur')->format('d M Y, H:i') }}</span>@endif
     </div>
     @elseif(($status ?? 'draft') === 'appraised')
+    <div class="mt-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2 flex items-center gap-2 text-xs text-amber-700">
+        ✍ <span><strong>Appraised.</strong> Your appraiser has reviewed and signed. Please read their feedback below and sign to acknowledge.</span>
+        @if($submittedAt)<span class="ml-auto text-amber-500 font-medium">Updated: {{ \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Kuala_Lumpur')->format('d M Y, H:i') }}</span>@endif
+    </div>
+    @elseif(($status ?? 'draft') === 'completed')
     <div class="mt-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2 flex items-center gap-2 text-xs text-emerald-700">
-        ✓ <span><strong>Appraised.</strong> Your appraisal has been completed by your appraiser.</span>
+        ✓ <span><strong>Completed.</strong> You've signed and acknowledged this appraisal.</span>
         @if($submittedAt)<span class="ml-auto text-emerald-500 font-medium">Updated: {{ \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Kuala_Lumpur')->format('d M Y, H:i') }}</span>@endif
     </div>
     @elseif($isWindowOpen)
@@ -289,9 +298,12 @@
 @php
     $phLogoMap   = ['RCG'=>'images/RCG-Logo-black.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png'];
     $phLogo      = $phLogoMap[session('company_code')] ?? null;
-    // Lock form body server-side — appraiser view is unlocked here and handled by JS
+    // Lock form body server-side — appraiser view is unlocked here and handled by JS.
+    // 'appraised' uses a soft JS-level lock (not `inert`) so the acknowledgment
+    // panel can be selectively unlocked for the appraisee to sign.
     $formLocked  = !($isAppraiserView ?? false)
-                && (!$isWindowOpen || in_array($status ?? 'draft', ['submitted','appraised']));
+                && (!$isWindowOpen || ($status ?? 'draft') === 'submitted');
+    $softLocked  = !($isAppraiserView ?? false) && ($status ?? 'draft') === 'appraised';
 @endphp
 <div id="form-body"@if($formLocked) inert style="pointer-events:none;opacity:.7;user-select:none;"@endif>
 <table id="print-table">
@@ -940,16 +952,25 @@
 
                 <div class="border-t border-dashed border-[#6B9080]/20"></div>
 
-                <div>
-                    <p class="text-[11px] text-slate-500 italic leading-relaxed mb-3">I hereby confirm that I have read, understood and accept/disagree with the foregoing appraisal. <span class="text-[#6B9080] font-semibold not-italic">(If you disagree please specify below)</span></p>
-                    <textarea name="s6_response" rows="4" placeholder="Write your response here…" class="f-area mb-6"></textarea>
+                @php
+                    // Appraisee can only sign after the appraiser has reviewed and signed (status = appraised).
+                    $ackUnlocked = !($isAppraiserView ?? false) && ($status ?? 'draft') === 'appraised';
+                @endphp
+                <div id="sec6_ack">
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-[11px] text-slate-500 italic leading-relaxed flex-1">I hereby confirm that I have read, understood and accept/disagree with the foregoing appraisal. <span class="text-[#6B9080] font-semibold not-italic">(If you disagree please specify below)</span></p>
+                        @if(!($isAppraiserView ?? false) && !$ackUnlocked)
+                        <span style="font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:.08em;display:flex;align-items:center;gap:4px;white-space:nowrap;margin-left:12px;">🔒 AFTER APPRAISER SIGNS</span>
+                        @endif
+                    </div>
+                    <textarea name="s6_response" rows="4" placeholder="Write your response here…" class="f-area mb-6"@if(!$ackUnlocked) readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;"@endif></textarea>
                     <div class="flex justify-end">
                         <div style="width:280px;">
-                            {{-- Appraisee signature — editable --}}
-                            <div class="sig-pad-wrap" data-sig-id="sig_appraisee">
+                            {{-- Appraisee signature — unlocked only once the appraiser has signed --}}
+                            <div class="sig-pad-wrap" data-sig-id="sig_appraisee"@if(!$ackUnlocked) style="pointer-events:none;opacity:0.55;"@endif>
                                 <div style="border:2px dashed rgba(107,144,128,.5);border-radius:10px;background:#f9fafb;position:relative;overflow:hidden;cursor:crosshair;">
                                     <canvas class="sig-canvas" width="560" height="110" style="width:100%;height:110px;display:block;touch-action:none;"></canvas>
-                                    <div class="sig-hint" style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:11px;font-weight:600;">✍&nbsp; Draw signature here</div>
+                                    <div class="sig-hint" style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:11px;font-weight:600;">{{ $ackUnlocked ? '✍ Draw signature here' : 'Available after appraiser signs' }}</div>
                                 </div>
                                 <div style="display:flex;gap:6px;margin-top:6px;justify-content:center;">
                                     <button type="button" onclick="sigClear(this)" style="font-size:10px;padding:3px 12px;border-radius:6px;border:1px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;font-weight:600;">Clear</button>
@@ -964,6 +985,13 @@
                             <p class="text-[9px] text-slate-400 text-center mt-2">Date: _______________</p>
                         </div>
                     </div>
+                    @if($ackUnlocked)
+                    <div class="flex justify-end mt-4 no-print">
+                        <button id="ackBtn" type="button" onclick="confirmAcknowledge()" style="display:flex;align-items:center;gap:6px;padding:10px 22px;border-radius:12px;font-size:12px;font-weight:700;border:none;background:linear-gradient(135deg,#2d5548,#4a7c6b);color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(45,85,72,.30);">
+                            ✍ Sign &amp; Acknowledge
+                        </button>
+                    </div>
+                    @endif
                 </div>
 
             </div>
@@ -1276,8 +1304,10 @@ const _savedData       = @json($savedData ?? null);
 const _quarter         = '{{ $quarter }}';
 const _isWindowOpen    = @json($isWindowOpen ?? false);
 const _status          = '{{ $status ?? "draft" }}';
-const _isSubmitted     = _status === 'submitted' || _status === 'appraised';
+const _isSubmitted     = _status === 'submitted' || _status === 'appraised' || _status === 'completed';
 const _isAppraiserView = @json($isAppraiserView ?? false);
+const _softLocked      = @json($softLocked ?? false);
+const _canSignAsAppraisee = !_isAppraiserView && _status === 'appraised';
 const _saveUrl         = _isAppraiserView
     ? '{{ $appraiserSaveUrl ?? "" }}'
     : '{{ route('performance.report.save', $quarter) }}';
@@ -1360,7 +1390,8 @@ function showToast(msg, ok) {
 // ── save ──────────────────────────────────────────────────────────────────────
 window.saveEvaluation = function(action) {
     action = action || 'draft';
-    if (!_isAppraiserView && !_isWindowOpen) { showToast('Evaluation window is closed.', false); return; }
+    // 'acknowledge' happens after the submission window closes, so it's exempt from the window check.
+    if (!_isAppraiserView && action !== 'acknowledge' && !_isWindowOpen) { showToast('Evaluation window is closed.', false); return; }
     // Validate Section 3 only for appraisee submit
     if (!_isAppraiserView && action === 'submit') {
         var missing = [];
@@ -1376,8 +1407,16 @@ window.saveEvaluation = function(action) {
             return;
         }
     }
+    // Appraisee must draw/upload a signature before acknowledging
+    if (!_isAppraiserView && action === 'acknowledge') {
+        var sigHidden = document.querySelector('input[name="sig_appraisee"]');
+        if (!sigHidden || !sigHidden.value) {
+            showToast('Please sign before acknowledging.', false);
+            return;
+        }
+    }
     const data = collectFormData();
-    var activeBtn = document.getElementById(action === 'draft' ? 'draftBtn' : (action === 'save' ? 'saveBtn' : 'submitBtn'));
+    var activeBtn = document.getElementById(action === 'draft' ? 'draftBtn' : (action === 'save' ? 'saveBtn' : (action === 'acknowledge' ? 'ackBtn' : 'submitBtn')));
     if (!activeBtn) activeBtn = document.getElementById('saveBtn');
     if (activeBtn) activeBtn.disabled = true;
     fetch(_saveUrl, {
@@ -1394,6 +1433,9 @@ window.saveEvaluation = function(action) {
             } else if (action === 'appraised') {
                 showToast('Marked as Appraised ✓', true);
                 setTimeout(function(){ window.location.href = '/performance/appraise'; }, 1200);
+            } else if (action === 'acknowledge') {
+                showToast('Signed & acknowledged ✓', true);
+                setTimeout(function(){ location.reload(); }, 1200);
             } else {
                 showToast('Draft saved ✓', true);
             }
@@ -1415,6 +1457,32 @@ function confirmAppraised() {
     if (confirm('Mark this appraisal as complete?\n\nThis will lock the form and notify the appraisee.')) {
         saveEvaluation('appraised');
     }
+}
+
+function confirmAcknowledge() {
+    if (confirm('Sign and acknowledge this appraisal?\n\nYou will not be able to edit it after acknowledging.')) {
+        saveEvaluation('acknowledge');
+    }
+}
+
+// Unlock the appraisee's final acknowledgment section — only reachable once status = appraised
+function unlockAppraiseeAcknowledgment() {
+    var el = document.getElementById('sec6_ack');
+    if (!el) return;
+    el.style.pointerEvents = 'auto';
+    el.style.opacity = '1';
+    el.querySelectorAll('textarea').forEach(function(inp) {
+        inp.removeAttribute('readonly');
+        inp.style.pointerEvents = 'auto';
+        inp.style.opacity = '';
+        inp.style.background = '';
+        inp.style.cursor = '';
+    });
+    el.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
+        wrap.style.pointerEvents = 'auto';
+        wrap.style.opacity = '1';
+        if (!wrap._sigInited) { sigInit(wrap); wrap._sigInited = true; }
+    });
 }
 
 function unlockAppraiserSections() {
@@ -1505,14 +1573,8 @@ function sigInit(wrap) {
         drawing = false;
         if (hint) hint.style.display = 'none';
         if (hidden) hidden.value = canvas.toDataURL('image/png');
-        // Appraisee signed → prompt to submit (signing is the final step)
-        if (wrap.dataset.sigId === 'sig_appraisee' && _isWindowOpen && !_isSubmitted && !_isAppraiserView) {
-            setTimeout(function() {
-                if (confirm('Evaluation signed.\n\nSubmit to your appraiser now?\n\nYou will not be able to edit after submitting.')) {
-                    saveEvaluation('submit');
-                }
-            }, 400);
-        }
+        // Appraisee signature is only drawable once the appraiser has reviewed and signed (status = appraised).
+        // Signing itself doesn't submit — the appraisee still clicks "Sign & Acknowledge" explicitly.
     }
 
     canvas.addEventListener('mousedown',  startDraw);
@@ -1552,14 +1614,8 @@ function sigUpload(input) {
             ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
             if (hint)   hint.style.display = 'none';
             if (hidden) hidden.value = canvas.toDataURL('image/png');
-            // Appraisee uploaded signature → prompt to submit
-            if (wrap.dataset.sigId === 'sig_appraisee' && _isWindowOpen && !_isSubmitted && !_isAppraiserView) {
-                setTimeout(function() {
-                    if (confirm('Evaluation signed.\n\nSubmit to your appraiser now?\n\nYou will not be able to edit after submitting.')) {
-                        saveEvaluation('submit');
-                    }
-                }, 400);
-            }
+            // Appraisee signature is only drawable once the appraiser has reviewed and signed (status = appraised).
+            // Signing itself doesn't submit — the appraisee still clicks "Sign & Acknowledge" explicitly.
         };
         img.src = ev.target.result;
     };
@@ -1585,8 +1641,9 @@ function restoreAllSigs() {
 
 // Auto-init editable signature pads (those without pointer-events:none on the wrap itself)
 document.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
-    if (wrap.style.pointerEvents !== 'none') {
+    if (wrap.style.pointerEvents !== 'none' && !wrap._sigInited) {
         sigInit(wrap);
+        wrap._sigInited = true;
     }
 });
 
@@ -1598,6 +1655,11 @@ if (_isAppraiserView) {
     var formBody = document.getElementById('form-body') || document.querySelector('main');
     if (formBody) { formBody.style.pointerEvents = 'none'; formBody.style.opacity = '0.85'; }
     unlockAppraiserSections();
+} else if (_softLocked) {
+    // status = appraised: soft-lock the whole form, then unlock just the acknowledgment panel
+    var formBody = document.getElementById('form-body') || document.querySelector('main');
+    if (formBody) { formBody.style.pointerEvents = 'none'; formBody.style.opacity = '0.85'; }
+    unlockAppraiseeAcknowledgment();
 } else if (!_isWindowOpen || _isSubmitted) {
     lockForm();
 }

@@ -73,8 +73,10 @@
                         <td class="px-5 py-4 text-slate-500 text-xs">{{ $sub['position'] ?? '—' }}</td>
                         <td class="px-5 py-4 text-slate-500 text-xs">{{ $sub['department_code'] ?? '—' }}</td>
                         <td class="px-5 py-4 text-center">
-                            @if($status === 'appraised')
-                            <span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] font-black px-2.5 py-1 rounded-full">✓ Appraised</span>
+                            @if($status === 'completed')
+                            <span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] font-black px-2.5 py-1 rounded-full">✓ Completed</span>
+                            @elseif($status === 'appraised')
+                            <span class="inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-[10px] font-black px-2.5 py-1 rounded-full">✍ Awaiting Appraisee Signature</span>
                             @elseif($status === 'submitted')
                             <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-[10px] font-black px-2.5 py-1 rounded-full">↑ Submitted</span>
                             @elseif($status === 'draft')
@@ -96,7 +98,7 @@
                                class="inline-flex items-center gap-1 bg-[#1a3d34] hover:bg-[#2d5548] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition">
                                 Review &amp; Appraise →
                             </a>
-                            @elseif($status === 'appraised')
+                            @elseif($status === 'appraised' || $status === 'completed')
                             <a href="/performance/appraise/{{ $sub['id'] }}/{{ strtolower($q) }}"
                                class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-3 py-1.5 rounded-lg transition">
                                 View
