@@ -111,6 +111,39 @@
         </div>
     </button>
 
+    <!-- PROFILE -->
+    <a
+        href="{{ route('profile') }}"
+        class="group relative w-full flex items-center gap-3 mb-4 shrink-0 pr-2 text-left
+        {{ request()->is('profile') ? 'bg-[#6B9080]/40' : 'hover:bg-white/10' }}
+        rounded-xl p-2 transition"
+        aria-label="My Profile"
+    >
+        <div class="w-9 h-9 rounded-full overflow-hidden shrink-0 ring-2 ring-white/20">
+            <img
+                src="https://ui-avatars.com/api/?name={{ urlencode(session('short_name') ?: session('full_name') ?: session('employee_name') ?: 'User') }}&background=6B9080&color=fff&size=36"
+                class="w-full h-full object-cover"
+                alt="Profile"
+            />
+        </div>
+
+        <div class="sidebar-text leading-tight min-w-0">
+            <p class="text-[12px] font-bold text-white truncate">
+                {{ session('short_name') ?: session('full_name') ?: session('employee_name') ?: 'User' }}
+            </p>
+            <p class="text-[9px] text-[#A4C3B2] truncate mt-0.5">
+                {{ session('position') ?: 'My Profile' }}
+            </p>
+        </div>
+
+        <div class="sidebar-tooltip hidden absolute left-[58px] top-1/2 -translate-y-1/2
+            bg-black text-white text-[10px] px-2 py-1 rounded-md
+            opacity-0 group-hover:opacity-100 pointer-events-none transition duration-150
+            whitespace-nowrap z-[9999] shadow-lg">
+            My Profile
+        </div>
+    </a>
+
     @php
         $navSections = [
             [
