@@ -840,6 +840,11 @@
                 'percentage' => number_format($latestActual, 2) . ' %',
                 default      => number_format($latestActual, 0),
             };
+            $targetDisplay = match($kpi['unit'] ?? '') {
+                'currency'   => number_format($baseTotal, 2),
+                'percentage' => number_format($baseTotal, 2) . ' %',
+                default      => number_format($baseTotal, 0),
+            };
         @endphp
 
         <div
@@ -855,6 +860,7 @@
                 <div class="flex flex-wrap items-center gap-1.5">
                     <span class="px-2.5 py-0.5 rounded-full {{ $ot['catPill'] }} text-[10px] font-black">{{ $kpi['category'] ?? 'General' }}</span>
                     <span class="px-2.5 py-0.5 rounded-full {{ $ot['subPill'] }} text-[10px] font-black">{{ $kpi['sub_category'] ?? 'Sub Category' }}</span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-white border {{ $ot['cardBorder'] }} {{ $ot['infoText'] }} text-[10px] font-black">⚖️ {{ number_format($kpi['weightage'] ?? 0, 0) }}%</span>
                     <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black">{{ $kpi['financial_year'] ?? '-' }}</span>
                     <span class="px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600 text-[10px] font-black">✍️ My KPI</span>
                 </div>
@@ -887,8 +893,8 @@
                 </div>
                 <div class="flex-1 grid grid-cols-4 gap-2">
                     <div class="rounded-xl {{ $ot['infoBg'] }} border px-3 py-1.5">
-                        <p class="text-[9px] uppercase {{ $ot['infoText'] }} font-black">Weightage</p>
-                        <p class="text-xs font-black text-slate-900">{{ number_format($kpi['weightage'] ?? 0, 0) }}%</p>
+                        <p class="text-[9px] uppercase {{ $ot['infoText'] }} font-black">Target</p>
+                        <p class="text-xs font-black text-slate-900">{{ $targetDisplay }}</p>
                     </div>
                     <div class="rounded-xl {{ $ot['infoBg'] }} border px-3 py-1.5">
                         <p class="text-[9px] uppercase {{ $ot['infoText'] }} font-black">Actual</p>

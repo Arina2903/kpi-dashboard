@@ -105,6 +105,12 @@
                         </div>
                         <span class="text-[10px] font-black {{ $qstyle['text'] }} shrink-0">{{ number_format($pct, 1) }}%</span>
                     </div>
+                    @if(!empty($row['remark']))
+                        <div class="mt-3 pt-3 border-t border-slate-100">
+                            <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Remark</p>
+                            <p class="text-[10px] text-slate-600 leading-relaxed">{{ $row['remark'] }}</p>
+                        </div>
+                    @endif
                 @else
                     <p class="text-[10px] text-slate-300 italic">This quarter hasn't been set up yet.</p>
                 @endif
