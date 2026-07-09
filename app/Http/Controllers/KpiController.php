@@ -2301,16 +2301,14 @@ class KpiController extends Controller
                     $user
                 );
 
+        /*
+        |--------------------------------------------------------------------------
+        | NO APPROVER (TOP OF HIERARCHY) — SELF-APPROVE IMMEDIATELY
+        |--------------------------------------------------------------------------
+        */
+
         if(!$approver){
-
-            return response()->json([
-
-                'success' => false,
-
-                'message'
-                    => 'Approver not found.'
-
-            ],422);
+            $approver = $user;
         }
 
         /*
@@ -2319,8 +2317,8 @@ class KpiController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $inserted =
-            $supabase->safeInsert(
+        $insertResult =
+            $supabase->insert(
 
                 'kpi_target_change_requests',
 
@@ -2393,7 +2391,11 @@ class KpiController extends Controller
 
             );
 
-        if(!$inserted){
+        if(
+            empty($insertResult)
+            ||
+            empty($insertResult[0]['id'])
+        ){
 
             return response()->json([
 
@@ -2403,6 +2405,23 @@ class KpiController extends Controller
                     => 'Failed to create request.'
 
             ],500);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SELF-APPROVE WHEN NO APPROVER EXISTS
+        |--------------------------------------------------------------------------
+        */
+
+        if($approver['id'] === $user['id']){
+
+            return app(
+                \App\Services\ApprovalActionService::class
+            )->approveTarget(
+                $insertResult[0],
+                $user['id'],
+                $user['short_name']
+            );
         }
 
         return response()->json([
@@ -2589,19 +2608,14 @@ class KpiController extends Controller
                     $user
                 );
 
-        if(
-            !$approver
-        ){
+        /*
+        |--------------------------------------------------------------------------
+        | NO APPROVER (TOP OF HIERARCHY) — SELF-APPROVE IMMEDIATELY
+        |--------------------------------------------------------------------------
+        */
 
-            return response()->json([
-
-                'success'
-                    => false,
-
-                'message'
-                    => 'Approver not found.'
-
-            ],422);
+        if(!$approver){
+            $approver = $user;
         }
 
         $approverId =
@@ -2703,6 +2717,27 @@ class KpiController extends Controller
                     => $e->getMessage(),
 
             ],500);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SELF-APPROVE WHEN NO APPROVER EXISTS
+        |--------------------------------------------------------------------------
+        */
+
+        if(
+            $approver['id'] === $user['id']
+            &&
+            !empty($result[0]['id'])
+        ){
+
+            return app(
+                \App\Services\ApprovalActionService::class
+            )->approveDelete(
+                $result[0],
+                $user['id'],
+                $user['short_name']
+            );
         }
 
         /*
@@ -3004,12 +3039,10 @@ class KpiController extends Controller
                 $this->hierarchyService
                     ->getApproverId($user);
 
-            if(!$approverId){
-                return response()->json([
-                    'success' => false,
-                    'message' =>
-                        'Approver not found.'
-                ], 422);
+            // NO APPROVER (TOP OF HIERARCHY) — SELF-APPROVE IMMEDIATELY
+            $noApprover = !$approverId;
+            if($noApprover){
+                $approverId = $user['id'] ?? null;
             }
 
             /*
@@ -3018,29 +3051,39 @@ class KpiController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            if(
-                !$this->supabase->safeInsert(
-                    'kpi_update_approvals',
-                    [
-                        'kpi_id' => $validated['kpi_id'],
-                        'quarter' => $validated['quarter'],
-                        'quarter_id' => $quarterRow['id'] ?? null,
-                        'old_actual' => $quarterRow['quarter_actual'] ?? 0,
-                        'quarter_target' => $quarterRow['quarter_target'] ?? 0,
-                        'requested_actual' => $validated['actual'] ?? 0,
-                        'request_remark' => $validated['remark'] ?? null,
-                        'requested_by' => $user['id'] ?? null,
-                        'requested_by_name' => $user['short_name'] ?? 'Unknown',
-                        'approver_id' => $approverId,
-                        'status' => 'pending',
-                        'created_at' => $this->nowMy(),
-                    ]
-                )
-            ){
+            $insertResult = $this->supabase->insert(
+                'kpi_update_approvals',
+                [
+                    'kpi_id' => $validated['kpi_id'],
+                    'quarter' => $validated['quarter'],
+                    'quarter_id' => $quarterRow['id'] ?? null,
+                    'old_actual' => $quarterRow['quarter_actual'] ?? 0,
+                    'quarter_target' => $quarterRow['quarter_target'] ?? 0,
+                    'requested_actual' => $validated['actual'] ?? 0,
+                    'request_remark' => $validated['remark'] ?? null,
+                    'requested_by' => $user['id'] ?? null,
+                    'requested_by_name' => $user['short_name'] ?? 'Unknown',
+                    'approver_id' => $approverId,
+                    'status' => 'pending',
+                    'created_at' => $this->nowMy(),
+                ]
+            );
+
+            if(empty($insertResult) || empty($insertResult[0]['id'])){
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to create approval request.'
                 ],500);
+            }
+
+            if($noApprover){
+                return app(
+                    \App\Services\ApprovalActionService::class
+                )->approveQuarter(
+                    $insertResult[0],
+                    $user['id'],
+                    $user['short_name']
+                );
             }
 
         return response()->json([
