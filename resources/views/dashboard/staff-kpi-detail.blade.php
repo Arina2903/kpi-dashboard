@@ -29,6 +29,16 @@
     };
     $avgStyle = $scoreStyle($average);
     $quartersByLabel = collect($quarters)->keyBy('quarter');
+
+    // Same category colour language as "My KPI" / staff KPI list
+    $categoryThemes = [
+        'Financial'         => ['catPill'=>'bg-emerald-700 text-white','subPill'=>'bg-emerald-100 text-emerald-700'],
+        'Growth & Customer' => ['catPill'=>'bg-indigo-700 text-white', 'subPill'=>'bg-indigo-100 text-indigo-700'],
+        'Initiatives'       => ['catPill'=>'bg-amber-600 text-white',  'subPill'=>'bg-amber-100 text-amber-700'],
+        'People'            => ['catPill'=>'bg-pink-700 text-white',   'subPill'=>'bg-pink-100 text-pink-700'],
+    ];
+    $categoryThemeDefault = ['catPill'=>'bg-slate-600 text-white','subPill'=>'bg-slate-100 text-slate-600'];
+    $ctheme = $categoryThemes[$kpi['category'] ?? ''] ?? $categoryThemeDefault;
 @endphp
 
 <main id="mainContent" class="ml-[230px] min-h-screen transition-all duration-300">
@@ -48,8 +58,8 @@
                 <h1 class="text-base font-black text-slate-900 leading-snug">{{ $kpi['kpi_title'] ?? 'Untitled KPI' }}</h1>
                 <p class="text-xs text-slate-500 mt-1">{{ $staff['full_name'] ?? $staff['short_name'] ?? 'Unknown' }} · {{ $currentFinancialYear }}</p>
                 <div class="flex items-center gap-2 mt-2 flex-wrap">
-                    <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-black">{{ $kpi['category'] ?? '-' }}</span>
-                    <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-black">{{ $kpi['sub_category'] ?? '-' }}</span>
+                    <span class="px-2 py-0.5 rounded-lg {{ $ctheme['catPill'] }} text-[10px] font-black">{{ $kpi['category'] ?? '-' }}</span>
+                    <span class="px-2 py-0.5 rounded-lg {{ $ctheme['subPill'] }} text-[10px] font-black">{{ $kpi['sub_category'] ?? '-' }}</span>
                     <span class="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 text-[10px] font-black border border-indigo-100">Weightage {{ number_format($kpi['weightage'] ?? 0, 1) }}%</span>
                     <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-black">Unit: {{ $kpi['unit'] ?? '-' }}</span>
                 </div>
