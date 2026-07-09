@@ -1767,7 +1767,10 @@ async function saveQuarterStatus(
                         : 'application/json',
 
                     'X-CSRF-TOKEN'
-                        : '{{ csrf_token() }}'
+                        : '{{ csrf_token() }}',
+
+                    'Accept'
+                        : 'application/json'
 
                 },
 
@@ -1919,7 +1922,10 @@ function closeKpiDetail(){
                                 : 'application/json',
 
                             'X-CSRF-TOKEN'
-                                : '{{ csrf_token() }}'
+                                : '{{ csrf_token() }}',
+
+                            'Accept'
+                                : 'application/json'
 
                         },
 
@@ -2362,6 +2368,7 @@ function closeKpiDetail(){
 
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
 
@@ -2509,7 +2516,10 @@ function closeKpiDetail(){
                                 : 'application/json',
 
                             'X-CSRF-TOKEN'
-                                : '{{ csrf_token() }}'
+                                : '{{ csrf_token() }}',
+
+                            'Accept'
+                                : 'application/json'
 
                         },
 
