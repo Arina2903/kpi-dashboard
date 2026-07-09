@@ -13,6 +13,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .soft-card { box-shadow: 0 8px 30px rgba(15,23,42,.07); }
+        .line-clamp-2 { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
     </style>
 </head>
 <body class="bg-[#f0f2f7] min-h-screen text-slate-900">
@@ -29,6 +30,24 @@
         return                 ['bar'=>'bg-emerald-700',                                'text'=>'text-emerald-800', 'badge'=>'bg-emerald-50 text-emerald-800 border-emerald-100','label'=>'Exceeded'];
     };
     $overallStyle = $scoreStyle($weightedScore);
+
+    // Same category order + colour language as "My KPI" so the boss sees a consistent system
+    $categoryOrder = ['Financial','Growth & Customer','Initiatives','People'];
+
+    $categoryThemes = [
+        'Financial'         => ['headerBg'=>'from-emerald-800 to-emerald-600','icon'=>'💰','catPill'=>'bg-emerald-700 text-white','subPill'=>'bg-emerald-100 text-emerald-700','border'=>'border-l-emerald-500'],
+        'Growth & Customer' => ['headerBg'=>'from-indigo-800 to-indigo-600', 'icon'=>'📈','catPill'=>'bg-indigo-700 text-white', 'subPill'=>'bg-indigo-100 text-indigo-700', 'border'=>'border-l-indigo-500'],
+        'Initiatives'       => ['headerBg'=>'from-amber-700 to-amber-500',  'icon'=>'🚀','catPill'=>'bg-amber-600 text-white',  'subPill'=>'bg-amber-100 text-amber-700',  'border'=>'border-l-amber-500'],
+        'People'            => ['headerBg'=>'from-pink-800 to-pink-600',   'icon'=>'👥','catPill'=>'bg-pink-700 text-white',   'subPill'=>'bg-pink-100 text-pink-700',   'border'=>'border-l-pink-500'],
+    ];
+    $categoryThemeDefault = ['headerBg'=>'from-slate-700 to-slate-600','icon'=>'📌','catPill'=>'bg-slate-600 text-white','subPill'=>'bg-slate-100 text-slate-600','border'=>'border-l-slate-400'];
+
+    // Group by category (defined order first, unknown categories after), then by sub_category
+    $kpiCollection = collect($kpis);
+    $grouped = $kpiCollection->groupBy(fn($k) => $k['category'] ?: 'Uncategorized');
+
+    $orderedCategories = collect($categoryOrder)->filter(fn($c) => $grouped->has($c));
+    $grouped->keys()->reject(fn($c) => in_array($c, $categoryOrder))->sort()->each(fn($c) => $orderedCategories->push($c));
 @endphp
 
 <main class="pl-[230px] transition-all duration-300">
@@ -63,47 +82,110 @@
         </div>
     </div>
 
-    {{-- KPI cards --}}
+    {{-- Legend --}}
+    @if(count($kpis) > 0)
+        <div class="flex items-center flex-wrap gap-2 mb-4">
+            @foreach($orderedCategories as $cat)
+                @php $lstyle = $categoryThemes[$cat] ?? $categoryThemeDefault; @endphp
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black {{ $lstyle['catPill'] }}">
+                    {{ $lstyle['icon'] }} {{ $cat }}
+                </span>
+            @endforeach
+        </div>
+    @endif
+
+    {{-- KPI list — grouped by category, then sub-category --}}
     @if(count($kpis) === 0)
         <div class="bg-white rounded-2xl border border-[#6B9080] soft-card p-10 text-center">
             <p class="text-sm font-black text-slate-400">No KPIs found for this staff in {{ $currentFinancialYear }}.</p>
         </div>
     @else
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            @foreach($kpis as $kpi)
-                @php $kstyle = $scoreStyle($kpi['progress_pct']); @endphp
-                <a href="{{ route('dashboard.staff.kpi.detail', [$staff['id'], $kpi['id']]) }}"
-                   class="block bg-white rounded-2xl border border-[#6B9080] soft-card p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all">
-                    <div class="flex items-start justify-between gap-2 mb-2">
-                        <h3 class="text-xs font-black text-slate-900 leading-snug line-clamp-2">{{ $kpi['kpi_title'] ?? 'Untitled KPI' }}</h3>
-                        <span class="shrink-0 px-2 py-0.5 rounded-lg text-[9px] font-black {{ $kstyle['badge'] }} border">{{ $kstyle['label'] }}</span>
-                    </div>
-                    <p class="text-[10px] text-slate-400 mb-3">{{ $kpi['category'] ?? '-' }} · {{ $kpi['sub_category'] ?? '-' }}</p>
+        <div class="space-y-6">
+        @foreach($orderedCategories as $cat)
+            @php
+                $ctheme    = $categoryThemes[$cat] ?? $categoryThemeDefault;
+                $catKpis   = $grouped->get($cat);
+                $subGroups = $catKpis->groupBy(fn($k) => $k['sub_category'] ?: 'General')->sortKeys();
+            @endphp
 
-                    <div class="grid grid-cols-3 gap-2 mb-3">
-                        <div>
-                            <p class="text-[8px] font-black text-slate-400 uppercase">Target</p>
-                            <p class="text-xs font-black text-slate-700">{{ number_format($kpi['display_target'], 2) }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[8px] font-black text-slate-400 uppercase">Actual</p>
-                            <p class="text-xs font-black text-slate-700">{{ number_format($kpi['display_actual'], 2) }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[8px] font-black text-slate-400 uppercase">Weightage</p>
-                            <p class="text-xs font-black text-slate-700">{{ number_format($kpi['weightage'] ?? 0, 1) }}%</p>
-                        </div>
-                    </div>
-
+            <div class="rounded-2xl overflow-hidden soft-card border border-[#6B9080]">
+                {{-- Category header --}}
+                <div class="px-4 py-2.5 bg-gradient-to-r {{ $ctheme['headerBg'] }} flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div class="h-1.5 rounded-full {{ $kstyle['bar'] }}" style="width:{{ min($kpi['progress_pct'],100) }}%"></div>
-                        </div>
-                        <span class="text-[10px] font-black {{ $kstyle['text'] }} shrink-0">{{ number_format($kpi['progress_pct'], 1) }}%</span>
+                        <span class="text-sm">{{ $ctheme['icon'] }}</span>
+                        <h2 class="text-xs font-black text-white uppercase tracking-wide">{{ $cat }}</h2>
                     </div>
-                    <p class="text-[9px] text-slate-400 mt-2">{{ $kpi['quarters_filled'] }}/4 quarters updated</p>
-                </a>
-            @endforeach
+                    <span class="text-[9px] font-black text-white/80">{{ $catKpis->count() }} KPI{{ $catKpis->count() === 1 ? '' : 's' }}</span>
+                </div>
+
+                <div class="bg-white p-4 space-y-5">
+                    @foreach($subGroups as $subCat => $subKpis)
+                        <div>
+                            {{-- Sub-category label --}}
+                            <div class="flex items-center gap-2 mb-2.5">
+                                <span class="px-2 py-0.5 rounded-lg text-[9px] font-black {{ $ctheme['subPill'] }}">{{ $subCat }}</span>
+                                <span class="text-[9px] text-slate-400 font-bold">{{ $subKpis->count() }} KPI{{ $subKpis->count() === 1 ? '' : 's' }}</span>
+                            </div>
+
+                            <div class="space-y-2">
+                                @foreach($subKpis as $kpi)
+                                    @php $kstyle = $scoreStyle($kpi['progress_pct']); @endphp
+                                    <a href="{{ route('dashboard.staff.kpi.detail', [$staff['id'], $kpi['id']]) }}"
+                                       class="block rounded-xl border {{ $ctheme['border'] }} border-l-4 border-slate-100 hover:bg-slate-50/70 hover:shadow-sm transition-all p-3">
+
+                                        <div class="flex items-start justify-between gap-3 mb-2.5">
+                                            <h3 class="text-xs font-black text-slate-900 leading-snug flex-1">{{ $kpi['kpi_title'] ?? 'Untitled KPI' }}</h3>
+                                            <div class="flex items-center gap-1.5 shrink-0">
+                                                <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[9px] font-black">W {{ number_format($kpi['weightage'] ?? 0, 1) }}%</span>
+                                                <span class="px-2 py-0.5 rounded-lg text-[9px] font-black {{ $kstyle['badge'] }} border">{{ $kstyle['label'] }}</span>
+                                            </div>
+                                        </div>
+
+                                        {{-- Overall progress --}}
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <span class="text-[9px] font-black text-slate-400 uppercase shrink-0">Overall</span>
+                                            <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                <div class="h-1.5 rounded-full {{ $kstyle['bar'] }}" style="width:{{ min($kpi['progress_pct'],100) }}%"></div>
+                                            </div>
+                                            <span class="text-[10px] font-black {{ $kstyle['text'] }} shrink-0 w-10 text-right">{{ number_format($kpi['progress_pct'], 1) }}%</span>
+                                            <span class="text-[9px] text-slate-400 shrink-0">({{ number_format($kpi['display_actual'],1) }} / {{ number_format($kpi['display_target'],1) }})</span>
+                                        </div>
+
+                                        {{-- Per-quarter strip, with each quarter's own title --}}
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                            @foreach($kpi['quarters'] as $q)
+                                                @php $qstyle = $scoreStyle($q['progress_pct']); @endphp
+                                                <div class="rounded-lg bg-slate-50 border border-slate-100 px-2 py-1.5">
+                                                    <div class="flex items-center justify-between mb-1">
+                                                        <span class="text-[9px] font-black text-slate-500">{{ $q['label'] }}</span>
+                                                        @if($q['has_data'])
+                                                            <span class="text-[9px] font-black {{ $qstyle['text'] }}">{{ number_format($q['progress_pct'],1) }}%</span>
+                                                        @else
+                                                            <span class="text-[9px] font-bold text-slate-300">—</span>
+                                                        @endif
+                                                    </div>
+                                                    @if($q['quarter_title'])
+                                                        <p class="text-[9px] text-slate-500 truncate mb-1" title="{{ $q['quarter_title'] }}">{{ $q['quarter_title'] }}</p>
+                                                    @endif
+                                                    @if($q['has_data'])
+                                                        <div class="h-1 bg-slate-200 rounded-full overflow-hidden mb-1">
+                                                            <div class="h-1 rounded-full {{ $qstyle['bar'] }}" style="width:{{ min($q['progress_pct'],100) }}%"></div>
+                                                        </div>
+                                                        <p class="text-[8px] text-slate-400">{{ number_format($q['actual'],1) }} / {{ number_format($q['target'],1) }}</p>
+                                                    @else
+                                                        <p class="text-[8px] text-slate-300 italic">Not planned</p>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
         </div>
     @endif
 

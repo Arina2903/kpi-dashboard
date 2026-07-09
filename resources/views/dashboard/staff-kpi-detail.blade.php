@@ -74,7 +74,7 @@
                 $hasData = $row !== null && ((float)($actual ?? 0) > 0 || (float)($target ?? 0) > 0);
             @endphp
             <div class="bg-white rounded-2xl border border-[#6B9080] soft-card p-4">
-                <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center justify-between mb-1">
                     <h3 class="text-xs font-black text-slate-900">{{ $ql }}</h3>
                     @if($row)
                         <span class="px-2 py-0.5 rounded-lg text-[8px] font-black {{ $qstyle['badge'] }} border">{{ $hasData ? $qstyle['label'] : 'No Data' }}</span>
@@ -82,6 +82,11 @@
                         <span class="px-2 py-0.5 rounded-lg text-[8px] font-black bg-slate-100 text-slate-400 border border-slate-200">Not Planned</span>
                     @endif
                 </div>
+                @if($row && !empty($row['quarter_title']))
+                    <p class="text-[10px] text-slate-400 mb-3 truncate" title="{{ $row['quarter_title'] }}">{{ $row['quarter_title'] }}</p>
+                @else
+                    <div class="mb-3"></div>
+                @endif
 
                 @if($row)
                     <div class="space-y-2 mb-3">

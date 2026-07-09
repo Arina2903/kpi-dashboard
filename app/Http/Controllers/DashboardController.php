@@ -691,6 +691,22 @@ class DashboardController extends Controller
             $kpi['progress_pct']   = $target > 0 ? round(($act / $target) * 100, 1) : 0;
             $kpi['quarters_filled'] = $qs->filter(fn ($q) => (float) ($q['quarter_actual'] ?? 0) > 0)->count();
 
+            // Per-quarter detail (target, actual, progress, quarter title) for the compact quarter strip
+            $kpi['quarters'] = collect(['Q1', 'Q2', 'Q3', 'Q4'])->map(function ($label) use ($qs) {
+                $row    = $qs->firstWhere('quarter', $label);
+                $target = max(0, (float) ($row['quarter_target'] ?? 0));
+                $actual = max(0, (float) ($row['quarter_actual'] ?? 0));
+
+                return [
+                    'label'        => $label,
+                    'quarter_title' => $row['quarter_title'] ?? null,
+                    'target'       => $target,
+                    'actual'       => $actual,
+                    'progress_pct' => $target > 0 ? round(($actual / $target) * 100, 1) : 0,
+                    'has_data'     => $row !== null,
+                ];
+            })->values()->all();
+
             return $kpi;
         })->values()->all();
 
