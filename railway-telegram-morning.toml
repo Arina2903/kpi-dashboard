@@ -1,0 +1,2 @@
+[deploy]
+startCommand = "php artisan config:clear && php artisan telegram:send-morning-digest"

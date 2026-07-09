@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\SupabaseService;
+use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
@@ -64,5 +65,34 @@ class ProfileController extends Controller
             'user'    => $user,
             'manager' => $manager,
         ], $this->sidebarData($supabase, $user)));
+    }
+
+    public function connectTelegram(Request $request, SupabaseService $supabase)
+    {
+        $code = Str::upper(Str::random(8));
+
+        $supabase->safePatch('users', ['id' => 'eq.' . session('user_uuid')], [
+            'telegram_link_code' => $code,
+            'telegram_link_code_expires_at' => now()->addMinutes(5)->toIso8601String(),
+        ]);
+
+        return response()->json([
+            'code' => $code,
+            'deep_link' => 'https://t.me/' . env('TELEGRAM_BOT_USERNAME') . '?start=' . $code,
+        ]);
+    }
+
+    public function telegramStatus(Request $request, SupabaseService $supabase)
+    {
+        $user = $supabase->first('users', [
+            'id' => 'eq.' . session('user_uuid'),
+            'select' => 'telegram_username,telegram_linked_at',
+        ]);
+
+        return response()->json([
+            'linked' => !empty($user['telegram_linked_at']),
+            'username' => $user['telegram_username'] ?? null,
+            'linked_at' => $user['telegram_linked_at'] ?? null,
+        ]);
     }
 }

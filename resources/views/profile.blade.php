@@ -95,8 +95,83 @@
         </dl>
     </div>
 
+    {{-- TELEGRAM --}}
+    <div class="bg-white rounded-2xl soft-card border border-slate-200 p-5">
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-full bg-[#229ED9]/10 flex items-center justify-center shrink-0">
+                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="#229ED9"><path d="M21.94 4.53a1.6 1.6 0 0 0-1.63-.27L2.98 10.98a1.53 1.53 0 0 0 .1 2.88l4.54 1.42 1.76 5.5c.14.44.5.72.94.72.03 0 .06 0 .1-.01.34-.03.63-.24.77-.55l2.15-3.9 4.5 3.3c.24.18.53.27.82.27.14 0 .29-.02.43-.07a1.5 1.5 0 0 0 1-1.1l3.03-13.7a1.6 1.6 0 0 0-.62-1.74Zm-3.35 2.68-8.03 7.28-.31 3.35-1.35-4.22 8.6-6.9c.2-.16.42.1.24.28l-6.9 6.24a.5.5 0 0 0-.15.3l-.2 2.13 8.6-9.7c.2-.23.5.03.33.24Z"/></svg>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[13px] font-black text-slate-900">Telegram Notifications</p>
+                    <p id="tg-status-text" class="text-[11px] text-slate-500 mt-0.5">Checking status…</p>
+                </div>
+            </div>
+            <button
+                id="tg-connect-btn"
+                type="button"
+                onclick="connectTelegram()"
+                class="text-[11px] font-black px-3 py-2 rounded-xl bg-[#6B9080] text-white hover:bg-[#5a7a6d] transition shrink-0"
+            >
+                Connect Telegram
+            </button>
+        </div>
+    </div>
+
 </div>
 </main>
+
+<script>
+    const TG_CSRF = '{{ csrf_token() }}';
+    let tgPollTimer = null;
+
+    async function refreshTelegramStatus() {
+        try {
+            const res = await fetch('{{ route("profile.telegram.status") }}', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const data = await res.json();
+
+            const statusText = document.getElementById('tg-status-text');
+            const connectBtn = document.getElementById('tg-connect-btn');
+
+            if (data.linked) {
+                statusText.textContent = 'Connected' + (data.username ? ' as @' + data.username : '');
+                statusText.className = 'text-[11px] text-emerald-600 font-semibold mt-0.5';
+                connectBtn.textContent = 'Reconnect';
+                if (tgPollTimer) { clearInterval(tgPollTimer); tgPollTimer = null; }
+            } else {
+                statusText.textContent = 'Not connected — link your Telegram to get daily KPI reminders.';
+                statusText.className = 'text-[11px] text-slate-500 mt-0.5';
+                connectBtn.textContent = 'Connect Telegram';
+            }
+        } catch (e) {
+            // silent — leave "Checking status…" as-is on transient failure
+        }
+    }
+
+    async function connectTelegram() {
+        const res = await fetch('{{ route("profile.telegram.connect") }}', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': TG_CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        const data = await res.json();
+
+        window.open(data.deep_link, '_blank');
+
+        document.getElementById('tg-status-text').textContent = 'Waiting for confirmation in Telegram…';
+
+        let attempts = 0;
+        if (tgPollTimer) clearInterval(tgPollTimer);
+        tgPollTimer = setInterval(async () => {
+            attempts++;
+            await refreshTelegramStatus();
+            if (attempts >= 40) { clearInterval(tgPollTimer); tgPollTimer = null; } // ~2 min at 3s
+        }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', refreshTelegramStatus);
+</script>
 
 </body>
 </html>
