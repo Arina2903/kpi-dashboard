@@ -44,7 +44,7 @@
 
     $canViewCompanyDashboard = $role === 'SLT';
     $isManager = in_array($role, ['SLT','VP','MANAGER']);
-    $isSltOffice = strtoupper(trim($currentDepartment)) === 'SLT OFFICE';
+    $isSltOffice = in_array(strtoupper(trim($currentDepartment)), ['SLT OFFICE', 'BTS']);
 
     $kpiCollection = collect($kpis ?? []);
 
