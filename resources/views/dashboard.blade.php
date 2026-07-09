@@ -627,7 +627,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="text-sm font-black text-slate-900">Department Staff Breakdown</h2>
-                <p class="text-[10px] text-slate-400 mt-0.5">All staff · quarterly scores · sorted by annual achievement@if($isSltOffice) · click a staff row for full KPI breakdown@endif</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">All staff · quarterly scores · sorted by annual achievement @if($isSltOffice) · click a staff row for full KPI breakdown @endif</p>
             </div>
             <button onclick="toggleAllDepts()" id="toggleAllBtn"
                     class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-black hover:bg-slate-200 transition">
