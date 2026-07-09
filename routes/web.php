@@ -88,6 +88,13 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::post('/switch-department', [DashboardController::class, 'switchDepartment'])
         ->name('switch.department');
 
+    // SLT Office only — staff KPI drill-down
+    Route::get('/dashboard/staff/{employeeId}', [DashboardController::class, 'staffKpis'])
+        ->name('dashboard.staff.kpis');
+
+    Route::get('/dashboard/staff/{employeeId}/kpi/{kpiId}', [DashboardController::class, 'staffKpiDetail'])
+        ->name('dashboard.staff.kpi.detail');
+
     /*
     |--------------------------------------------------------------------------
     | KPI MAIN

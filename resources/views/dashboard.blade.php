@@ -44,6 +44,7 @@
 
     $canViewCompanyDashboard = $role === 'SLT';
     $isManager = in_array($role, ['SLT','VP','MANAGER']);
+    $isSltOffice = strtoupper(trim($currentDepartment)) === 'SLT OFFICE';
 
     $kpiCollection = collect($kpis ?? []);
 
@@ -626,7 +627,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="text-sm font-black text-slate-900">Department Staff Breakdown</h2>
-                <p class="text-[10px] text-slate-400 mt-0.5">All staff · quarterly scores · sorted by annual achievement</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">All staff · quarterly scores · sorted by annual achievement@if($isSltOffice) · click a staff row for full KPI breakdown@endif</p>
             </div>
             <button onclick="toggleAllDepts()" id="toggleAllBtn"
                     class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-black hover:bg-slate-200 transition">
@@ -712,7 +713,8 @@
                                                     default     => 'bg-slate-100 text-slate-500',
                                                 };
                                             @endphp
-                                            <tr class="{{ $isMe ? 'bg-indigo-50/70' : 'hover:bg-slate-50' }} transition">
+                                            <tr class="{{ $isMe ? 'bg-indigo-50/70' : 'hover:bg-slate-50' }} transition{{ $isSltOffice ? ' cursor-pointer' : '' }}"
+                                                @if($isSltOffice) onclick="window.location.href='{{ route('dashboard.staff.kpis', $staff['employee_id']) }}'" @endif>
                                                 <td class="px-2 py-2 text-[9px] text-slate-400 font-bold">{{ $si+1 }}</td>
                                                 <td class="px-2 py-2">
                                                     <div class="flex items-center gap-1.5">
@@ -720,6 +722,9 @@
                                                             <img src="https://ui-avatars.com/api/?name={{ urlencode($staff['name']??'U') }}&background=0f172a&color=fff&size=20" class="w-full h-full"/>
                                                         </div>
                                                         <span class="text-[10px] font-black text-slate-900">{{ $staff['name'] ?? 'Unknown' }}@if($isMe)<span class="text-indigo-400 font-normal"> (you)</span>@endif</span>
+                                                        @if($isSltOffice)
+                                                            <svg class="w-3 h-3 text-slate-300 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                                                        @endif
                                                     </div>
                                                 </td>
                                                 <td class="px-2 py-2">

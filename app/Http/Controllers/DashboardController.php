@@ -616,6 +616,175 @@ class DashboardController extends Controller
         ];
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | STAFF KPI DRILL-DOWN — SLT Office only
+    |--------------------------------------------------------------------------
+    */
+
+    private function requireSltOffice(array $user): void
+    {
+        if (strtoupper(trim($user['department_code'] ?? '')) !== 'SLT OFFICE') {
+            abort(403, 'This page is only accessible to SLT Office.');
+        }
+    }
+
+    public function staffKpis(string $employeeId, SupabaseService $supabase)
+    {
+        if (!session()->has('employee_uuid') || !session()->has('company_code')) {
+            return redirect()->route('login')->with('error', 'Sila login terlebih dahulu.');
+        }
+
+        $user = $this->getCurrentUser($supabase);
+        if (!$user) {
+            session()->flush();
+            return redirect()->route('login')->with('error', 'Session tidak sah. Sila login semula.');
+        }
+
+        $this->requireSltOffice($user);
+
+        $companyCode = session('company_code');
+
+        $staff = $supabase->get('employees', [
+            'id'            => 'eq.' . $employeeId,
+            'company_code'  => 'eq.' . $companyCode,
+            'is_active'     => 'eq.true',
+            'select'        => '*',
+        ])[0] ?? null;
+
+        if (!$staff) {
+            abort(404, 'Staff not found.');
+        }
+
+        $kpis = $supabase->get('kpis', [
+            'employee_id'    => 'eq.' . $employeeId,
+            'company_code'   => 'eq.' . $companyCode,
+            'financial_year' => 'eq.' . $this->currentFinancialYear,
+            'select'         => '*',
+            'order'          => 'created_at.desc',
+        ]) ?? [];
+
+        $kpiIds = collect($kpis)->pluck('id')->filter()->values()->toArray();
+
+        $quarterMap = collect();
+        if (!empty($kpiIds)) {
+            $quarters = $supabase->get('kpi_quarters', [
+                'kpi_id' => 'in.(' . implode(',', $kpiIds) . ')',
+                'select' => '*',
+            ]) ?? [];
+            $quarterMap = collect($quarters)->groupBy('kpi_id');
+        }
+
+        $kpis = collect($kpis)->map(function ($kpi) use ($quarterMap) {
+            $qs      = $quarterMap->get($kpi['id'], collect());
+            $qTarget = $qs->sum(fn ($q) => max(0, (float) ($q['quarter_target'] ?? 0)));
+            $qActual = $qs->sum(fn ($q) => max(0, (float) ($q['quarter_actual'] ?? 0)));
+
+            $base   = max(0, (float) ($kpi['base_target']   ?? 0));
+            $actual = max(0, (float) ($kpi['actual_value']  ?? 0));
+
+            $target = $qTarget > 0 ? $qTarget : $base;
+            $act    = $qTarget > 0 ? $qActual : $actual;
+
+            $kpi['display_target'] = $target;
+            $kpi['display_actual'] = $act;
+            $kpi['progress_pct']   = $target > 0 ? round(($act / $target) * 100, 1) : 0;
+            $kpi['quarters_filled'] = $qs->filter(fn ($q) => (float) ($q['quarter_actual'] ?? 0) > 0)->count();
+
+            return $kpi;
+        })->values()->all();
+
+        $staffDepartment = $supabase->get('departments', [
+            'code'   => 'eq.' . ($staff['department_code'] ?? ''),
+            'select' => '*',
+        ])[0] ?? null;
+
+        $totalWeight   = collect($kpis)->sum(fn ($k) => (float) ($k['weightage'] ?? 0));
+        $weightedScore = collect($kpis)->sum(fn ($k) => (float) ($k['weightage'] ?? 0) > 0
+            ? ($k['progress_pct'] * (float) ($k['weightage'] ?? 0) / 100)
+            : 0);
+
+        return view('dashboard.staff-kpis', [
+            'user'                 => $user,
+            'department'           => $this->getUserDepartment($supabase, $user),
+            'staff'                => $staff,
+            'kpis'                 => $kpis,
+            'departmentName'       => $staffDepartment['name'] ?? $staff['department_code'] ?? '-',
+            'currentFinancialYear' => $this->currentFinancialYear,
+            'totalWeight'          => round($totalWeight, 2),
+            'weightedScore'        => round($weightedScore, 2),
+        ]);
+    }
+
+    public function staffKpiDetail(string $employeeId, string $kpiId, SupabaseService $supabase)
+    {
+        if (!session()->has('employee_uuid') || !session()->has('company_code')) {
+            return redirect()->route('login')->with('error', 'Sila login terlebih dahulu.');
+        }
+
+        $user = $this->getCurrentUser($supabase);
+        if (!$user) {
+            session()->flush();
+            return redirect()->route('login')->with('error', 'Session tidak sah. Sila login semula.');
+        }
+
+        $this->requireSltOffice($user);
+
+        $companyCode = session('company_code');
+
+        $staff = $supabase->get('employees', [
+            'id'           => 'eq.' . $employeeId,
+            'company_code' => 'eq.' . $companyCode,
+            'is_active'    => 'eq.true',
+            'select'       => '*',
+        ])[0] ?? null;
+
+        if (!$staff) {
+            abort(404, 'Staff not found.');
+        }
+
+        $kpi = $supabase->get('kpis', [
+            'id'           => 'eq.' . $kpiId,
+            'employee_id'  => 'eq.' . $employeeId,
+            'company_code' => 'eq.' . $companyCode,
+            'select'       => '*',
+        ])[0] ?? null;
+
+        if (!$kpi) {
+            abort(404, 'KPI not found.');
+        }
+
+        $quarters = $supabase->get('kpi_quarters', [
+            'kpi_id' => 'eq.' . $kpiId,
+            'select' => '*',
+        ]) ?? [];
+
+        $quarters = collect($quarters)->map(function ($q) {
+            $target = max(0, (float) ($q['quarter_target'] ?? 0));
+            $actual = max(0, (float) ($q['quarter_actual'] ?? 0));
+            $q['progress_pct'] = $target > 0 ? round(($actual / $target) * 100, 1) : 0;
+            return $q;
+        })->sortBy('quarter')->values()->all();
+
+        $filledQuarters = collect($quarters)->filter(
+            fn ($q) => (float) ($q['quarter_actual'] ?? 0) > 0
+        );
+
+        $average = $filledQuarters->count() > 0
+            ? round($filledQuarters->avg('progress_pct'), 1)
+            : 0;
+
+        return view('dashboard.staff-kpi-detail', [
+            'user'                 => $user,
+            'department'           => $this->getUserDepartment($supabase, $user),
+            'staff'                => $staff,
+            'kpi'                  => $kpi,
+            'quarters'             => $quarters,
+            'average'              => $average,
+            'currentFinancialYear' => $this->currentFinancialYear,
+        ]);
+    }
+
     private function calculateSummary(array $kpis): array
     {
         $collection = collect($kpis);
