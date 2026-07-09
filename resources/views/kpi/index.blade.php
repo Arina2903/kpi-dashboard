@@ -2963,6 +2963,18 @@ function renderKpiDetail(activeQuarter) {
                             </div>
                         </div>
 
+                        <!-- MERGED ACTUAL VALUE — only when open quarter, no approval needed -->
+                        ${(!reasonRequired && !beforeQuarter) ? `
+                        <div id="mergedActualSection" class="${quarter.status === 'completed' ? 'hidden' : ''}">
+                            <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-4">
+                                <label class="text-[10px] font-black text-amber-700 uppercase tracking-widest">New Actual Value <span class="text-slate-400 normal-case font-medium">(optional — leave blank to only update details)</span></label>
+                                <input id="newActual-${quarter.id}" type="number" min="0"
+                                    class="w-full mt-1.5 h-11 rounded-2xl border border-slate-200 px-4 text-sm focus:border-amber-400 transition"
+                                    placeholder="Enter new actual value" value="${quarter.quarter_actual ?? ''}">
+                            </div>
+                        </div>
+                        ` : ''}
+
                         <!-- COMPLETION PROOF — shown only when status = completed -->
                         <div id="completionProofSection" class="${quarter.status === 'completed' ? '' : 'hidden'}">
                             <div class="rounded-2xl border border-[#6B3F2A]/30 bg-[#FBF5EF] p-4 space-y-3">
@@ -2990,18 +3002,18 @@ function renderKpiDetail(activeQuarter) {
 
                         <button id="qSaveBtn" onclick="quarterSaveDispatch('${quarter.id}')"
                             class="w-full h-11 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
-                            ${quarter.status === 'completed' ? '🏆 Submit Completion' : '💾 Save Quarter Details'}
+                            ${quarter.status === 'completed' ? '🏆 Submit Completion' : ((!reasonRequired && !beforeQuarter) ? '💾 Save Quarter & Actual' : '💾 Save Quarter Details')}
                         </button>
                     </div>
                 </div>
 
-                <!-- ④ UPDATE ACTUAL CARD -->
-                ${!beforeQuarter ? `
+                <!-- ④ UPDATE ACTUAL CARD — only shown when approval is needed or quarter hasn't started -->
+                ${(reasonRequired && !beforeQuarter) ? `
                 <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
                         <span class="w-1 h-5 rounded-full bg-amber-500 shrink-0"></span>
                         <p class="text-xs font-black text-slate-700 uppercase tracking-wider">Update Actual Value</p>
-                        ${reasonRequired ? '<span class="ml-auto text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-lg font-bold">⚠ Requires reason (past/completed)</span>' : ''}
+                        <span class="ml-auto text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-lg font-bold">⚠ Requires reason (past/completed)</span>
                     </div>
                     <div class="p-6 space-y-4">
                         <div>
@@ -3010,27 +3022,27 @@ function renderKpiDetail(activeQuarter) {
                                 class="w-full mt-1.5 h-11 rounded-2xl border border-slate-200 px-4 text-sm focus:border-amber-400 transition"
                                 placeholder="Enter new actual value">
                         </div>
-                        ${reasonRequired ? `
                         <div>
                             <label class="text-[10px] font-black text-red-500 uppercase tracking-widest">Reason <span class="text-red-500">*</span> (min 20 chars)</label>
                             <textarea id="reason-${quarter.id}" rows="3"
                                 class="w-full mt-1.5 rounded-2xl border border-slate-200 px-4 py-3 text-sm resize-none"
                                 placeholder="Explain why you are updating a past/completed quarter…"></textarea>
-                        </div>` : ''}
-                        <button onclick="${reasonRequired ? `submitActualUpdateRequest('${kpi.id}','${quarter.id}')` : `updateQuarterActual('${quarter.id}')`}"
-                            class="w-full h-11 rounded-2xl ${reasonRequired ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-amber-500 to-amber-600'} text-white font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg">
-                            ${reasonRequired ? '📋 Submit Update Request' : '✏️ Save Actual'}
+                        </div>
+                        <button onclick="submitActualUpdateRequest('${kpi.id}','${quarter.id}')"
+                            class="w-full h-11 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 text-white font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg">
+                            📋 Submit Update Request
                         </button>
                     </div>
                 </div>
-                ` : `
+                ` : ''}
+                ${beforeQuarter ? `
                 <div class="bg-slate-50 rounded-3xl border border-dashed border-slate-300 p-5 flex items-center gap-4">
                     <div class="w-12 h-12 rounded-2xl bg-slate-200 flex items-center justify-center text-xl shrink-0">⏳</div>
                     <div>
                         <p class="text-sm font-black text-slate-600">Quarter Not Started Yet</p>
                         <p class="text-xs text-slate-400 mt-0.5">Actual updates available from ${fmtDate(quarter.start_date)}</p>
                     </div>
-                </div>`}
+                </div>` : ''}
 
             </div>
 
@@ -3239,16 +3251,19 @@ function showToast(msg, color = 'emerald') {
 /* Show/hide completion proof section when status changes */
 function toggleCompletionProof(status) {
     const section = document.getElementById('completionProofSection');
+    const merged  = document.getElementById('mergedActualSection');
     const btn     = document.getElementById('qSaveBtn');
     if (!section || !btn) return;
     if (status === 'completed') {
         section.classList.remove('hidden');
+        if (merged) merged.classList.add('hidden');
         btn.innerHTML = '🏆 Submit Completion';
         btn.className = btn.className.replace('from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 shadow-indigo-600/20',
             'from-[#6B3F2A] to-[#5a3323] hover:from-[#5a3323] hover:to-[#4a2a1a] shadow-[#6B3F2A]/20');
     } else {
         section.classList.add('hidden');
-        btn.innerHTML = '💾 Save Quarter Details';
+        if (merged) merged.classList.remove('hidden');
+        btn.innerHTML = merged ? '💾 Save Quarter & Actual' : '💾 Save Quarter Details';
         btn.className = btn.className.replace('from-[#6B3F2A] to-[#5a3323] hover:from-[#5a3323] hover:to-[#4a2a1a] shadow-[#6B3F2A]/20',
             'from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 shadow-indigo-600/20');
     }
@@ -3345,8 +3360,59 @@ function quarterSaveDispatch(quarterId) {
     const status = document.getElementById('qStatusInput')?.value;
     if (status === 'completed') {
         completeQuarterSubmit(quarterId);
+    } else if (document.getElementById('mergedActualSection')) {
+        // Open quarter, no approval needed — one click saves details + actual together
+        saveQuarterAndActualCombined(quarterId);
     } else {
         saveQuarterInline(quarterId);
+    }
+}
+
+/* Combined save: quarter details + actual value in a single user action (no approval needed) */
+async function saveQuarterAndActualCombined(quarterId) {
+    const title  = document.getElementById('qTitleInput')?.value?.trim()  ?? '';
+    const desc   = document.getElementById('qDescInput')?.value            ?? '';
+    const status = document.getElementById('qStatusInput')?.value          ?? '';
+    const start  = document.getElementById('qStartInput')?.value           ?? '';
+    const end    = document.getElementById('qEndInput')?.value             ?? '';
+    const actual = document.getElementById('newActual-' + quarterId)?.value ?? '';
+
+    if (start && end && start > end) { alert('Start date cannot be after end date.'); return; }
+
+    const btn = document.getElementById('qSaveBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+    try {
+        const detailRes = await fetch(`/kpi/quarter/${quarterId}/inline-update`, {
+            method: 'PUT',
+            headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':'{{ csrf_token() }}', 'Accept':'application/json' },
+            body: JSON.stringify({ quarter_title: title, quarter_description: desc, status, start_date: start || null, end_date: end || null }),
+        });
+        const detailData = await detailRes.json();
+        if (!detailData.success) {
+            alert(detailData.message || 'Failed to save quarter details.');
+            return;
+        }
+
+        if (actual !== '') {
+            const actualRes = await fetch('/kpi/update-quarter', {
+                method: 'POST',
+                headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':'{{ csrf_token() }}', 'Accept':'application/json' },
+                body: JSON.stringify({ quarter_id: quarterId, quarter_actual: actual }),
+            });
+            const actualData = await actualRes.json();
+            if (!actualData.success) {
+                alert(actualData.message || 'Quarter details saved, but failed to save actual value.');
+                return;
+            }
+        }
+
+        showToast('Quarter saved ✓', 'indigo');
+        location.reload();
+    } catch (e) {
+        alert('Network error.');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '💾 Save Quarter & Actual'; }
     }
 }
 
