@@ -50,7 +50,7 @@
     $grouped->keys()->reject(fn($c) => in_array($c, $categoryOrder))->sort()->each(fn($c) => $orderedCategories->push($c));
 @endphp
 
-<main class="pl-[230px] transition-all duration-300">
+<main id="mainContent" class="ml-[230px] min-h-screen transition-all duration-300">
 <div class="px-4 pt-4 pb-10">
 
     {{-- Breadcrumb / back --}}

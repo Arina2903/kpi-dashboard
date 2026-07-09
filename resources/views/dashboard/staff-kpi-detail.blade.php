@@ -31,7 +31,7 @@
     $quartersByLabel = collect($quarters)->keyBy('quarter');
 @endphp
 
-<main class="pl-[230px] transition-all duration-300">
+<main id="mainContent" class="ml-[230px] min-h-screen transition-all duration-300">
 <div class="px-4 pt-4 pb-10">
 
     {{-- Breadcrumb / back --}}
