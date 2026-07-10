@@ -105,6 +105,7 @@ class TelegramMiniAppController extends Controller
                 'kpi_quarter_id' => $openQuarter['id'],
                 'kpi_title' => $kpi['kpi_title'],
                 'category' => $kpi['category'] ?? null,
+                'sub_category' => $kpi['sub_category'] ?? null,
                 'unit' => $kpi['unit'],
                 'quarter' => $openQuarter['quarter'],
                 'quarter_target' => (float) ($openQuarter['quarter_target'] ?? 0),

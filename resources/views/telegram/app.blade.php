@@ -26,7 +26,7 @@
 <body class="bg-[#F5EEDC] min-h-screen text-slate-900">
 
 <div class="max-w-md mx-auto min-h-screen flex flex-col">
-    <div id="topbar" class="bg-[#0d2218] text-white px-4 py-3.5 flex items-center gap-3 shrink-0">
+    <div id="topbar" class="bg-[#6B3F2A] text-white px-4 py-3.5 flex items-center gap-3 shrink-0">
         <button id="backBtn" onclick="goHome()" class="hidden text-white/80 text-lg leading-none">←</button>
         <h1 id="topbarTitle" class="text-[15px] font-black">KPI Mini App</h1>
     </div>
@@ -99,6 +99,18 @@
         'People':            { catPill: 'bg-pink-700 text-white',    subPill: 'bg-pink-100 text-pink-700',       icon: '👥' },
     };
     const DEFAULT_CATEGORY_COLOR = { catPill: 'bg-slate-600 text-white', subPill: 'bg-slate-100 text-slate-600', icon: '📌' };
+
+    // Shared ordering for every screen that lists KPIs, so "Add Today's Task"
+    // groups the same way "My KPIs" does: category order first, then
+    // sub-category alphabetically within it.
+    function sortByCategoryAndSub(items) {
+        return [...items].sort((a, b) => {
+            const ai = CATEGORY_ORDER.indexOf(a.category); const bi = CATEGORY_ORDER.indexOf(b.category);
+            const catDiff = (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+            if (catDiff !== 0) return catDiff;
+            return (a.sub_category || '').localeCompare(b.sub_category || '');
+        });
+    }
 
     const STATUS_LABELS = {
         completed:   { label: 'Completed',   color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
@@ -260,11 +272,15 @@
         return { text: '🔒 Upcoming', cls: 'bg-slate-100 text-slate-400' };
     }
 
-    function quarterRow(kpiId, q, unit) {
+    function quarterRow(kpiId, q, unit, task) {
         const isCurrent = q.state === 'current';
         const badge = achvBadge(q.achievement_percentage);
         const barPct = Math.max(0, Math.min(100, q.achievement_percentage));
         const label = quarterLabel(q.state);
+
+        const hint = task
+            ? `Updates today's task "${task.planned_note || 'Today\'s task'}". Use a minus sign to reduce.`
+            : `How much did today add? Use a minus sign to reduce.`;
 
         const updateControl = isCurrent ? `
             <div class="mt-2.5 flex items-center gap-2">
@@ -274,7 +290,7 @@
                     Update
                 </button>
             </div>
-            <p class="text-[9px] text-slate-400 mt-1">How much did today add? Use a minus sign to reduce.</p>
+            <p class="text-[9px] text-slate-400 mt-1">${hint}</p>
             <p id="feedback-${kpiId}" class="hidden text-[10px] font-bold mt-1.5"></p>
         ` : '';
 
@@ -326,11 +342,7 @@
         window.__todayTasksByKpi = {};
         (todayTasks.tasks || []).forEach(t => { window.__todayTasksByKpi[t.kpi_id] = t; });
 
-        // Same grouping order as the web dashboard's category sections.
-        const sorted = [...data.kpis].sort((a, b) => {
-            const ai = CATEGORY_ORDER.indexOf(a.category); const bi = CATEGORY_ORDER.indexOf(b.category);
-            return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-        });
+        const sorted = sortByCategoryAndSub(data.kpis);
 
         let lastCategory = null;
         let html = `
@@ -356,9 +368,9 @@
             const aBadge = achvBadge(k.achievement_percentage);
             const pct = Math.max(0, Math.min(100, k.achievement_percentage));
             const annualTarget = (k.quarters || []).reduce((sum, q) => sum + (Number(q.target) || 0), 0);
-            const quarterRows = (k.quarters || []).map(q => quarterRow(k.kpi_id, q, k.unit)).join('');
-
             const task = (window.__todayTasksByKpi || {})[k.kpi_id];
+            const quarterRows = (k.quarters || []).map(q => quarterRow(k.kpi_id, q, k.unit, task)).join('');
+
             const taskChip = task ? `
                 <div class="mt-2.5 flex items-center gap-2 px-2.5 py-2 rounded-xl bg-[#FBF4E6] border border-[#E3D2B0]">
                     <span class="text-[13px]">📌</span>
@@ -438,16 +450,34 @@
             return;
         }
 
-        window.__openKpis = data.kpis;
+        const sorted = sortByCategoryAndSub(data.kpis);
+        window.__openKpis = sorted;
 
-        const rows = data.kpis.map(k => {
+        let lastCategory = null;
+        let rows = '';
+
+        sorted.forEach(k => {
             const cat = CATEGORY_COLORS[k.category] || DEFAULT_CATEGORY_COLOR;
+
+            if (k.category !== lastCategory) {
+                rows += `
+                    <div class="flex items-center gap-2 ${lastCategory ? 'mt-4' : ''} mb-1 px-1">
+                        <span class="text-[15px]">${cat.icon}</span>
+                        <p class="text-[11px] font-black uppercase tracking-wide text-[#6B3F2A]">${k.category || 'Other'}</p>
+                    </div>
+                `;
+                lastCategory = k.category;
+            }
+
             const remaining = Math.max(0, (Number(k.quarter_target) || 0) - (Number(k.quarter_actual) || 0));
-            return `
+            rows += `
                 <button onclick='renderAddTaskForm(${JSON.stringify(k.kpi_id)})' class="w-full text-left tap-card ${card(`
                     <div class="flex items-center justify-between gap-2">
                         <div class="min-w-0">
-                            <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${cat.icon} ${k.category || '-'}</span>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${cat.icon} ${k.category || '-'}</span>
+                                ${k.sub_category ? `<span class="px-2 py-0.5 rounded-full ${cat.subPill} text-[8px] font-black">${k.sub_category}</span>` : ''}
+                            </div>
                             <p class="text-[13px] font-black text-slate-900 mt-1.5">${k.kpi_title}</p>
                             <p class="text-[10px] text-slate-500 mt-0.5">Remaining this quarter: <b>${formatUnit(remaining, k.unit)}</b></p>
                         </div>
@@ -455,7 +485,7 @@
                     </div>
                 `, 'hover:border-red-400')}</button>
             `;
-        }).join('');
+        });
 
         app.innerHTML = `<div class="space-y-2">${rows}</div>`;
     }
@@ -542,11 +572,24 @@
 
         feedback.classList.add('hidden');
 
+        // If today's task exists for this KPI, route through the task-linked
+        // endpoint so the task gets marked done and stays aligned with the
+        // KPI's actual, instead of updating the quarter disconnected from it.
+        const task = (window.__todayTasksByKpi || {})[kpiId];
+
         try {
-            await api(`/kpis/${kpiId}/quarters/${quarterId}/adjust`, {
-                method: 'POST',
-                body: JSON.stringify({ employee_id: state.employeeId, company_code: state.companyCode, delta }),
-            });
+            if (task) {
+                const newProgress = Math.max(0, (Number(task.progress_value) || 0) + delta);
+                await api(`/tasks/${task.id}/progress`, {
+                    method: 'POST',
+                    body: JSON.stringify({ employee_id: state.employeeId, company_code: state.companyCode, progress_value: newProgress }),
+                });
+            } else {
+                await api(`/kpis/${kpiId}/quarters/${quarterId}/adjust`, {
+                    method: 'POST',
+                    body: JSON.stringify({ employee_id: state.employeeId, company_code: state.companyCode, delta }),
+                });
+            }
             if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             if (tg?.showPopup) tg.showPopup({ message: 'Updated! Your KPI actual has been refreshed. ✅' });
             renderMyKpis();
