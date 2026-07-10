@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Telegram;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Telegram\Concerns\ResolvesTelegramEmployee;
+use App\Services\KpiQuarterUpdateService;
 use App\Services\SupabaseService;
 use Illuminate\Http\Request;
 
@@ -19,27 +20,6 @@ class TelegramMiniAppController extends Controller
     private function todayMy(): string
     {
         return now('Asia/Kuala_Lumpur')->toDateString();
-    }
-
-    private function calculateAchievement($baseTarget, $stretchTarget, $actualValue): float
-    {
-        $base = max(0, (float) ($baseTarget ?? 0));
-        $stretch = max($base, (float) ($stretchTarget ?? 0));
-        $actual = max(0, (float) ($actualValue ?? 0));
-
-        if ($base <= 0) {
-            return 0;
-        }
-
-        if ($actual <= $base) {
-            return round(($actual / $base) * 100, 2);
-        }
-
-        if ($stretch > $base) {
-            return round(min(200, 100 + (($actual - $base) / ($stretch - $base)) * 100), 2);
-        }
-
-        return 100;
     }
 
     /*
@@ -262,7 +242,7 @@ class TelegramMiniAppController extends Controller
     | POST /api/telegram/tasks/{id}/progress
     |--------------------------------------------------------------------------
     */
-    public function submitProgress(Request $request, SupabaseService $supabase, string $id)
+    public function submitProgress(Request $request, SupabaseService $supabase, KpiQuarterUpdateService $quarterService, string $id)
     {
         $validated = $request->validate([
             'employee_id' => 'required|string',
@@ -310,7 +290,7 @@ class TelegramMiniAppController extends Controller
 
         $kpi = $supabase->first('kpis', ['id' => 'eq.' . $task['kpi_id'], 'select' => '*']);
         $liveQuarterActual = (float) ($quarter['quarter_actual'] ?? 0);
-        $result = $this->applyQuarterActualChange($supabase, $kpi, $quarter, $liveQuarterActual + $delta);
+        $result = $quarterService->applyQuarterActualChange($kpi, $quarter, $liveQuarterActual + $delta);
 
         $supabase->safePatch('telegram_daily_tasks', ['id' => 'eq.' . $task['id']], [
             'progress_value' => $newProgress,
@@ -329,7 +309,7 @@ class TelegramMiniAppController extends Controller
     | pre-planned daily task required) — the fast path used by the "My KPIs"
     | screen's inline update control.
     */
-    public function adjustQuarter(Request $request, SupabaseService $supabase, string $kpiId, string $quarterId)
+    public function adjustQuarter(Request $request, SupabaseService $supabase, KpiQuarterUpdateService $quarterService, string $kpiId, string $quarterId)
     {
         $validated = $request->validate([
             'employee_id' => 'required|string',
@@ -383,44 +363,9 @@ class TelegramMiniAppController extends Controller
             ], 422);
         }
 
-        $result = $this->applyQuarterActualChange($supabase, $kpi, $quarter, $newQuarterActual);
+        $result = $quarterService->applyQuarterActualChange($kpi, $quarter, $newQuarterActual);
 
         return response()->json(['success' => true] + $result);
-    }
-
-    /**
-     * Writes a quarter's new actual, recomputes the KPI's annual actual_value
-     * and achievement_percentage from all quarters, and persists both.
-     */
-    private function applyQuarterActualChange(SupabaseService $supabase, array $kpi, array $quarter, float $newQuarterActual): array
-    {
-        $supabase->safePatch('kpi_quarters', ['id' => 'eq.' . $quarter['id']], [
-            'quarter_actual' => $newQuarterActual,
-            'updated_at' => $this->nowMy(),
-        ]);
-
-        $allQuarters = $supabase->get('kpi_quarters', [
-            'kpi_id' => 'eq.' . $kpi['id'],
-            'select' => '*',
-        ]) ?? [];
-
-        $totalActual = collect($allQuarters)->sum(function ($q) use ($quarter, $newQuarterActual) {
-            return (float) ($q['id'] === $quarter['id'] ? $newQuarterActual : ($q['quarter_actual'] ?? 0));
-        });
-
-        $achievement = $this->calculateAchievement($kpi['base_target'] ?? 0, $kpi['stretch_target'] ?? 0, $totalActual);
-
-        $supabase->safePatch('kpis', ['id' => 'eq.' . $kpi['id']], [
-            'actual_value' => $totalActual,
-            'achievement_percentage' => $achievement,
-            'updated_at' => $this->nowMy(),
-        ]);
-
-        return [
-            'quarter_actual' => $newQuarterActual,
-            'actual_value' => $totalActual,
-            'achievement_percentage' => $achievement,
-        ];
     }
 
     /*

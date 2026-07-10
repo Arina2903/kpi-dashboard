@@ -5,6 +5,7 @@ use App\Http\Controllers\Telegram\TelegramWebhookController;
 use App\Http\Controllers\Telegram\TelegramMiniAppController;
 use App\Http\Controllers\Telegram\TelegramLinkController;
 use App\Http\Controllers\Telegram\TelegramCronController;
+use App\Http\Controllers\Telegram\TelegramProjectTaskController;
 
 Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])
     ->middleware('telegram.webhook.secret');
@@ -23,4 +24,12 @@ Route::middleware('telegram.webapp.auth')->prefix('telegram')->group(function ()
     Route::post('/kpis/{kpiId}/quarters/{quarterId}/adjust', [TelegramMiniAppController::class, 'adjustQuarter']);
     Route::get('/link/status', [TelegramLinkController::class, 'status']);
     Route::post('/link/disconnect', [TelegramLinkController::class, 'disconnect']);
+
+    Route::get('/projects', [TelegramProjectTaskController::class, 'listProjects']);
+    Route::post('/projects', [TelegramProjectTaskController::class, 'createProject']);
+    Route::get('/project-tasks', [TelegramProjectTaskController::class, 'listTasks']);
+    Route::post('/project-tasks', [TelegramProjectTaskController::class, 'createTask']);
+    Route::get('/project-tasks/kpi-options', [TelegramProjectTaskController::class, 'kpiOptions']);
+    Route::post('/project-tasks/{id}/link-kpis', [TelegramProjectTaskController::class, 'linkKpis']);
+    Route::post('/project-tasks/{id}/progress', [TelegramProjectTaskController::class, 'updateProgress']);
 });
