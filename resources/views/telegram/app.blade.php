@@ -13,12 +13,17 @@
 
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .soft-card { box-shadow: 0 6px 20px rgba(15,23,42,.06); }
+        .soft-card {
+            box-shadow: 0 14px 26px -10px rgba(107,63,42,.28), 0 4px 10px rgba(107,63,42,.14), inset 0 1px 0 rgba(255,255,255,.7);
+        }
+        .soft-card-sm {
+            box-shadow: 0 6px 14px -6px rgba(107,63,42,.22), inset 0 1px 0 rgba(255,255,255,.6);
+        }
         .tap-card { transition: border-color .15s, background .15s; }
         .sticky-bottom { position: sticky; bottom: 0; padding-bottom: env(safe-area-inset-bottom, 12px); }
     </style>
 </head>
-<body class="bg-[#f0f2f7] min-h-screen text-slate-900">
+<body class="bg-[#F5EEDC] min-h-screen text-slate-900">
 
 <div class="max-w-md mx-auto min-h-screen flex flex-col">
     <div id="topbar" class="bg-[#0d2218] text-white px-4 py-3.5 flex items-center gap-3 shrink-0">
@@ -82,13 +87,33 @@
         return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
     }
 
-    const STATUS_COLORS = {
-        completed: 'bg-emerald-100 text-emerald-700',
-        on_track: 'bg-emerald-100 text-emerald-700',
-        at_risk: 'bg-amber-100 text-amber-700',
-        in_trouble: 'bg-red-100 text-red-700',
-        not_started: 'bg-slate-100 text-slate-500',
+    // Same category order/colors, status labels, and achievement bands used on
+    // the web dashboard (resources/views/kpi/my-department-kpi.blade.php), so
+    // the Mini App matches the system rather than inventing its own palette.
+    const CATEGORY_ORDER = ['Financial', 'Growth & Customer', 'Initiatives', 'People'];
+
+    const CATEGORY_COLORS = {
+        'Financial':         { catPill: 'bg-emerald-700 text-white', subPill: 'bg-emerald-100 text-emerald-700', icon: '💰' },
+        'Growth & Customer': { catPill: 'bg-indigo-700 text-white',  subPill: 'bg-indigo-100 text-indigo-700',   icon: '📈' },
+        'Initiatives':       { catPill: 'bg-amber-600 text-white',   subPill: 'bg-amber-100 text-amber-700',     icon: '🚀' },
+        'People':            { catPill: 'bg-pink-700 text-white',    subPill: 'bg-pink-100 text-pink-700',       icon: '👥' },
     };
+    const DEFAULT_CATEGORY_COLOR = { catPill: 'bg-slate-600 text-white', subPill: 'bg-slate-100 text-slate-600', icon: '📌' };
+
+    const STATUS_LABELS = {
+        completed:   { label: 'Completed',   color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
+        on_track:    { label: 'On Track',    color: 'bg-[#F5EAE0] text-[#6B3F2A]',     dot: 'bg-[#6B3F2A]' },
+        at_risk:     { label: 'At Risk',     color: 'bg-yellow-100 text-yellow-700',   dot: 'bg-yellow-500' },
+        in_trouble:  { label: 'In Trouble',  color: 'bg-red-100 text-red-700',         dot: 'bg-red-500' },
+        not_started: { label: 'Not Started', color: 'bg-slate-100 text-slate-500',     dot: 'bg-slate-400' },
+    };
+
+    function achvBadge(score) {
+        if (score >= 90) return { label: 'Excellent', color: 'bg-emerald-100 text-emerald-700', bar: 'from-emerald-400 to-green-500' };
+        if (score >= 75) return { label: 'Good',      color: 'bg-[#F5EAE0] text-[#6B3F2A]',     bar: 'from-[#8B5E4A] to-[#6B3F2A]' };
+        if (score >= 50) return { label: 'Watch',     color: 'bg-yellow-100 text-yellow-700',   bar: 'from-yellow-400 to-amber-500' };
+        return              { label: 'Critical', color: 'bg-red-100 text-red-700',       bar: 'from-red-400 to-rose-500' };
+    }
 
     function setTopbar(title, showBack) {
         document.getElementById('topbarTitle').textContent = title;
@@ -100,7 +125,7 @@
     }
 
     function card(inner, extraClasses = '') {
-        return `<div class="bg-white rounded-2xl soft-card border border-slate-200 p-4 ${extraClasses}">${inner}</div>`;
+        return `<div class="bg-[#FFFCF4] rounded-2xl soft-card border-2 border-[#D9C4A0] p-4 ${extraClasses}">${inner}</div>`;
     }
 
     /* ---------------------------------------------------------------- */
@@ -212,21 +237,22 @@
     }
 
     function quarterLabel(state) {
-        if (state === 'current') return { text: '🟢 Update here', cls: 'bg-[#CCE3DE] text-[#1a3d34]' };
-        if (state === 'ended') return { text: '✓ Done', cls: 'bg-slate-100 text-slate-500' };
-        return { text: 'Upcoming', cls: 'bg-slate-100 text-slate-400' };
+        if (state === 'current') return { text: '✏️ Update here', cls: 'bg-red-100 text-red-700' };
+        if (state === 'ended') return { text: '🔒 Done', cls: 'bg-slate-100 text-slate-500' };
+        return { text: '🔒 Upcoming', cls: 'bg-slate-100 text-slate-400' };
     }
 
     function quarterRow(kpiId, q, unit) {
-        const barPct = Math.max(0, Math.min(100, q.achievement_percentage));
         const isCurrent = q.state === 'current';
+        const badge = achvBadge(q.achievement_percentage);
+        const barPct = Math.max(0, Math.min(100, q.achievement_percentage));
         const label = quarterLabel(q.state);
 
         const updateControl = isCurrent ? `
             <div class="mt-2.5 flex items-center gap-2">
                 <input type="number" step="any" placeholder="e.g. 50 or -10" id="delta-${kpiId}"
-                    class="flex-1 min-w-0 text-[12px] px-3 py-2 rounded-xl border-2 border-[#6B9080]/50 outline-none focus:border-[#6B9080]">
-                <button onclick="submitDelta('${kpiId}','${q.id}')" class="px-4 py-2 rounded-xl bg-[#6B9080] hover:bg-[#5a7a6d] text-white text-[11px] font-black shrink-0">
+                    class="flex-1 min-w-0 text-[12px] px-3 py-2 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+                <button onclick="submitDelta('${kpiId}','${q.id}')" class="px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[11px] font-black shrink-0 shadow-[0_4px_12px_rgba(22,163,74,.4)]">
                     Update
                 </button>
             </div>
@@ -235,18 +261,18 @@
         ` : '';
 
         return `
-            <div class="rounded-xl px-3 py-2.5 ${isCurrent ? 'bg-[#6B9080]/8 border-2 border-[#6B9080]' : 'bg-slate-50 border border-slate-100'}">
+            <div class="rounded-xl px-3 py-2.5 soft-card-sm ${isCurrent ? 'bg-red-50 border-2 border-red-500' : 'bg-[#FBF4E6] border-2 border-[#E3D2B0]'}">
                 <div class="flex items-center justify-between gap-2">
-                    <p class="text-[11px] font-black ${isCurrent ? 'text-[#1a3d34]' : 'text-slate-600'}">${q.quarter}</p>
+                    <p class="text-[11px] font-black ${isCurrent ? 'text-red-700' : 'text-slate-600'}">${q.quarter}</p>
                     <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full ${label.cls}">${label.text}</span>
                 </div>
-                <div class="w-full h-1.5 bg-slate-200 rounded-full mt-2 overflow-hidden">
-                    <div class="h-full rounded-full ${isCurrent ? 'bg-[#6B9080]' : 'bg-slate-400'}" style="width:${barPct}%"></div>
+                <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-2 overflow-hidden">
+                    <div class="h-full rounded-full bg-gradient-to-r ${badge.bar}" style="width:${barPct}%"></div>
                 </div>
                 <div class="flex items-center justify-between mt-1.5">
                     <p class="text-[10px] text-slate-500">Target: <span class="font-bold text-slate-700">${formatUnit(q.target, unit)}</span></p>
                     <p class="text-[10px] text-slate-500">Actual: <span class="font-bold text-slate-700">${formatUnit(q.actual, unit)}</span></p>
-                    <p class="text-[10px] font-black ${isCurrent ? 'text-[#1a3d34]' : 'text-slate-500'}">${q.achievement_percentage}%</p>
+                    <p class="text-[10px] font-black ${isCurrent ? 'text-red-700' : 'text-slate-500'}">${q.achievement_percentage}%</p>
                 </div>
                 ${updateControl}
             </div>
@@ -271,44 +297,77 @@
             return;
         }
 
-        const cards = data.kpis.map(k => {
+        // Track each quarter's live actual so submitDelta can block a decrease
+        // below 0 client-side, without waiting on a round trip.
+        window.__quarterActuals = {};
+        data.kpis.forEach(k => (k.quarters || []).forEach(q => { window.__quarterActuals[q.id] = q.actual; }));
+
+        // Same grouping order as the web dashboard's category sections.
+        const sorted = [...data.kpis].sort((a, b) => {
+            const ai = CATEGORY_ORDER.indexOf(a.category); const bi = CATEGORY_ORDER.indexOf(b.category);
+            return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+        });
+
+        let lastCategory = null;
+        let html = '';
+
+        sorted.forEach(k => {
+            if (k.category !== lastCategory) {
+                const cat = CATEGORY_COLORS[k.category] || DEFAULT_CATEGORY_COLOR;
+                html += `
+                    <div class="flex items-center gap-2 ${lastCategory ? 'mt-5' : ''} mb-1 px-1">
+                        <span class="text-[15px]">${cat.icon}</span>
+                        <p class="text-[11px] font-black uppercase tracking-wide text-[#6B3F2A]">${k.category || 'Other'}</p>
+                    </div>
+                `;
+                lastCategory = k.category;
+            }
+
+            const cat = CATEGORY_COLORS[k.category] || DEFAULT_CATEGORY_COLOR;
+            const sDef = STATUS_LABELS[k.status] || STATUS_LABELS.not_started;
+            const aBadge = achvBadge(k.achievement_percentage);
             const pct = Math.max(0, Math.min(100, k.achievement_percentage));
-            const statusClass = STATUS_COLORS[k.status] || STATUS_COLORS.not_started;
+            const annualTarget = (k.quarters || []).reduce((sum, q) => sum + (Number(q.target) || 0), 0);
             const quarterRows = (k.quarters || []).map(q => quarterRow(k.kpi_id, q, k.unit)).join('');
 
-            return card(`
-                <div class="flex items-start justify-between gap-2">
-                    <div class="min-w-0">
-                        <p class="text-[9px] uppercase tracking-wide text-slate-400 font-black">KPI</p>
-                        <p class="text-[14px] font-black text-slate-900 leading-snug">${k.kpi_title}</p>
-                        <p class="text-[10px] text-slate-500 mt-0.5">${k.category || ''}</p>
-                    </div>
-                    <div class="text-right shrink-0">
-                        <p class="text-[18px] font-black text-slate-900">${k.achievement_percentage}%</p>
-                        <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full ${statusClass}">${(k.status || '').replace('_', ' ')}</span>
-                    </div>
+            html += card(`
+                <div class="flex flex-wrap items-center gap-1.5 mb-2">
+                    <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${cat.icon} ${k.category || '-'}</span>
+                    ${k.sub_category ? `<span class="px-2 py-0.5 rounded-full ${cat.subPill} text-[8px] font-black">${k.sub_category}</span>` : ''}
+                    <span class="flex items-center gap-1 px-2 py-0.5 rounded-full ${sDef.color} text-[8px] font-black">
+                        <span class="w-1.5 h-1.5 rounded-full ${sDef.dot}"></span>${sDef.label}
+                    </span>
                 </div>
 
-                <div class="w-full h-1.5 bg-slate-100 rounded-full mt-3 overflow-hidden">
-                    <div class="h-full rounded-full ${statusClass.split(' ')[0].replace('100', '400')}" style="width:${pct}%"></div>
+                <p class="text-[14px] font-black text-slate-900 leading-snug">${k.kpi_title}</p>
+
+                <div class="flex items-center justify-between mt-2">
+                    <span class="px-2 py-0.5 rounded-full ${aBadge.color} text-[9px] font-black">${aBadge.label}</span>
+                    <p class="text-[18px] font-black text-slate-900">${k.achievement_percentage}%</p>
+                </div>
+
+                <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-2 overflow-hidden">
+                    <div class="h-full rounded-full bg-gradient-to-r ${aBadge.bar}" style="width:${pct}%"></div>
                 </div>
                 <div class="flex items-center justify-between mt-1.5">
                     <p class="text-[10px] text-slate-500 font-bold">Overall (Full Year)</p>
-                    <p class="text-[11px] text-slate-700 font-black">${formatUnit(k.actual_value, k.unit)} / ${formatUnit(k.base_target, k.unit)}</p>
+                    <p class="text-[11px] text-slate-700 font-black">${formatUnit(k.actual_value, k.unit)} / ${formatUnit(annualTarget, k.unit)}</p>
                 </div>
 
-                <div class="mt-3 pt-3 border-t border-slate-100">
+                <div class="mt-3 pt-3 border-t-2 border-dashed border-[#E3D2B0]">
                     <p class="text-[9px] uppercase tracking-wide text-slate-400 font-black mb-2">By Quarter</p>
                     <div class="space-y-1.5">${quarterRows || '<p class="text-[10px] text-slate-400">No quarters set up yet.</p>'}</div>
                 </div>
-            `);
-        }).join('<div class="h-2"></div>');
+            `) + '<div class="h-2"></div>';
+        });
 
-        app.innerHTML = cards + `
+        html += `
             <div class="pt-2 pb-6 text-center">
                 <button onclick="confirmDisconnect()" class="text-[11px] text-slate-400 underline">Disconnect Telegram</button>
             </div>
         `;
+
+        app.innerHTML = html;
     }
 
     async function submitDelta(kpiId, quarterId) {
@@ -321,12 +380,22 @@
             return;
         }
 
+        const delta = Number(raw);
+        const currentActual = window.__quarterActuals?.[quarterId] ?? 0;
+
+        if (delta < 0 && currentActual + delta < 0) {
+            feedback.textContent = `Can't reduce — this quarter's actual is only ${currentActual}.`;
+            feedback.className = 'text-[10px] font-bold mt-1.5 text-red-600';
+            feedback.classList.remove('hidden');
+            return;
+        }
+
         feedback.classList.add('hidden');
 
         try {
             await api(`/kpis/${kpiId}/quarters/${quarterId}/adjust`, {
                 method: 'POST',
-                body: JSON.stringify({ employee_id: state.employeeId, company_code: state.companyCode, delta: Number(raw) }),
+                body: JSON.stringify({ employee_id: state.employeeId, company_code: state.companyCode, delta }),
             });
             if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             if (tg?.showPopup) tg.showPopup({ message: 'Updated! Your KPI actual has been refreshed. ✅' });

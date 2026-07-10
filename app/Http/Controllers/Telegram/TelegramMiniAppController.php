@@ -373,7 +373,14 @@ class TelegramMiniAppController extends Controller
         }
 
         $liveQuarterActual = (float) ($quarter['quarter_actual'] ?? 0);
-        $newQuarterActual = max(0, $liveQuarterActual + (float) $validated['delta']);
+        $newQuarterActual = $liveQuarterActual + (float) $validated['delta'];
+
+        if ($newQuarterActual < 0) {
+            return response()->json([
+                'success' => false,
+                'message' => "Can't reduce — this quarter's actual is only " . $liveQuarterActual . '.',
+            ], 422);
+        }
 
         $result = $this->applyQuarterActualChange($supabase, $kpi, $quarter, $newQuarterActual);
 
@@ -482,6 +489,7 @@ class TelegramMiniAppController extends Controller
                 'kpi_id' => $kpi['id'],
                 'kpi_title' => $kpi['kpi_title'],
                 'category' => $kpi['category'] ?? null,
+                'sub_category' => $kpi['sub_category'] ?? null,
                 'unit' => $kpi['unit'],
                 'base_target' => (float) ($kpi['base_target'] ?? 0),
                 'stretch_target' => (float) ($kpi['stretch_target'] ?? 0),
