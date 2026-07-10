@@ -4,9 +4,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
 use App\Http\Controllers\Telegram\TelegramMiniAppController;
 use App\Http\Controllers\Telegram\TelegramLinkController;
+use App\Http\Controllers\Telegram\TelegramCronController;
 
 Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])
     ->middleware('telegram.webhook.secret');
+
+Route::middleware('telegram.cron.secret')->prefix('telegram/cron')->group(function () {
+    Route::post('/morning', [TelegramCronController::class, 'morning']);
+    Route::post('/evening', [TelegramCronController::class, 'evening']);
+});
 
 Route::middleware('telegram.webapp.auth')->prefix('telegram')->group(function () {
     Route::get('/kpis/open', [TelegramMiniAppController::class, 'openKpis']);
