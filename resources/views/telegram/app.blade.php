@@ -245,10 +245,12 @@
     function renderChooseDashboard(dashboards) {
         setTopbar('Choose Dashboard', false);
         const rows = dashboards.map(d => `
-            <button onclick='pickDashboard(${JSON.stringify(d)})' class="w-full text-left tap-card ${card(`
-                <p class="text-[13px] font-black text-slate-900">${d.company_display_name}</p>
-                <p class="text-[11px] text-slate-500 mt-0.5">${d.short_name} · <span class="uppercase font-semibold">${d.role || ''}</span></p>
-            `, 'hover:border-[#6B9080]')}</button>
+            <button onclick='pickDashboard(${JSON.stringify(d)})' class="w-full text-left tap-card">
+                ${card(`
+                    <p class="text-[13px] font-black text-slate-900">${d.company_display_name}</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">${d.short_name} · <span class="uppercase font-semibold">${d.role || ''}</span></p>
+                `, 'hover:border-[#6B9080]')}
+            </button>
         `).join('');
         document.getElementById('app').innerHTML = `<div class="space-y-2">${rows}</div>`;
     }
@@ -471,19 +473,21 @@
 
             const remaining = Math.max(0, (Number(k.quarter_target) || 0) - (Number(k.quarter_actual) || 0));
             rows += `
-                <button onclick='renderAddTaskForm(${JSON.stringify(k.kpi_id)})' class="w-full text-left tap-card ${card(`
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="min-w-0">
-                            <div class="flex flex-wrap items-center gap-1.5">
-                                <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${cat.icon} ${k.category || '-'}</span>
-                                ${k.sub_category ? `<span class="px-2 py-0.5 rounded-full ${cat.subPill} text-[8px] font-black">${k.sub_category}</span>` : ''}
+                <button onclick='renderAddTaskForm(${JSON.stringify(k.kpi_id)})' class="w-full text-left tap-card">
+                    ${card(`
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${cat.icon} ${k.category || '-'}</span>
+                                    ${k.sub_category ? `<span class="px-2 py-0.5 rounded-full ${cat.subPill} text-[8px] font-black">${k.sub_category}</span>` : ''}
+                                </div>
+                                <p class="text-[13px] font-black text-slate-900 mt-1.5">${k.kpi_title}</p>
+                                <p class="text-[10px] text-slate-500 mt-0.5">Remaining this quarter: <b>${formatUnit(remaining, k.unit)}</b></p>
                             </div>
-                            <p class="text-[13px] font-black text-slate-900 mt-1.5">${k.kpi_title}</p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">Remaining this quarter: <b>${formatUnit(remaining, k.unit)}</b></p>
+                            <span class="text-slate-300 shrink-0">›</span>
                         </div>
-                        <span class="text-slate-300 shrink-0">›</span>
-                    </div>
-                `, 'hover:border-red-400')}</button>
+                    `, 'hover:border-red-400')}
+                </button>
             `;
         });
 
