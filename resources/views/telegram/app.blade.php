@@ -109,10 +109,28 @@
     };
 
     function achvBadge(score) {
-        if (score >= 90) return { label: 'Excellent', color: 'bg-emerald-100 text-emerald-700', bar: 'from-emerald-400 to-green-500' };
-        if (score >= 75) return { label: 'Good',      color: 'bg-[#F5EAE0] text-[#6B3F2A]',     bar: 'from-[#8B5E4A] to-[#6B3F2A]' };
-        if (score >= 50) return { label: 'Watch',     color: 'bg-yellow-100 text-yellow-700',   bar: 'from-yellow-400 to-amber-500' };
-        return              { label: 'Critical', color: 'bg-red-100 text-red-700',       bar: 'from-red-400 to-rose-500' };
+        if (score >= 90) return { label: 'Excellent', color: 'bg-emerald-100 text-emerald-700', bar: 'from-emerald-400 to-green-500', ring: '#10B981' };
+        if (score >= 75) return { label: 'Good',      color: 'bg-[#F5EAE0] text-[#6B3F2A]',     bar: 'from-[#8B5E4A] to-[#6B3F2A]', ring: '#6B3F2A' };
+        if (score >= 50) return { label: 'Watch',     color: 'bg-yellow-100 text-yellow-700',   bar: 'from-yellow-400 to-amber-500', ring: '#F59E0B' };
+        return              { label: 'Critical', color: 'bg-red-100 text-red-700',       bar: 'from-red-400 to-rose-500', ring: '#EF4444' };
+    }
+
+    // A circular "gambaran" (visual) of a KPI's achievement score, used on
+    // each KPI card instead of just a number.
+    function progressRing(scoreRaw) {
+        const badge = achvBadge(scoreRaw);
+        const score = Math.max(0, Math.min(100, scoreRaw));
+        const r = 24, c = 2 * Math.PI * r;
+        const offset = c - (score / 100) * c;
+        return `
+            <svg width="60" height="60" viewBox="0 0 60 60" class="shrink-0">
+                <circle cx="30" cy="30" r="${r}" fill="none" stroke="#EFE3C7" stroke-width="6"/>
+                <circle cx="30" cy="30" r="${r}" fill="none" stroke="${badge.ring}" stroke-width="6"
+                    stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}"
+                    transform="rotate(-90 30 30)"/>
+                <text x="30" y="35" text-anchor="middle" font-size="13" font-weight="900" fill="#1e293b">${Math.round(scoreRaw)}%</text>
+            </svg>
+        `;
     }
 
     function setTopbar(title, showBack) {
@@ -121,7 +139,7 @@
     }
 
     function goHome() {
-        window.location.href = '/telegram/app';
+        renderMyKpis();
     }
 
     function card(inner, extraClasses = '') {
@@ -284,9 +302,12 @@
         const app = document.getElementById('app');
         app.innerHTML = `<p class="text-center text-slate-400 text-[12px] mt-10">Loading…</p>`;
 
-        let data;
+        let data, todayTasks;
         try {
-            data = await api(`/kpis/summary?employee_id=${state.employeeId}&company_code=${state.companyCode}`);
+            [data, todayTasks] = await Promise.all([
+                api(`/kpis/summary?employee_id=${state.employeeId}&company_code=${state.companyCode}`),
+                api(`/tasks/today?employee_id=${state.employeeId}&company_code=${state.companyCode}`),
+            ]);
         } catch (e) {
             renderError('Could not load your KPIs.');
             return;
@@ -302,6 +323,9 @@
         window.__quarterActuals = {};
         data.kpis.forEach(k => (k.quarters || []).forEach(q => { window.__quarterActuals[q.id] = q.actual; }));
 
+        window.__todayTasksByKpi = {};
+        (todayTasks.tasks || []).forEach(t => { window.__todayTasksByKpi[t.kpi_id] = t; });
+
         // Same grouping order as the web dashboard's category sections.
         const sorted = [...data.kpis].sort((a, b) => {
             const ai = CATEGORY_ORDER.indexOf(a.category); const bi = CATEGORY_ORDER.indexOf(b.category);
@@ -309,13 +333,17 @@
         });
 
         let lastCategory = null;
-        let html = '';
+        let html = `
+            <button onclick="renderAddTaskPickKpi()" class="w-full py-3 rounded-2xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black shadow-[0_6px_16px_rgba(22,163,74,.35)]">
+                ➕ Add Today's Task
+            </button>
+        `;
 
         sorted.forEach(k => {
             if (k.category !== lastCategory) {
                 const cat = CATEGORY_COLORS[k.category] || DEFAULT_CATEGORY_COLOR;
                 html += `
-                    <div class="flex items-center gap-2 ${lastCategory ? 'mt-5' : ''} mb-1 px-1">
+                    <div class="flex items-center gap-2 mt-4 mb-1 px-1">
                         <span class="text-[15px]">${cat.icon}</span>
                         <p class="text-[11px] font-black uppercase tracking-wide text-[#6B3F2A]">${k.category || 'Other'}</p>
                     </div>
@@ -330,29 +358,45 @@
             const annualTarget = (k.quarters || []).reduce((sum, q) => sum + (Number(q.target) || 0), 0);
             const quarterRows = (k.quarters || []).map(q => quarterRow(k.kpi_id, q, k.unit)).join('');
 
-            html += card(`
-                <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                    <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${cat.icon} ${k.category || '-'}</span>
-                    ${k.sub_category ? `<span class="px-2 py-0.5 rounded-full ${cat.subPill} text-[8px] font-black">${k.sub_category}</span>` : ''}
-                    <span class="flex items-center gap-1 px-2 py-0.5 rounded-full ${sDef.color} text-[8px] font-black">
-                        <span class="w-1.5 h-1.5 rounded-full ${sDef.dot}"></span>${sDef.label}
+            const task = (window.__todayTasksByKpi || {})[k.kpi_id];
+            const taskChip = task ? `
+                <div class="mt-2.5 flex items-center gap-2 px-2.5 py-2 rounded-xl bg-[#FBF4E6] border border-[#E3D2B0]">
+                    <span class="text-[13px]">📌</span>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-[10px] font-black text-slate-700 truncate">${task.planned_note || 'Today\'s task'}</p>
+                        <p class="text-[9px] text-slate-400">Planned: ${formatUnit(task.planned_target, k.unit)}</p>
+                    </div>
+                    <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${task.status === 'done' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                        ${task.status === 'done' ? '✓ Done' : 'Pending'}
                     </span>
                 </div>
+            ` : '';
 
-                <p class="text-[14px] font-black text-slate-900 leading-snug">${k.kpi_title}</p>
-
-                <div class="flex items-center justify-between mt-2">
-                    <span class="px-2 py-0.5 rounded-full ${aBadge.color} text-[9px] font-black">${aBadge.label}</span>
-                    <p class="text-[18px] font-black text-slate-900">${k.achievement_percentage}%</p>
+            html += card(`
+                <div class="flex items-start gap-3">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-1.5 mb-2">
+                            <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${cat.icon} ${k.category || '-'}</span>
+                            ${k.sub_category ? `<span class="px-2 py-0.5 rounded-full ${cat.subPill} text-[8px] font-black">${k.sub_category}</span>` : ''}
+                            <span class="flex items-center gap-1 px-2 py-0.5 rounded-full ${sDef.color} text-[8px] font-black">
+                                <span class="w-1.5 h-1.5 rounded-full ${sDef.dot}"></span>${sDef.label}
+                            </span>
+                        </div>
+                        <p class="text-[14px] font-black text-slate-900 leading-snug">${k.kpi_title}</p>
+                        <span class="inline-block mt-2 px-2 py-0.5 rounded-full ${aBadge.color} text-[9px] font-black">${aBadge.label}</span>
+                    </div>
+                    ${progressRing(k.achievement_percentage)}
                 </div>
 
-                <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-2 overflow-hidden">
+                <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-3 overflow-hidden">
                     <div class="h-full rounded-full bg-gradient-to-r ${aBadge.bar}" style="width:${pct}%"></div>
                 </div>
                 <div class="flex items-center justify-between mt-1.5">
                     <p class="text-[10px] text-slate-500 font-bold">Overall (Full Year)</p>
                     <p class="text-[11px] text-slate-700 font-black">${formatUnit(k.actual_value, k.unit)} / ${formatUnit(annualTarget, k.unit)}</p>
                 </div>
+
+                ${taskChip}
 
                 <div class="mt-3 pt-3 border-t-2 border-dashed border-[#E3D2B0]">
                     <p class="text-[9px] uppercase tracking-wide text-slate-400 font-black mb-2">By Quarter</p>
@@ -368,6 +412,112 @@
         `;
 
         app.innerHTML = html;
+    }
+
+    /* ---------------------------------------------------------------- */
+    /* ADD TASK — pick a KPI, name the task, target auto-fills from what's */
+    /* left to hit this quarter's target. Actual gets filled in later via */
+    /* the Update box on the My KPIs screen.                              */
+    /* ---------------------------------------------------------------- */
+
+    async function renderAddTaskPickKpi() {
+        setTopbar("Add Today's Task", true);
+        const app = document.getElementById('app');
+        app.innerHTML = `<p class="text-center text-slate-400 text-[12px] mt-10">Loading your KPIs…</p>`;
+
+        let data;
+        try {
+            data = await api(`/kpis/open?employee_id=${state.employeeId}&company_code=${state.companyCode}`);
+        } catch (e) {
+            renderError('Could not load your KPIs.');
+            return;
+        }
+
+        if (!data.kpis.length) {
+            app.innerHTML = card(`<p class="text-[13px] text-slate-600 text-center py-6">No open KPIs for the current quarter.</p>`);
+            return;
+        }
+
+        window.__openKpis = data.kpis;
+
+        const rows = data.kpis.map(k => {
+            const cat = CATEGORY_COLORS[k.category] || DEFAULT_CATEGORY_COLOR;
+            const remaining = Math.max(0, (Number(k.quarter_target) || 0) - (Number(k.quarter_actual) || 0));
+            return `
+                <button onclick='renderAddTaskForm(${JSON.stringify(k.kpi_id)})' class="w-full text-left tap-card ${card(`
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="min-w-0">
+                            <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${cat.icon} ${k.category || '-'}</span>
+                            <p class="text-[13px] font-black text-slate-900 mt-1.5">${k.kpi_title}</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Remaining this quarter: <b>${formatUnit(remaining, k.unit)}</b></p>
+                        </div>
+                        <span class="text-slate-300 shrink-0">›</span>
+                    </div>
+                `, 'hover:border-red-400')}</button>
+            `;
+        }).join('');
+
+        app.innerHTML = `<div class="space-y-2">${rows}</div>`;
+    }
+
+    async function renderAddTaskForm(kpiId) {
+        const k = (window.__openKpis || []).find(x => x.kpi_id === kpiId);
+        if (!k) { renderAddTaskPickKpi(); return; }
+
+        setTopbar('New Task', true);
+        const cat = CATEGORY_COLORS[k.category] || DEFAULT_CATEGORY_COLOR;
+        const remaining = Math.max(0, (Number(k.quarter_target) || 0) - (Number(k.quarter_actual) || 0));
+
+        document.getElementById('app').innerHTML = card(`
+            <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${cat.icon} ${k.category || '-'}</span>
+            <p class="text-[14px] font-black text-slate-900 mt-1.5">${k.kpi_title}</p>
+
+            <div class="mt-3 rounded-xl bg-[#FBF4E6] border-2 border-[#E3D2B0] px-3 py-2.5">
+                <p class="text-[9px] uppercase tracking-wide text-slate-400 font-black">Target to complete this task</p>
+                <p class="text-[18px] font-black text-slate-900 mt-0.5">${formatUnit(remaining, k.unit)}</p>
+                <p class="text-[9px] text-slate-400 mt-0.5">Remaining to hit ${k.quarter}'s target (${formatUnit(k.quarter_target, k.unit)})</p>
+            </div>
+
+            <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Task title</p>
+            <input type="text" id="taskTitleInput" placeholder="e.g. Call 5 new leads"
+                value="${(k.planned_note || '').replace(/"/g, '&quot;')}"
+                class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+
+            <button onclick="saveAddTask('${k.kpi_id}')" class="w-full mt-4 py-3 rounded-2xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-black shadow-[0_6px_16px_rgba(22,163,74,.35)]">
+                Save Task
+            </button>
+            <p id="addTaskFeedback" class="hidden text-[10px] font-bold text-red-600 mt-2 text-center"></p>
+        `);
+    }
+
+    async function saveAddTask(kpiId) {
+        const k = (window.__openKpis || []).find(x => x.kpi_id === kpiId);
+        const feedback = document.getElementById('addTaskFeedback');
+        const title = document.getElementById('taskTitleInput').value.trim();
+
+        if (!title) {
+            feedback.textContent = 'Enter a task title first.';
+            feedback.classList.remove('hidden');
+            return;
+        }
+
+        const remaining = Math.max(0, (Number(k.quarter_target) || 0) - (Number(k.quarter_actual) || 0));
+
+        try {
+            await api('/tasks', {
+                method: 'POST',
+                body: JSON.stringify({
+                    employee_id: state.employeeId,
+                    company_code: state.companyCode,
+                    tasks: [{ kpi_id: k.kpi_id, kpi_quarter_id: k.kpi_quarter_id, planned_target: remaining, planned_note: title }],
+                }),
+            });
+            if (tg?.showPopup) tg.showPopup({ message: "Today's task saved! ✅" });
+            renderMyKpis();
+        } catch (e) {
+            feedback.textContent = e.data?.message || "Couldn't save — please try again.";
+            feedback.classList.remove('hidden');
+        }
     }
 
     async function submitDelta(kpiId, quarterId) {
