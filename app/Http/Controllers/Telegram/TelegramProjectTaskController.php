@@ -295,12 +295,13 @@ class TelegramProjectTaskController extends Controller
     |--------------------------------------------------------------------------
     | POST /api/telegram/project-tasks/{id}/progress
     |--------------------------------------------------------------------------
-    | Adds $delta to the task's own actual, then applies the same delta to
-    | every linked KPI's currently-open quarter, so "the KPI auto-updates in
-    | the bot and system" — both sides run through the same shared service
-    | used by the quick inline Update box.
+    | Adds $delta to the task's own actual ONLY — this does not touch any
+    | linked KPI's quarter_actual (a KPI's official actual is only ever
+    | changed via the "My KPIs" inline Update box / adjustQuarter). Each
+    | update is also logged to telegram_project_task_updates so a KPI's
+    | linked tasks can show a "what was updated, and when" history.
     */
-    public function updateProgress(Request $request, SupabaseService $supabase, KpiQuarterUpdateService $quarterService, string $id)
+    public function updateProgress(Request $request, SupabaseService $supabase, string $id)
     {
         $validated = $request->validate([
             'employee_id' => 'required|string',
@@ -335,54 +336,102 @@ class TelegramProjectTaskController extends Controller
             ], 422);
         }
 
-        $today = $this->todayMy();
-
-        $links = $supabase->get('telegram_project_task_kpi_links', [
-            'task_id' => 'eq.' . $id,
-            'select' => '*',
-        ]) ?? [];
-
-        $kpiResults = [];
-        $kpiErrors = [];
-
-        if (!empty($links)) {
-            $kpiIds = array_column($links, 'kpi_id');
-            $kpis = $supabase->get('kpis', [
-                'id' => 'in.(' . implode(',', $kpiIds) . ')',
-                'select' => '*',
-            ]) ?? [];
-
-            foreach ($kpis as $kpi) {
-                $quarter = $quarterService->findOpenQuarter($kpi['id'], $today);
-
-                if (!$quarter) {
-                    $kpiErrors[] = "\"{$kpi['kpi_title']}\" has no open quarter right now — skipped.";
-                    continue;
-                }
-
-                $newQuarterActual = (float) ($quarter['quarter_actual'] ?? 0) + $delta;
-
-                if ($newQuarterActual < 0) {
-                    $kpiErrors[] = "\"{$kpi['kpi_title']}\" is already at 0 for this quarter — skipped.";
-                    continue;
-                }
-
-                $kpiResults[] = ['kpi_id' => $kpi['id'], 'kpi_title' => $kpi['kpi_title']]
-                    + $quarterService->applyQuarterActualChange($kpi, $quarter, $newQuarterActual);
-            }
-        }
-
         $supabase->safePatch('telegram_project_tasks', ['id' => 'eq.' . $id], [
             'actual' => $newActual,
             'status' => $newActual >= (float) $task['target'] && (float) $task['target'] > 0 ? 'done' : 'in_progress',
             'updated_at' => $this->nowMy(),
         ]);
 
+        $supabase->safeInsert('telegram_project_task_updates', [
+            'task_id' => $id,
+            'delta' => $delta,
+            'new_actual' => $newActual,
+        ]);
+
         return response()->json([
             'success' => true,
             'task_actual' => $newActual,
-            'updated_kpis' => $kpiResults,
-            'skipped_kpis' => $kpiErrors,
         ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET /api/telegram/kpis/{kpiId}/task-history
+    |--------------------------------------------------------------------------
+    | Every task linked to this KPI, each with its timestamped update log —
+    | "list what tasks are under that KPI, like a history."
+    */
+    public function kpiTaskHistory(Request $request, SupabaseService $supabase, string $kpiId)
+    {
+        $validated = $request->validate([
+            'employee_id' => 'required|string',
+            'company_code' => 'required|string',
+        ]);
+
+        $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
+
+        $kpi = $supabase->first('kpis', [
+            'id' => 'eq.' . $kpiId,
+            'employee_id' => 'eq.' . $validated['employee_id'],
+            'company_code' => 'eq.' . $validated['company_code'],
+            'select' => 'id,kpi_title',
+        ]);
+
+        if (empty($kpi)) {
+            return response()->json(['success' => false, 'message' => 'KPI not found.'], 404);
+        }
+
+        $links = $supabase->get('telegram_project_task_kpi_links', [
+            'kpi_id' => 'eq.' . $kpiId,
+            'select' => '*',
+        ]) ?? [];
+
+        if (empty($links)) {
+            return response()->json(['kpi_title' => $kpi['kpi_title'], 'tasks' => []]);
+        }
+
+        $taskIds = array_column($links, 'task_id');
+        $tasks = $supabase->get('telegram_project_tasks', [
+            'id' => 'in.(' . implode(',', $taskIds) . ')',
+            'select' => '*',
+            'order' => 'created_at.desc',
+        ]) ?? [];
+
+        if (empty($tasks)) {
+            return response()->json(['kpi_title' => $kpi['kpi_title'], 'tasks' => []]);
+        }
+
+        $projectIds = array_unique(array_column($tasks, 'project_id'));
+        $projects = $supabase->get('telegram_projects', [
+            'id' => 'in.(' . implode(',', $projectIds) . ')',
+            'select' => 'id,name',
+        ]) ?? [];
+        $projectMap = collect($projects)->keyBy('id');
+
+        $updates = $supabase->get('telegram_project_task_updates', [
+            'task_id' => 'in.(' . implode(',', $taskIds) . ')',
+            'select' => '*',
+            'order' => 'created_at.desc',
+        ]) ?? [];
+        $updatesByTask = collect($updates)->groupBy('task_id');
+
+        $result = array_map(function ($task) use ($projectMap, $updatesByTask) {
+            return [
+                'id' => $task['id'],
+                'title' => $task['title'],
+                'project_name' => $projectMap->get($task['project_id'])['name'] ?? 'Untitled Project',
+                'unit' => $task['unit'],
+                'target' => (float) $task['target'],
+                'actual' => (float) $task['actual'],
+                'status' => $task['status'],
+                'updates' => $updatesByTask->get($task['id'], collect())->map(fn($u) => [
+                    'delta' => (float) $u['delta'],
+                    'new_actual' => (float) $u['new_actual'],
+                    'created_at' => $u['created_at'],
+                ])->values(),
+            ];
+        }, $tasks);
+
+        return response()->json(['kpi_title' => $kpi['kpi_title'], 'tasks' => $result]);
     }
 }

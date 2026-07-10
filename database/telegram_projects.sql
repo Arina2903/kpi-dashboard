@@ -4,9 +4,11 @@
 --
 -- Adds "Projects" and "Tasks" as first-class, reusable entities for the
 -- Telegram Mini App's daily to-do flow, distinct from the one-off, KPI-scoped
--- rows in telegram_daily_tasks. A task can be linked to multiple KPIs; when
--- its actual is updated, the same delta is applied to every linked KPI's
--- currently-open quarter.
+-- rows in telegram_daily_tasks. A task can be linked to multiple KPIs purely
+-- for tracking/visibility (see telegram_project_task_updates.sql) — updating
+-- a task's actual does NOT write into any KPI's quarter_actual. The KPI's
+-- own actual is still only ever changed via the existing quick inline
+-- Update box on "My KPIs" / the adjustQuarter endpoint.
 --
 -- Note: there is an existing unrelated `tasks` table (tied to `initiatives`,
 -- no target/actual/unit columns) — these are separate, prefixed tables so as

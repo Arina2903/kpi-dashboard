@@ -87,6 +87,12 @@
         return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
     }
 
+    function formatDateTime(iso) {
+        return new Date(iso).toLocaleString('en-MY', {
+            timeZone: 'Asia/Kuala_Lumpur', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+        });
+    }
+
     // Same category order/colors, status labels, and achievement bands used on
     // the web dashboard (resources/views/kpi/my-department-kpi.blade.php), so
     // the Mini App matches the system rather than inventing its own palette.
@@ -391,6 +397,10 @@
                     <p class="text-[9px] uppercase tracking-wide text-slate-400 font-black mb-2">By Quarter</p>
                     <div class="space-y-1.5">${quarterRows || '<p class="text-[10px] text-slate-400">No quarters set up yet.</p>'}</div>
                 </div>
+
+                <button onclick='renderKpiTaskHistory(${JSON.stringify(k.kpi_id)}, ${JSON.stringify(k.kpi_title)})' class="w-full mt-3 py-2 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[10px] font-black">
+                    📜 Tasks & History
+                </button>
             `) + '<div class="h-2"></div>';
         });
 
@@ -669,8 +679,8 @@
         const pct = t.target > 0 ? Math.max(0, Math.min(100, (t.actual / t.target) * 100)) : 0;
         const badge = achvBadge(pct);
         const kpiNote = t.linked_kpis.length
-            ? `This also updates ${t.linked_kpis.length} linked KPI(s) automatically.`
-            : `Not linked to any KPI yet — link it first so updates flow through.`;
+            ? `This updates the task only — it's tracked under ${t.linked_kpis.length} KPI(s), viewable from that KPI's Task History.`
+            : `This updates the task only. Not linked to any KPI yet.`;
 
         document.getElementById('app').innerHTML = card(`
             <p class="text-[10px] font-bold text-slate-400">📁 ${t.project_name}</p>
@@ -720,15 +730,12 @@
         feedback.classList.add('hidden');
 
         try {
-            const result = await api(`/project-tasks/${taskId}/progress`, {
+            await api(`/project-tasks/${taskId}/progress`, {
                 method: 'POST',
                 body: JSON.stringify({ employee_id: state.employeeId, company_code: state.companyCode, delta }),
             });
             if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            const kpiNames = (result.updated_kpis || []).map(k => k.kpi_title).join(', ');
-            if (tg?.showPopup) {
-                tg.showPopup({ message: kpiNames ? `Updated! ${kpiNames} also refreshed. ✅` : 'Task updated! ✅' });
-            }
+            if (tg?.showPopup) tg.showPopup({ message: 'Task updated! ✅' });
             renderMyTasks();
         } catch (e) {
             feedback.textContent = e.data?.message || "Couldn't update — please try again.";
@@ -780,7 +787,7 @@
         }).join('<div class="h-1.5"></div>');
 
         app.innerHTML = `
-            <p class="text-[11px] text-slate-500 mb-2 px-1">Task "<b>${t.title}</b>" (${t.unit}) — tick which KPI(s) this feeds into.</p>
+            <p class="text-[11px] text-slate-500 mb-2 px-1">Task "<b>${t.title}</b>" (${t.unit}) — tick which KPI(s) to track this under. Doesn't change either KPI's actual — this is for visibility in that KPI's Task History.</p>
             <div>${rows}</div>
             <button onclick="saveLinkKpis('${taskId}')" class="w-full mt-4 py-3 rounded-2xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-black shadow-[0_6px_16px_rgba(22,163,74,.35)]">
                 Save Links
@@ -804,6 +811,64 @@
             feedback.textContent = e.data?.message || "Couldn't save — please try again.";
             feedback.classList.remove('hidden');
         }
+    }
+
+    async function renderKpiTaskHistory(kpiId, kpiTitle) {
+        setTopbar('Tasks & History', true);
+        const app = document.getElementById('app');
+        app.innerHTML = `<p class="text-center text-slate-400 text-[12px] mt-10">Loading…</p>`;
+
+        let data;
+        try {
+            data = await api(`/kpis/${kpiId}/task-history?employee_id=${state.employeeId}&company_code=${state.companyCode}`);
+        } catch (e) {
+            renderError('Could not load task history.');
+            return;
+        }
+
+        if (!data.tasks.length) {
+            app.innerHTML = card(`
+                <p class="text-[13px] font-black text-slate-900 mb-1">${kpiTitle}</p>
+                <p class="text-[12px] text-slate-500 leading-relaxed mt-2">No tasks linked to this KPI yet. Go to My Tasks → Link to KPI to track one here.</p>
+            `);
+            return;
+        }
+
+        const taskCards = data.tasks.map(t => {
+            const pct = t.target > 0 ? Math.max(0, Math.min(100, (t.actual / t.target) * 100)) : 0;
+            const badge = achvBadge(pct);
+            const historyRows = t.updates.length ? t.updates.map(u => `
+                <div class="flex items-center justify-between py-1.5 border-b border-[#EFE3C7] last:border-0">
+                    <p class="text-[10px] text-slate-500">${formatDateTime(u.created_at)}</p>
+                    <p class="text-[10px] font-black ${u.delta >= 0 ? 'text-emerald-600' : 'text-red-600'}">${u.delta >= 0 ? '+' : ''}${formatUnit(u.delta, t.unit)}</p>
+                    <p class="text-[10px] text-slate-400">→ ${formatUnit(u.new_actual, t.unit)}</p>
+                </div>
+            `).join('') : `<p class="text-[10px] text-slate-400 py-2">No updates logged yet.</p>`;
+
+            return card(`
+                <div class="flex items-center justify-between gap-2">
+                    <p class="text-[13px] font-black text-slate-900 leading-snug min-w-0">${t.title}</p>
+                    <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${t.status === 'done' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                        ${t.status === 'done' ? '✓ Done' : 'In Progress'}
+                    </span>
+                </div>
+                <p class="text-[10px] text-slate-400">📁 ${t.project_name}</p>
+                <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-2 overflow-hidden">
+                    <div class="h-full rounded-full bg-gradient-to-r ${badge.bar}" style="width:${pct}%"></div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5">
+                    <p class="text-[10px] text-slate-500">Target: <span class="font-bold text-slate-700">${formatUnit(t.target, t.unit)}</span></p>
+                    <p class="text-[10px] text-slate-500">Actual: <span class="font-bold text-slate-700">${formatUnit(t.actual, t.unit)}</span></p>
+                    <p class="text-[10px] font-black text-slate-700">${pct.toFixed(0)}%</p>
+                </div>
+                <div class="mt-3 pt-3 border-t-2 border-dashed border-[#E3D2B0]">
+                    <p class="text-[9px] uppercase tracking-wide text-slate-400 font-black mb-1">Update History</p>
+                    ${historyRows}
+                </div>
+            `) + '<div class="h-2"></div>';
+        }).join('');
+
+        app.innerHTML = `<p class="text-[11px] text-slate-500 mb-2 px-1">Tasks tracked under "<b>${data.kpi_title}</b>"</p>` + taskCards;
     }
 
     boot();

@@ -32,4 +32,5 @@ Route::middleware('telegram.webapp.auth')->prefix('telegram')->group(function ()
     Route::get('/project-tasks/kpi-options', [TelegramProjectTaskController::class, 'kpiOptions']);
     Route::post('/project-tasks/{id}/link-kpis', [TelegramProjectTaskController::class, 'linkKpis']);
     Route::post('/project-tasks/{id}/progress', [TelegramProjectTaskController::class, 'updateProgress']);
+    Route::get('/kpis/{kpiId}/task-history', [TelegramProjectTaskController::class, 'kpiTaskHistory']);
 });
