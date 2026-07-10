@@ -371,17 +371,57 @@ class TelegramMiniAppController extends Controller
             'order' => 'created_at.asc',
         ]) ?? [];
 
-        $result = array_map(fn($kpi) => [
-            'kpi_id' => $kpi['id'],
-            'kpi_title' => $kpi['kpi_title'],
-            'category' => $kpi['category'] ?? null,
-            'unit' => $kpi['unit'],
-            'base_target' => (float) ($kpi['base_target'] ?? 0),
-            'stretch_target' => (float) ($kpi['stretch_target'] ?? 0),
-            'actual_value' => (float) ($kpi['actual_value'] ?? 0),
-            'achievement_percentage' => (float) ($kpi['achievement_percentage'] ?? 0),
-            'status' => $kpi['status'] ?? 'not_started',
-        ], $kpis);
+        if (empty($kpis)) {
+            return response()->json(['financial_year' => $fy, 'kpis' => []]);
+        }
+
+        $today = $this->todayMy();
+        $kpiIds = array_column($kpis, 'id');
+
+        $quarters = $supabase->get('kpi_quarters', [
+            'kpi_id' => 'in.(' . implode(',', $kpiIds) . ')',
+            'select' => '*',
+            'order' => 'start_date.asc',
+        ]) ?? [];
+
+        $quartersByKpi = collect($quarters)->groupBy('kpi_id');
+
+        $result = array_map(function ($kpi) use ($quartersByKpi, $today) {
+            $kpiQuarters = $quartersByKpi->get($kpi['id'], collect())->map(function ($q) use ($today) {
+                $target = (float) ($q['quarter_target'] ?? 0);
+                $actual = (float) ($q['quarter_actual'] ?? 0);
+
+                $state = 'upcoming';
+                if (!empty($q['start_date']) && !empty($q['end_date'])) {
+                    if ($q['end_date'] < $today) {
+                        $state = 'ended';
+                    } elseif ($q['start_date'] <= $today && $q['end_date'] >= $today) {
+                        $state = 'current';
+                    }
+                }
+
+                return [
+                    'quarter' => $q['quarter'],
+                    'target' => $target,
+                    'actual' => $actual,
+                    'achievement_percentage' => $target > 0 ? round(($actual / $target) * 100, 2) : 0,
+                    'state' => $state,
+                ];
+            })->values();
+
+            return [
+                'kpi_id' => $kpi['id'],
+                'kpi_title' => $kpi['kpi_title'],
+                'category' => $kpi['category'] ?? null,
+                'unit' => $kpi['unit'],
+                'base_target' => (float) ($kpi['base_target'] ?? 0),
+                'stretch_target' => (float) ($kpi['stretch_target'] ?? 0),
+                'actual_value' => (float) ($kpi['actual_value'] ?? 0),
+                'achievement_percentage' => (float) ($kpi['achievement_percentage'] ?? 0),
+                'status' => $kpi['status'] ?? 'not_started',
+                'quarters' => $kpiQuarters,
+            ];
+        }, $kpis);
 
         return response()->json(['financial_year' => $fy, 'kpis' => $result]);
     }

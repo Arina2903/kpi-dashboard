@@ -206,7 +206,7 @@
                 `)}</button>
                 <button onclick="window.location.href='/telegram/app?screen=summary'" class="w-full text-left ${card(`
                     <div class="flex items-center justify-between">
-                        <div><p class="text-[13px] font-black">📊 My KPI Summary</p><p class="text-[11px] text-slate-500 mt-0.5">View all KPI progress</p></div>
+                        <div><p class="text-[13px] font-black">📊 My KPI Summary</p><p class="text-[11px] text-slate-500 mt-0.5">Target vs actual, by quarter</p></div>
                         <span class="text-slate-300">›</span>
                     </div>
                 `)}</button>
@@ -437,11 +437,40 @@
 
         if (allOk) {
             if (tg?.showPopup) tg.showPopup({ message: 'Progress updated! Your KPI actuals have been refreshed. ✅' });
-            goHome();
+            renderSummary(true);
         }
     }
 
-    async function renderSummary() {
+    function quarterLabel(state) {
+        if (state === 'current') return { text: '🟢 Updating now', cls: 'bg-[#CCE3DE] text-[#1a3d34]' };
+        if (state === 'ended') return { text: '✓ Done', cls: 'bg-slate-100 text-slate-500' };
+        return { text: 'Upcoming', cls: 'bg-slate-100 text-slate-400' };
+    }
+
+    function quarterRow(q, unit) {
+        const barPct = Math.max(0, Math.min(100, q.achievement_percentage));
+        const isCurrent = q.state === 'current';
+        const label = quarterLabel(q.state);
+
+        return `
+            <div class="rounded-xl px-3 py-2.5 ${isCurrent ? 'bg-[#6B9080]/8 border-2 border-[#6B9080]' : 'bg-slate-50 border border-slate-100'}">
+                <div class="flex items-center justify-between gap-2">
+                    <p class="text-[11px] font-black ${isCurrent ? 'text-[#1a3d34]' : 'text-slate-600'}">${q.quarter}</p>
+                    <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full ${label.cls}">${label.text}</span>
+                </div>
+                <div class="w-full h-1.5 bg-slate-200 rounded-full mt-2 overflow-hidden">
+                    <div class="h-full rounded-full ${isCurrent ? 'bg-[#6B9080]' : 'bg-slate-400'}" style="width:${barPct}%"></div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5">
+                    <p class="text-[10px] text-slate-500">Target: <span class="font-bold text-slate-700">${formatUnit(q.target, unit)}</span></p>
+                    <p class="text-[10px] text-slate-500">Actual: <span class="font-bold text-slate-700">${formatUnit(q.actual, unit)}</span></p>
+                    <p class="text-[10px] font-black ${isCurrent ? 'text-[#1a3d34]' : 'text-slate-500'}">${q.achievement_percentage}%</p>
+                </div>
+            </div>
+        `;
+    }
+
+    async function renderSummary(justUpdated = false) {
         setTopbar('My KPI Summary', true);
         const app = document.getElementById('app');
         app.innerHTML = `<p class="text-center text-slate-400 text-[12px] mt-10">Loading…</p>`;
@@ -459,26 +488,46 @@
             return;
         }
 
-        app.innerHTML = data.kpis.map(k => {
+        const banner = justUpdated ? `
+            <div class="rounded-2xl bg-emerald-50 border border-emerald-200 px-3 py-2.5 text-[11px] font-bold text-emerald-700 text-center">
+                ✅ Your actual has been updated below — synced to the system instantly.
+            </div>
+        ` : '';
+
+        const cards = data.kpis.map(k => {
             const pct = Math.max(0, Math.min(100, k.achievement_percentage));
             const statusClass = STATUS_COLORS[k.status] || STATUS_COLORS.not_started;
+            const quarterRows = (k.quarters || []).map(q => quarterRow(q, k.unit)).join('');
+
             return card(`
                 <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0">
-                        <p class="text-[13px] font-black text-slate-900">${k.kpi_title}</p>
+                        <p class="text-[9px] uppercase tracking-wide text-slate-400 font-black">KPI</p>
+                        <p class="text-[14px] font-black text-slate-900 leading-snug">${k.kpi_title}</p>
                         <p class="text-[10px] text-slate-500 mt-0.5">${k.category || ''}</p>
                     </div>
-                    <p class="text-[16px] font-black text-slate-900 shrink-0">${k.achievement_percentage}%</p>
+                    <div class="text-right shrink-0">
+                        <p class="text-[18px] font-black text-slate-900">${k.achievement_percentage}%</p>
+                        <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full ${statusClass}">${(k.status || '').replace('_', ' ')}</span>
+                    </div>
                 </div>
+
                 <div class="w-full h-1.5 bg-slate-100 rounded-full mt-3 overflow-hidden">
                     <div class="h-full rounded-full ${statusClass.split(' ')[0].replace('100', '400')}" style="width:${pct}%"></div>
                 </div>
-                <div class="flex items-center justify-between mt-2">
-                    <p class="text-[10px] text-slate-500">${formatUnit(k.actual_value, k.unit)} / ${formatUnit(k.base_target, k.unit)}</p>
-                    <span class="text-[9px] font-black px-2 py-1 rounded-full ${statusClass}">${(k.status || '').replace('_', ' ')}</span>
+                <div class="flex items-center justify-between mt-1.5">
+                    <p class="text-[10px] text-slate-500 font-bold">Overall (Full Year)</p>
+                    <p class="text-[11px] text-slate-700 font-black">${formatUnit(k.actual_value, k.unit)} / ${formatUnit(k.base_target, k.unit)}</p>
+                </div>
+
+                <div class="mt-3 pt-3 border-t border-slate-100">
+                    <p class="text-[9px] uppercase tracking-wide text-slate-400 font-black mb-2">By Quarter</p>
+                    <div class="space-y-1.5">${quarterRows || '<p class="text-[10px] text-slate-400">No quarters set up yet.</p>'}</div>
                 </div>
             `);
         }).join('<div class="h-2"></div>');
+
+        app.innerHTML = banner + cards;
     }
 
     boot();
