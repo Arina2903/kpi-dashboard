@@ -20,6 +20,7 @@ Route::middleware('telegram.webapp.auth')->prefix('telegram')->group(function ()
     Route::post('/tasks', [TelegramMiniAppController::class, 'storeTasks']);
     Route::get('/tasks/today', [TelegramMiniAppController::class, 'todayTasks']);
     Route::post('/tasks/{id}/progress', [TelegramMiniAppController::class, 'submitProgress']);
+    Route::post('/kpis/{kpiId}/quarters/{quarterId}/adjust', [TelegramMiniAppController::class, 'adjustQuarter']);
     Route::get('/link/status', [TelegramLinkController::class, 'status']);
     Route::post('/link/disconnect', [TelegramLinkController::class, 'disconnect']);
 });

@@ -307,31 +307,9 @@ class TelegramMiniAppController extends Controller
         $newProgress = (float) $validated['progress_value'];
         $delta = $newProgress - $previousProgress;
 
-        $liveQuarterActual = (float) ($quarter['quarter_actual'] ?? 0);
-        $newQuarterActual = $liveQuarterActual + $delta;
-
-        $supabase->safePatch('kpi_quarters', ['id' => 'eq.' . $quarter['id']], [
-            'quarter_actual' => $newQuarterActual,
-            'updated_at' => $this->nowMy(),
-        ]);
-
-        $allQuarters = $supabase->get('kpi_quarters', [
-            'kpi_id' => 'eq.' . $task['kpi_id'],
-            'select' => '*',
-        ]) ?? [];
-
-        $totalActual = collect($allQuarters)->sum(function ($q) use ($quarter, $newQuarterActual) {
-            return (float) ($q['id'] === $quarter['id'] ? $newQuarterActual : ($q['quarter_actual'] ?? 0));
-        });
-
         $kpi = $supabase->first('kpis', ['id' => 'eq.' . $task['kpi_id'], 'select' => '*']);
-        $achievement = $this->calculateAchievement($kpi['base_target'] ?? 0, $kpi['stretch_target'] ?? 0, $totalActual);
-
-        $supabase->safePatch('kpis', ['id' => 'eq.' . $task['kpi_id']], [
-            'actual_value' => $totalActual,
-            'achievement_percentage' => $achievement,
-            'updated_at' => $this->nowMy(),
-        ]);
+        $liveQuarterActual = (float) ($quarter['quarter_actual'] ?? 0);
+        $result = $this->applyQuarterActualChange($supabase, $kpi, $quarter, $liveQuarterActual + $delta);
 
         $supabase->safePatch('telegram_daily_tasks', ['id' => 'eq.' . $task['id']], [
             'progress_value' => $newProgress,
@@ -339,12 +317,102 @@ class TelegramMiniAppController extends Controller
             'updated_at' => $this->nowMy(),
         ]);
 
-        return response()->json([
-            'success' => true,
+        return response()->json(['success' => true] + $result);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | POST /api/telegram/kpis/{kpiId}/quarters/{quarterId}/adjust
+    |--------------------------------------------------------------------------
+    | Directly increases or decreases a quarter's actual by $delta (no
+    | pre-planned daily task required) — the fast path used by the "My KPIs"
+    | screen's inline update control.
+    */
+    public function adjustQuarter(Request $request, SupabaseService $supabase, string $kpiId, string $quarterId)
+    {
+        $validated = $request->validate([
+            'employee_id' => 'required|string',
+            'company_code' => 'required|string',
+            'delta' => 'required|numeric',
+        ]);
+
+        if ((float) $validated['delta'] === 0.0) {
+            return response()->json(['success' => false, 'message' => 'Enter a non-zero amount.'], 422);
+        }
+
+        $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
+
+        $kpi = $supabase->first('kpis', [
+            'id' => 'eq.' . $kpiId,
+            'employee_id' => 'eq.' . $validated['employee_id'],
+            'company_code' => 'eq.' . $validated['company_code'],
+            'select' => '*',
+        ]);
+
+        if (empty($kpi)) {
+            return response()->json(['success' => false, 'message' => 'KPI not found.'], 404);
+        }
+
+        $quarter = $supabase->first('kpi_quarters', [
+            'id' => 'eq.' . $quarterId,
+            'kpi_id' => 'eq.' . $kpiId,
+            'select' => '*',
+        ]);
+
+        if (empty($quarter)) {
+            return response()->json(['success' => false, 'message' => 'Quarter not found.'], 404);
+        }
+
+        $today = $this->todayMy();
+
+        if ($quarter['start_date'] > $today || $quarter['end_date'] < $today) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This quarter is not currently open. Use the web dashboard\'s approval request flow for retroactive updates.',
+            ], 422);
+        }
+
+        $liveQuarterActual = (float) ($quarter['quarter_actual'] ?? 0);
+        $newQuarterActual = max(0, $liveQuarterActual + (float) $validated['delta']);
+
+        $result = $this->applyQuarterActualChange($supabase, $kpi, $quarter, $newQuarterActual);
+
+        return response()->json(['success' => true] + $result);
+    }
+
+    /**
+     * Writes a quarter's new actual, recomputes the KPI's annual actual_value
+     * and achievement_percentage from all quarters, and persists both.
+     */
+    private function applyQuarterActualChange(SupabaseService $supabase, array $kpi, array $quarter, float $newQuarterActual): array
+    {
+        $supabase->safePatch('kpi_quarters', ['id' => 'eq.' . $quarter['id']], [
+            'quarter_actual' => $newQuarterActual,
+            'updated_at' => $this->nowMy(),
+        ]);
+
+        $allQuarters = $supabase->get('kpi_quarters', [
+            'kpi_id' => 'eq.' . $kpi['id'],
+            'select' => '*',
+        ]) ?? [];
+
+        $totalActual = collect($allQuarters)->sum(function ($q) use ($quarter, $newQuarterActual) {
+            return (float) ($q['id'] === $quarter['id'] ? $newQuarterActual : ($q['quarter_actual'] ?? 0));
+        });
+
+        $achievement = $this->calculateAchievement($kpi['base_target'] ?? 0, $kpi['stretch_target'] ?? 0, $totalActual);
+
+        $supabase->safePatch('kpis', ['id' => 'eq.' . $kpi['id']], [
+            'actual_value' => $totalActual,
+            'achievement_percentage' => $achievement,
+            'updated_at' => $this->nowMy(),
+        ]);
+
+        return [
             'quarter_actual' => $newQuarterActual,
             'actual_value' => $totalActual,
             'achievement_percentage' => $achievement,
-        ]);
+        ];
     }
 
     /*
@@ -401,6 +469,7 @@ class TelegramMiniAppController extends Controller
                 }
 
                 return [
+                    'id' => $q['id'],
                     'quarter' => $q['quarter'],
                     'target' => $target,
                     'actual' => $actual,
