@@ -23,7 +23,9 @@ Route::get('/', function () {
 // Telegram Mini App shell — opened inside Telegram's WebView, no Laravel session
 // is available there, so this stays outside the kpi.auth group. Auth for the
 // data it loads happens per-request via Telegram initData (see routes/api.php).
-Route::view('/telegram/app', 'telegram.app')->name('telegram.app');
+Route::view('/telegram/app', 'telegram.app', [
+    'botUsername' => env('TELEGRAM_BOT_USERNAME', ''),
+])->name('telegram.app');
 
 Route::get('/login', [AuthController::class, 'showLogin'])
     ->name('login');

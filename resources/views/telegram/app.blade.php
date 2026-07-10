@@ -38,6 +38,7 @@
     tg?.ready();
     tg?.expand();
 
+    const BOT_USERNAME = '{{ $botUsername }}';
     const initData = tg?.initData || '';
     const params = new URLSearchParams(window.location.search);
     const deepLinkScreen = params.get('screen') || 'home';
@@ -111,7 +112,11 @@
         try {
             status = await api('/link/status');
         } catch (e) {
-            renderError('Something went wrong. Pull to refresh and try again.');
+            if (e.status === 401) {
+                renderNotInTelegram();
+            } else {
+                renderError('Something went wrong. Pull to refresh and try again.');
+            }
             return;
         }
 
@@ -166,6 +171,18 @@
             <p class="text-[12px] text-slate-500 leading-relaxed">
                 Open the KPI Dashboard on the web, go to <b>My Profile</b>, and tap
                 <b>Connect Telegram</b> to link this account.
+            </p>
+        `);
+    }
+
+    function renderNotInTelegram() {
+        setTopbar('KPI Mini App', false);
+        const botLine = BOT_USERNAME ? ` Open <b>@${BOT_USERNAME}</b> in Telegram and` : ' Open the bot in Telegram and';
+        document.getElementById('app').innerHTML = card(`
+            <p class="text-[13px] font-black text-slate-900 mb-1">Open this from Telegram</p>
+            <p class="text-[12px] text-slate-500 leading-relaxed">
+                This page only works when opened inside the Telegram app.${botLine}
+                tap the KPI Mini App button there.
             </p>
         `);
     }
