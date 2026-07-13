@@ -142,6 +142,11 @@
             .px-4 { padding-left: 4px !important; padding-right: 4px !important; }
             .pt-3 { padding-top: 0 !important; }
             .pb-10 { padding-bottom: 0 !important; }
+            /* Doc-card's inner content padding is still full-size (px-10 py-8) —
+               shrink it so content reaches close to the doc-card's green border
+               instead of leaving a wide gap on every side. */
+            .px-10 { padding-left: 10px !important; padding-right: 10px !important; }
+            .py-8  { padding-top: 8px !important; padding-bottom: 8px !important; }
 
             .doc-card { box-shadow: none !important; border: 1px solid #6B9080 !important; border-radius: 12px !important; }
             .sec-bar { background: linear-gradient(90deg, #1a3d34, #2d5548) !important; }
