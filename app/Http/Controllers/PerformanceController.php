@@ -815,6 +815,11 @@ class PerformanceController extends Controller
         $reportStatus = !empty($savedRows) ? ($savedRows[0]['status'] ?? 'draft') : 'draft';
         $submittedAt  = !empty($savedRows) ? ($savedRows[0]['updated_at'] ?? null) : null;
 
+        // Each appraiser level submits its own section independently (manager's
+        // 6B/7A, VP's 7B, SLT's 7C) — the lock flag lives inside form_data since
+        // there's no dedicated column per level.
+        $myLevelLocked = !empty($savedData["_{$appraiserLevel}_locked"]);
+
         return view('performance.report', [
             'user'                 => $user,
             'currentUserName'      => $user['full_name'] ?? $user['short_name'] ?? 'User',
@@ -844,6 +849,7 @@ class PerformanceController extends Controller
             'appraiseeId'          => $employeeId,
             'appraiserLevel'       => $appraiserLevel,
             'appraiserSaveUrl'     => route('performance.appraise.save', [$employeeId, $q]),
+            'myLevelLocked'        => $myLevelLocked,
         ]);
     }
 
@@ -879,7 +885,27 @@ class PerformanceController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $action = $request->input('action', 'save');
+        $action = $request->input('action', 'draft');
+
+        // Fetch existing form_data first — needed both to check whether this
+        // level already submitted (and is therefore locked) and to merge onto.
+        $existing      = $supabase->get('performance_reports', [
+            'employee_id'    => 'eq.' . $employeeId,
+            'financial_year' => 'eq.' . $this->currentFinancialYear,
+            'quarter'        => 'eq.' . $q,
+            'select'         => 'form_data,status',
+        ]) ?? [];
+        $existingData  = !empty($existing) ? ($existing[0]['form_data'] ?? []) : [];
+        $currentStatus = !empty($existing) ? ($existing[0]['status'] ?? 'submitted') : 'submitted';
+
+        // Each appraiser level submits its own section independently — once
+        // locked, neither a draft-save nor another submit may touch it again,
+        // even if the client were tampered with (the button is hidden, but this
+        // is the actual enforcement).
+        $lockKey = "_{$appraiserLevel}_locked";
+        if (!empty($existingData[$lockKey])) {
+            return response()->json(['error' => 'Your section has already been submitted and is locked.'], 403);
+        }
 
         // Each appraiser level may only write its own portion of the form —
         // enforced here so a VP/SLT session can't smuggle in edits to the
@@ -903,24 +929,19 @@ class PerformanceController extends Controller
             }
         }
 
-        // Merge appraiser data onto existing form_data
-        $existing      = $supabase->get('performance_reports', [
-            'employee_id'    => 'eq.' . $employeeId,
-            'financial_year' => 'eq.' . $this->currentFinancialYear,
-            'quarter'        => 'eq.' . $q,
-            'select'         => 'form_data,status',
-        ]) ?? [];
-        $existingData  = !empty($existing) ? ($existing[0]['form_data'] ?? []) : [];
-        $currentStatus = !empty($existing) ? ($existing[0]['status'] ?? 'submitted') : 'submitted';
-        $newData       = array_merge($existingData, $allowedData);
+        if ($action === 'submit') {
+            $allowedData[$lockKey] = true;
+        }
 
-        // Only the manager's explicit "Mark as Appraised" action advances the
-        // status — everything else (a plain save, or a VP/SLT adding their
-        // own remarks) must leave the current status untouched, so it never
-        // regresses from appraised/completed back to submitted.
+        $newData = array_merge($existingData, $allowedData);
+
+        // Only the manager's explicit submit ("Mark as Appraised") advances the
+        // overall status — everything else (a draft save, or a VP/SLT submitting
+        // their own remarks) must leave the current status untouched, so it
+        // never regresses from appraised/completed back to submitted.
         $status = match (true) {
             $currentStatus === 'completed' => 'completed',
-            $action === 'appraised' && $appraiserLevel === 'manager' => 'appraised',
+            $action === 'submit' && $appraiserLevel === 'manager' => 'appraised',
             default => $currentStatus,
         };
 
@@ -934,6 +955,6 @@ class PerformanceController extends Controller
             'updated_at'     => now()->toISOString(),
         ], 'employee_id,financial_year,quarter');
 
-        return response()->json(['success' => true, 'status' => $status]);
+        return response()->json(['success' => true, 'status' => $status, 'locked' => $action === 'submit']);
     }
 }

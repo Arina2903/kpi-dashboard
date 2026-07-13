@@ -213,16 +213,20 @@
         <div class="flex items-center gap-2">
             @if($isAppraiserView ?? false)
             {{-- ── Appraiser buttons ── --}}
+            @if($myLevelLocked ?? false)
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-3 py-1.5 rounded-full">
+                ✓ Your section is submitted
+            </span>
+            @else
             <span class="flex items-center gap-1.5 text-[10px] font-bold bg-blue-500/20 text-blue-200 border border-blue-400/30 px-3 py-1.5 rounded-full">
                 <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span> Appraiser View · {{ $currentUserName }}
             </span>
-            <button id="saveBtn" onclick="saveEvaluation('save')" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20 flex items-center gap-1.5">
+            <button id="apprDraftBtn" onclick="saveEvaluation('draft')" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20 flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                Save Notes
+                Save Draft
             </button>
-            @if(($appraiserLevel ?? '') === 'manager')
-            <button id="appraiseBtn" onclick="confirmAppraised()" class="bg-emerald-500/30 hover:bg-emerald-500/50 text-emerald-100 px-4 py-2 rounded-xl font-bold text-xs transition border border-emerald-400/40 flex items-center gap-1.5">
-                ✓ Mark as Appraised
+            <button id="apprSubmitBtn" onclick="confirmAppraiserSubmit()" class="bg-emerald-500/30 hover:bg-emerald-500/50 text-emerald-100 px-4 py-2 rounded-xl font-bold text-xs transition border border-emerald-400/40 flex items-center gap-1.5">
+                {{ ($appraiserLevel ?? '') === 'manager' ? '✓ Submit & Mark as Appraised' : '✓ Submit' }}
             </button>
             @endif
             @elseif(($status ?? 'draft') === 'submitted')
@@ -1324,6 +1328,7 @@ const _status          = '{{ $status ?? "draft" }}';
 const _isSubmitted     = _status === 'submitted' || _status === 'appraised' || _status === 'completed';
 const _isAppraiserView = @json($isAppraiserView ?? false);
 const _appraiserLevel  = '{{ $appraiserLevel ?? "" }}';
+const _myLevelLocked   = @json($myLevelLocked ?? false);
 const _softLocked      = @json($softLocked ?? false);
 const _canSignAsAppraisee = !_isAppraiserView && _status === 'appraised';
 const _saveUrl         = _isAppraiserView
@@ -1408,6 +1413,10 @@ function showToast(msg, ok) {
 // ── save ──────────────────────────────────────────────────────────────────────
 window.saveEvaluation = function(action) {
     action = action || 'draft';
+    // Belt-and-braces: the Save Draft/Submit buttons are hidden once this level
+    // has submitted, but the server also rejects this — this just avoids a
+    // pointless round trip.
+    if (_isAppraiserView && _myLevelLocked) { showToast('Your section is already submitted and locked.', false); return; }
     // 'acknowledge' happens after the submission window closes, so it's exempt from the window check.
     if (!_isAppraiserView && action !== 'acknowledge' && !_isWindowOpen) { showToast('Evaluation window is closed.', false); return; }
     // Validate Section 3 only for appraisee submit
@@ -1434,8 +1443,11 @@ window.saveEvaluation = function(action) {
         }
     }
     const data = collectFormData();
-    var activeBtn = document.getElementById(action === 'draft' ? 'draftBtn' : (action === 'save' ? 'saveBtn' : (action === 'acknowledge' ? 'ackBtn' : 'submitBtn')));
-    if (!activeBtn) activeBtn = document.getElementById('saveBtn');
+    var activeBtn = document.getElementById(
+        action === 'draft'       ? (_isAppraiserView ? 'apprDraftBtn'  : 'draftBtn') :
+        action === 'submit'      ? (_isAppraiserView ? 'apprSubmitBtn' : 'submitBtn') :
+        action === 'acknowledge' ? 'ackBtn' : 'saveBtn'
+    );
     if (activeBtn) activeBtn.disabled = true;
     fetch(_saveUrl, {
         method: 'POST',
@@ -1445,12 +1457,19 @@ window.saveEvaluation = function(action) {
     .then(function(r){ return r.json(); })
     .then(function(res){
         if (res && res.success) {
-            if (action === 'submit') {
+            if (_isAppraiserView) {
+                if (action === 'submit' && _appraiserLevel === 'manager') {
+                    showToast('Marked as Appraised ✓', true);
+                    setTimeout(function(){ window.location.href = '/performance/appraise'; }, 1200);
+                } else if (action === 'submit') {
+                    showToast('Submitted ✓', true);
+                    setTimeout(function(){ location.reload(); }, 1200);
+                } else {
+                    showToast('Draft saved ✓', true);
+                }
+            } else if (action === 'submit') {
                 showToast('Submitted to appraiser ✓', true);
                 setTimeout(function(){ location.reload(); }, 1200);
-            } else if (action === 'appraised') {
-                showToast('Marked as Appraised ✓', true);
-                setTimeout(function(){ window.location.href = '/performance/appraise'; }, 1200);
             } else if (action === 'acknowledge') {
                 showToast('Signed & acknowledged ✓', true);
                 setTimeout(function(){ location.reload(); }, 1200);
@@ -1471,9 +1490,12 @@ function confirmSubmit() {
     }
 }
 
-function confirmAppraised() {
-    if (confirm('Mark this appraisal as complete?\n\nThis will lock the form and notify the appraisee.')) {
-        saveEvaluation('appraised');
+function confirmAppraiserSubmit() {
+    var msg = _appraiserLevel === 'manager'
+        ? 'Mark this appraisal as complete?\n\nThis locks your section, advances the appraisal to the appraisee for acknowledgment, and notifies them. You will not be able to edit your section after this.'
+        : 'Submit your remarks?\n\nYou will not be able to edit this section after submitting.';
+    if (confirm(msg)) {
+        saveEvaluation('submit');
     }
 }
 
@@ -1507,6 +1529,10 @@ function unlockAppraiseeAcknowledgment() {
 // SLT only owns their own Section 7 block, never the manager's Section 6B
 // / KPI scores / attendance, and never another level's Section 7 block.
 function unlockAppraiserSections() {
+    // Already submitted — leave the form-body-level lock (set by the caller)
+    // in place instead of unlocking this level's section again.
+    if (_myLevelLocked) return;
+
     var sectionIds = _appraiserLevel === 'manager'
         ? ['sec6b', 'sec6b_sig', 'sec7_manager']
         : _appraiserLevel === 'vp'
