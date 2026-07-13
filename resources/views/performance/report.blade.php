@@ -260,8 +260,15 @@
     </div>
     {{-- Status banner --}}
     @if($isAppraiserView ?? false)
+    @php
+        $appraiserLevelInstructions = match($appraiserLevel ?? 'manager') {
+            'vp'  => 'Fill in your Section 7 (VP) remarks and recommendation.',
+            'slt' => 'Fill in your Section 7 (SLT) remarks and recommendation.',
+            default => 'Fill in Section 2 (Appraiser Score), Section 3 (Superior Rating & Comment), Section 4 (Attendance), Section 6B, and Section 7 (Manager), then mark as Appraised.',
+        };
+    @endphp
     <div class="mt-2 rounded-xl bg-blue-50 border border-blue-200 px-4 py-2 flex items-center gap-2 text-xs text-blue-700">
-        👁 <span><strong>Appraiser view.</strong> Fill in Section 6B and Section 7, then mark as Appraised.</span>
+        👁 <span><strong>Appraiser view.</strong> {{ $appraiserLevelInstructions }}</span>
         @if($submittedAt)<span class="ml-auto text-blue-500 font-medium">Submitted: {{ \Carbon\Carbon::parse($submittedAt)->timezone('Asia/Kuala_Lumpur')->format('d M Y, H:i') }}</span>@endif
     </div>
     @elseif(($status ?? 'draft') === 'submitted')
