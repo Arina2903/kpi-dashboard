@@ -1149,6 +1149,13 @@
             else { supEl.textContent = '—'; supEl.style.color = '#cbd5e1'; }
         }
     }
+    // This whole script block is wrapped in an IIFE, so plain function
+    // declarations stay private to it — but the second <script> block below
+    // (unrelated to this one, runs in the global scope) calls updateS3() and
+    // updateS6() directly on page load. Without this, that call throws
+    // "updateS3 is not defined", which halts ALL of that script's remaining
+    // code — including the appraiser unlock/lock logic that runs right after it.
+    window.updateS3 = updateS3;
     document.querySelectorAll('input[name^="self_"], input[name^="sup_"]').forEach(function(r) {
         r.addEventListener('change', function(){ updateS3(); updateS6(); });
     });
@@ -1295,6 +1302,7 @@
         if(aEl){aEl.textContent=aCnt>0?aSum.toFixed(1):'—';aEl.style.color=aCnt>0?s6Clr(aSum):'#cbd5e1';}
         updateGauge(sCnt > 0 ? sSum : null);
     }
+    window.updateS6 = updateS6;
 
     // Wire: Section 2 self/app inputs → updateS6
     document.querySelectorAll('[name^="kpi_self_"],[name^="kpi_app_"]').forEach(function(el){ el.addEventListener('input', updateS6); });
