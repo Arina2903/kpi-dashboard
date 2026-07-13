@@ -510,9 +510,9 @@ class PerformanceController extends Controller
         $action = $request->input('action', 'draft');
 
         $existing      = $supabase->get('performance_reports', [
-            'employee_id'    => session('employee_uuid'),
-            'financial_year' => $this->currentFinancialYear,
-            'quarter'        => $q,
+            'employee_id'    => 'eq.' . session('employee_uuid'),
+            'financial_year' => 'eq.' . $this->currentFinancialYear,
+            'quarter'        => 'eq.' . $q,
             'select'         => 'form_data,status',
         ]) ?? [];
         $currentStatus = !empty($existing) ? ($existing[0]['status'] ?? 'draft') : 'draft';
