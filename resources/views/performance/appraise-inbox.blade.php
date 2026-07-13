@@ -21,14 +21,14 @@
             <a href="/performance/report/q2" class="text-slate-400 hover:text-slate-600 text-xs font-semibold">← Back</a>
         </div>
         <h1 class="text-2xl font-black text-slate-800">Appraise Team</h1>
-        <p class="text-sm text-slate-500 mt-1">{{ $currentFinancialYear }} · Review and complete appraisals for your direct reports.</p>
+        <p class="text-sm text-slate-500 mt-1">{{ $currentFinancialYear }} · Review and complete appraisals across your team — direct reports as Manager, and anyone further down the chain as VP or SLT.</p>
     </div>
 
     @if(empty($subordinates))
     <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm">
         <div class="text-4xl mb-3">👥</div>
-        <p class="text-slate-500 font-semibold">No direct reports found.</p>
-        <p class="text-slate-400 text-sm mt-1">Employees who have you set as their reports-to will appear here.</p>
+        <p class="text-slate-500 font-semibold">No one in your appraiser chain yet.</p>
+        <p class="text-slate-400 text-sm mt-1">Employees who report to you (directly, or via a manager/VP under you) will appear here.</p>
     </div>
     @else
 
@@ -54,6 +54,7 @@
                         <th class="text-left px-5 py-3 font-black">Name</th>
                         <th class="text-left px-5 py-3 font-black">Position</th>
                         <th class="text-left px-5 py-3 font-black">Department</th>
+                        <th class="text-center px-5 py-3 font-black">Your Role</th>
                         <th class="text-center px-5 py-3 font-black">Status</th>
                         <th class="text-center px-5 py-3 font-black">Last Updated</th>
                         <th class="text-center px-5 py-3 font-black">Action</th>
@@ -72,6 +73,9 @@
                         </td>
                         <td class="px-5 py-4 text-slate-500 text-xs">{{ $sub['position'] ?? '—' }}</td>
                         <td class="px-5 py-4 text-slate-500 text-xs">{{ $sub['department_code'] ?? '—' }}</td>
+                        <td class="px-5 py-4 text-center">
+                            <span class="inline-flex items-center gap-1 bg-slate-100 text-slate-600 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wide">{{ $sub['appraiser_level'] ?? '—' }}</span>
+                        </td>
                         <td class="px-5 py-4 text-center">
                             @if($status === 'completed')
                             <span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-[10px] font-black px-2.5 py-1 rounded-full">✓ Completed</span>

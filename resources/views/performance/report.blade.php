@@ -220,9 +220,11 @@
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 Save Notes
             </button>
+            @if(($appraiserLevel ?? '') === 'manager')
             <button id="appraiseBtn" onclick="confirmAppraised()" class="bg-emerald-500/30 hover:bg-emerald-500/50 text-emerald-100 px-4 py-2 rounded-xl font-bold text-xs transition border border-emerald-400/40 flex items-center gap-1.5">
                 ✓ Mark as Appraised
             </button>
+            @endif
             @elseif(($status ?? 'draft') === 'submitted')
             {{-- ── Submitted — awaiting appraiser ── --}}
             <span class="flex items-center gap-1.5 text-[10px] font-bold bg-blue-500/20 text-blue-200 border border-blue-400/30 px-3 py-1.5 rounded-full">
@@ -1006,7 +1008,7 @@
                 @php $sec7=[['key'=>'manager','label'=>'A','title'=>'Promotability and Other Remarks and Recommendations by the Appraiser (Manager)'],['key'=>'vp','label'=>'B','title'=>'Remarks and/or Recommendations by VP'],['key'=>'slt','label'=>'C','title'=>'Remarks by SLT']]; @endphp
                 @foreach($sec7 as $idx => $blk)
                 @if($idx>0)<div class="border-t border-dashed border-[#6B9080]/20 pt-7"></div>@endif
-                <div>
+                <div id="sec7_{{ $blk['key'] }}">
                     <div class="part-label">{{ $blk['label'] }} &nbsp;·&nbsp; {{ $blk['title'] }}</div>
                     <textarea name="s7_{{ $blk['key'] }}_remarks" rows="4" placeholder="—" class="f-area mb-5" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;resize:none;"></textarea>
                     <div class="flex items-end justify-between gap-6 flex-wrap">
@@ -1306,6 +1308,7 @@ const _isWindowOpen    = @json($isWindowOpen ?? false);
 const _status          = '{{ $status ?? "draft" }}';
 const _isSubmitted     = _status === 'submitted' || _status === 'appraised' || _status === 'completed';
 const _isAppraiserView = @json($isAppraiserView ?? false);
+const _appraiserLevel  = '{{ $appraiserLevel ?? "" }}';
 const _softLocked      = @json($softLocked ?? false);
 const _canSignAsAppraisee = !_isAppraiserView && _status === 'appraised';
 const _saveUrl         = _isAppraiserView
@@ -1485,8 +1488,19 @@ function unlockAppraiseeAcknowledgment() {
     });
 }
 
+// Which parts of the form the current appraiser level may edit — a VP or
+// SLT only owns their own Section 7 block, never the manager's Section 6B
+// / KPI scores / attendance, and never another level's Section 7 block.
 function unlockAppraiserSections() {
-    ['sec6b', 'sec6b_sig', 'sec7'].forEach(function(id) {
+    var sectionIds = _appraiserLevel === 'manager'
+        ? ['sec6b', 'sec6b_sig', 'sec7_manager']
+        : _appraiserLevel === 'vp'
+            ? ['sec7_vp']
+            : _appraiserLevel === 'slt'
+                ? ['sec7_slt']
+                : [];
+
+    sectionIds.forEach(function(id) {
         var el = document.getElementById(id);
         if (!el) return;
         el.style.pointerEvents = 'auto';
@@ -1510,7 +1524,10 @@ function unlockAppraiserSections() {
             if (!wrap._sigInited) { sigInit(wrap); wrap._sigInited = true; }
         });
     });
-    // Unlock appraiser score inputs in Section 2
+
+    if (_appraiserLevel !== 'manager') return;
+
+    // Unlock appraiser score inputs in Section 2 — manager only
     document.querySelectorAll('.kpi-app-input').forEach(function(inp) {
         inp.removeAttribute('readonly');
         inp.style.pointerEvents = 'auto';
@@ -1518,7 +1535,7 @@ function unlockAppraiserSections() {
         inp.style.background = '';
         inp.style.cursor = '';
     });
-    // Unlock attendance count inputs for appraiser
+    // Unlock attendance count inputs — manager only
     document.querySelectorAll('.att-count-input').forEach(function(inp) {
         inp.style.pointerEvents = 'auto';
         inp.style.opacity       = '1';

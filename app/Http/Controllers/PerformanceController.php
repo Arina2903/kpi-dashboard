@@ -549,17 +549,66 @@ class PerformanceController extends Controller
         return response()->json(['success' => true, 'quarter' => $q, 'status' => $status]);
     }
 
+    /**
+     * Walks up an employee's reports_to_id chain (manager, then that
+     * manager's manager = VP, then that VP's manager = SLT) to find which
+     * level — if any — $viewerId sits at relative to $employee. Section 7
+     * of the appraisal form has a separate remarks block for each of these
+     * three levels, so appraiser access isn't just "the direct manager".
+     * $getParent resolves a reports_to_id into that employee's own record —
+     * either a live Supabase lookup or a pre-fetched map, depending on caller.
+     */
+    private function resolveAppraiserLevel(?array $employee, string $viewerId, callable $getParent): ?string
+    {
+        $levels = ['manager', 'vp', 'slt'];
+        $current = $employee;
+
+        foreach ($levels as $level) {
+            $reportsTo = $current['reports_to_id'] ?? null;
+            if (empty($reportsTo)) {
+                return null;
+            }
+            if ($reportsTo === $viewerId) {
+                return $level;
+            }
+            $current = $getParent($reportsTo);
+            if (empty($current)) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
     public function appraiserInbox(SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid')) {
             return redirect()->route('login');
         }
 
-        $subordinates = $supabase->get('employees', [
-            'reports_to_id' => 'eq.' . session('employee_uuid'),
+        $viewerId = session('employee_uuid');
+        $viewer = $supabase->first('employees', ['id' => 'eq.' . $viewerId, 'select' => 'company_code']);
+
+        $allActive = $supabase->get('employees', [
+            'company_code' => 'eq.' . ($viewer['company_code'] ?? ''),
             'is_active'     => 'eq.true',
-            'select'        => 'id,short_name,full_name,position,department_code',
+            'select'        => 'id,short_name,full_name,position,department_code,reports_to_id',
         ]) ?? [];
+
+        $byId = collect($allActive)->keyBy('id');
+        $getParent = fn($id) => $byId->get($id);
+
+        $subordinates = [];
+        foreach ($allActive as $emp) {
+            if ($emp['id'] === $viewerId) {
+                continue;
+            }
+            $level = $this->resolveAppraiserLevel($emp, $viewerId, $getParent);
+            if ($level) {
+                $emp['appraiser_level'] = $level;
+                $subordinates[] = $emp;
+            }
+        }
 
         $reportMap = [];
         if (!empty($subordinates)) {
@@ -591,15 +640,23 @@ class PerformanceController extends Controller
         $q = strtoupper($quarter);
         if (!in_array($q, ['Q1','Q2','Q3','Q4'])) abort(404);
 
-        // Verify subordinate reports to current user
+        // Verify the viewer sits somewhere in this employee's appraiser chain
+        // (direct manager, VP, or SLT) — not just a direct report.
+        $viewerId = session('employee_uuid');
         $employees = $supabase->get('employees', [
-            'id'            => 'eq.' . $employeeId,
-            'reports_to_id' => 'eq.' . session('employee_uuid'),
-            'is_active'     => 'eq.true',
-            'select'        => '*',
+            'id'        => 'eq.' . $employeeId,
+            'is_active' => 'eq.true',
+            'select'    => '*',
         ]);
         if (empty($employees)) abort(403);
         $user = $employees[0];
+
+        $appraiserLevel = $this->resolveAppraiserLevel(
+            $user,
+            $viewerId,
+            fn($id) => $supabase->first('employees', ['id' => 'eq.' . $id, 'select' => '*'])
+        );
+        if (!$appraiserLevel) abort(403);
 
         // Tenure
         $joinDate = $user['join_date'] ?? null;
@@ -785,6 +842,7 @@ class PerformanceController extends Controller
             'status'               => $reportStatus,
             'isAppraiserView'      => true,
             'appraiseeId'          => $employeeId,
+            'appraiserLevel'       => $appraiserLevel,
             'appraiserSaveUrl'     => route('performance.appraise.save', [$employeeId, $q]),
         ]);
     }
@@ -800,18 +858,50 @@ class PerformanceController extends Controller
             return response()->json(['error' => 'Invalid quarter'], 422);
         }
 
-        // Verify manager relationship
+        // Verify the viewer sits somewhere in this employee's appraiser chain
+        // (direct manager, VP, or SLT) — not just a direct report.
+        $viewerId = session('employee_uuid');
         $employees = $supabase->get('employees', [
-            'id'            => 'eq.' . $employeeId,
-            'reports_to_id' => 'eq.' . session('employee_uuid'),
-            'is_active'     => 'eq.true',
-            'select'        => 'id',
+            'id'        => 'eq.' . $employeeId,
+            'is_active' => 'eq.true',
+            'select'    => '*',
         ]);
         if (empty($employees)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
+        $appraiserLevel = $this->resolveAppraiserLevel(
+            $employees[0],
+            $viewerId,
+            fn($id) => $supabase->first('employees', ['id' => 'eq.' . $id, 'select' => '*'])
+        );
+        if (!$appraiserLevel) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $action = $request->input('action', 'save');
+
+        // Each appraiser level may only write its own portion of the form —
+        // enforced here so a VP/SLT session can't smuggle in edits to the
+        // manager's Section 6B / KPI scores, or another level's Section 7
+        // block, even if the client were tampered with.
+        $allowedPrefixes = match ($appraiserLevel) {
+            'manager' => ['kpi_app_', 'att_comment_', 's6_', 'sig_appraiser', 's7_manager_'],
+            'vp'      => ['s7_vp_'],
+            'slt'     => ['s7_slt_'],
+            default   => [],
+        };
+
+        $incoming = $request->input('form_data', []);
+        $allowedData = [];
+        foreach ($incoming as $key => $value) {
+            foreach ($allowedPrefixes as $prefix) {
+                if (str_starts_with($key, $prefix)) {
+                    $allowedData[$key] = $value;
+                    break;
+                }
+            }
+        }
 
         // Merge appraiser data onto existing form_data
         $existing      = $supabase->get('performance_reports', [
@@ -822,13 +912,17 @@ class PerformanceController extends Controller
         ]) ?? [];
         $existingData  = !empty($existing) ? ($existing[0]['form_data'] ?? []) : [];
         $currentStatus = !empty($existing) ? ($existing[0]['status'] ?? 'submitted') : 'submitted';
-        $newData       = array_merge($existingData, $request->input('form_data', []));
+        $newData       = array_merge($existingData, $allowedData);
 
-        // Once the appraisee has signed off (completed), the appraiser editing notes
-        // afterwards must not regress the status back to appraised/submitted.
-        $status = $currentStatus === 'completed'
-            ? 'completed'
-            : ($action === 'appraised' ? 'appraised' : 'submitted');
+        // Only the manager's explicit "Mark as Appraised" action advances the
+        // status — everything else (a plain save, or a VP/SLT adding their
+        // own remarks) must leave the current status untouched, so it never
+        // regresses from appraised/completed back to submitted.
+        $status = match (true) {
+            $currentStatus === 'completed' => 'completed',
+            $action === 'appraised' && $appraiserLevel === 'manager' => 'appraised',
+            default => $currentStatus,
+        };
 
         $supabase->upsert('performance_reports', [
             'employee_id'    => $employeeId,
