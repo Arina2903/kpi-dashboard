@@ -13,6 +13,7 @@ Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])
 Route::middleware('telegram.cron.secret')->prefix('telegram/cron')->group(function () {
     Route::post('/morning', [TelegramCronController::class, 'morning']);
     Route::post('/evening', [TelegramCronController::class, 'evening']);
+    Route::post('/review/{period}', [TelegramCronController::class, 'review']);
 });
 
 Route::middleware('telegram.webapp.auth')->prefix('telegram')->group(function () {
@@ -33,4 +34,6 @@ Route::middleware('telegram.webapp.auth')->prefix('telegram')->group(function ()
     Route::post('/project-tasks/{id}/link-kpis', [TelegramProjectTaskController::class, 'linkKpis']);
     Route::post('/project-tasks/{id}/progress', [TelegramProjectTaskController::class, 'updateProgress']);
     Route::get('/kpis/{kpiId}/task-history', [TelegramProjectTaskController::class, 'kpiTaskHistory']);
+
+    Route::get('/reviews', [TelegramMiniAppController::class, 'reviews']);
 });

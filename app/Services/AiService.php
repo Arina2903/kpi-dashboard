@@ -304,4 +304,72 @@ PROMPT;
 
         return json_decode($text, true) ?? [];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GENERATE PERFORMANCE REVIEW (weekly / monthly / quarterly)
+    |--------------------------------------------------------------------------
+    */
+
+    public function generatePerformanceReview(
+        string $employeeName,
+        string $periodType,
+        string $periodLabel,
+        array  $stats
+    ): array {
+        $systemPrompt = 'You are a professional performance-review assistant for an internal company KPI system. '
+            . 'Write objective, evidence-based commentary in a neutral, professional tone — no emoji, no exclamation marks, no motivational fluff. '
+            . 'Base the review strictly on the activity and KPI data provided. Respond ONLY with valid JSON — no markdown, no explanation.';
+
+        $activeDays = $stats['active_days'] ?? 0;
+        $totalDays  = $stats['total_days'] ?? 0;
+        $tasks      = $stats['tasks'] ?? [];
+        $kpis       = $stats['kpis'] ?? [];
+
+        $taskLines = empty($tasks)
+            ? 'No task updates were logged during this period.'
+            : implode("\n", array_map(
+                fn($t) => "- \"{$t['title']}\": logged " . ($t['delta_in_period'] >= 0 ? '+' : '') . "{$t['delta_in_period']} {$t['unit']} this period, running total {$t['actual']}/{$t['target']} {$t['unit']} ({$t['status']})",
+                $tasks
+            ));
+
+        $kpiLines = empty($kpis)
+            ? 'No KPIs are set for this employee.'
+            : implode("\n", array_map(
+                fn($k) => "- \"{$k['kpi_title']}\" ({$k['category']}): {$k['achievement_percentage']}% of annual target achieved, status {$k['status']}",
+                $kpis
+            ));
+
+        $userPrompt = "Employee: {$employeeName}\n"
+            . "Review period: {$periodLabel} ({$periodType})\n\n"
+            . "TASK ACTIVITY:\n"
+            . "Active on {$activeDays} of {$totalDays} days in this period.\n"
+            . "{$taskLines}\n\n"
+            . "KPI STANDING (current, not period-specific):\n"
+            . "{$kpiLines}\n\n"
+            . "Score this period 0–100, weighing both task activity consistency and KPI achievement:\n"
+            . "90-100 — Highly consistent activity and strong KPI achievement.\n"
+            . "75-89 — Solid, mostly consistent activity with KPIs on track.\n"
+            . "50-74 — Inconsistent activity or KPI achievement noticeably behind pace.\n"
+            . "0-49 — Little to no logged activity and/or KPI achievement well behind.\n\n"
+            . "Respond with JSON only: {\"score\": number, \"narrative\": \"2-4 professional sentences summarizing performance this period, naming what is going well and what needs attention, grounded in the data above\"}";
+
+        $response = $this->request()->post('https://api.openai.com/v1/chat/completions', [
+            'model'                 => $this->model,
+            'max_completion_tokens' => 300,
+            'temperature'           => 0.3,
+            'messages'              => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user',   'content' => $userPrompt],
+            ],
+        ]);
+
+        if (!$response->successful()) {
+            throw new \RuntimeException('OpenAI request failed: ' . $response->body());
+        }
+
+        $text = trim($response->json('choices.0.message.content', '{}'));
+
+        return json_decode($text, true) ?? ['score' => 0, 'narrative' => ''];
+    }
 }

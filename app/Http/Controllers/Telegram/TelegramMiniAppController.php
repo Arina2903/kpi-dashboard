@@ -448,4 +448,39 @@ class TelegramMiniAppController extends Controller
 
         return response()->json(['financial_year' => $fy, 'kpis' => $result]);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET /api/telegram/reviews
+    |--------------------------------------------------------------------------
+    | Latest AI-generated review for the requested period type, plus a short
+    | history of prior periods. Reviews are generated on a schedule (see
+    | TelegramReviewService / database/telegram_review_cron.sql) — this
+    | endpoint only reads what has already been generated.
+    */
+    public function reviews(Request $request, SupabaseService $supabase)
+    {
+        $validated = $request->validate([
+            'employee_id' => 'required|string',
+            'company_code' => 'required|string',
+            'period' => 'required|in:weekly,monthly,quarterly',
+        ]);
+
+        $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
+
+        $reviews = $supabase->get('telegram_ai_reviews', [
+            'employee_id' => 'eq.' . $validated['employee_id'],
+            'company_code' => 'eq.' . $validated['company_code'],
+            'period_type' => 'eq.' . $validated['period'],
+            'select' => 'id,period_label,period_start,period_end,score,narrative,generated_at',
+            'order' => 'period_start.desc',
+            'limit' => '8',
+        ]) ?? [];
+
+        return response()->json([
+            'period' => $validated['period'],
+            'latest' => $reviews[0] ?? null,
+            'history' => array_slice($reviews, 1),
+        ]);
+    }
 }

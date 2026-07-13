@@ -509,10 +509,13 @@
                 <button onclick="renderMyKpis()" class="flex-1 py-3 rounded-2xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[12px] font-black">
                     📊 My KPIs
                 </button>
-                <button onclick="renderNewTaskPickProject()" class="flex-1 py-3 rounded-2xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black shadow-[0_6px_16px_rgba(22,163,74,.35)]">
-                    ➕ New Task
+                <button onclick="renderPerformanceReview('weekly')" class="flex-1 py-3 rounded-2xl bg-white border-2 border-slate-300 text-slate-700 text-[12px] font-black">
+                    Performance Review
                 </button>
             </div>
+            <button onclick="renderNewTaskPickProject()" class="w-full mt-2 py-3 rounded-2xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black shadow-[0_6px_16px_rgba(22,163,74,.35)]">
+                ➕ New Task
+            </button>
         `;
 
         if (!window.__myTasks.length) {
@@ -985,6 +988,108 @@
         }).join('');
 
         app.innerHTML = `<p class="text-[11px] text-slate-500 mb-2 px-1">Tasks tracked under "<b>${data.kpi_title}</b>"</p>` + taskCards;
+    }
+
+    /* ---------------------------------------------------------------- */
+    /* PERFORMANCE REVIEW — AI-generated weekly/monthly/quarterly score  */
+    /* and narrative, grounded in task activity + KPI standing. Reviews  */
+    /* are generated on a schedule (see TelegramReviewService), not on   */
+    /* demand — this screen only displays what already exists. Kept      */
+    /* deliberately plain and text-led: no emoji, muted slate tones,     */
+    /* since this reads as a formal record rather than a daily tool.     */
+    /* ---------------------------------------------------------------- */
+
+    const REVIEW_PERIODS = [
+        { key: 'weekly', label: 'Weekly' },
+        { key: 'monthly', label: 'Monthly' },
+        { key: 'quarterly', label: 'Quarterly' },
+    ];
+
+    function reviewBand(score) {
+        if (score >= 90) return { label: 'Excellent', cls: 'text-emerald-800 border-emerald-700' };
+        if (score >= 75) return { label: 'Good', cls: 'text-slate-700 border-slate-400' };
+        if (score >= 50) return { label: 'Needs Attention', cls: 'text-amber-800 border-amber-700' };
+        return { label: 'At Risk', cls: 'text-rose-800 border-rose-700' };
+    }
+
+    function reviewEmptyNote(periodType) {
+        if (periodType === 'weekly') return 'Generated every Sunday evening, covering the previous 7 days.';
+        if (periodType === 'monthly') return 'Generated on the 1st of each month, covering the month before.';
+        return 'Generated automatically when one of your KPI quarters closes.';
+    }
+
+    function reviewCard(r) {
+        const band = reviewBand(r.score);
+        return card(`
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">${r.period_label}</p>
+            <p class="text-[28px] font-black text-slate-900 mt-1 leading-none">${Math.round(r.score)}<span class="text-[13px] font-bold text-slate-400">/100</span></p>
+            <span class="inline-block mt-2 px-2 py-0.5 rounded-full border text-[9px] font-bold ${band.cls}">${band.label}</span>
+            <p class="text-[12px] text-slate-600 leading-relaxed mt-3 pt-3 border-t border-slate-200">${r.narrative}</p>
+        `);
+    }
+
+    function reviewHistorySection(history) {
+        if (!history.length) return '';
+        const rows = history.map((r, i) => `
+            <button onclick="renderReviewDetail(${i})" class="w-full text-left tap-card">
+                ${card(`
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="text-[12px] font-bold text-slate-700">${r.period_label}</p>
+                        <p class="text-[12px] font-black text-slate-500">${Math.round(r.score)}/100</p>
+                    </div>
+                `, 'hover:border-slate-400')}
+            </button>
+        `).join('<div class="h-1.5"></div>');
+
+        return `
+            <p class="text-[10px] uppercase tracking-wide text-slate-400 font-bold mt-4 mb-1.5 px-1">Previous periods</p>
+            <div>${rows}</div>
+        `;
+    }
+
+    async function renderPerformanceReview(periodType) {
+        periodType = periodType || 'weekly';
+        setTopbar('Performance Review', true);
+        const app = document.getElementById('app');
+        app.innerHTML = `<p class="text-center text-slate-400 text-[12px] mt-10">Loading…</p>`;
+
+        const tabs = `
+            <div class="flex items-center gap-1 border-b-2 border-slate-200 mb-4">
+                ${REVIEW_PERIODS.map(p => `
+                    <button onclick="renderPerformanceReview('${p.key}')"
+                        class="flex-1 pb-2.5 text-[12px] font-bold ${p.key === periodType ? 'text-slate-900 border-b-2 border-slate-900 -mb-[2px]' : 'text-slate-400'}">
+                        ${p.label}
+                    </button>
+                `).join('')}
+            </div>
+        `;
+
+        let data;
+        try {
+            data = await api(`/reviews?employee_id=${state.employeeId}&company_code=${state.companyCode}&period=${periodType}`);
+        } catch (e) {
+            app.innerHTML = tabs + card(`<p class="text-[13px] text-slate-600 text-center py-6">Could not load your review.</p>`);
+            return;
+        }
+
+        window.__reviewHistory = data.history || [];
+
+        if (!data.latest) {
+            app.innerHTML = tabs + card(`
+                <p class="text-[13px] font-bold text-slate-900 mb-1.5">No review yet</p>
+                <p class="text-[12px] text-slate-500 leading-relaxed">${reviewEmptyNote(periodType)}</p>
+            `);
+            return;
+        }
+
+        app.innerHTML = tabs + reviewCard(data.latest) + reviewHistorySection(window.__reviewHistory);
+    }
+
+    function renderReviewDetail(index) {
+        const r = (window.__reviewHistory || [])[index];
+        if (!r) { renderPerformanceReview('weekly'); return; }
+        setTopbar('Performance Review', true);
+        document.getElementById('app').innerHTML = reviewCard(r);
     }
 
     boot();
