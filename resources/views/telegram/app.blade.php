@@ -157,7 +157,7 @@
     }
 
     function goHome() {
-        renderMyKpis();
+        renderThingsToDo();
     }
 
     function card(inner, extraClasses = '') {
@@ -211,7 +211,7 @@
     }
 
     function routeToScreen() {
-        renderMyKpis();
+        renderThingsToDo();
     }
 
     /* ---------------------------------------------------------------- */
@@ -319,7 +319,7 @@
     }
 
     async function renderMyKpis() {
-        setTopbar('My KPIs', false);
+        setTopbar('My KPIs', true);
         const app = document.getElementById('app');
         app.innerHTML = `<p class="text-center text-slate-400 text-[12px] mt-10">Loading…</p>`;
 
@@ -344,11 +344,7 @@
         const sorted = sortByCategoryAndSub(data.kpis);
 
         let lastCategory = null;
-        let html = `
-            <button onclick="renderMyTasks()" class="w-full py-3 rounded-2xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black shadow-[0_6px_16px_rgba(22,163,74,.35)]">
-                📁 My Tasks
-            </button>
-        `;
+        let html = '';
 
         sorted.forEach(k => {
             if (k.category !== lastCategory) {
@@ -404,12 +400,6 @@
             `) + '<div class="h-2"></div>';
         });
 
-        html += `
-            <div class="pt-2 pb-6 text-center">
-                <button onclick="confirmDisconnect()" class="text-[11px] text-slate-400 underline">Disconnect Telegram</button>
-            </div>
-        `;
-
         app.innerHTML = html;
     }
 
@@ -451,95 +441,152 @@
     }
 
     /* ---------------------------------------------------------------- */
-    /* PROJECTS & TASKS — a reusable, persistent to-do system: create a  */
-    /* project, add tasks under it, link each task to the KPI(s) it     */
-    /* feeds, then update its progress any time (morning or evening).   */
-    /* Updating a task's actual applies the same delta to every linked  */
-    /* KPI's currently-open quarter, via the same shared quarter-update */
-    /* service the quick "My KPIs" Update box uses.                    */
+    /* THINGS TO DO — this is the app's home screen. A reusable,        */
+    /* persistent to-do system: create a project, add tasks under it,   */
+    /* pick which KPI(s) it feeds (mandatory, last step of creation),   */
+    /* then update its progress any time (Daily Update). Every task     */
+    /* card here is shown grouped under the KPI it belongs to, so this  */
+    /* reads like a task manager built around your KPIs, not a         */
+    /* separate to-do list bolted on the side. Updating a task's        */
+    /* actual only changes that task's own actual — it does NOT touch  */
+    /* any linked KPI's official quarter_actual (that stays a          */
+    /* deliberate, separate action on the "My KPIs" screen).            */
     /* ---------------------------------------------------------------- */
 
-    async function renderMyTasks() {
-        setTopbar('My Tasks', true);
+    function taskCard(t, primaryKpiId) {
+        const pct = t.target > 0 ? Math.max(0, Math.min(100, (t.actual / t.target) * 100)) : 0;
+        const badge = achvBadge(pct);
+        const extraKpis = (t.linked_kpis || []).filter(k => k.kpi_id !== primaryKpiId);
+        const extraChips = extraKpis.length
+            ? `<div class="flex flex-wrap gap-1.5 mt-2">${extraKpis.map(k => `<span class="px-2 py-0.5 rounded-full bg-[#CCE3DE] text-[#1a3d34] text-[8px] font-black">🔗 ${k.kpi_title}</span>`).join('')}</div>`
+            : '';
+
+        return card(`
+            <div class="flex items-center justify-between gap-2">
+                <p class="text-[13px] font-black text-slate-900 leading-snug min-w-0">${t.title}</p>
+                <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${t.status === 'done' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                    ${t.status === 'done' ? '✓ Done' : 'In Progress'}
+                </span>
+            </div>
+            <p class="text-[9px] text-slate-400">📁 ${t.project_name}</p>
+            <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-2 overflow-hidden">
+                <div class="h-full rounded-full bg-gradient-to-r ${badge.bar}" style="width:${pct}%"></div>
+            </div>
+            <div class="flex items-center justify-between mt-1.5">
+                <p class="text-[10px] text-slate-500">Target: <span class="font-bold text-slate-700">${formatUnit(t.target, t.unit)}</span></p>
+                <p class="text-[10px] text-slate-500">Actual: <span class="font-bold text-slate-700">${formatUnit(t.actual, t.unit)}</span></p>
+                <p class="text-[10px] font-black text-slate-700">${pct.toFixed(0)}%</p>
+            </div>
+            ${extraChips}
+            <div class="flex items-center gap-2 mt-3">
+                <button onclick="renderTaskProgress('${t.id}')" class="flex-1 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[11px] font-black">
+                    📝 Daily Update
+                </button>
+                <button onclick="renderLinkTaskKpis('${t.id}')" class="flex-1 py-2 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[11px] font-black">
+                    🔗 Edit KPIs
+                </button>
+            </div>
+        `);
+    }
+
+    async function renderThingsToDo() {
+        setTopbar('Things To Do', false);
         const app = document.getElementById('app');
-        app.innerHTML = `<p class="text-center text-slate-400 text-[12px] mt-10">Loading your tasks…</p>`;
+        app.innerHTML = `<p class="text-center text-slate-400 text-[12px] mt-10">Loading your to-dos…</p>`;
 
         let data;
         try {
             data = await api(`/project-tasks?employee_id=${state.employeeId}&company_code=${state.companyCode}`);
         } catch (e) {
-            renderError('Could not load your tasks.');
+            renderError('Could not load your to-dos.');
             return;
         }
 
         window.__myTasks = data.tasks || [];
 
         const header = `
-            <button onclick="renderNewTaskPickProject()" class="w-full py-3 rounded-2xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black shadow-[0_6px_16px_rgba(22,163,74,.35)]">
-                ➕ New Task
-            </button>
+            <div class="flex items-center gap-2">
+                <button onclick="renderMyKpis()" class="flex-1 py-3 rounded-2xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[12px] font-black">
+                    📊 My KPIs
+                </button>
+                <button onclick="renderNewTaskPickProject()" class="flex-1 py-3 rounded-2xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black shadow-[0_6px_16px_rgba(22,163,74,.35)]">
+                    ➕ New Task
+                </button>
+            </div>
         `;
 
         if (!window.__myTasks.length) {
-            app.innerHTML = header + `<div class="mt-3">${card(`<p class="text-[13px] text-slate-600 text-center py-6">No tasks yet. Create one to start tracking daily progress.</p>`)}</div>`;
+            app.innerHTML = header + `<div class="mt-3">${card(`<p class="text-[13px] text-slate-600 text-center py-6">No to-dos yet. Every task you create is tied to a KPI — tap "New Task" to start tracking daily progress.</p>`)}</div>`;
             return;
         }
 
-        // Group by project, preserving arrival order (most recently created first).
+        // Group by each task's primary (first) linked KPI. Tasks saved before
+        // linking was mandatory may have none yet — those land in a "Needs a
+        // KPI" bucket up top instead of being silently dropped.
         const groups = [];
         const seen = {};
         window.__myTasks.forEach(t => {
-            if (!seen[t.project_id]) {
-                seen[t.project_id] = { project_name: t.project_name, tasks: [] };
-                groups.push(seen[t.project_id]);
+            const primary = (t.linked_kpis || [])[0] || null;
+            const key = primary ? primary.kpi_id : '__needs_kpi__';
+            if (!seen[key]) {
+                seen[key] = {
+                    kpi_id: primary ? primary.kpi_id : null,
+                    kpi_title: primary ? primary.kpi_title : 'Needs a KPI',
+                    category: primary ? primary.category : null,
+                    tasks: [],
+                };
+                groups.push(seen[key]);
             }
-            seen[t.project_id].tasks.push(t);
+            seen[key].tasks.push(t);
+        });
+
+        const needsKpiGroup = groups.find(g => g.kpi_id === null);
+        const kpiGroups = groups.filter(g => g.kpi_id !== null).sort((a, b) => {
+            const ai = CATEGORY_ORDER.indexOf(a.category); const bi = CATEGORY_ORDER.indexOf(b.category);
+            const catDiff = (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+            if (catDiff !== 0) return catDiff;
+            return a.kpi_title.localeCompare(b.kpi_title);
         });
 
         let html = header;
 
-        groups.forEach(group => {
+        if (needsKpiGroup) {
             html += `
                 <div class="flex items-center gap-2 mt-4 mb-1 px-1">
-                    <span class="text-[15px]">📁</span>
-                    <p class="text-[11px] font-black uppercase tracking-wide text-[#6B3F2A]">${group.project_name}</p>
+                    <span class="text-[15px]">⚠️</span>
+                    <p class="text-[11px] font-black uppercase tracking-wide text-red-600">Needs a KPI</p>
                 </div>
             `;
+            needsKpiGroup.tasks.forEach(t => { html += taskCard(t, null) + '<div class="h-2"></div>'; });
+        }
 
-            group.tasks.forEach(t => {
-                const pct = t.target > 0 ? Math.max(0, Math.min(100, (t.actual / t.target) * 100)) : 0;
-                const badge = achvBadge(pct);
-                const kpiChips = t.linked_kpis.length
-                    ? t.linked_kpis.map(k => `<span class="px-2 py-0.5 rounded-full bg-[#CCE3DE] text-[#1a3d34] text-[8px] font-black">🔗 ${k.kpi_title}</span>`).join('')
-                    : `<span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 text-[8px] font-black">Not linked to any KPI</span>`;
+        let lastCategory = null;
+        kpiGroups.forEach(group => {
+            if (group.category !== lastCategory) {
+                const cat = CATEGORY_COLORS[group.category] || DEFAULT_CATEGORY_COLOR;
+                html += `
+                    <div class="flex items-center gap-2 mt-4 mb-1 px-1">
+                        <span class="text-[15px]">${cat.icon}</span>
+                        <p class="text-[11px] font-black uppercase tracking-wide text-[#6B3F2A]">${group.category || 'Other'}</p>
+                    </div>
+                `;
+                lastCategory = group.category;
+            }
 
-                html += card(`
-                    <div class="flex items-center justify-between gap-2">
-                        <p class="text-[13px] font-black text-slate-900 leading-snug min-w-0">${t.title}</p>
-                        <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${t.status === 'done' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                            ${t.status === 'done' ? '✓ Done' : 'In Progress'}
-                        </span>
-                    </div>
-                    <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-2 overflow-hidden">
-                        <div class="h-full rounded-full bg-gradient-to-r ${badge.bar}" style="width:${pct}%"></div>
-                    </div>
-                    <div class="flex items-center justify-between mt-1.5">
-                        <p class="text-[10px] text-slate-500">Target: <span class="font-bold text-slate-700">${formatUnit(t.target, t.unit)}</span></p>
-                        <p class="text-[10px] text-slate-500">Actual: <span class="font-bold text-slate-700">${formatUnit(t.actual, t.unit)}</span></p>
-                        <p class="text-[10px] font-black text-slate-700">${pct.toFixed(0)}%</p>
-                    </div>
-                    <div class="flex flex-wrap gap-1.5 mt-2">${kpiChips}</div>
-                    <div class="flex items-center gap-2 mt-3">
-                        <button onclick="renderTaskProgress('${t.id}')" class="flex-1 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[11px] font-black">
-                            ✏️ Update Progress
-                        </button>
-                        <button onclick="renderLinkTaskKpis('${t.id}')" class="flex-1 py-2 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[11px] font-black">
-                            🔗 Link to KPI
-                        </button>
-                    </div>
-                `) + '<div class="h-2"></div>';
-            });
+            html += `
+                <button onclick='renderKpiTaskHistory(${JSON.stringify(group.kpi_id)}, ${JSON.stringify(group.kpi_title)})' class="w-full text-left px-1 mb-1.5">
+                    <p class="text-[12px] font-black text-slate-700">📌 ${group.kpi_title} <span class="text-slate-300 font-bold">›</span></p>
+                </button>
+            `;
+
+            group.tasks.forEach(t => { html += taskCard(t, group.kpi_id) + '<div class="h-2"></div>'; });
         });
+
+        html += `
+            <div class="pt-2 pb-6 text-center">
+                <button onclick="confirmDisconnect()" class="text-[11px] text-slate-400 underline">Disconnect Telegram</button>
+            </div>
+        `;
 
         app.innerHTML = html;
     }
@@ -636,14 +683,14 @@
             <input type="number" step="any" min="0" id="taskTargetInput" placeholder="e.g. 50"
                 class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
 
-            <button onclick="saveNewTask('${projectId}')" class="w-full mt-4 py-3 rounded-2xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-black shadow-[0_6px_16px_rgba(22,163,74,.35)]">
-                Save Task
+            <button onclick='goToPickKpis(${JSON.stringify(projectId)}, ${JSON.stringify(projectName)})' class="w-full mt-4 py-3 rounded-2xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-black shadow-[0_6px_16px_rgba(22,163,74,.35)]">
+                Next: Pick a KPI →
             </button>
             <p id="newTaskFeedback" class="hidden text-[10px] font-bold text-red-600 mt-2 text-center"></p>
         `);
     }
 
-    async function saveNewTask(projectId) {
+    function goToPickKpis(projectId, projectName) {
         const feedback = document.getElementById('newTaskFeedback');
         const title = document.getElementById('taskTitleInput').value.trim();
         const unit = document.getElementById('taskUnitInput').value;
@@ -655,16 +702,79 @@
             return;
         }
 
+        renderNewTaskPickKpis(projectId, projectName, title, unit, Number(target));
+    }
+
+    // Last step of creating a task — picking the KPI(s) it belongs to is
+    // mandatory, so a task can never exist without at least one.
+    async function renderNewTaskPickKpis(projectId, projectName, title, unit, target) {
+        setTopbar('New Task — Pick KPI(s)', true);
+        const app = document.getElementById('app');
+        app.innerHTML = `<p class="text-center text-slate-400 text-[12px] mt-10">Loading matching KPIs…</p>`;
+
+        let data;
+        try {
+            data = await api(`/project-tasks/kpi-options?employee_id=${state.employeeId}&company_code=${state.companyCode}&unit=${unit}`);
+        } catch (e) {
+            renderError('Could not load your KPIs.');
+            return;
+        }
+
+        if (!data.kpis.length) {
+            app.innerHTML = card(`<p class="text-[13px] text-slate-600 text-center py-6">No open KPIs with a matching "${unit}" unit right now. Every task needs a KPI — try a different unit, or check back once a matching quarter is open.</p>`);
+            return;
+        }
+
+        const sortedKpis = sortByCategoryAndSub(data.kpis);
+        const rows = sortedKpis.map(k => {
+            const cat = CATEGORY_COLORS[k.category] || DEFAULT_CATEGORY_COLOR;
+            return `
+                <label class="block cursor-pointer">
+                    ${card(`
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" value="${k.kpi_id}" class="kpi-link-checkbox w-5 h-5 accent-[#16A34A] shrink-0">
+                            <div class="min-w-0">
+                                <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${cat.icon} ${k.category || '-'}</span>
+                                <p class="text-[13px] font-black text-slate-900 mt-1">${k.kpi_title}</p>
+                            </div>
+                        </div>
+                    `)}
+                </label>
+            `;
+        }).join('<div class="h-1.5"></div>');
+
+        app.innerHTML = `
+            <p class="text-[10px] font-bold text-slate-400">📁 ${projectName}</p>
+            <p class="text-[14px] font-black text-slate-900 mt-1 mb-3">${title}</p>
+            <p class="text-[11px] text-slate-500 mb-2 px-1">Last step — tick at least one KPI this task feeds into.</p>
+            <div>${rows}</div>
+            <button onclick='saveNewTask(${JSON.stringify(projectId)}, ${JSON.stringify(title)}, ${JSON.stringify(unit)}, ${target})' class="w-full mt-4 py-3 rounded-2xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-black shadow-[0_6px_16px_rgba(22,163,74,.35)]">
+                Save Task
+            </button>
+            <p id="newTaskFeedback" class="hidden text-[10px] font-bold text-red-600 mt-2 text-center"></p>
+        `;
+    }
+
+    async function saveNewTask(projectId, title, unit, target) {
+        const feedback = document.getElementById('newTaskFeedback');
+        const kpiIds = [...document.querySelectorAll('.kpi-link-checkbox:checked')].map(el => el.value);
+
+        if (kpiIds.length === 0) {
+            feedback.textContent = 'Tick at least one KPI — every task needs one.';
+            feedback.classList.remove('hidden');
+            return;
+        }
+
         try {
             await api('/project-tasks', {
                 method: 'POST',
                 body: JSON.stringify({
                     employee_id: state.employeeId, company_code: state.companyCode,
-                    project_id: projectId, title, unit, target: Number(target),
+                    project_id: projectId, title, unit, target: Number(target), kpi_ids: kpiIds,
                 }),
             });
             if (tg?.showPopup) tg.showPopup({ message: 'Task saved! ✅' });
-            renderMyTasks();
+            renderThingsToDo();
         } catch (e) {
             feedback.textContent = e.data?.message || "Couldn't save — please try again.";
             feedback.classList.remove('hidden');
@@ -673,14 +783,14 @@
 
     function renderTaskProgress(taskId) {
         const t = (window.__myTasks || []).find(x => x.id === taskId);
-        if (!t) { renderMyTasks(); return; }
+        if (!t) { renderThingsToDo(); return; }
 
-        setTopbar('Update Progress', true);
+        setTopbar('Daily Update', true);
         const pct = t.target > 0 ? Math.max(0, Math.min(100, (t.actual / t.target) * 100)) : 0;
         const badge = achvBadge(pct);
         const kpiNote = t.linked_kpis.length
             ? `This updates the task only — it's tracked under ${t.linked_kpis.length} KPI(s), viewable from that KPI's Task History.`
-            : `This updates the task only. Not linked to any KPI yet.`;
+            : `This updates the task only.`;
 
         document.getElementById('app').innerHTML = card(`
             <p class="text-[10px] font-bold text-slate-400">📁 ${t.project_name}</p>
@@ -736,7 +846,7 @@
             });
             if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             if (tg?.showPopup) tg.showPopup({ message: 'Task updated! ✅' });
-            renderMyTasks();
+            renderThingsToDo();
         } catch (e) {
             feedback.textContent = e.data?.message || "Couldn't update — please try again.";
             feedback.className = 'text-[10px] font-bold mt-2 text-red-600';
@@ -746,9 +856,9 @@
 
     async function renderLinkTaskKpis(taskId) {
         const t = (window.__myTasks || []).find(x => x.id === taskId);
-        if (!t) { renderMyTasks(); return; }
+        if (!t) { renderThingsToDo(); return; }
 
-        setTopbar('Link to KPI(s)', true);
+        setTopbar('Edit KPI Links', true);
         const app = document.getElementById('app');
         app.innerHTML = `<p class="text-center text-slate-400 text-[12px] mt-10">Loading KPIs…</p>`;
 
@@ -787,7 +897,7 @@
         }).join('<div class="h-1.5"></div>');
 
         app.innerHTML = `
-            <p class="text-[11px] text-slate-500 mb-2 px-1">Task "<b>${t.title}</b>" (${t.unit}) — tick which KPI(s) to track this under. Doesn't change either KPI's actual — this is for visibility in that KPI's Task History.</p>
+            <p class="text-[11px] text-slate-500 mb-2 px-1">Task "<b>${t.title}</b>" (${t.unit}) — tick which KPI(s) to track this under (at least one required). Doesn't change either KPI's actual — this is for visibility in that KPI's Task History.</p>
             <div>${rows}</div>
             <button onclick="saveLinkKpis('${taskId}')" class="w-full mt-4 py-3 rounded-2xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-black shadow-[0_6px_16px_rgba(22,163,74,.35)]">
                 Save Links
@@ -800,13 +910,19 @@
         const feedback = document.getElementById('linkKpisFeedback');
         const kpiIds = [...document.querySelectorAll('.kpi-link-checkbox:checked')].map(el => el.value);
 
+        if (kpiIds.length === 0) {
+            feedback.textContent = 'Every task needs at least one KPI — tick at least one.';
+            feedback.classList.remove('hidden');
+            return;
+        }
+
         try {
             await api(`/project-tasks/${taskId}/link-kpis`, {
                 method: 'POST',
                 body: JSON.stringify({ employee_id: state.employeeId, company_code: state.companyCode, kpi_ids: kpiIds }),
             });
             if (tg?.showPopup) tg.showPopup({ message: 'Linked! ✅' });
-            renderMyTasks();
+            renderThingsToDo();
         } catch (e) {
             feedback.textContent = e.data?.message || "Couldn't save — please try again.";
             feedback.classList.remove('hidden');

@@ -120,7 +120,7 @@ class TelegramProjectTaskController extends Controller
         $kpiIds = array_unique(array_column($links, 'kpi_id'));
         $kpis = empty($kpiIds) ? [] : ($supabase->get('kpis', [
             'id' => 'in.(' . implode(',', $kpiIds) . ')',
-            'select' => 'id,kpi_title,unit',
+            'select' => 'id,kpi_title,unit,category',
         ]) ?? []);
         $kpiMap = collect($kpis)->keyBy('id');
 
@@ -129,7 +129,7 @@ class TelegramProjectTaskController extends Controller
         $result = array_map(function ($task) use ($projectMap, $linksByTask, $kpiMap) {
             $linkedKpis = $linksByTask->get($task['id'], collect())->map(function ($link) use ($kpiMap) {
                 $kpi = $kpiMap->get($link['kpi_id']);
-                return $kpi ? ['kpi_id' => $kpi['id'], 'kpi_title' => $kpi['kpi_title']] : null;
+                return $kpi ? ['kpi_id' => $kpi['id'], 'kpi_title' => $kpi['kpi_title'], 'category' => $kpi['category'] ?? null] : null;
             })->filter()->values();
 
             return [
@@ -162,6 +162,10 @@ class TelegramProjectTaskController extends Controller
             'title' => 'required|string|max:200',
             'unit' => 'required|in:number,currency,percentage',
             'target' => 'required|numeric|min:0',
+            // Every task must belong to at least one KPI — linking is the
+            // last step of the create flow, not an optional afterthought.
+            'kpi_ids' => 'required|array|min:1',
+            'kpi_ids.*' => 'string',
         ]);
 
         $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
@@ -176,6 +180,24 @@ class TelegramProjectTaskController extends Controller
             return response()->json(['success' => false, 'message' => 'Project not found.'], 404);
         }
 
+        $kpiIds = array_unique($validated['kpi_ids']);
+
+        $kpis = $supabase->get('kpis', [
+            'id' => 'in.(' . implode(',', $kpiIds) . ')',
+            'employee_id' => 'eq.' . $validated['employee_id'],
+            'company_code' => 'eq.' . $validated['company_code'],
+            'select' => 'id,unit',
+        ]) ?? [];
+
+        if (count($kpis) !== count($kpiIds)) {
+            return response()->json(['success' => false, 'message' => 'One or more KPIs were not found.'], 404);
+        }
+
+        $mismatched = collect($kpis)->first(fn($k) => $k['unit'] !== $validated['unit']);
+        if ($mismatched) {
+            return response()->json(['success' => false, 'message' => "Unit mismatch — this task is in \"{$validated['unit']}\", but a selected KPI isn't."], 422);
+        }
+
         $inserted = $supabase->insert('telegram_project_tasks', [
             'project_id' => $validated['project_id'],
             'employee_id' => $validated['employee_id'],
@@ -185,7 +207,18 @@ class TelegramProjectTaskController extends Controller
             'target' => (float) $validated['target'],
         ]);
 
-        return response()->json(['task' => $inserted[0] ?? null]);
+        $task = $inserted[0] ?? null;
+
+        if ($task) {
+            foreach ($kpiIds as $kpiId) {
+                $supabase->insert('telegram_project_task_kpi_links', [
+                    'task_id' => $task['id'],
+                    'kpi_id' => $kpiId,
+                ]);
+            }
+        }
+
+        return response()->json(['task' => $task]);
     }
 
     /*
@@ -236,14 +269,15 @@ class TelegramProjectTaskController extends Controller
     | POST /api/telegram/project-tasks/{id}/link-kpis
     |--------------------------------------------------------------------------
     | Replaces the set of KPIs this task feeds into. Every kpi_id must belong
-    | to the same employee/company and share the task's unit.
+    | to the same employee/company and share the task's unit. At least one
+    | KPI must remain linked — a task can never end up orphaned.
     */
     public function linkKpis(Request $request, SupabaseService $supabase, string $id)
     {
         $validated = $request->validate([
             'employee_id' => 'required|string',
             'company_code' => 'required|string',
-            'kpi_ids' => 'array',
+            'kpi_ids' => 'required|array|min:1',
             'kpi_ids.*' => 'string',
         ]);
 
