@@ -33,7 +33,7 @@
 <button
     id="aiChatBubble"
     onclick="toggleAiChat()"
-    class="fixed bottom-6 right-6 z-[9999] w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 shadow-xl flex items-center justify-center transition"
+    class="no-print fixed bottom-6 right-6 z-[9999] w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 shadow-xl flex items-center justify-center transition"
     title="ANIRA - KPI AI Assistant"
 >
     <svg id="aiChatIconOpen" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -48,7 +48,7 @@
 <!-- Chat panel -->
 <div
     id="aiChatPanel"
-    class="fixed bottom-24 right-6 z-[9998] w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col hidden"
+    class="no-print fixed bottom-24 right-6 z-[9998] w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col hidden"
     style="height: 480px;"
 >
     <!-- Header -->

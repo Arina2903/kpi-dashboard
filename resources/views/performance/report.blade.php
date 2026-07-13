@@ -131,7 +131,7 @@
 
             @page { size: A4 portrait; margin: 10mm 10mm 12mm; }
 
-            #print-table { width: 100% !important; border-collapse: collapse !important; }
+            #print-table { width: 100% !important; border-collapse: collapse !important; zoom: 0.85 !important; }
             #print-thead { display: table-header-group !important; }
             #print-thead td { padding: 4mm 0 3mm; background: white !important; }
             #doc-hdr { display: none !important; }
