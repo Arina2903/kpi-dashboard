@@ -633,12 +633,12 @@
                     </td>
                     <td style="padding:10px 8px;vertical-align:top;background:rgba(107,144,128,.03);" class="text-center">
                         <p style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Superior</p>
-                        <div class="rating-group justify-center" style="pointer-events:none;opacity:0.5;">
+                        <div class="rating-group justify-center sup-rating-group" style="pointer-events:none;opacity:0.5;">
                             @foreach([1,2,3,4,5] as $sc)<input type="radio" id="sup_{{ $area['no'] }}_{{ $sc }}" name="sup_{{ $area['no'] }}" value="{{ $sc }}"><label for="sup_{{ $area['no'] }}_{{ $sc }}">{{ $sc }}</label>@endforeach
                         </div>
                     </td>
                     <td style="padding:10px 12px;vertical-align:top;background:rgba(107,144,128,.03);">
-                        <input type="text" name="att_comment_{{ $area['no'] }}" placeholder="Filled by appraiser…" class="t-input" style="margin-top:6px;pointer-events:none;opacity:0.5;" readonly>
+                        <input type="text" name="att_comment_{{ $area['no'] }}" placeholder="Filled by appraiser…" class="t-input att-comment-input" style="margin-top:6px;pointer-events:none;opacity:0.5;" readonly>
                     </td>
                 </tr>
                 @endforeach
@@ -1534,6 +1534,16 @@ function unlockAppraiserSections() {
         inp.style.opacity = '';
         inp.style.background = '';
         inp.style.cursor = '';
+    });
+    // Unlock Superior Rating (1-5) and Appraiser's Comment in Section 3 — manager only
+    document.querySelectorAll('.sup-rating-group').forEach(function(el) {
+        el.style.pointerEvents = 'auto';
+        el.style.opacity = '';
+    });
+    document.querySelectorAll('.att-comment-input').forEach(function(inp) {
+        inp.removeAttribute('readonly');
+        inp.style.pointerEvents = 'auto';
+        inp.style.opacity = '';
     });
     // Unlock attendance count inputs — manager only
     document.querySelectorAll('.att-count-input').forEach(function(inp) {
