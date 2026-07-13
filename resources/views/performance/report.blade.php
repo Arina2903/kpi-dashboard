@@ -789,11 +789,11 @@
                             </div>
                         </td>
                         <td class="text-center" style="padding:10px 8px;">
-                            <div class="rating-group justify-center">
+                            <div class="rating-group justify-center cv-app-rating-group" style="pointer-events:none;opacity:0.5;">
                                 @foreach([1,2,3,4,5] as $sc)<input type="radio" id="cv_a_{{ $ci }}_{{ $sc }}" name="cv_app_{{ $ci }}" value="{{ $sc }}"><label for="cv_a_{{ $ci }}_{{ $sc }}">{{ $sc }}</label>@endforeach
                             </div>
                         </td>
-                        <td style="padding:10px 12px;"><input type="text" name="cv_remark_{{ $ci }}" placeholder="Remarks…" class="t-input"></td>
+                        <td style="padding:10px 12px;"><input type="text" name="cv_remark_{{ $ci }}" placeholder="Remarks…" class="t-input cv-remark-input" style="pointer-events:none;opacity:0.5;" readonly></td>
                     </tr>
                     @endforeach
                     </tbody>
@@ -1553,6 +1553,40 @@ function unlockAppraiserSections() {
         inp.style.background    = '#fff';
         inp.removeAttribute('readonly');
     });
+    // Unlock Appraiser Rating + Remarks in Section 5 (Q4 only) — manager only
+    document.querySelectorAll('.cv-app-rating-group').forEach(function(el) {
+        el.style.pointerEvents = 'auto';
+        el.style.opacity = '';
+    });
+    document.querySelectorAll('.cv-remark-input').forEach(function(inp) {
+        inp.removeAttribute('readonly');
+        inp.style.pointerEvents = 'auto';
+        inp.style.opacity = '';
+    });
+}
+
+// Belt-and-braces: explicitly disable every appraisee-authored field for the
+// appraiser view, rather than relying only on the inherited pointer-events
+// lock from the form body — a radio's paired <label> (the clickable visual)
+// can end up interactive independently of the input's own lock state, so
+// both the input and its label are handled here.
+function lockAppraiseeOwnFields() {
+    var fieldSelector = 'input[name^="self_"], input[name^="cv_self_"], input[name^="kpi_title_"], ' +
+        'textarea[name="part_b"], textarea[name="part_c"], textarea[name="att_remarks"]';
+
+    document.querySelectorAll(fieldSelector).forEach(function(el) {
+        el.disabled = true;
+        el.style.pointerEvents = 'none';
+    });
+
+    document.querySelectorAll('input[name^="self_"], input[name^="cv_self_"]').forEach(function(radio) {
+        var lbl = document.querySelector('label[for="' + radio.id + '"]');
+        if (lbl) {
+            lbl.style.pointerEvents = 'none';
+            lbl.style.opacity = '0.55';
+            lbl.style.cursor = 'not-allowed';
+        }
+    });
 }
 
 // ── signature pad ─────────────────────────────────────────────────────────────
@@ -1682,6 +1716,7 @@ if (_isAppraiserView) {
     var formBody = document.getElementById('form-body') || document.querySelector('main');
     if (formBody) { formBody.style.pointerEvents = 'none'; formBody.style.opacity = '0.85'; }
     unlockAppraiserSections();
+    lockAppraiseeOwnFields();
 } else if (_softLocked) {
     // status = appraised: soft-lock the whole form, then unlock just the acknowledgment panel
     var formBody = document.getElementById('form-body') || document.querySelector('main');
