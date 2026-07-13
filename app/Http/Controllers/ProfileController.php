@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\SupabaseService;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
 {
@@ -94,5 +95,64 @@ class ProfileController extends Controller
             'username' => $user['telegram_username'] ?? null,
             'linked_at' => $user['telegram_linked_at'] ?? null,
         ]);
+    }
+
+    public function updateEmail(Request $request, SupabaseService $supabase)
+    {
+        $request->validate([
+            'email'            => 'required|email',
+            'current_password' => 'required|string',
+        ]);
+
+        $authUser = $supabase->first('users', ['id' => 'eq.' . session('user_uuid'), 'select' => '*']);
+
+        if (!$authUser || !$this->currentPasswordMatches($request->current_password, $authUser)) {
+            return back()->with('error', 'Current password is incorrect.');
+        }
+
+        $existing = $supabase->first('users', ['email' => 'eq.' . $request->email, 'select' => 'id']);
+        if ($existing && $existing['id'] !== $authUser['id']) {
+            return back()->with('error', 'That email is already used by another account.');
+        }
+
+        $supabase->update('users', ['id' => 'eq.' . $authUser['id']], ['email' => $request->email]);
+        $supabase->safePatch('employees', ['id' => 'eq.' . session('employee_uuid')], ['email' => $request->email]);
+
+        session(['user_email' => $request->email]);
+
+        return back()->with('success', 'Email updated successfully.');
+    }
+
+    public function updatePassword(Request $request, SupabaseService $supabase)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password'          => 'required|string|min:8|confirmed',
+        ]);
+
+        $authUser = $supabase->first('users', ['id' => 'eq.' . session('user_uuid'), 'select' => '*']);
+
+        if (!$authUser || !$this->currentPasswordMatches($request->current_password, $authUser)) {
+            return back()->with('error', 'Current password is incorrect.');
+        }
+
+        $supabase->update('users', ['id' => 'eq.' . $authUser['id']], [
+            'password_hash' => Hash::make($request->password),
+        ]);
+
+        session(['using_default_password' => false]);
+
+        return back()->with('success', 'Password updated successfully.');
+    }
+
+    // Mirrors AuthController's login check: accounts with no password_hash yet
+    // are still gated by the shared default password until they set their own.
+    private function currentPasswordMatches(string $inputPassword, array $authUser): bool
+    {
+        if (empty($authUser['password_hash'])) {
+            return $inputPassword === 'Richworks';
+        }
+
+        return Hash::check($inputPassword, $authUser['password_hash']);
     }
 }

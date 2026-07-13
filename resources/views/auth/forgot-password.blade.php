@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RichWorks KPI Login</title>
+    <title>Forgot Password · RichWorks KPI</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -11,13 +11,12 @@
 
         <div class="flex items-center gap-3 mb-6">
             <img src="/images/RCG-Logo.png" class="w-10 h-10 object-contain">
-
             <div>
                 <h1 class="text-base font-bold text-slate-900">
-                    RichWorks KPI
+                    Forgot Password
                 </h1>
                 <p class="text-xs text-slate-500">
-                    Multi-Company Dashboard Access
+                    We'll email you a link to reset it
                 </p>
             </div>
         </div>
@@ -40,7 +39,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('login.submit') }}" class="space-y-4">
+        <form method="POST" action="{{ route('password.forgot.submit') }}" class="space-y-4">
             @csrf
 
             <div>
@@ -58,36 +57,18 @@
                 >
             </div>
 
-            <div>
-                <div class="flex items-center justify-between mb-1">
-                    <label class="block text-sm font-medium text-slate-700">
-                        Password
-                    </label>
-                    <a href="{{ route('password.forgot') }}" class="text-xs font-semibold text-[#4a7c6b] hover:text-[#2d5548]">
-                        Forgot password?
-                    </a>
-                </div>
-                <input
-                    type="password"
-                    name="password"
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none"
-                    placeholder="Enter your password"
-                    required
-                >
-            </div>
-
             <button
                 type="submit"
                 class="w-full rounded-xl bg-[#06142f] py-3 text-sm font-semibold text-white hover:bg-[#0b1f49] transition"
             >
-                Login
+                Send Reset Link
             </button>
         </form>
 
         <div class="mt-5 text-center">
-            <p class="text-xs text-slate-400">
-                Please contact HR if you do not have login access.
-            </p>
+            <a href="{{ route('login') }}" class="text-xs font-semibold text-[#4a7c6b] hover:text-[#2d5548]">
+                ← Back to login
+            </a>
         </div>
 
     </div>

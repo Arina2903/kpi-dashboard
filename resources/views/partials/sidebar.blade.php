@@ -1,5 +1,18 @@
 @include('partials.ai-chat-widget')
 
+@if(session('admin_impersonating'))
+<div class="no-print" style="position:fixed;top:0;left:230px;right:0;z-index:9997;background:linear-gradient(90deg,#7c3aed,#a78bfa);color:#fff;padding:8px 24px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:12px;font-weight:700;box-shadow:0 2px 12px rgba(124,58,237,.35);">
+    <span>👁 Viewing as <strong>{{ session('full_name') ?? session('short_name') ?? session('employee_name') }}</strong> — BTS Admin session</span>
+    <form method="POST" action="{{ route('admin.view-as.stop') }}" class="inline">
+        @csrf
+        <button type="submit" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);padding:4px 12px;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;">
+            Return to my account
+        </button>
+    </form>
+</div>
+<div style="height:36px;"></div>
+@endif
+
 <style>
     /* Remove text-selection cursor from all non-interactive elements */
     * { cursor: default; }
@@ -267,6 +280,7 @@
                 'items'    => [
                     ['label' => 'Staff Access',    'href' => '/users-access', 'match' => 'users-access*', 'icon' => 'users'],
                     ['label' => 'System Settings', 'href' => '/settings',     'match' => 'settings*',     'icon' => 'settings'],
+                    ['label' => 'View As (Employee KPI)', 'href' => route('admin.view-as'), 'match' => 'admin/view-as*', 'icon' => 'users'],
                 ],
             ],
         ];

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RichWorks KPI Login</title>
+    <title>Reset Password · RichWorks KPI</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -11,13 +11,12 @@
 
         <div class="flex items-center gap-3 mb-6">
             <img src="/images/RCG-Logo.png" class="w-10 h-10 object-contain">
-
             <div>
                 <h1 class="text-base font-bold text-slate-900">
-                    RichWorks KPI
+                    Reset Password
                 </h1>
                 <p class="text-xs text-slate-500">
-                    Multi-Company Dashboard Access
+                    Choose a new password below
                 </p>
             </div>
         </div>
@@ -28,20 +27,15 @@
             </div>
         @endif
 
-        @if(session('success'))
-            <div class="mb-4 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
-                {{ session('success') }}
-            </div>
-        @endif
-
         @if($errors->any())
             <div class="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
                 {{ $errors->first() }}
             </div>
         @endif
 
-        <form method="POST" action="{{ route('login.submit') }}" class="space-y-4">
+        <form method="POST" action="{{ route('password.reset.submit') }}" class="space-y-4">
             @csrf
+            <input type="hidden" name="token" value="{{ $token }}">
 
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">
@@ -50,7 +44,7 @@
                 <input
                     type="email"
                     name="email"
-                    value="{{ old('email') }}"
+                    value="{{ old('email', $email) }}"
                     class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none"
                     placeholder="name@richworks.com"
                     required
@@ -59,19 +53,29 @@
             </div>
 
             <div>
-                <div class="flex items-center justify-between mb-1">
-                    <label class="block text-sm font-medium text-slate-700">
-                        Password
-                    </label>
-                    <a href="{{ route('password.forgot') }}" class="text-xs font-semibold text-[#4a7c6b] hover:text-[#2d5548]">
-                        Forgot password?
-                    </a>
-                </div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">
+                    New Password
+                </label>
                 <input
                     type="password"
                     name="password"
+                    minlength="8"
                     class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none"
-                    placeholder="Enter your password"
+                    placeholder="At least 8 characters"
+                    required
+                >
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">
+                    Confirm New Password
+                </label>
+                <input
+                    type="password"
+                    name="password_confirmation"
+                    minlength="8"
+                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none"
+                    placeholder="Re-enter new password"
                     required
                 >
             </div>
@@ -80,14 +84,14 @@
                 type="submit"
                 class="w-full rounded-xl bg-[#06142f] py-3 text-sm font-semibold text-white hover:bg-[#0b1f49] transition"
             >
-                Login
+                Reset Password
             </button>
         </form>
 
         <div class="mt-5 text-center">
-            <p class="text-xs text-slate-400">
-                Please contact HR if you do not have login access.
-            </p>
+            <a href="{{ route('login') }}" class="text-xs font-semibold text-[#4a7c6b] hover:text-[#2d5548]">
+                ← Back to login
+            </a>
         </div>
 
     </div>

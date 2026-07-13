@@ -35,24 +35,21 @@ Route::post('/login', [AuthController::class, 'submitLogin'])
 
 /*
 |--------------------------------------------------------------------------
-| FIRST TIME PASSWORD
+| FORGOT / RESET PASSWORD
 |--------------------------------------------------------------------------
 */
 
-Route::get('/create-password', [AuthController::class, 'firstPassword'])
-    ->name('password.first');
+Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])
+    ->name('password.forgot');
 
-Route::post('/create-password', [AuthController::class, 'storeFirstPassword'])
-    ->name('password.first.submit');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])
+    ->name('password.forgot.submit');
 
-/*
-|--------------------------------------------------------------------------
-| EMAIL VERIFICATION
-|--------------------------------------------------------------------------
-*/
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])
+    ->name('password.reset');
 
-Route::get('/verify-email/{token}', [AuthController::class, 'verifyEmail'])
-    ->name('verify.email');
+Route::post('/reset-password', [AuthController::class, 'submitResetPassword'])
+    ->name('password.reset.submit');
 
 /*
 |--------------------------------------------------------------------------
@@ -311,6 +308,8 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
     Route::post('/profile/telegram/connect', [\App\Http\Controllers\ProfileController::class, 'connectTelegram'])->name('profile.telegram.connect');
     Route::get('/profile/telegram/status', [\App\Http\Controllers\ProfileController::class, 'telegramStatus'])->name('profile.telegram.status');
+    Route::post('/profile/email', [\App\Http\Controllers\ProfileController::class, 'updateEmail'])->name('profile.email.update');
+    Route::post('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
     /*
     |--------------------------------------------------------------------------
@@ -393,5 +392,15 @@ Route::middleware(['kpi.auth'])->group(function () {
 
     Route::post('/ai/suggest-targets', [AiController::class, 'suggestTargets'])
         ->name('ai.suggest-targets');
+
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN — VIEW AS (BTS department only)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/admin/view-as', [\App\Http\Controllers\AdminController::class, 'index'])->name('admin.view-as');
+    Route::post('/admin/view-as/stop', [\App\Http\Controllers\AdminController::class, 'stop'])->name('admin.view-as.stop');
+    Route::post('/admin/view-as/{employeeId}', [\App\Http\Controllers\AdminController::class, 'start'])->name('admin.view-as.start');
 
 });

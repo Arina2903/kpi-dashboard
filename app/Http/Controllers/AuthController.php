@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use App\Mail\PasswordResetMail;
 use App\Services\SupabaseService;
 
 class AuthController extends Controller
@@ -154,6 +157,90 @@ class AuthController extends Controller
         return redirect()
             ->route('login')
             ->with('success', 'Anda telah logout.');
+    }
+
+    public function showForgotPassword()
+    {
+        return view('auth.forgot-password');
+    }
+
+    public function sendResetLink(Request $request, SupabaseService $supabase)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = $supabase->first('users', [
+            'email'     => 'eq.' . $request->email,
+            'is_active' => 'eq.true',
+            'select'    => 'id,name,email',
+        ]);
+
+        // Always show the same message whether or not the email exists,
+        // so this form can't be used to probe which emails have accounts.
+        if ($user) {
+            $token = Str::random(64);
+
+            $supabase->safePatch('users', ['id' => 'eq.' . $user['id']], [
+                'password_reset_token'      => Hash::make($token),
+                'password_reset_expires_at' => now()->addMinutes(30)->toIso8601String(),
+            ]);
+
+            $resetUrl = route('password.reset', ['token' => $token]) . '?email=' . urlencode($user['email']);
+
+            try {
+                Mail::to($user['email'])->send(new PasswordResetMail($resetUrl, $user['name'] ?? 'there'));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Password reset email failed to send', ['error' => $e->getMessage()]);
+            }
+        }
+
+        return back()->with('success', 'If that email is registered, a reset link has been sent to it.');
+    }
+
+    public function showResetPassword(string $token, Request $request)
+    {
+        return view('auth.reset-password', [
+            'token' => $token,
+            'email' => $request->query('email', ''),
+        ]);
+    }
+
+    public function submitResetPassword(Request $request, SupabaseService $supabase)
+    {
+        $request->validate([
+            'email'    => 'required|email',
+            'token'    => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $supabase->first('users', [
+            'email'     => 'eq.' . $request->email,
+            'is_active' => 'eq.true',
+            'select'    => '*',
+        ]);
+
+        $expired = empty($user['password_reset_expires_at'])
+            || now()->greaterThan(\Carbon\Carbon::parse($user['password_reset_expires_at']));
+
+        $tokenValid = $user
+            && !empty($user['password_reset_token'])
+            && !$expired
+            && Hash::check($request->token, $user['password_reset_token']);
+
+        if (!$tokenValid) {
+            return back()
+                ->withInput()
+                ->with('error', 'This reset link is invalid or has expired. Please request a new one.');
+        }
+
+        $supabase->update('users', ['id' => 'eq.' . $user['id']], [
+            'password_hash'             => Hash::make($request->password),
+            'password_reset_token'      => null,
+            'password_reset_expires_at' => null,
+        ]);
+
+        return redirect()
+            ->route('login')
+            ->with('success', 'Your password has been reset. Please log in with your new password.');
     }
 
     private function getUserDashboards(SupabaseService $supabase, string $userId): array
