@@ -72,7 +72,7 @@ class PerformanceController extends Controller
 
         // Submission windows: last ~week of quarter + first ~week of next quarter
         $windows = [
-            1 => ['start' => "{$year}-03-24", 'end' => "{$year}-04-07"],
+            1 => ['start' => "{$year}-03-24", 'end' => "2026-07-17"],
             2 => ['start' => "{$year}-06-23", 'end' => "{$year}-07-17"],
             3 => ['start' => "{$year}-09-22", 'end' => "{$year}-10-06"],
             4 => ['start' => "{$year}-12-23", 'end' => ($year + 1) . "-01-06"],
@@ -179,7 +179,7 @@ class PerformanceController extends Controller
         };
 
         $windows = [
-            1 => ['start' => "{$year}-03-24", 'end' => "{$year}-04-07"],
+            1 => ['start' => "{$year}-03-24", 'end' => "2026-07-17"],
             2 => ['start' => "{$year}-06-23", 'end' => "{$year}-07-17"],
             3 => ['start' => "{$year}-09-22", 'end' => "{$year}-10-06"],
             4 => ['start' => "{$year}-12-23", 'end' => ($year + 1) . "-01-06"],
@@ -330,7 +330,7 @@ class PerformanceController extends Controller
         $mon  = (int) $now->month;
 
         $windows = [
-            'Q1' => ['start' => "{$year}-03-24", 'end' => "{$year}-04-07"],
+            'Q1' => ['start' => "{$year}-03-24", 'end' => "2026-07-17"],
             'Q2' => ['start' => "{$year}-06-23", 'end' => "{$year}-07-17"],
             'Q3' => ['start' => "{$year}-09-22", 'end' => "{$year}-10-06"],
             'Q4' => ['start' => "{$year}-12-23", 'end' => ($year + 1) . "-01-06"],
@@ -688,7 +688,7 @@ class PerformanceController extends Controller
         $year = (int) $now->year;
         $mon  = (int) $now->month;
         $windows = [
-            'Q1' => ['start' => "{$year}-03-24", 'end' => "{$year}-04-07"],
+            'Q1' => ['start' => "{$year}-03-24", 'end' => "2026-07-17"],
             'Q2' => ['start' => "{$year}-06-23", 'end' => "{$year}-07-17"],
             'Q3' => ['start' => "{$year}-09-22", 'end' => "{$year}-10-06"],
             'Q4' => ['start' => "{$year}-12-23", 'end' => ($year + 1) . "-01-06"],
