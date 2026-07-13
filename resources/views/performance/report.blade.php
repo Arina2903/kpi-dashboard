@@ -1550,10 +1550,18 @@ function unlockAppraiserSections() {
         inp.style.background = '';
         inp.style.cursor = '';
     });
-    // Unlock Superior Rating (1-5) and Appraiser's Comment in Section 3 — manager only
+    // Unlock Superior Rating (1-5) and Appraiser's Comment in Section 3 — manager only.
+    // Radios are visually hidden (display:none) — the clickable surface is the
+    // paired <label> — so explicitly reset each label rather than trusting
+    // inherited pointer-events to cascade down from the wrapping div.
     document.querySelectorAll('.sup-rating-group').forEach(function(el) {
         el.style.pointerEvents = 'auto';
         el.style.opacity = '';
+        el.querySelectorAll('label').forEach(function(lbl) {
+            lbl.style.pointerEvents = 'auto';
+            lbl.style.opacity = '';
+            lbl.style.cursor = 'pointer';
+        });
     });
     document.querySelectorAll('.att-comment-input').forEach(function(inp) {
         inp.removeAttribute('readonly');
@@ -1572,6 +1580,11 @@ function unlockAppraiserSections() {
     document.querySelectorAll('.cv-app-rating-group').forEach(function(el) {
         el.style.pointerEvents = 'auto';
         el.style.opacity = '';
+        el.querySelectorAll('label').forEach(function(lbl) {
+            lbl.style.pointerEvents = 'auto';
+            lbl.style.opacity = '';
+            lbl.style.cursor = 'pointer';
+        });
     });
     document.querySelectorAll('.cv-remark-input').forEach(function(inp) {
         inp.removeAttribute('readonly');
