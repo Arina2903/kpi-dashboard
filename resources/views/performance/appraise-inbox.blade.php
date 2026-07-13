@@ -66,6 +66,13 @@
                         $report = $reportMap[$sub['id']][$q] ?? null;
                         $status = $report['status'] ?? 'not_started';
                         $updatedAt = $report['updated_at'] ?? null;
+                        // Each appraiser level (manager/vp/slt) submits its own section
+                        // independently — overall $status alone can't tell you whether
+                        // *this* viewer's part is done (e.g. a VP may still owe their
+                        // remarks even after the manager has already marked it appraised).
+                        $myLevel  = $sub['appraiser_level'] ?? null;
+                        $myLocked = $myLevel && !empty($report['form_data']["_{$myLevel}_locked"] ?? null);
+                        $canAct   = in_array($status, ['submitted', 'appraised', 'completed']) && !$myLocked;
                     @endphp
                     <tr class="hover:bg-slate-50/60 transition">
                         <td class="px-5 py-4">
@@ -88,6 +95,15 @@
                             @else
                             <span class="inline-flex items-center gap-1 bg-slate-100 text-slate-500 text-[10px] font-black px-2.5 py-1 rounded-full">— Not Started</span>
                             @endif
+                            @if(in_array($status, ['submitted', 'appraised', 'completed']))
+                            <div class="mt-1.5">
+                                @if($myLocked)
+                                <span class="text-emerald-600 text-[9px] font-bold">✓ You've submitted</span>
+                                @else
+                                <span class="text-amber-500 text-[9px] font-bold">Your part: pending</span>
+                                @endif
+                            </div>
+                            @endif
                         </td>
                         <td class="px-5 py-4 text-center text-[11px] text-slate-400">
                             @if($updatedAt)
@@ -97,12 +113,12 @@
                             @endif
                         </td>
                         <td class="px-5 py-4 text-center">
-                            @if($status === 'submitted')
+                            @if($canAct)
                             <a href="/performance/appraise/{{ $sub['id'] }}/{{ strtolower($q) }}"
                                class="inline-flex items-center gap-1 bg-[#1a3d34] hover:bg-[#2d5548] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition">
                                 Review &amp; Appraise →
                             </a>
-                            @elseif($status === 'appraised' || $status === 'completed')
+                            @elseif(in_array($status, ['submitted', 'appraised', 'completed']))
                             <a href="/performance/appraise/{{ $sub['id'] }}/{{ strtolower($q) }}"
                                class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-3 py-1.5 rounded-lg transition">
                                 View

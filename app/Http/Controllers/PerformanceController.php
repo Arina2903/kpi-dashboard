@@ -616,7 +616,7 @@ class PerformanceController extends Controller
             $reports = $supabase->get('performance_reports', [
                 'employee_id'    => 'in.(' . implode(',', $subIds) . ')',
                 'financial_year' => 'eq.' . $this->currentFinancialYear,
-                'select'         => 'employee_id,quarter,status,updated_at',
+                'select'         => 'employee_id,quarter,status,updated_at,form_data',
             ]) ?? [];
             foreach ($reports as $r) {
                 $reportMap[$r['employee_id']][$r['quarter']] = $r;
