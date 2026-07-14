@@ -118,7 +118,7 @@
 
             @if(!empty($jobDescription['summary']))
             <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
-                Job Purpose
+                1) Job Purpose
             </div>
             <div class="p-4 border-b border-black">
                 <p class="text-[12.5px] text-slate-700 leading-relaxed whitespace-pre-line">
@@ -129,7 +129,7 @@
 
             @if(!empty($jobDescription['responsibilities']))
             <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
-                Key Responsibilities
+                2) Key Responsibilities
             </div>
             <div class="p-4 border-b border-black">
                 <ol class="list-decimal pl-5 space-y-2">
@@ -142,11 +142,24 @@
 
             @if(!empty($jobDescription['requirements']))
             <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
-                Requirements &amp; Qualifications
+                3) Qualifications &amp; Experience
+            </div>
+            <div class="p-4 border-b border-black">
+                <ul class="list-disc pl-5 space-y-2">
+                    @foreach($jobDescription['requirements'] as $item)
+                    <li class="text-[12.5px] text-slate-700 leading-relaxed">{{ $item }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
+            @if(!empty($jobDescription['competencies']))
+            <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
+                4) Competencies &amp; Behavioural Expectations
             </div>
             <div class="p-4">
                 <ul class="list-disc pl-5 space-y-2">
-                    @foreach($jobDescription['requirements'] as $item)
+                    @foreach($jobDescription['competencies'] as $item)
                     <li class="text-[12.5px] text-slate-700 leading-relaxed">{{ $item }}</li>
                     @endforeach
                 </ul>
