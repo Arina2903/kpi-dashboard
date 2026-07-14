@@ -9,11 +9,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>*, body { font-family: 'Inter', sans-serif; }</style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-[#f0f2f7] min-h-screen text-slate-900">
 
 @include('partials.sidebar')
 
-<main class="ml-[230px] p-8">
+<main id="mainContent" class="ml-[230px] min-h-screen transition-all duration-300 p-8">
 
     {{-- Header --}}
     <div class="mb-8">
