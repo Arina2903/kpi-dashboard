@@ -63,15 +63,17 @@
         <table class="w-full text-left border-collapse table-fixed">
             <tbody>
                 <tr>
-                    <td rowspan="2" class="w-40 border-r-2 border-b border-black p-4 align-middle text-center">
+                    <td rowspan="2" class="w-40 border-r-2 border-b border-black p-2 align-middle text-center">
                         @if($jdLogo)
-                        <img
-                            src="{{ asset(ltrim($jdLogo, '/')) }}"
-                            alt="{{ session('company_display_name') ?: 'Company' }}"
-                            class="max-w-[110px] max-h-16 object-contain mx-auto"
-                            onerror="this.style.display='none';this.nextElementSibling.style.display='block';"
-                        />
-                        <span class="hidden text-[13px] font-black text-slate-800">
+                        <div class="h-28 flex items-center justify-center mx-auto">
+                            <img
+                                src="{{ asset(ltrim($jdLogo, '/')) }}"
+                                alt="{{ session('company_display_name') ?: 'Company' }}"
+                                class="max-w-full max-h-full object-contain"
+                                onerror="this.parentElement.style.display='none';this.closest('td').querySelector('.jd-logo-fallback').classList.remove('hidden');"
+                            />
+                        </div>
+                        <span class="jd-logo-fallback hidden text-[13px] font-black text-slate-800">
                             {{ session('company_display_name') ?: session('company_code') ?: 'Company' }}
                         </span>
                         @else
