@@ -12,7 +12,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .soft-card { box-shadow: 0 8px 30px rgba(15,23,42,.07); }
+        .doc-card { box-shadow: 0 8px 30px rgba(15,23,42,.08); }
+        .doc-bar {
+            background: #0a0a0a;
+            color: #fff;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body class="bg-[#f0f2f7] min-h-screen text-slate-900">
@@ -20,133 +27,134 @@
 @include('partials.sidebar')
 
 <main id="mainContent" class="ml-[230px] min-h-screen transition-all duration-300">
-<div class="p-4 max-w-3xl mx-auto space-y-4">
+<div class="p-4 max-w-4xl mx-auto space-y-3">
 
     <a href="/dashboard" class="text-[10px] text-slate-500 hover:text-slate-800">← Dashboard</a>
 
-    {{-- HEADER --}}
-    <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080]">
-        <div class="h-1 bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#A4C3B2]"></div>
-        <div class="p-5 flex items-start gap-4">
-            <div class="w-12 h-12 rounded-xl bg-[#CCE3DE] flex items-center justify-center shrink-0">
-                <svg class="w-6 h-6 text-[#1a3d34]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <rect x="3" y="7" width="18" height="13" rx="2"/>
-                    <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                    <path d="M3 12h18M10 12v2h4v-2"/>
-                </svg>
-            </div>
-            <div class="min-w-0 flex-1">
-                <p class="text-[9px] uppercase tracking-widest font-black text-slate-400">Job Description</p>
-                <h1 class="text-lg font-black text-slate-900 leading-tight truncate mt-0.5">
-                    {{ $jobDescription['job_title'] ?? $user['position'] ?? 'Not yet titled' }}
-                </h1>
-                <p class="text-[12px] text-slate-500 mt-0.5">
-                    {{ $user['full_name'] ?? $user['short_name'] ?? '-' }}
-                </p>
-                <div class="flex flex-wrap gap-1.5 mt-2">
-                    <span class="text-[9px] font-black uppercase tracking-wide px-2 py-1 rounded-full bg-[#CCE3DE] text-[#1a3d34]">
-                        {{ $user['role'] ?? '-' }}
-                    </span>
-                    <span class="text-[9px] font-black uppercase tracking-wide px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                        {{ $department['name'] ?? $user['department_code'] ?? '-' }}
-                    </span>
-                    @if(!empty($jobDescription['updated_at']))
-                    <span class="text-[9px] font-black uppercase tracking-wide px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                        Updated {{ \Carbon\Carbon::parse($jobDescription['updated_at'])->format('d M Y') }}
-                    </span>
-                    @endif
-                </div>
-            </div>
+    @php
+        $jdLogo = session('company_logo');
+        if (!$jdLogo) {
+            $logoMap = ['RCG'=>'images/RCG-Logo.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png'];
+            $jdLogo = $logoMap[session('company_code')] ?? null;
+        }
+
+        $position     = $jobDescription['job_title'] ?? $user['position'] ?? '-';
+        $departmentNm = $department['name'] ?? $user['department_code'] ?? '-';
+        $reportingTo  = $jobDescription['reporting_line'] ?? null;
+        if (!$reportingTo) {
+            $reportingTo = $manager['short_name'] ?? $manager['full_name'] ?? '-';
+        }
+        $effectiveDate = !empty($jobDescription['effective_date'])
+            ? \Carbon\Carbon::parse($jobDescription['effective_date'])->format('d M Y')
+            : '-';
+    @endphp
+
+    {{-- DOCUMENT --}}
+    <div class="bg-white doc-card border-2 border-black overflow-hidden">
+
+        <div class="doc-bar text-sm px-4 py-2.5">
+            Job Description
         </div>
-    </div>
 
-    @if(empty($jobDescription))
+        <table class="w-full text-left border-collapse table-fixed">
+            <tbody>
+                <tr>
+                    <td rowspan="2" class="w-40 border-r-2 border-b border-black p-4 align-middle text-center">
+                        @if($jdLogo)
+                        <img
+                            src="{{ asset(ltrim($jdLogo, '/')) }}"
+                            alt="{{ session('company_display_name') ?: 'Company' }}"
+                            class="max-w-[110px] max-h-16 object-contain mx-auto"
+                            onerror="this.style.display='none';this.nextElementSibling.style.display='block';"
+                        />
+                        <span class="hidden text-[13px] font-black text-slate-800">
+                            {{ session('company_display_name') ?: session('company_code') ?: 'Company' }}
+                        </span>
+                        @else
+                        <span class="text-[13px] font-black text-slate-800">
+                            {{ session('company_display_name') ?: session('company_code') ?: 'Company' }}
+                        </span>
+                        @endif
+                    </td>
+                    <td class="border-r border-b border-black p-3 w-1/3">
+                        <p class="text-[10px] font-black text-black">Position</p>
+                        <p class="text-[12px] text-slate-700 mt-1">{{ $position }}</p>
+                    </td>
+                    <td class="border-b border-black p-3 w-1/3">
+                        <p class="text-[10px] font-black text-black">Department</p>
+                        <p class="text-[12px] text-slate-700 mt-1">{{ $departmentNm }}</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border-r border-black p-3">
+                        <p class="text-[10px] font-black text-black">Reporting To</p>
+                        <p class="text-[12px] text-slate-700 mt-1">{{ $reportingTo }}</p>
+                    </td>
+                    <td class="p-3">
+                        <p class="text-[10px] font-black text-black">Effective Date</p>
+                        <p class="text-[12px] text-slate-700 mt-1">{{ $effectiveDate }}</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
-    {{-- EMPTY STATE --}}
-    <div class="bg-white rounded-2xl soft-card border border-slate-200 p-8 text-center">
-        <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-3">
-            <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <rect x="3" y="7" width="18" height="13" rx="2"/>
-                <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                <path d="M3 12h18M10 12v2h4v-2"/>
-            </svg>
-        </div>
-        <p class="text-[13px] font-black text-slate-800">No job description on file yet</p>
-        <p class="text-[12px] text-slate-500 mt-1 max-w-sm mx-auto">
-            Your job description hasn't been set up yet. Please contact HR or your department admin to have it added.
-        </p>
-    </div>
+        @if(empty($jobDescription))
 
-    @else
-
-        @if(!empty($jobDescription['summary']))
-        {{-- SUMMARY --}}
-        <div class="bg-white rounded-2xl soft-card border border-slate-200 p-5">
-            <p class="text-[9px] uppercase tracking-widest font-black text-slate-400 mb-3">Overview</p>
-            <p class="text-[13px] text-slate-700 leading-relaxed whitespace-pre-line">
-                {{ $jobDescription['summary'] }}
+        {{-- EMPTY STATE --}}
+        <div class="p-8 text-center border-t-2 border-black">
+            <p class="text-[13px] font-black text-slate-800">No job description content on file yet</p>
+            <p class="text-[12px] text-slate-500 mt-1 max-w-sm mx-auto">
+                Please contact HR or your department admin to have the job purpose, responsibilities, and requirements added.
             </p>
         </div>
-        @endif
 
-        @if(!empty($jobDescription['responsibilities']))
-        {{-- RESPONSIBILITIES --}}
-        <div class="bg-white rounded-2xl soft-card border border-slate-200 p-5">
-            <p class="text-[9px] uppercase tracking-widest font-black text-slate-400 mb-3">Key Responsibilities</p>
-            <ol class="space-y-2.5">
-                @foreach($jobDescription['responsibilities'] as $i => $item)
-                <li class="flex items-start gap-3">
-                    <span class="shrink-0 w-5 h-5 rounded-full bg-[#6B9080]/15 text-[#1a3d34] text-[10px] font-black flex items-center justify-center mt-0.5">
-                        {{ $i + 1 }}
-                    </span>
-                    <span class="text-[13px] text-slate-700 leading-relaxed">{{ $item }}</span>
-                </li>
-                @endforeach
-            </ol>
-        </div>
-        @endif
+        @else
 
-        @if(!empty($jobDescription['requirements']))
-        {{-- REQUIREMENTS --}}
-        <div class="bg-white rounded-2xl soft-card border border-slate-200 p-5">
-            <p class="text-[9px] uppercase tracking-widest font-black text-slate-400 mb-3">Requirements &amp; Qualifications</p>
-            <ul class="space-y-2.5">
-                @foreach($jobDescription['requirements'] as $item)
-                <li class="flex items-start gap-3">
-                    <svg class="w-4 h-4 text-[#6B9080] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4"/>
-                        <circle cx="12" cy="12" r="9"/>
-                    </svg>
-                    <span class="text-[13px] text-slate-700 leading-relaxed">{{ $item }}</span>
-                </li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
-
-        {{-- REPORTING LINE --}}
-        @if(!empty($jobDescription['reporting_line']) || $manager)
-        <div class="bg-white rounded-2xl soft-card border border-slate-200 p-5">
-            <p class="text-[9px] uppercase tracking-widest font-black text-slate-400 mb-3">Reporting Line</p>
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-[#CCE3DE] flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4 text-[#1a3d34]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                    </svg>
-                </div>
-                <div class="min-w-0">
-                    <p class="text-[13px] font-semibold text-slate-800">
-                        {{ $jobDescription['reporting_line'] ?? ($manager['short_name'] ?? $manager['full_name'] ?? '-') }}
-                    </p>
-                    @if(empty($jobDescription['reporting_line']) && !empty($manager['position']))
-                    <p class="text-[11px] text-slate-500">{{ $manager['position'] }}</p>
-                    @endif
-                </div>
+            @if(!empty($jobDescription['summary']))
+            <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
+                Job Purpose
             </div>
-        </div>
+            <div class="p-4 border-b border-black">
+                <p class="text-[12.5px] text-slate-700 leading-relaxed whitespace-pre-line">
+                    {{ $jobDescription['summary'] }}
+                </p>
+            </div>
+            @endif
+
+            @if(!empty($jobDescription['responsibilities']))
+            <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
+                Key Responsibilities
+            </div>
+            <div class="p-4 border-b border-black">
+                <ol class="list-decimal pl-5 space-y-2">
+                    @foreach($jobDescription['responsibilities'] as $item)
+                    <li class="text-[12.5px] text-slate-700 leading-relaxed">{{ $item }}</li>
+                    @endforeach
+                </ol>
+            </div>
+            @endif
+
+            @if(!empty($jobDescription['requirements']))
+            <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
+                Requirements &amp; Qualifications
+            </div>
+            <div class="p-4">
+                <ul class="list-disc pl-5 space-y-2">
+                    @foreach($jobDescription['requirements'] as $item)
+                    <li class="text-[12.5px] text-slate-700 leading-relaxed">{{ $item }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
         @endif
 
+    </div>
+
+    @if(!empty($jobDescription['updated_at']))
+    <p class="text-[10px] text-slate-400 text-right pr-1">
+        Last updated {{ \Carbon\Carbon::parse($jobDescription['updated_at'])->format('d M Y, h:i A') }}
+    </p>
     @endif
 
 </div>
