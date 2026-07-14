@@ -72,13 +72,15 @@ class JobDescriptionController extends Controller
         ], $this->sidebarData($supabase, $user)));
     }
 
-    private function linesToArray(?string $text): array
+    // Content comes from a Quill rich-text editor (see job-description.blade.php), which
+    // only ever emits a fixed set of formatting tags — this allowlist strips anything else
+    // (including <script>) and any inline event-handler attributes that might slip through.
+    private function sanitizeHtml(?string $html): string
     {
-        return collect(preg_split('/\r\n|\r|\n/', (string) $text))
-            ->map(fn ($line) => trim($line))
-            ->filter(fn ($line) => $line !== '')
-            ->values()
-            ->all();
+        $allowed = '<p><br><ul><ol><li><table><thead><tbody><tr><td><th><strong><b><em><i><u><s>';
+        $html    = strip_tags((string) $html, $allowed);
+
+        return preg_replace('/\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html);
     }
 
     public function update(Request $request, SupabaseService $supabase)
@@ -87,10 +89,10 @@ class JobDescriptionController extends Controller
 
         $supabase->upsert('job_descriptions', [
             'employee_id'      => $user['id'],
-            'summary'          => trim((string) $request->input('summary', '')),
-            'responsibilities' => $this->linesToArray($request->input('responsibilities')),
-            'requirements'     => $this->linesToArray($request->input('requirements')),
-            'competencies'     => $this->linesToArray($request->input('competencies')),
+            'summary'          => $this->sanitizeHtml($request->input('summary')),
+            'responsibilities' => $this->sanitizeHtml($request->input('responsibilities')),
+            'requirements'     => $this->sanitizeHtml($request->input('requirements')),
+            'competencies'     => $this->sanitizeHtml($request->input('competencies')),
             'updated_at'       => now()->toIso8601String(),
         ], 'employee_id');
 

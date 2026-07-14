@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .doc-card { box-shadow: 0 8px 30px rgba(15,23,42,.08); }
@@ -20,6 +22,9 @@
             letter-spacing: .08em;
             text-transform: uppercase;
         }
+        .jd-editor .ql-editor { font-size: 12.5px; min-height: 120px; }
+        .jd-editor .ql-editor table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+        .jd-editor .ql-editor table td { border: 1px solid #94a3b8; padding: 6px 8px; }
     </style>
 </head>
 <body class="bg-[#f0f2f7] min-h-screen text-slate-900">
@@ -59,7 +64,7 @@
             : '-';
     @endphp
 
-    <form method="POST" action="{{ route('job-description.update') }}">
+    <form method="POST" action="{{ route('job-description.update') }}" id="jdForm">
     @csrf
 
     {{-- DOCUMENT --}}
@@ -113,57 +118,33 @@
             </tbody>
         </table>
 
-        {{-- 1) JOB PURPOSE --}}
-        <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
-            1) Job Purpose
-        </div>
-        <div class="p-4 border-b border-black">
-            <textarea
-                name="summary"
-                rows="5"
-                placeholder="Not filled in yet — describe the purpose of this role..."
-                class="w-full rounded-lg border border-slate-300 p-2.5 text-[12.5px] text-slate-700 leading-relaxed focus:ring-2 focus:ring-black/15 focus:border-black focus:outline-none"
-            >{{ $jobDescription['summary'] ?? '' }}</textarea>
-        </div>
+        @php
+            $jdSections = [
+                ['key' => 'summary',          'title' => '1) Job Purpose',                             'placeholder' => 'Describe the purpose of this role...'],
+                ['key' => 'responsibilities', 'title' => '2) Key Responsibilities',                     'placeholder' => 'List the key responsibilities...'],
+                ['key' => 'requirements',     'title' => '3) Qualifications &amp; Experience',           'placeholder' => 'List qualifications and experience...'],
+                ['key' => 'competencies',     'title' => '4) Competencies &amp; Behavioural Expectations', 'placeholder' => 'List competencies and behavioural expectations...'],
+            ];
+        @endphp
 
-        {{-- 2) KEY RESPONSIBILITIES --}}
+        @foreach($jdSections as $i => $section)
         <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
-            2) Key Responsibilities
+            {!! $section['title'] !!}
         </div>
-        <div class="p-4 border-b border-black">
-            <textarea
-                name="responsibilities"
-                rows="6"
-                placeholder="Not filled in yet — one responsibility per line..."
-                class="w-full rounded-lg border border-slate-300 p-2.5 text-[12.5px] text-slate-700 leading-relaxed focus:ring-2 focus:ring-black/15 focus:border-black focus:outline-none"
-            >{{ implode("\n", $jobDescription['responsibilities'] ?? []) }}</textarea>
+        <div class="p-4 {{ $i < count($jdSections) - 1 ? 'border-b border-black' : '' }}">
+            <div class="flex justify-end mb-1.5">
+                <button
+                    type="button"
+                    onclick="insertJdTable('{{ $section['key'] }}')"
+                    class="text-[10px] font-black px-2 py-1 rounded border border-slate-300 text-slate-600 hover:bg-slate-50 transition"
+                >
+                    + Insert Table
+                </button>
+            </div>
+            <div class="jd-editor bg-white border border-slate-300 rounded-lg" id="editor-{{ $section['key'] }}"></div>
+            <input type="hidden" name="{{ $section['key'] }}" id="input-{{ $section['key'] }}" value="{{ $jobDescription[$section['key']] ?? '' }}">
         </div>
-
-        {{-- 3) QUALIFICATIONS & EXPERIENCE --}}
-        <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
-            3) Qualifications &amp; Experience
-        </div>
-        <div class="p-4 border-b border-black">
-            <textarea
-                name="requirements"
-                rows="6"
-                placeholder="Not filled in yet — one qualification / experience item per line..."
-                class="w-full rounded-lg border border-slate-300 p-2.5 text-[12.5px] text-slate-700 leading-relaxed focus:ring-2 focus:ring-black/15 focus:border-black focus:outline-none"
-            >{{ implode("\n", $jobDescription['requirements'] ?? []) }}</textarea>
-        </div>
-
-        {{-- 4) COMPETENCIES & BEHAVIOURAL EXPECTATIONS --}}
-        <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
-            4) Competencies &amp; Behavioural Expectations
-        </div>
-        <div class="p-4">
-            <textarea
-                name="competencies"
-                rows="6"
-                placeholder="Not filled in yet — one competency / behavioural expectation per line..."
-                class="w-full rounded-lg border border-slate-300 p-2.5 text-[12.5px] text-slate-700 leading-relaxed focus:ring-2 focus:ring-black/15 focus:border-black focus:outline-none"
-            >{{ implode("\n", $jobDescription['competencies'] ?? []) }}</textarea>
-        </div>
+        @endforeach
 
         <div class="p-3 flex justify-end border-t-2 border-black">
             <button
@@ -185,6 +166,50 @@
 
 </div>
 </main>
+
+<script>
+    var jdEditors = {};
+
+    function initJdEditor(name, placeholder) {
+        var quill = new Quill('#editor-' + name, {
+            theme: 'snow',
+            placeholder: placeholder,
+            modules: {
+                toolbar: [
+                    ['bold', 'italic'],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                ],
+            },
+        });
+
+        var existing = document.getElementById('input-' + name).value;
+        if (existing) {
+            quill.clipboard.dangerouslyPasteHTML(existing);
+        }
+
+        jdEditors[name] = quill;
+    }
+
+    function insertJdTable(name) {
+        var quill = jdEditors[name];
+        var range = quill.getSelection(true);
+        var tableHtml = '<table><tr><td>Cell</td><td>Cell</td></tr><tr><td>Cell</td><td>Cell</td></tr></table><p><br></p>';
+        quill.clipboard.dangerouslyPasteHTML(range.index, tableHtml);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initJdEditor('summary', 'Describe the purpose of this role...');
+        initJdEditor('responsibilities', 'List the key responsibilities...');
+        initJdEditor('requirements', 'List qualifications and experience...');
+        initJdEditor('competencies', 'List competencies and behavioural expectations...');
+    });
+
+    document.getElementById('jdForm').addEventListener('submit', function () {
+        Object.keys(jdEditors).forEach(function (name) {
+            document.getElementById('input-' + name).value = jdEditors[name].root.innerHTML;
+        });
+    });
+</script>
 
 </body>
 </html>
