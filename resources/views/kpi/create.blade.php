@@ -3424,6 +3424,101 @@ async function aiSuggestDescription() {
     }
 }
 
+/* -------------------------------------------------------------------------
+ | ANIRA — KPI FORM FILL
+ | Called by the chat widget when the user confirms a KPI suggestion.
+ ------------------------------------------------------------------------- */
+
+window.aniraKpiPage = true;
+
+window.aniraFillKpiForm = function (data) {
+    // Title
+    const titleEl = document.getElementById('kpiTitle');
+    if (titleEl && data.title) {
+        titleEl.value = data.title;
+        titleEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // Description
+    const descEl = document.querySelector('textarea[name="kpi_description"]');
+    if (descEl && data.description) {
+        descEl.value = data.description;
+        descEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // Category (radio)
+    if (data.category) {
+        const catRadio = document.querySelector(`input[name="category"][value="${CSS.escape(data.category)}"]`);
+        if (catRadio) {
+            catRadio.checked = true;
+            catRadio.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    // Sub-category — must wait for updateSubCategories() to render the options
+    if (data.sub_category) {
+        setTimeout(() => {
+            const subRadios = document.querySelectorAll('input[name="sub_category"]');
+            subRadios.forEach(r => {
+                if (r.value === data.sub_category) {
+                    r.checked = true;
+                    r.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+            if (typeof updateSummary === 'function') updateSummary();
+        }, 150);
+    }
+
+    // Unit
+    const unitEl = document.getElementById('unit');
+    if (unitEl && data.unit) {
+        unitEl.value = data.unit;
+        unitEl.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // Base / Stretch targets
+    const baseEl = document.getElementById('baseTarget');
+    if (baseEl && data.base_target != null) {
+        baseEl.value = data.base_target;
+        baseEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    const stretchEl = document.getElementById('stretchTarget');
+    if (stretchEl && data.stretch_target != null) {
+        stretchEl.value = data.stretch_target;
+        stretchEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // Quarters — target, title, and description
+    ['Q1','Q2','Q3','Q4'].forEach(q => {
+        const qKey = q.toLowerCase();
+
+        const targetInp = document.querySelector(`input[name="quarters[${q}][quarter_target]"]`);
+        if (targetInp && data[qKey] != null) {
+            targetInp.value = data[qKey];
+            targetInp.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        const titleKey = `${qKey}_title`;
+        const titleInp = document.querySelector(`input[name="quarters[${q}][quarter_title]"]`);
+        if (titleInp && data[titleKey]) {
+            titleInp.value = data[titleKey];
+            titleInp.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        const descKey  = `${qKey}_description`;
+        const descArea = document.querySelector(`textarea[name="quarters[${q}][quarter_description]"]`);
+        if (descArea && data[descKey]) {
+            descArea.value = data[descKey];
+            descArea.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    });
+
+    if (typeof updateSummary === 'function') updateSummary();
+
+    // Scroll to top of the form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 </script>
 
 <div

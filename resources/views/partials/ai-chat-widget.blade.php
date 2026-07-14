@@ -1,7 +1,7 @@
 <!-- AI CHAT WIDGET -->
 <style>
     #aiChatPanel {
-        transition: opacity .2s ease, transform .2s ease;
+        transition: opacity .2s ease, transform .2s ease, width .25s ease, height .25s ease, bottom .25s ease, right .25s ease;
     }
     #aiChatPanel.hidden {
         opacity: 0;
@@ -12,6 +12,12 @@
         opacity: 1;
         transform: translateY(0) scale(1);
         pointer-events: all;
+    }
+    #aiChatPanel.maximized {
+        width: min(680px, 96vw) !important;
+        height: calc(100vh - 80px) !important;
+        bottom: 16px !important;
+        right: 16px !important;
     }
     .ai-msg-user {
         background: #2563eb;
@@ -24,6 +30,13 @@
         color: #1e293b;
         border-radius: 18px 18px 18px 4px;
         align-self: flex-start;
+    }
+    .ai-kpi-card {
+        background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+        border: 1px solid #c4b5fd;
+        border-radius: 16px;
+        align-self: flex-start;
+        width: 96%;
     }
     #aiChatMessages::-webkit-scrollbar { width: 4px; }
     #aiChatMessages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -52,7 +65,7 @@
     style="height: 480px;"
 >
     <!-- Header -->
-    <div class="flex items-center gap-3 px-5 py-4 border-b border-slate-100 rounded-t-3xl bg-violet-600">
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-slate-100 rounded-t-3xl bg-violet-600 flex-shrink-0">
         <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2a1 1 0 0 1 .993.883L13 3v1.07a8.002 8.002 0 0 1 6.93 6.93H21a1 1 0 0 1 .117 1.993L21 13h-1.07a8.002 8.002 0 0 1-6.93 6.93V21a1 1 0 0 1-1.993.117L11 21v-1.07a8.002 8.002 0 0 1-6.93-6.93H3a1 1 0 0 1-.117-1.993L3 11h1.07a8.002 8.002 0 0 1 6.93-6.93V3a1 1 0 0 1 1-1z"/>
@@ -62,31 +75,48 @@
             <p class="text-white font-black text-sm">ANIRA</p>
             <p class="text-violet-200 text-xs">KPI AI Assistant</p>
         </div>
-        <button onclick="toggleAiChat()" class="ml-auto text-white/70 hover:text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-        </button>
+        <div class="ml-auto flex items-center gap-1">
+            <!-- Clear history -->
+            <button onclick="aiClearHistory()" class="text-white/60 hover:text-white p-1 rounded-lg hover:bg-white/10 transition" title="Clear conversation">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+            </button>
+            <!-- Maximize toggle -->
+            <button id="aiMaximizeBtn" onclick="toggleAiMaximize()" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition" title="Expand">
+                <svg id="aiMaximizeIcon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                </svg>
+            </button>
+            <!-- Close -->
+            <button onclick="toggleAiChat()" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
     </div>
 
     <!-- Messages -->
     <div id="aiChatMessages" class="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
-        <!-- Initial greeting -->
-        <div class="ai-msg-bot text-sm px-4 py-3 max-w-[85%]">
-            Hi! I'm ANIRA, your KPI coach. I'm here to help you build strong, high-scoring KPIs — not by writing them for you, but by asking the right questions so you can think it through yourself. Want to build a KPI, or do you have a question about the system?
-        </div>
+    </div>
 
-        <!-- Quick prompts -->
-        <div id="aiQuickPrompts" class="flex flex-col gap-2 mt-1">
-            <p class="text-xs text-slate-400 font-medium">Quick questions:</p>
-            <button onclick="aiQuickSend('Help me build a KPI')" class="text-left text-xs px-3 py-2 rounded-xl border border-violet-200 text-violet-700 hover:bg-violet-50 transition">Help me build a KPI</button>
-            <button onclick="aiQuickSend('How do I score high on my KPI?')" class="text-left text-xs px-3 py-2 rounded-xl border border-violet-200 text-violet-700 hover:bg-violet-50 transition">How do I score high on my KPI?</button>
-            <button onclick="aiQuickSend('How does the approval process work?')" class="text-left text-xs px-3 py-2 rounded-xl border border-violet-200 text-violet-700 hover:bg-violet-50 transition">How does the approval process work?</button>
-        </div>
+    <!-- Build My KPI bar (hidden until 3+ messages) -->
+    <div id="aiBuildKpiBar" class="hidden px-4 pt-2 pb-0 flex-shrink-0">
+        <button
+            onclick="aiBuildKpi()"
+            id="aiBuildKpiBtn"
+            class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-2xl bg-violet-50 border border-violet-200 text-violet-700 text-xs font-semibold hover:bg-violet-100 transition"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+            Draft my KPI from this conversation
+        </button>
     </div>
 
     <!-- Input -->
-    <div class="px-4 py-3 border-t border-slate-100">
+    <div class="px-4 py-3 border-t border-slate-100 flex-shrink-0 mt-2">
         <div class="flex items-center gap-2 bg-slate-50 rounded-2xl px-4 py-2">
             <input
                 id="aiChatInput"
@@ -111,16 +141,92 @@
 
 <script>
 (function () {
-    const CSRF = '{{ csrf_token() }}';
-    const chatUrl = '{{ route("ai.chat") }}';
+    const CSRF        = '{{ csrf_token() }}';
+    const chatUrl     = '{{ route("ai.chat") }}';
+    const suggestUrl  = '{{ route("ai.suggest-kpi") }}';
 
-    let history   = [];
-    let isOpen    = false;
-    let isWaiting = false;
+    const JSON_HEADERS = {
+        'Content-Type':     'application/json',
+        'Accept':           'application/json',
+        'X-CSRF-TOKEN':     CSRF,
+        'X-Requested-With': 'XMLHttpRequest',
+    };
+    const STORAGE_KEY = 'anira_session_v2';
 
+    // State
+    let history     = [];  // API message array
+    let uiMessages  = [];  // {type:'user'|'bot'|'kpi_card', text?, kpi?}
+    let isOpen      = false;
+    let isMaximized = false;
+    let isWaiting   = false;
+
+    /* -----------------------------------------------------------------------
+     | SESSION STORAGE — persist conversation across page navigations
+     ----------------------------------------------------------------------- */
+    function saveSession() {
+        try {
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ history, uiMessages }));
+        } catch (_) {}
+    }
+
+    function loadSession() {
+        try {
+            const raw = sessionStorage.getItem(STORAGE_KEY);
+            if (!raw) return false;
+            const data = JSON.parse(raw);
+            if (!data || !Array.isArray(data.history)) return false;
+            history    = data.history    ?? [];
+            uiMessages = data.uiMessages ?? [];
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function restoreMessages() {
+        const wrap = document.getElementById('aiChatMessages');
+        if (uiMessages.length === 0) {
+            renderGreeting();
+            return;
+        }
+        uiMessages.forEach(m => {
+            if (m.type === 'user') {
+                renderMessage('user', m.text, false);
+            } else if (m.type === 'bot') {
+                renderMessage('bot', m.text, false);
+            } else if (m.type === 'kpi_card') {
+                renderKpiCard(m.kpi, false);
+            }
+        });
+        wrap.scrollTop = wrap.scrollHeight;
+        maybeShowBuildBar();
+    }
+
+    function renderGreeting() {
+        const wrap = document.getElementById('aiChatMessages');
+        const greeting = document.createElement('div');
+        greeting.className = 'ai-msg-bot text-sm px-4 py-3 max-w-[85%]';
+        greeting.innerHTML = formatBotText("Hi! I'm ANIRA, your KPI advisor and coach. Tell me your role and what you're working on this year — I'll suggest the best KPIs for you based on your job description, or help you refine one you already have in mind.");
+        wrap.appendChild(greeting);
+
+        const quickDiv = document.createElement('div');
+        quickDiv.id = 'aiQuickPrompts';
+        quickDiv.className = 'flex flex-col gap-2 mt-1';
+        quickDiv.innerHTML = `
+            <p class="text-xs text-slate-400 font-medium">Quick questions:</p>
+            <button onclick="aiQuickSend('Suggest a KPI for me based on my job description')" class="text-left text-xs px-3 py-2 rounded-xl border border-violet-200 text-violet-700 hover:bg-violet-50 transition">Suggest a KPI based on my job description</button>
+            <button onclick="aiQuickSend('How do I score high on my KPI?')" class="text-left text-xs px-3 py-2 rounded-xl border border-violet-200 text-violet-700 hover:bg-violet-50 transition">How do I score high?</button>
+            <button onclick="aiQuickSend('How does the approval process work?')" class="text-left text-xs px-3 py-2 rounded-xl border border-violet-200 text-violet-700 hover:bg-violet-50 transition">How does approval work?</button>
+        `;
+        wrap.appendChild(quickDiv);
+    }
+
+    /* -----------------------------------------------------------------------
+     | OPEN / CLOSE
+     ----------------------------------------------------------------------- */
     window.toggleAiChat = function () {
         isOpen = !isOpen;
-        const panel = document.getElementById('aiChatPanel');
+        const panel     = document.getElementById('aiChatPanel');
         const iconOpen  = document.getElementById('aiChatIconOpen');
         const iconClose = document.getElementById('aiChatIconClose');
         const dot       = document.getElementById('aiUnreadDot');
@@ -140,12 +246,48 @@
         }
     };
 
+    /* -----------------------------------------------------------------------
+     | MAXIMIZE / RESTORE
+     ----------------------------------------------------------------------- */
+    window.toggleAiMaximize = function () {
+        isMaximized = !isMaximized;
+        const panel = document.getElementById('aiChatPanel');
+        const icon  = document.getElementById('aiMaximizeIcon');
+
+        if (isMaximized) {
+            panel.classList.add('maximized');
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"/>';
+        } else {
+            panel.classList.remove('maximized');
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>';
+        }
+    };
+
+    /* -----------------------------------------------------------------------
+     | CLEAR HISTORY
+     ----------------------------------------------------------------------- */
+    window.aiClearHistory = function () {
+        history    = [];
+        uiMessages = [];
+        saveSession();
+        const wrap = document.getElementById('aiChatMessages');
+        wrap.innerHTML = '';
+        document.getElementById('aiBuildKpiBar')?.classList.add('hidden');
+        renderGreeting();
+    };
+
+    /* -----------------------------------------------------------------------
+     | QUICK PROMPTS
+     ----------------------------------------------------------------------- */
     window.aiQuickSend = function (text) {
         document.getElementById('aiQuickPrompts')?.remove();
         document.getElementById('aiChatInput').value = text;
         aiSendMessage();
     };
 
+    /* -----------------------------------------------------------------------
+     | SEND MESSAGE
+     ----------------------------------------------------------------------- */
     window.aiSendMessage = async function () {
         if (isWaiting) return;
 
@@ -156,43 +298,222 @@
         input.value = '';
         document.getElementById('aiQuickPrompts')?.remove();
 
-        appendMessage('user', text);
+        renderMessage('user', text, true);
         history.push({ role: 'user', content: text });
-
-        // keep last 10 turns to avoid huge payloads
         if (history.length > 20) history = history.slice(-20);
 
+        maybeShowBuildBar();
         isWaiting = true;
         const typing = appendTyping();
 
         try {
-            const res  = await fetch(chatUrl, {
+            const res = await fetch(chatUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': CSRF,
-                },
+                headers: JSON_HEADERS,
                 body: JSON.stringify({ messages: history }),
             });
 
-            const data = await res.json();
             typing.remove();
 
-            const reply = data.success ? data.reply : (data.message ?? 'Something went wrong.');
-            appendMessage('bot', reply);
-            history.push({ role: 'assistant', content: reply });
-
-            if (!isOpen) {
-                document.getElementById('aiUnreadDot').classList.remove('hidden');
+            if (res.status === 419) {
+                renderMessage('bot', 'Your session has expired. Please refresh the page and try again.', false);
+                isWaiting = false;
+                return;
             }
 
+            let data;
+            try { data = await res.json(); }
+            catch (_) {
+                renderMessage('bot', `Server error (${res.status}). Please try again.`, false);
+                isWaiting = false;
+                return;
+            }
+
+            const reply = data.success ? data.reply : (data.message ?? 'Something went wrong.');
+            renderMessage('bot', reply, true);
+            history.push({ role: 'assistant', content: reply });
+
+            saveSession();
+
+            if (!isOpen) document.getElementById('aiUnreadDot').classList.remove('hidden');
+
         } catch (e) {
-            typing.remove();
-            appendMessage('bot', 'Network error. Please try again.');
+            document.querySelectorAll('#aiChatMessages .ai-msg-bot:last-child')
+                .forEach(el => { if (el.querySelector('.animate-bounce')) el.remove(); });
+            renderMessage('bot', 'Could not reach the server. Check your connection and try again.', false);
         } finally {
             isWaiting = false;
         }
     };
+
+    /* -----------------------------------------------------------------------
+     | BUILD MY KPI — generate a complete structured KPI draft
+     ----------------------------------------------------------------------- */
+    window.aiBuildKpi = async function () {
+        if (isWaiting || history.length < 2) return;
+
+        document.getElementById('aiBuildKpiBar').classList.add('hidden');
+
+        renderMessage('bot', "Give me a moment — I'm putting together your best KPI based on our conversation...", false);
+        const typing = appendTyping();
+        isWaiting = true;
+
+        try {
+            const res = await fetch(suggestUrl, {
+                method: 'POST',
+                headers: JSON_HEADERS,
+                body: JSON.stringify({ messages: history }),
+            });
+
+            typing.remove();
+
+            if (res.status === 419) {
+                renderMessage('bot', 'Your session has expired. Please refresh the page and try again.', false);
+                maybeShowBuildBar();
+                isWaiting = false;
+                return;
+            }
+
+            let data;
+            try { data = await res.json(); }
+            catch (_) {
+                renderMessage('bot', `Server error (${res.status}). Please try again.`, false);
+                maybeShowBuildBar();
+                isWaiting = false;
+                return;
+            }
+
+            if (!data.success || !data.kpi) {
+                renderMessage('bot', data.message ?? "Could not generate a suggestion right now. Let's keep chatting.", false);
+                maybeShowBuildBar();
+                isWaiting = false;
+                return;
+            }
+
+            renderKpiCard(data.kpi, true);
+            saveSession();
+
+        } catch (e) {
+            document.querySelectorAll('#aiChatMessages .ai-msg-bot:last-child')
+                .forEach(el => { if (el.querySelector('.animate-bounce')) el.remove(); });
+            renderMessage('bot', 'Could not reach the server. Check your connection and try again.', false);
+            maybeShowBuildBar();
+        } finally {
+            isWaiting = false;
+        }
+    };
+
+    /* -----------------------------------------------------------------------
+     | KPI CARD RENDER
+     ----------------------------------------------------------------------- */
+    function renderKpiCard(kpi, persist) {
+        const wrap = document.getElementById('aiChatMessages');
+        const div  = document.createElement('div');
+        div.className = 'ai-kpi-card text-sm px-4 py-4';
+
+        const unit = kpi.unit === 'currency' ? 'RM ' : kpi.unit === 'percentage' ? '' : '';
+        const suffix = kpi.unit === 'percentage' ? '%' : '';
+        const fmt  = (v) => v != null ? `${unit}${Number(v).toLocaleString('en-MY')}${suffix}` : '-';
+
+        const onKpiPage = typeof window.aniraKpiPage !== 'undefined' && window.aniraKpiPage;
+        const kpiJson   = escAttr(JSON.stringify(kpi));
+
+        const fillBtn = onKpiPage
+            ? `<button onclick="aniraConfirmFill(JSON.parse(this.dataset.kpi))" data-kpi="${kpiJson}" class="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition">Fill Form</button>`
+            : `<a href="/kpi/create" class="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition text-center block">Go to Create KPI</a>`;
+
+        div.innerHTML = `
+            <p class="text-[10px] uppercase tracking-widest font-black text-violet-500 mb-2">ANIRA KPI Draft</p>
+            <p class="font-black text-slate-900 text-sm leading-snug mb-1">${escHtml(kpi.title ?? '')}</p>
+            <p class="text-xs text-slate-600 leading-relaxed mb-3">${escHtml(kpi.description ?? '')}</p>
+            <div class="grid grid-cols-2 gap-1.5 text-xs mb-3">
+                <div class="bg-white/70 rounded-xl p-2">
+                    <p class="text-slate-400 text-[10px] uppercase font-bold">Category</p>
+                    <p class="font-semibold text-slate-800 mt-0.5">${escHtml(kpi.category ?? '-')}</p>
+                </div>
+                <div class="bg-white/70 rounded-xl p-2">
+                    <p class="text-slate-400 text-[10px] uppercase font-bold">Sub-Category</p>
+                    <p class="font-semibold text-slate-800 mt-0.5">${escHtml(kpi.sub_category ?? '-')}</p>
+                </div>
+                <div class="bg-white/70 rounded-xl p-2">
+                    <p class="text-slate-400 text-[10px] uppercase font-bold">Unit</p>
+                    <p class="font-semibold text-slate-800 mt-0.5 capitalize">${escHtml(kpi.unit ?? '-')}</p>
+                </div>
+                <div class="bg-white/70 rounded-xl p-2">
+                    <p class="text-slate-400 text-[10px] uppercase font-bold">Base → Stretch</p>
+                    <p class="font-semibold text-slate-800 mt-0.5">${fmt(kpi.base_target)} → ${fmt(kpi.stretch_target)}</p>
+                </div>
+            </div>
+            <div class="flex gap-1 text-[10px] mb-3">
+                ${['Q1','Q2','Q3','Q4'].map(q => `<div class="flex-1 bg-white/70 rounded-xl p-2 text-center"><p class="text-slate-400 font-bold">${q}</p><p class="font-semibold text-slate-800 mt-0.5">${fmt(kpi[q.toLowerCase()])}</p></div>`).join('')}
+            </div>
+            ${kpi.rationale ? `<p class="text-[11px] text-violet-700 italic mb-3">${escHtml(kpi.rationale)}</p>` : ''}
+            <div class="flex gap-2">
+                ${fillBtn}
+                <button onclick="aiBuildKpi()" class="flex-1 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition">Try Again</button>
+            </div>
+        `;
+
+        wrap.appendChild(div);
+        wrap.scrollTop = wrap.scrollHeight;
+
+        if (persist) {
+            uiMessages.push({ type: 'kpi_card', kpi });
+        }
+    }
+
+    /* -----------------------------------------------------------------------
+     | CONFIRM FILL
+     ----------------------------------------------------------------------- */
+    window.aniraConfirmFill = function (kpi) {
+        if (typeof window.aniraFillKpiForm === 'function') {
+            window.aniraFillKpiForm(kpi);
+            renderMessage('bot', "Done! I've filled in all the KPI details including the quarterly plan. Review everything carefully and tweak any values before submitting.", false);
+        }
+    };
+
+    /* -----------------------------------------------------------------------
+     | SHOW BUILD BAR
+     ----------------------------------------------------------------------- */
+    function maybeShowBuildBar() {
+        if (history.length >= 3) {
+            document.getElementById('aiBuildKpiBar')?.classList.remove('hidden');
+        }
+    }
+
+    /* -----------------------------------------------------------------------
+     | RENDER HELPERS
+     ----------------------------------------------------------------------- */
+    function renderMessage(role, text, persist) {
+        const wrap = document.getElementById('aiChatMessages');
+        const div  = document.createElement('div');
+        div.className = (role === 'user' ? 'ai-msg-user' : 'ai-msg-bot') + ' text-sm px-4 py-3 max-w-[85%]';
+
+        if (role === 'bot') {
+            div.innerHTML = formatBotText(text);
+        } else {
+            div.textContent = text;
+        }
+
+        wrap.appendChild(div);
+        wrap.scrollTop = wrap.scrollHeight;
+
+        if (persist) {
+            uiMessages.push({ type: role, text });
+        }
+
+        return div;
+    }
+
+    function appendTyping() {
+        const wrap = document.getElementById('aiChatMessages');
+        const div  = document.createElement('div');
+        div.className = 'ai-msg-bot text-sm px-4 py-3 max-w-[85%]';
+        div.innerHTML = '<span class="inline-flex gap-1"><span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:0ms"></span><span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:150ms"></span><span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:300ms"></span></span>';
+        wrap.appendChild(div);
+        wrap.scrollTop = wrap.scrollHeight;
+        return div;
+    }
 
     function formatBotText(text) {
         const lines = text.split('\n');
@@ -231,33 +552,18 @@
     }
 
     function escHtml(str) {
-        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
-    function appendMessage(role, text) {
-        const wrap = document.getElementById('aiChatMessages');
-        const div  = document.createElement('div');
-        div.className = (role === 'user' ? 'ai-msg-user' : 'ai-msg-bot') + ' text-sm px-4 py-3 max-w-[85%]';
-
-        if (role === 'bot') {
-            div.innerHTML = formatBotText(text);
-        } else {
-            div.textContent = text;
-        }
-
-        wrap.appendChild(div);
-        wrap.scrollTop = wrap.scrollHeight;
-        return div;
+    function escAttr(str) {
+        return String(str ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
     }
 
-    function appendTyping() {
-        const wrap = document.getElementById('aiChatMessages');
-        const div  = document.createElement('div');
-        div.className = 'ai-msg-bot text-sm px-4 py-3 max-w-[85%]';
-        div.innerHTML = '<span class="inline-flex gap-1"><span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:0ms"></span><span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:150ms"></span><span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:300ms"></span></span>';
-        wrap.appendChild(div);
-        wrap.scrollTop = wrap.scrollHeight;
-        return div;
-    }
+    /* -----------------------------------------------------------------------
+     | INIT — restore or show greeting
+     ----------------------------------------------------------------------- */
+    const restored = loadSession();
+    restoreMessages();
+
 })();
 </script>
