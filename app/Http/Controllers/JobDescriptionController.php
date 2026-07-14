@@ -71,4 +71,29 @@ class JobDescriptionController extends Controller
             'jobDescription'  => $jobDescription,
         ], $this->sidebarData($supabase, $user)));
     }
+
+    private function linesToArray(?string $text): array
+    {
+        return collect(preg_split('/\r\n|\r|\n/', (string) $text))
+            ->map(fn ($line) => trim($line))
+            ->filter(fn ($line) => $line !== '')
+            ->values()
+            ->all();
+    }
+
+    public function update(Request $request, SupabaseService $supabase)
+    {
+        $user = $this->currentUser($supabase);
+
+        $supabase->upsert('job_descriptions', [
+            'employee_id'      => $user['id'],
+            'summary'          => trim((string) $request->input('summary', '')),
+            'responsibilities' => $this->linesToArray($request->input('responsibilities')),
+            'requirements'     => $this->linesToArray($request->input('requirements')),
+            'competencies'     => $this->linesToArray($request->input('competencies')),
+            'updated_at'       => now()->toIso8601String(),
+        ], 'employee_id');
+
+        return redirect()->route('job-description')->with('success', 'Job description updated.');
+    }
 }

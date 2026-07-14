@@ -29,7 +29,23 @@
 <main id="mainContent" class="ml-[230px] min-h-screen transition-all duration-300">
 <div class="p-4 max-w-4xl mx-auto space-y-3">
 
-    <a href="/dashboard" class="text-[10px] text-slate-500 hover:text-slate-800">← Dashboard</a>
+    <div class="flex items-center justify-between">
+        <a href="/dashboard" class="text-[10px] text-slate-500 hover:text-slate-800">← Dashboard</a>
+        <button
+            type="button"
+            id="jdEditBtn"
+            onclick="setJdEditing(true)"
+            class="text-[11px] font-black px-3 py-1.5 rounded-lg bg-black text-white hover:bg-slate-800 transition"
+        >
+            Edit Job Description
+        </button>
+    </div>
+
+    @if(session('success'))
+    <div class="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-[12px] font-semibold text-emerald-700">
+        ✓ {{ session('success') }}
+    </div>
+    @endif
 
     @php
         if (session('company_code') === 'RCG') {
@@ -53,8 +69,11 @@
             : '-';
     @endphp
 
+    <form method="POST" action="{{ route('job-description.update') }}">
+    @csrf
+
     {{-- DOCUMENT --}}
-    <div class="bg-white doc-card border-2 border-black overflow-hidden">
+    <div id="jdDoc" class="bg-white doc-card border-2 border-black overflow-hidden">
 
         <div class="doc-bar text-sm px-4 py-2.5">
             Job Description
@@ -104,71 +123,124 @@
             </tbody>
         </table>
 
-        @if(empty($jobDescription))
-
-        {{-- EMPTY STATE --}}
-        <div class="p-8 text-center border-t-2 border-black">
-            <p class="text-[13px] font-black text-slate-800">No job description content on file yet</p>
-            <p class="text-[12px] text-slate-500 mt-1 max-w-sm mx-auto">
-                Please contact HR or your department admin to have the job purpose, responsibilities, and requirements added.
-            </p>
+        {{-- 1) JOB PURPOSE --}}
+        <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
+            1) Job Purpose
+        </div>
+        <div class="p-4 border-b border-black">
+            <div class="jd-view-field">
+                @if(!empty($jobDescription['summary']))
+                <p class="text-[12.5px] text-slate-700 leading-relaxed whitespace-pre-line">{{ $jobDescription['summary'] }}</p>
+                @else
+                <p class="text-[12px] text-slate-400 italic">Not filled in yet.</p>
+                @endif
+            </div>
+            <div class="jd-edit-field hidden">
+                <textarea
+                    name="summary"
+                    rows="5"
+                    placeholder="Describe the purpose of this role..."
+                    class="w-full rounded-lg border border-slate-300 p-2.5 text-[12.5px] focus:ring-2 focus:ring-black/15 focus:border-black focus:outline-none"
+                >{{ $jobDescription['summary'] ?? '' }}</textarea>
+            </div>
         </div>
 
-        @else
-
-            @if(!empty($jobDescription['summary']))
-            <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
-                1) Job Purpose
-            </div>
-            <div class="p-4 border-b border-black">
-                <p class="text-[12.5px] text-slate-700 leading-relaxed whitespace-pre-line">
-                    {{ $jobDescription['summary'] }}
-                </p>
-            </div>
-            @endif
-
-            @if(!empty($jobDescription['responsibilities']))
-            <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
-                2) Key Responsibilities
-            </div>
-            <div class="p-4 border-b border-black">
+        {{-- 2) KEY RESPONSIBILITIES --}}
+        <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
+            2) Key Responsibilities
+        </div>
+        <div class="p-4 border-b border-black">
+            <div class="jd-view-field">
+                @if(!empty($jobDescription['responsibilities']))
                 <ol class="list-decimal pl-5 space-y-2">
                     @foreach($jobDescription['responsibilities'] as $item)
                     <li class="text-[12.5px] text-slate-700 leading-relaxed">{{ $item }}</li>
                     @endforeach
                 </ol>
+                @else
+                <p class="text-[12px] text-slate-400 italic">Not filled in yet.</p>
+                @endif
             </div>
-            @endif
+            <div class="jd-edit-field hidden">
+                <textarea
+                    name="responsibilities"
+                    rows="6"
+                    placeholder="One responsibility per line..."
+                    class="w-full rounded-lg border border-slate-300 p-2.5 text-[12.5px] focus:ring-2 focus:ring-black/15 focus:border-black focus:outline-none"
+                >{{ implode("\n", $jobDescription['responsibilities'] ?? []) }}</textarea>
+            </div>
+        </div>
 
-            @if(!empty($jobDescription['requirements']))
-            <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
-                3) Qualifications &amp; Experience
-            </div>
-            <div class="p-4 border-b border-black">
+        {{-- 3) QUALIFICATIONS & EXPERIENCE --}}
+        <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
+            3) Qualifications &amp; Experience
+        </div>
+        <div class="p-4 border-b border-black">
+            <div class="jd-view-field">
+                @if(!empty($jobDescription['requirements']))
                 <ul class="list-disc pl-5 space-y-2">
                     @foreach($jobDescription['requirements'] as $item)
                     <li class="text-[12.5px] text-slate-700 leading-relaxed">{{ $item }}</li>
                     @endforeach
                 </ul>
+                @else
+                <p class="text-[12px] text-slate-400 italic">Not filled in yet.</p>
+                @endif
             </div>
-            @endif
+            <div class="jd-edit-field hidden">
+                <textarea
+                    name="requirements"
+                    rows="6"
+                    placeholder="One qualification / experience item per line..."
+                    class="w-full rounded-lg border border-slate-300 p-2.5 text-[12.5px] focus:ring-2 focus:ring-black/15 focus:border-black focus:outline-none"
+                >{{ implode("\n", $jobDescription['requirements'] ?? []) }}</textarea>
+            </div>
+        </div>
 
-            @if(!empty($jobDescription['competencies']))
-            <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
-                4) Competencies &amp; Behavioural Expectations
-            </div>
-            <div class="p-4">
+        {{-- 4) COMPETENCIES & BEHAVIOURAL EXPECTATIONS --}}
+        <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
+            4) Competencies &amp; Behavioural Expectations
+        </div>
+        <div class="p-4">
+            <div class="jd-view-field">
+                @if(!empty($jobDescription['competencies']))
                 <ul class="list-disc pl-5 space-y-2">
                     @foreach($jobDescription['competencies'] as $item)
                     <li class="text-[12.5px] text-slate-700 leading-relaxed">{{ $item }}</li>
                     @endforeach
                 </ul>
+                @else
+                <p class="text-[12px] text-slate-400 italic">Not filled in yet.</p>
+                @endif
             </div>
-            @endif
+            <div class="jd-edit-field hidden">
+                <textarea
+                    name="competencies"
+                    rows="6"
+                    placeholder="One competency / behavioural expectation per line..."
+                    class="w-full rounded-lg border border-slate-300 p-2.5 text-[12.5px] focus:ring-2 focus:ring-black/15 focus:border-black focus:outline-none"
+                >{{ implode("\n", $jobDescription['competencies'] ?? []) }}</textarea>
+            </div>
+        </div>
 
-        @endif
+        <div class="jd-edit-field hidden p-3 flex justify-end gap-2 border-t-2 border-black">
+            <button
+                type="button"
+                onclick="setJdEditing(false)"
+                class="text-[11px] font-black px-3 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 transition"
+            >
+                Cancel
+            </button>
+            <button
+                type="submit"
+                class="text-[11px] font-black px-4 py-2 rounded-lg bg-black text-white hover:bg-slate-800 transition"
+            >
+                Save Job Description
+            </button>
+        </div>
 
     </div>
+    </form>
 
     @if(!empty($jobDescription['updated_at']))
     <p class="text-[10px] text-slate-400 text-right pr-1">
@@ -178,6 +250,14 @@
 
 </div>
 </main>
+
+<script>
+    function setJdEditing(editing) {
+        document.querySelectorAll('.jd-view-field').forEach(el => el.classList.toggle('hidden', editing));
+        document.querySelectorAll('.jd-edit-field').forEach(el => el.classList.toggle('hidden', !editing));
+        document.getElementById('jdEditBtn').classList.toggle('hidden', editing);
+    }
+</script>
 
 </body>
 </html>

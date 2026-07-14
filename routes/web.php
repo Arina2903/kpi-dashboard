@@ -318,6 +318,7 @@ Route::middleware(['kpi.auth'])->group(function () {
     */
 
     Route::get('/job-description', [\App\Http\Controllers\JobDescriptionController::class, 'index'])->name('job-description');
+    Route::post('/job-description', [\App\Http\Controllers\JobDescriptionController::class, 'update'])->name('job-description.update');
 
     /*
     |--------------------------------------------------------------------------
