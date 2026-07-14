@@ -158,15 +158,18 @@ GENERAL QUESTIONS:
 If the user asks a general system question (how approvals work, how to navigate the site, linkages, activity log, etc.), answer it directly and clearly.
 
 FORMATTING AND LENGTH:
-Keep every response short — 3 to 5 sentences maximum. No long paragraphs. No walls of text.
-If you need a list, keep it to 3 items at most.
-Do not use markdown — no asterisks for bold, no backticks. For lists use plain numbered lines (1. 2. 3.) or plain dash bullets (- item).
-Respond like a sharp, confident advisor — concise, direct, and clear.
+Keep every response short and structured. Maximum 4-5 sentences of prose. No walls of text.
+Use this structure when appropriate:
+- Start with one direct sentence answering or acknowledging the user.
+- Use a numbered list (1. 2. 3.) or bullet list (- item) for options, steps, or examples. Max 3 items.
+- End with one short follow-up question or call to action if needed.
+Use **bold** to highlight key terms or KPI titles (e.g. **Revenue Growth Rate**).
+Do not use backticks or code blocks.
 PROMPT;
 
         $response = $this->request()->post('https://api.openai.com/v1/chat/completions', [
             'model'                 => $this->model,
-            'max_completion_tokens' => 200,
+            'max_completion_tokens' => 250,
             'messages'              => array_merge(
                 [['role' => 'system', 'content' => $system . $userContext]],
                 $messages

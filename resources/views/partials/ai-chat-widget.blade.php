@@ -415,12 +415,9 @@
         const suffix = kpi.unit === 'percentage' ? '%' : '';
         const fmt  = (v) => v != null ? `${unit}${Number(v).toLocaleString('en-MY')}${suffix}` : '-';
 
-        const onKpiPage = typeof window.aniraKpiPage !== 'undefined' && window.aniraKpiPage;
-        const kpiJson   = escAttr(JSON.stringify(kpi));
+        const kpiJson = escAttr(JSON.stringify(kpi));
 
-        const fillBtn = onKpiPage
-            ? `<button onclick="aniraConfirmFill(JSON.parse(this.dataset.kpi))" data-kpi="${kpiJson}" class="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition">Fill Form</button>`
-            : `<a href="/kpi/create" class="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition text-center block">Go to Create KPI</a>`;
+        const fillBtn = `<button onclick="aniraFillOrRedirect(JSON.parse(this.dataset.kpi))" data-kpi="${kpiJson}" class="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition">Fill Form</button>`;
 
         div.innerHTML = `
             <p class="text-[10px] uppercase tracking-widest font-black text-violet-500 mb-2">ANIRA KPI Draft</p>
@@ -463,12 +460,19 @@
     }
 
     /* -----------------------------------------------------------------------
-     | CONFIRM FILL
+     | FILL OR REDIRECT
+     | If already on KPI create page — fill immediately.
+     | Otherwise save KPI to sessionStorage and go to /kpi/create.
      ----------------------------------------------------------------------- */
-    window.aniraConfirmFill = function (kpi) {
+    window.aniraFillOrRedirect = function (kpi) {
         if (typeof window.aniraFillKpiForm === 'function') {
+            // Already on create page — fill right now
             window.aniraFillKpiForm(kpi);
-            renderMessage('bot', "Done! I've filled in all the KPI details including the quarterly plan. Review everything carefully and tweak any values before submitting.", false);
+            renderMessage('bot', "Done! I've filled in all the KPI details. Review and tweak before submitting.", false);
+        } else {
+            // Save KPI and redirect — create page will auto-fill on load
+            try { sessionStorage.setItem('anira_pending_kpi', JSON.stringify(kpi)); } catch (_) {}
+            window.location.href = '/kpi/create';
         }
     };
 
@@ -515,19 +519,30 @@
         return div;
     }
 
-    function formatBotText(text) {
+    function inlineFormat(str) {
+        return escHtml(str)
+            .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+            .replace(/\*(.+?)\*/g,     '<em>$1</em>')
+            .replace(/`(.+?)`/g,       '<code class="bg-slate-200 text-slate-700 px-1 rounded text-[11px]">$1</code>');
+    }
+
+    function formatBotText(raw) {
+        // Strip heading markers but keep the text
+        let text = raw.replace(/^#{1,6}\s+/gm, '');
+
         const lines = text.split('\n');
-        let html = '';
-        let inOl = false;
-        let inUl = false;
+        let html  = '';
+        let inOl  = false;
+        let inUl  = false;
+        let first = true;
 
         const closeList = () => {
             if (inOl) { html += '</ol>'; inOl = false; }
             if (inUl) { html += '</ul>'; inUl = false; }
         };
 
-        lines.forEach(raw => {
-            const line = raw.trim();
+        lines.forEach(line => {
+            line = line.trim();
             if (!line) { closeList(); return; }
 
             const olMatch = line.match(/^(\d+)\.\s+(.*)/);
@@ -535,15 +550,24 @@
 
             if (olMatch) {
                 if (inUl) { html += '</ul>'; inUl = false; }
-                if (!inOl) { html += '<ol class="list-decimal pl-4 mt-1 space-y-1">'; inOl = true; }
-                html += `<li>${escHtml(olMatch[2])}</li>`;
+                if (!inOl) {
+                    html += `<ol class="list-decimal pl-5 ${first ? '' : 'mt-2'} space-y-1.5 text-[13px]">`;
+                    inOl = true;
+                }
+                html += `<li class="leading-snug">${inlineFormat(olMatch[2])}</li>`;
+                first = false;
             } else if (ulMatch) {
                 if (inOl) { html += '</ol>'; inOl = false; }
-                if (!inUl) { html += '<ul class="list-disc pl-4 mt-1 space-y-1">'; inUl = true; }
-                html += `<li>${escHtml(ulMatch[1])}</li>`;
+                if (!inUl) {
+                    html += `<ul class="list-disc pl-5 ${first ? '' : 'mt-2'} space-y-1.5 text-[13px]">`;
+                    inUl = true;
+                }
+                html += `<li class="leading-snug">${inlineFormat(ulMatch[1])}</li>`;
+                first = false;
             } else {
                 closeList();
-                html += `<p class="mt-1">${escHtml(line)}</p>`;
+                html += `<p class="leading-snug text-[13px] ${first ? '' : 'mt-2'}">${inlineFormat(line)}</p>`;
+                first = false;
             }
         });
 

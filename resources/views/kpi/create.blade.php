@@ -3431,6 +3431,19 @@ async function aiSuggestDescription() {
 
 window.aniraKpiPage = true;
 
+// Auto-fill if redirected here from another page via ANIRA
+(function () {
+    try {
+        const raw = sessionStorage.getItem('anira_pending_kpi');
+        if (!raw) return;
+        sessionStorage.removeItem('anira_pending_kpi');
+        const kpi = JSON.parse(raw);
+        if (kpi && typeof window.aniraFillKpiForm === 'function') {
+            window.aniraFillKpiForm(kpi);
+        }
+    } catch (_) {}
+})();
+
 window.aniraFillKpiForm = function (data) {
     // Title
     const titleEl = document.getElementById('kpiTitle');
