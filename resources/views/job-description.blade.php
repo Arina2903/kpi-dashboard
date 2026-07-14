@@ -32,10 +32,14 @@
     <a href="/dashboard" class="text-[10px] text-slate-500 hover:text-slate-800">← Dashboard</a>
 
     @php
-        $jdLogo = session('company_logo');
-        if (!$jdLogo) {
-            $logoMap = ['RCG'=>'images/RCG-Logo.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png'];
-            $jdLogo = $logoMap[session('company_code')] ?? null;
+        if (session('company_code') === 'RCG') {
+            $jdLogo = 'images/RCG-Logo-black.png';
+        } else {
+            $jdLogo = session('company_logo');
+            if (!$jdLogo) {
+                $logoMap = ['RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png'];
+                $jdLogo = $logoMap[session('company_code')] ?? null;
+            }
         }
 
         $position     = $jobDescription['job_title'] ?? $user['position'] ?? '-';
