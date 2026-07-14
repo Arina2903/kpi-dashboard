@@ -168,6 +168,12 @@
                         'match' => 'dashboard*',
                         'icon' => 'dashboard',
                     ],
+                    [
+                        'label' => 'Job Description',
+                        'href' => route('job-description'),
+                        'match' => 'job-description*',
+                        'icon' => 'jobdesc',
+                    ],
                 ],
             ],
             [
