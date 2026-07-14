@@ -72,12 +72,12 @@ class JobDescriptionController extends Controller
         ], $this->sidebarData($supabase, $user)));
     }
 
-    // Content comes from a Quill rich-text editor (see job-description.blade.php), which
+    // Content comes from a CKEditor rich-text editor (see job-description.blade.php), which
     // only ever emits a fixed set of formatting tags — this allowlist strips anything else
     // (including <script>) and any inline event-handler attributes that might slip through.
     private function sanitizeHtml(?string $html): string
     {
-        $allowed = '<p><br><ul><ol><li><table><thead><tbody><tr><td><th><strong><b><em><i><u><s>';
+        $allowed = '<p><br><ul><ol><li><figure><table><thead><tbody><tr><td><th><strong><b><em><i><u><s>';
         $html    = strip_tags((string) $html, $allowed);
 
         return preg_replace('/\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html);

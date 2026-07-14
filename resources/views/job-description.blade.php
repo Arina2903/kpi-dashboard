@@ -10,8 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.min.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/19.0.0/classic/ckeditor.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .doc-card { box-shadow: 0 8px 30px rgba(15,23,42,.08); }
@@ -22,9 +21,9 @@
             letter-spacing: .08em;
             text-transform: uppercase;
         }
-        .jd-editor .ql-editor { font-size: 12.5px; min-height: 120px; }
-        .jd-editor .ql-editor table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-        .jd-editor .ql-editor table td { border: 1px solid #94a3b8; padding: 6px 8px; }
+        .jd-editor .ck-editor__editable_inline { min-height: 120px; font-size: 12.5px; }
+        .jd-editor .ck-content table { width: 100%; border-collapse: collapse; }
+        .jd-editor .ck-content table td, .jd-editor .ck-content table th { border: 1px solid #94a3b8; padding: 6px 8px; }
     </style>
 </head>
 <body class="bg-[#f0f2f7] min-h-screen text-slate-900">
@@ -132,17 +131,10 @@
             {!! $section['title'] !!}
         </div>
         <div class="p-4 {{ $i < count($jdSections) - 1 ? 'border-b border-black' : '' }}">
-            <div class="flex justify-end mb-1.5">
-                <button
-                    type="button"
-                    onclick="insertJdTable('{{ $section['key'] }}')"
-                    class="text-[10px] font-black px-2 py-1 rounded border border-slate-300 text-slate-600 hover:bg-slate-50 transition"
-                >
-                    + Insert Table
-                </button>
+            <div class="jd-editor bg-white border border-slate-300 rounded-lg">
+                <div id="editor-{{ $section['key'] }}">{!! $jobDescription[$section['key']] ?? '' !!}</div>
             </div>
-            <div class="jd-editor bg-white border border-slate-300 rounded-lg" id="editor-{{ $section['key'] }}"></div>
-            <input type="hidden" name="{{ $section['key'] }}" id="input-{{ $section['key'] }}" value="{{ $jobDescription[$section['key']] ?? '' }}">
+            <input type="hidden" name="{{ $section['key'] }}" id="input-{{ $section['key'] }}">
         </div>
         @endforeach
 
@@ -171,42 +163,30 @@
     var jdEditors = {};
 
     function initJdEditor(name, placeholder) {
-        var quill = new Quill('#editor-' + name, {
-            theme: 'snow',
-            placeholder: placeholder,
-            modules: {
-                toolbar: [
-                    ['bold', 'italic'],
-                    [{ list: 'ordered' }, { list: 'bullet' }],
-                ],
-            },
-        });
-
-        var existing = document.getElementById('input-' + name).value;
-        if (existing) {
-            quill.clipboard.dangerouslyPasteHTML(existing);
-        }
-
-        jdEditors[name] = quill;
+        ClassicEditor
+            .create(document.getElementById('editor-' + name), {
+                placeholder: placeholder,
+                toolbar: ['bold', 'italic', 'bulletedList', 'numberedList', '|', 'insertTable'],
+                table: {
+                    contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells'],
+                },
+            })
+            .then(function (editor) {
+                jdEditors[name] = editor;
+            })
+            .catch(function (error) {
+                console.error('JD editor failed to load:', name, error);
+            });
     }
 
-    function insertJdTable(name) {
-        var quill = jdEditors[name];
-        var range = quill.getSelection(true);
-        var tableHtml = '<table><tr><td>Cell</td><td>Cell</td></tr><tr><td>Cell</td><td>Cell</td></tr></table><p><br></p>';
-        quill.clipboard.dangerouslyPasteHTML(range.index, tableHtml);
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        initJdEditor('summary', 'Describe the purpose of this role...');
-        initJdEditor('responsibilities', 'List the key responsibilities...');
-        initJdEditor('requirements', 'List qualifications and experience...');
-        initJdEditor('competencies', 'List competencies and behavioural expectations...');
-    });
+    initJdEditor('summary', 'Describe the purpose of this role...');
+    initJdEditor('responsibilities', 'List the key responsibilities...');
+    initJdEditor('requirements', 'List qualifications and experience...');
+    initJdEditor('competencies', 'List competencies and behavioural expectations...');
 
     document.getElementById('jdForm').addEventListener('submit', function () {
         Object.keys(jdEditors).forEach(function (name) {
-            document.getElementById('input-' + name).value = jdEditors[name].root.innerHTML;
+            document.getElementById('input-' + name).value = jdEditors[name].getData();
         });
     });
 </script>
