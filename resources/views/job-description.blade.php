@@ -61,7 +61,21 @@
         $effectiveDate = !empty($jobDescription['effective_date'])
             ? \Carbon\Carbon::parse($jobDescription['effective_date'])->format('d M Y')
             : '-';
+
+        $jdStatus = $jobDescription['status'] ?? 'draft';
     @endphp
+
+    <div class="flex items-center justify-end">
+        @if($jdStatus === 'submitted')
+        <span class="text-[9px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
+            Submitted{{ !empty($jobDescription['submitted_at']) ? ' — ' . \Carbon\Carbon::parse($jobDescription['submitted_at'])->format('d M Y') : '' }}
+        </span>
+        @else
+        <span class="text-[9px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full bg-slate-200 text-slate-600">
+            Draft
+        </span>
+        @endif
+    </div>
 
     <form method="POST" action="{{ route('job-description.update') }}" id="jdForm">
     @csrf
@@ -127,7 +141,7 @@
         @endphp
 
         @foreach($jdSections as $i => $section)
-        <div class="doc-bar text-sm px-4 py-2.5 border-t-2 border-black">
+        <div class="doc-bar text-[11px] px-4 py-2.5 border-t-2 border-black">
             {!! $section['title'] !!}
         </div>
         <div class="p-4 {{ $i < count($jdSections) - 1 ? 'border-b border-black' : '' }}">
@@ -138,12 +152,22 @@
         </div>
         @endforeach
 
-        <div class="p-3 flex justify-end border-t-2 border-black">
+        <div class="p-3 flex justify-end gap-2 border-t-2 border-black">
             <button
                 type="submit"
+                name="action"
+                value="draft"
+                class="text-[11px] font-black px-4 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 transition"
+            >
+                Save Draft
+            </button>
+            <button
+                type="submit"
+                name="action"
+                value="submit"
                 class="text-[11px] font-black px-4 py-2 rounded-lg bg-black text-white hover:bg-slate-800 transition"
             >
-                Save Job Description
+                Submit
             </button>
         </div>
 

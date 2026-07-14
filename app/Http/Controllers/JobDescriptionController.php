@@ -87,15 +87,27 @@ class JobDescriptionController extends Controller
     {
         $user = $this->currentUser($supabase);
 
-        $supabase->upsert('job_descriptions', [
+        $isSubmit = $request->input('action') === 'submit';
+
+        $payload = [
             'employee_id'      => $user['id'],
             'summary'          => $this->sanitizeHtml($request->input('summary')),
             'responsibilities' => $this->sanitizeHtml($request->input('responsibilities')),
             'requirements'     => $this->sanitizeHtml($request->input('requirements')),
             'competencies'     => $this->sanitizeHtml($request->input('competencies')),
+            'status'           => $isSubmit ? 'submitted' : 'draft',
             'updated_at'       => now()->toIso8601String(),
-        ], 'employee_id');
+        ];
 
-        return redirect()->route('job-description')->with('success', 'Job description updated.');
+        if ($isSubmit) {
+            $payload['submitted_at'] = now()->toIso8601String();
+        }
+
+        $supabase->upsert('job_descriptions', $payload, 'employee_id');
+
+        return redirect()->route('job-description')->with(
+            'success',
+            $isSubmit ? 'Job description submitted.' : 'Draft saved.'
+        );
     }
 }
