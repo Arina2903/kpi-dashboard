@@ -126,42 +126,7 @@
         </div>
     </button>
 
-    <!-- PROFILE -->
-    <div class="h-px w-full shrink-0 bg-gradient-to-r from-[#D4AF37] to-transparent"></div>
-
-    <a
-        href="{{ route('profile') }}"
-        class="group relative w-full flex items-center gap-2 my-1 shrink-0 pr-2 text-left
-        {{ request()->is('profile') ? 'bg-gradient-to-r from-[#C8102E] to-[#7A0019] border-l-[3px] border-[#D4AF37]' : 'hover:bg-white/10' }}
-        rounded-lg p-1.5 transition"
-        aria-label="My Profile"
-    >
-        <div class="w-7 h-7 rounded-full overflow-hidden shrink-0 ring-2 ring-[#D4AF37]/60">
-            <img
-                src="https://ui-avatars.com/api/?name={{ urlencode(session('short_name') ?: session('full_name') ?: session('employee_name') ?: 'User') }}&background=D4AF37&color=1a1a1a&size=36"
-                class="w-full h-full object-cover"
-                alt="Profile"
-            />
-        </div>
-
-        <div class="sidebar-text leading-tight min-w-0">
-            <p class="text-[12px] font-bold text-white truncate">
-                {{ session('short_name') ?: session('full_name') ?: session('employee_name') ?: 'User' }}
-            </p>
-            <p class="text-[9px] text-[#A4C3B2] truncate mt-0.5">
-                {{ session('position') ?: 'My Profile' }}
-            </p>
-        </div>
-
-        <div class="sidebar-tooltip hidden absolute left-[52px] top-1/2 -translate-y-1/2
-            bg-black text-white text-[10px] px-2 py-1 rounded-md
-            opacity-0 group-hover:opacity-100 pointer-events-none transition duration-150
-            whitespace-nowrap z-[9999] shadow-lg">
-            My Profile
-        </div>
-    </a>
-
-    <div class="h-px w-full shrink-0 mb-3 bg-gradient-to-r from-transparent to-[#D4AF37]"></div>
+    <div class="h-px w-full shrink-0 mb-3 bg-gradient-to-r from-[#D4AF37] to-transparent"></div>
 
     @php
         $navSections = [
@@ -401,45 +366,38 @@
 
     <!-- SYSTEM ZONE -->
     <div class="sidebar-system mt-3 pt-3 border-t border-white/10 shrink-0">
-        <p class="sidebar-text text-[9px] text-[#A4C3B2] font-semibold uppercase tracking-widest mb-2 px-2">
-            Current View
-        </p>
 
-        <div class="sidebar-text border border-white/10 rounded-xl p-3 bg-white/8 mb-2" style="background:rgba(255,255,255,0.07)">
-            @if($canSwitchDepartment ?? false)
-                <p class="text-[10px] text-white mb-2 font-semibold">
-                    Department View
+        <a
+            href="{{ route('profile') }}"
+            class="group relative w-full flex items-center gap-2 mb-2 shrink-0 pr-2 text-left
+            {{ request()->is('profile') ? 'bg-gradient-to-r from-[#C8102E] to-[#7A0019] border-l-[3px] border-[#D4AF37]' : 'hover:bg-white/10' }}
+            rounded-lg p-1.5 transition"
+            aria-label="My Profile"
+        >
+            <div class="w-7 h-7 rounded-full overflow-hidden shrink-0 ring-2 ring-[#D4AF37]/60">
+                <img
+                    src="https://ui-avatars.com/api/?name={{ urlencode(session('short_name') ?: session('full_name') ?: session('employee_name') ?: 'User') }}&background=D4AF37&color=1a1a1a&size=36"
+                    class="w-full h-full object-cover"
+                    alt="Profile"
+                />
+            </div>
+
+            <div class="sidebar-text leading-tight min-w-0">
+                <p class="text-[12px] font-bold text-white truncate">
+                    {{ session('short_name') ?: session('full_name') ?: session('employee_name') ?: 'User' }}
                 </p>
-
-                <form method="POST" action="{{ route('switch.department') }}">
-                    @csrf
-
-                    <select
-                        name="department_code"
-                        onchange="this.form.submit()"
-                        class="w-full rounded-lg px-2 py-2 text-[11px] text-white outline-none border border-white/20"
-                        style="background:rgba(255,255,255,0.1)"
-                    >
-                        @foreach(($departments ?? []) as $dept)
-                            <option
-                                value="{{ $dept['code'] }}"
-                                {{ (($selectedDepartmentCode ?? null) === $dept['code']) ? 'selected' : '' }}
-                            >
-                                {{ $dept['name'] }}
-                            </option>
-                        @endforeach
-                    </select>
-                </form>
-            @else
-                <p class="text-[10px] text-white mb-1 font-semibold">
-                    Department
+                <p class="text-[9px] text-[#A4C3B2] truncate mt-0.5">
+                    {{ session('position') ?: 'My Profile' }}
                 </p>
+            </div>
 
-                <div class="text-[11px] text-white truncate">
-                    {{ $department['name'] ?? $user['department_code'] ?? '-' }}
-                </div>
-            @endif
-        </div>
+            <div class="sidebar-tooltip hidden absolute left-[52px] top-1/2 -translate-y-1/2
+                bg-black text-white text-[10px] px-2 py-1 rounded-md
+                opacity-0 group-hover:opacity-100 pointer-events-none transition duration-150
+                whitespace-nowrap z-[9999] shadow-lg">
+                My Profile
+            </div>
+        </a>
 
         <form method="POST" action="{{ route('logout') }}">
             @csrf
