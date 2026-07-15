@@ -884,13 +884,33 @@
                                     <pattern id="bc_hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
                                         <line x1="0" y1="0" x2="0" y2="8" stroke="#ffffff" stroke-width="2.5" opacity="0.28"/>
                                     </pattern>
+                                    {{-- Soft glow for the live-score dot --}}
+                                    <filter id="bc_glow" x="-150%" y="-150%" width="400%" height="400%">
+                                        <feGaussianBlur stdDeviation="6" result="blur"/>
+                                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                                    </filter>
+                                    {{-- Zone gradients: subtle light-to-rich for depth --}}
+                                    <linearGradient id="gradZone1" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#FF6B6E"/><stop offset="100%" stop-color="#ED1C24"/>
+                                    </linearGradient>
+                                    <linearGradient id="gradZone2" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#FFB347"/><stop offset="100%" stop-color="#FF8C00"/>
+                                    </linearGradient>
+                                    <linearGradient id="gradZone3" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#FFEB80"/><stop offset="100%" stop-color="#FFD700"/>
+                                    </linearGradient>
+                                    <linearGradient id="gradZone4" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#4CD787"/><stop offset="100%" stop-color="#00B050"/>
+                                    </linearGradient>
                                 </defs>
+                                {{-- Soft cast shadow under the curve for a floating look --}}
+                                <ellipse cx="500" cy="304" rx="460" ry="7" fill="#0f172a" opacity="0.14" filter="url(#bc_shadow)"/>
                                 {{-- 4 equal zones of 250px each --}}
-                                <rect x="0"   y="0" width="250" height="300" fill="#ED1C24" clip-path="url(#bc_clip)"/>
-                                <rect x="250" y="0" width="250" height="300" fill="#FF8C00" clip-path="url(#bc_clip)"/>
-                                <rect x="500" y="0" width="250" height="300" fill="#FFD700" clip-path="url(#bc_clip)"/>
+                                <rect x="0"   y="0" width="250" height="300" fill="url(#gradZone1)" clip-path="url(#bc_clip)"/>
+                                <rect x="250" y="0" width="250" height="300" fill="url(#gradZone2)" clip-path="url(#bc_clip)"/>
+                                <rect x="500" y="0" width="250" height="300" fill="url(#gradZone3)" clip-path="url(#bc_clip)"/>
                                 <rect x="500" y="0" width="250" height="300" fill="url(#bc_hatch)" clip-path="url(#bc_clip)"/>
-                                <rect x="750" y="0" width="250" height="300" fill="#00B050" clip-path="url(#bc_clip)"/>
+                                <rect x="750" y="0" width="250" height="300" fill="url(#gradZone4)" clip-path="url(#bc_clip)"/>
                                 {{-- Zone dividers --}}
                                 <line x1="250" y1="235" x2="250" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
                                 <line x1="500" y1="40"  x2="500" y2="300" stroke="rgba(255,255,255,.85)" stroke-width="3.5"/>
@@ -898,13 +918,13 @@
                                 {{-- Baseline --}}
                                 <line x1="0" y1="300" x2="1000" y2="300" stroke="#e2e8f0" stroke-width="1"/>
                                 {{-- Zone name badges (bg = zone colour, text = white on red/green, black on yellow/orange) --}}
-                                <rect x="50"  y="306" width="150" height="22" rx="11" fill="#ED1C24"/>
+                                <rect x="50"  y="306" width="150" height="22" rx="11" fill="#ED1C24" filter="url(#bc_shadow)"/>
                                 <text x="125" y="321" text-anchor="middle" fill="#FFFFFF" style="font-size:11px;font-weight:800;">Unsatisfactory</text>
-                                <rect x="300" y="306" width="150" height="22" rx="11" fill="#FF8C00"/>
+                                <rect x="300" y="306" width="150" height="22" rx="11" fill="#FF8C00" filter="url(#bc_shadow)"/>
                                 <text x="375" y="321" text-anchor="middle" fill="#000000" style="font-size:11px;font-weight:800;">Below Average</text>
-                                <rect x="550" y="306" width="150" height="22" rx="11" fill="#FFD700"/>
+                                <rect x="550" y="306" width="150" height="22" rx="11" fill="#FFD700" filter="url(#bc_shadow)"/>
                                 <text x="625" y="321" text-anchor="middle" fill="#000000" style="font-size:11px;font-weight:800;">Meets Expectations</text>
-                                <rect x="800" y="306" width="150" height="22" rx="11" fill="#00B050"/>
+                                <rect x="800" y="306" width="150" height="22" rx="11" fill="#00B050" filter="url(#bc_shadow)"/>
                                 <text x="875" y="321" text-anchor="middle" fill="#FFFFFF" style="font-size:11px;font-weight:800;">Outstanding</text>
                                 {{-- Score ranges --}}
                                 <text x="125" y="347" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">1 – 49</text>
@@ -914,6 +934,10 @@
                                 {{-- Indicator: vertical line + dot + floating score label --}}
                                 <g id="bellIndicator" style="display:none;">
                                     <line id="bellLine" x1="500" y1="0" x2="500" y2="300" stroke="#1e293b" stroke-width="3" stroke-dasharray="8,5" stroke-linecap="round"/>
+                                    <circle id="bellGlow" cx="500" cy="100" r="9" fill="#1e293b" filter="url(#bc_glow)" opacity="0.55">
+                                        <animate attributeName="r" values="9;15;9" dur="1.8s" repeatCount="indefinite"/>
+                                        <animate attributeName="opacity" values="0.55;0.1;0.55" dur="1.8s" repeatCount="indefinite"/>
+                                    </circle>
                                     <circle id="bellDot" cx="500" cy="100" r="9" fill="#1e293b" stroke="white" stroke-width="3"/>
                                     <rect id="bellBg" x="440" y="-58" width="120" height="48" rx="10" ry="10" fill="white" stroke="#1e293b" stroke-width="1.5" filter="url(#bc_shadow)"/>
                                     <text id="bellScoreNum" x="500" y="-25" text-anchor="middle" fill="#1e293b" style="font-size:22px;font-weight:900;"></text>
@@ -1247,6 +1271,9 @@
         document.getElementById('bellDot').setAttribute('cx', bx);
         document.getElementById('bellDot').setAttribute('cy', by);
         document.getElementById('bellDot').setAttribute('fill', clr);
+        document.getElementById('bellGlow').setAttribute('cx', bx);
+        document.getElementById('bellGlow').setAttribute('cy', by);
+        document.getElementById('bellGlow').setAttribute('fill', clr);
         document.getElementById('bellBg').setAttribute('x', lx - 60);
         document.getElementById('bellBg').setAttribute('stroke', clr);
         document.getElementById('bellScoreNum').setAttribute('x', lx);
