@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://ui-avatars.com">
 
     {{-- Inter font — loaded here once for the whole page --}}
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,500&display=swap" rel="stylesheet">
 
     {{-- Tailwind Play CDN — must be sync (it generates styles by scanning DOM) --}}
     <script src="https://cdn.tailwindcss.com"></script>
@@ -353,26 +353,20 @@
 
 {{-- ═══════ HEADER (sticky) ════════════════════════════════════════════════ --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#F5F5F3]">
-    <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-4 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+    <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-6 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
         <div class="pointer-events-none absolute -top-10 -right-10 w-48 h-48 rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
         <div class="pointer-events-none absolute -bottom-16 left-1/3 w-56 h-56 rounded-full bg-[#C8102E]/20 blur-3xl"></div>
         @php
             $greetHour = now()->timezone('Asia/Kuala_Lumpur')->hour;
             $greeting  = $greetHour < 12 ? 'Good Morning' : ($greetHour < 18 ? 'Good Afternoon' : 'Good Evening');
-            $todayLabel = now()->timezone('Asia/Kuala_Lumpur')->format('l, d F Y');
         @endphp
         <div class="relative">
-            <h1 class="text-xl font-black tracking-tight">Hi, {{ $greeting }} <span class="text-[#D4AF37]">{{ $currentUserName }}</span> 👋</h1>
-            <p class="text-white/70 text-[11px] mt-1 flex flex-wrap items-center gap-x-1.5">
-                <span>{{ $user['role'] ?? '-' }}</span>
-                <span class="w-1 h-1 rounded-full bg-[#D4AF37]/70 inline-block"></span>
-                <span>{{ $currentDepartment }}</span>
-                <span class="w-1 h-1 rounded-full bg-[#D4AF37]/70 inline-block"></span>
-                <span>{{ $currentFinancialYear }}</span>
-                <span class="w-1 h-1 rounded-full bg-[#D4AF37]/70 inline-block"></span>
-                <span>{{ $todayLabel }}</span>
-            </p>
+            <h1 class="text-[26px] leading-tight" style="font-family:'Playfair Display',serif;">
+                <span class="italic font-medium text-white/90">Hi, {{ $greeting }}</span>
+                <span class="font-semibold text-[#D4AF37]">{{ $currentUserName }}</span>
+                <span class="not-italic">👋</span>
+            </h1>
         </div>
         <div class="relative flex flex-wrap items-center gap-2">
             <a href="{{ route('kpi.create') }}"  class="bg-white text-[#7A0019] hover:bg-[#fff5f5] px-4 py-2 rounded-xl shadow font-bold text-xs transition hover:-translate-y-0.5">+ Create KPI</a>
