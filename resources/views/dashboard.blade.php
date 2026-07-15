@@ -355,9 +355,13 @@
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#f0f2f7]">
     <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-4 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
+        @php
+            $greetHour = now()->timezone('Asia/Kuala_Lumpur')->hour;
+            $greeting  = $greetHour < 12 ? 'Good Morning' : ($greetHour < 18 ? 'Good Afternoon' : 'Good Evening');
+        @endphp
         <div>
-            <h1 class="text-xl font-black">Dashboard</h1>
-            <p class="text-white/70 text-[11px] mt-0.5">{{ $currentUserName }} · {{ $user['role'] ?? '-' }} · {{ $currentDepartment }} · {{ $currentFinancialYear }}</p>
+            <h1 class="text-xl font-black">Hi, {{ $greeting }} {{ $currentUserName }} 👋</h1>
+            <p class="text-white/70 text-[11px] mt-0.5">{{ $user['role'] ?? '-' }} · {{ $currentDepartment }} · {{ $currentFinancialYear }}</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
             <a href="{{ route('kpi.create') }}"  class="bg-white text-[#1a3d34] hover:bg-[#f0faf7] px-4 py-2 rounded-xl shadow font-bold text-xs transition">+ Create KPI</a>
@@ -373,45 +377,45 @@
 @if($errors->any())<div class="bg-red-50 text-red-700 px-3 py-2 rounded-xl text-xs border border-red-200">{{ $errors->first() }}</div>@endif
 
 {{-- ═══════ MY PERFORMANCE ══════════════════════════════════════════════════ --}}
-<div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080]">
+<div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#D4AF37]/30">
     <div class="h-1 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
     <div class="flex flex-col lg:flex-row">
 
         {{-- Left: score panel --}}
-        <div class="bg-[#CCE3DE] p-5 lg:min-w-[240px] xl:min-w-[260px] flex flex-col justify-between">
+        <div class="bg-gradient-to-br from-[#1A0A0A] to-[#7A0019] p-5 lg:min-w-[240px] xl:min-w-[260px] flex flex-col justify-between text-white">
             <div>
-                <p class="text-[9px] uppercase tracking-widest font-black text-[#6B9080] mb-3">My Performance · {{ $currentFinancialYear }}</p>
+                <p class="text-[9px] uppercase tracking-widest font-black text-[#D4AF37] mb-3">My Performance · {{ $currentFinancialYear }}</p>
                 <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-[#6B9080]/40">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode($currentUserName) }}&background=6B9080&color=fff&size=40" class="w-full h-full object-cover"/>
+                    <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-[#D4AF37]/60">
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode($currentUserName) }}&background=D4AF37&color=1a1a1a&size=40" class="w-full h-full object-cover"/>
                     </div>
                     <div>
-                        <h2 class="text-sm font-black text-slate-900 leading-tight">{{ $currentUserName }}</h2>
-                        <p class="text-[9px] text-slate-500 mt-0.5">{{ $userPosition }} · {{ $currentDepartment }}</p>
+                        <h2 class="text-sm font-black text-white leading-tight">{{ $currentUserName }}</h2>
+                        <p class="text-[9px] text-white/60 mt-0.5">{{ $userPosition }} · {{ $currentDepartment }}</p>
                     </div>
                 </div>
                 @if($individualKpiCount === 0)
-                    <p class="text-4xl font-black text-slate-300 mb-2">—</p>
-                    <p class="text-xs text-slate-400">No KPIs for {{ $currentFinancialYear }}</p>
+                    <p class="text-4xl font-black text-white/30 mb-2">—</p>
+                    <p class="text-xs text-white/50">No KPIs for {{ $currentFinancialYear }}</p>
                 @elseif($individualWeightage <= 0)
-                    <p class="text-4xl font-black text-slate-300 mb-2">—</p>
-                    <p class="text-xs text-slate-400">{{ $individualKpiCount }} KPIs · weightage not set</p>
-                    <a href="{{ route('weightage') }}" class="inline-block mt-2 text-xs font-black text-[#6B9080] underline">Set weightage →</a>
+                    <p class="text-4xl font-black text-white/30 mb-2">—</p>
+                    <p class="text-xs text-white/50">{{ $individualKpiCount }} KPIs · weightage not set</p>
+                    <a href="{{ route('weightage') }}" class="inline-block mt-2 text-xs font-black text-[#D4AF37] underline">Set weightage →</a>
                 @else
                     <div class="flex items-end gap-1.5 mb-2">
                         <span class="text-5xl font-black leading-none {{ $individualScoreStyle['text'] }}">{{ number_format($individualPerformance,1) }}</span>
-                        <span class="text-xl font-black text-slate-400 mb-1">%</span>
+                        <span class="text-xl font-black text-white/40 mb-1">%</span>
                     </div>
-                    <div class="h-1.5 bg-[#6B9080]/20 rounded-full overflow-hidden mb-2">
+                    <div class="h-1.5 bg-white/10 rounded-full overflow-hidden mb-2">
                         <div class="h-1.5 rounded-full {{ $individualScoreStyle['bar'] }}" style="width:{{ min($individualPerformance,100) }}%"></div>
                     </div>
                     <span class="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black border {{ $individualScoreStyle['badge'] }}">{{ $individualScoreStyle['label'] }}</span>
-                    <p class="text-[9px] text-slate-500 mt-1.5">{{ $individualKpiCount }} KPIs · {{ number_format($individualWeightage,0) }}% weightage</p>
+                    <p class="text-[9px] text-white/50 mt-1.5">{{ $individualKpiCount }} KPIs · {{ number_format($individualWeightage,0) }}% weightage</p>
                 @endif
             </div>
-            <div class="flex gap-2 mt-5 pt-4 border-t border-[#6B9080]/20">
-                <a href="{{ route('kpi.index') }}" class="flex-1 text-center bg-[#6B9080] hover:bg-[#5a7a6e] text-white px-3 py-2 rounded-xl text-xs font-black transition">My KPIs</a>
-                <a href="{{ route('weightage') }}" class="flex-1 text-center bg-white/60 hover:bg-white text-slate-700 px-3 py-2 rounded-xl text-xs font-black transition border border-[#6B9080]/30">Weightage</a>
+            <div class="flex gap-2 mt-5 pt-4 border-t border-white/10">
+                <a href="{{ route('kpi.index') }}" class="flex-1 text-center bg-[#D4AF37] hover:bg-[#c19c2f] text-[#1a1a1a] px-3 py-2 rounded-xl text-xs font-black transition">My KPIs</a>
+                <a href="{{ route('weightage') }}" class="flex-1 text-center bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-xs font-black transition border border-white/20">Weightage</a>
             </div>
         </div>
 
@@ -437,9 +441,9 @@
                     <p class="text-[9px] text-slate-400 uppercase tracking-wide mt-1">At Risk</p>
                 </div>
                 @endif
-                <div class="bg-[#6B9080]/5 rounded-2xl p-3 text-center border border-[#6B9080]/20">
-                    <p class="text-2xl font-black text-[#6B9080]">{{ number_format($individualWeightage,0) }}%</p>
-                    <p class="text-[9px] text-[#6B9080]/70 uppercase tracking-wide mt-1">Weightage</p>
+                <div class="bg-[#D4AF37]/10 rounded-2xl p-3 text-center border border-[#D4AF37]/30">
+                    <p class="text-2xl font-black text-[#B8860B]">{{ number_format($individualWeightage,0) }}%</p>
+                    <p class="text-[9px] text-[#B8860B]/80 uppercase tracking-wide mt-1">Weightage</p>
                 </div>
             </div>
             <div>
@@ -450,10 +454,10 @@
                     <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-[10px] font-black text-slate-700">{{ $qi }}</span>
-                            <span class="text-[10px] font-black {{ $pct >= 100 ? 'text-[#6B9080]' : ($pct > 0 ? 'text-amber-500' : 'text-slate-300') }}">{{ $pct }}%</span>
+                            <span class="text-[10px] font-black {{ $pct >= 100 ? 'text-[#B8860B]' : ($pct > 0 ? 'text-amber-500' : 'text-slate-300') }}">{{ $pct }}%</span>
                         </div>
                         <div class="h-1.5 bg-slate-200 rounded-full overflow-hidden mb-1.5">
-                            <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-[#A4C3B2]' : 'bg-slate-200' }}" style="width:{{ $pct }}%"></div>
+                            <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-[#D4AF37]' : 'bg-slate-200' }}" style="width:{{ $pct }}%"></div>
                         </div>
                         <p class="text-[8px] text-slate-400">{{ $qc }}/{{ $qt }} KPIs</p>
                     </div>
