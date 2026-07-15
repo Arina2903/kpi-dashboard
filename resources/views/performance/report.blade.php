@@ -882,14 +882,14 @@
                                     </filter>
                                 </defs>
                                 {{-- 4 equal zones of 250px each --}}
-                                <rect x="0"   y="0" width="250" height="300" fill="#FEE2E2" clip-path="url(#bc_clip)"/>
-                                <rect x="250" y="0" width="250" height="300" fill="#FFEDD5" clip-path="url(#bc_clip)"/>
-                                <rect x="500" y="0" width="250" height="300" fill="#FEF3C7" clip-path="url(#bc_clip)"/>
-                                <rect x="750" y="0" width="250" height="300" fill="#DCFCE7" clip-path="url(#bc_clip)"/>
+                                <rect x="0"   y="0" width="250" height="300" fill="#FCA5A5" clip-path="url(#bc_clip)"/>
+                                <rect x="250" y="0" width="250" height="300" fill="#FDBA74" clip-path="url(#bc_clip)"/>
+                                <rect x="500" y="0" width="250" height="300" fill="#FCD34D" clip-path="url(#bc_clip)"/>
+                                <rect x="750" y="0" width="250" height="300" fill="#86EFAC" clip-path="url(#bc_clip)"/>
                                 {{-- Zone dividers --}}
-                                <line x1="250" y1="235" x2="250" y2="300" stroke="rgba(15,23,42,.12)" stroke-width="2.5"/>
-                                <line x1="500" y1="40"  x2="500" y2="300" stroke="rgba(15,23,42,.12)" stroke-width="2.5"/>
-                                <line x1="750" y1="235" x2="750" y2="300" stroke="rgba(15,23,42,.12)" stroke-width="2.5"/>
+                                <line x1="250" y1="235" x2="250" y2="300" stroke="rgba(15,23,42,.18)" stroke-width="2.5"/>
+                                <line x1="500" y1="40"  x2="500" y2="300" stroke="rgba(15,23,42,.18)" stroke-width="2.5"/>
+                                <line x1="750" y1="235" x2="750" y2="300" stroke="rgba(15,23,42,.18)" stroke-width="2.5"/>
                                 {{-- Baseline --}}
                                 <line x1="0" y1="300" x2="1000" y2="300" stroke="#e2e8f0" stroke-width="1"/>
                                 {{-- Zone names --}}
