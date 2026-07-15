@@ -127,16 +127,18 @@
     </button>
 
     <!-- PROFILE -->
+    <div class="h-px w-full shrink-0 bg-gradient-to-r from-[#D4AF37] to-transparent"></div>
+
     <a
         href="{{ route('profile') }}"
-        class="group relative w-full flex items-center gap-3 mb-4 shrink-0 pr-2 text-left
-        {{ request()->is('profile') ? 'bg-[#6B9080]/40' : 'hover:bg-white/10' }}
+        class="group relative w-full flex items-center gap-3 my-2 shrink-0 pr-2 text-left
+        {{ request()->is('profile') ? 'bg-gradient-to-r from-[#C8102E] to-[#7A0019] border-l-[3px] border-[#D4AF37]' : 'hover:bg-white/10' }}
         rounded-xl p-2 transition"
         aria-label="My Profile"
     >
-        <div class="w-9 h-9 rounded-full overflow-hidden shrink-0 ring-2 ring-white/20">
+        <div class="w-9 h-9 rounded-full overflow-hidden shrink-0 ring-2 ring-[#D4AF37]/60">
             <img
-                src="https://ui-avatars.com/api/?name={{ urlencode(session('short_name') ?: session('full_name') ?: session('employee_name') ?: 'User') }}&background=6B9080&color=fff&size=36"
+                src="https://ui-avatars.com/api/?name={{ urlencode(session('short_name') ?: session('full_name') ?: session('employee_name') ?: 'User') }}&background=D4AF37&color=1a1a1a&size=36"
                 class="w-full h-full object-cover"
                 alt="Profile"
             />
@@ -158,6 +160,8 @@
             My Profile
         </div>
     </a>
+
+    <div class="h-px w-full shrink-0 mb-4 bg-gradient-to-r from-transparent to-[#D4AF37]"></div>
 
     @php
         $navSections = [
@@ -350,7 +354,7 @@
                             href="{{ $item['href'] }}"
                             class="group relative flex items-center gap-3 px-3 py-2 rounded-xl transition
                             {{ $isActive
-                                ? 'bg-[#6B9080]/40 text-white font-black shadow-md'
+                                ? 'bg-gradient-to-r from-[#C8102E] to-[#7A0019] border-l-[3px] border-[#D4AF37] text-white font-black shadow-md'
                                 : 'text-white/85 font-medium hover:bg-white/10 hover:text-white'
                             }}"
                         >
