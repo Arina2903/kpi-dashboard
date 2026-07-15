@@ -152,6 +152,51 @@
         </div>
         @endforeach
 
+        @php
+            $ackDate = !empty($jobDescription['submitted_at'])
+                ? \Carbon\Carbon::parse($jobDescription['submitted_at'])->format('d/m/Y')
+                : '';
+            $jobholderName = $user['short_name'] ?? $user['full_name'] ?? $user['name'] ?? '-';
+        @endphp
+
+        <div class="doc-bar text-[11px] px-4 py-2.5 border-t-2 border-black">
+            5) Acknowledgement
+        </div>
+        <div class="p-4 border-b border-black">
+            <p class="text-[11px] italic text-slate-700 leading-relaxed mb-4">
+                I hereby confirm that I have received, read, and understood the contents of this Job Description.
+                I agree to perform the duties and responsibilities stated herein in accordance with the Company's policies, SOPs, and Management's instructions from time to time.
+            </p>
+            <table class="w-full text-left border-collapse border border-black">
+                <thead>
+                    <tr>
+                        <th class="border border-black p-2 text-[10px] font-black uppercase w-1/3">HR &amp; Administration</th>
+                        <th class="border border-black p-2 text-[10px] font-black uppercase w-1/3">Jobholder</th>
+                        <th class="border border-black p-2 text-[10px] font-black uppercase w-1/3">Supervisor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="border border-black p-3 align-top" style="height:110px;">
+                            <div style="height:56px;"></div>
+                            <p class="text-[11px] text-slate-700">Name :</p>
+                            <p class="text-[11px] text-slate-700">Date :</p>
+                        </td>
+                        <td class="border border-black p-3 align-top" style="height:110px;">
+                            <div style="height:56px;"></div>
+                            <p class="text-[11px] text-slate-700">Name : {{ $jobholderName }}</p>
+                            <p class="text-[11px] text-slate-700">Date : {{ $ackDate }}</p>
+                        </td>
+                        <td class="border border-black p-3 align-top" style="height:110px;">
+                            <div style="height:56px;"></div>
+                            <p class="text-[11px] text-slate-700">Name : {{ $reportingTo }}</p>
+                            <p class="text-[11px] text-slate-700">Date : {{ $ackDate }}</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
         <div class="p-3 flex justify-end gap-2 border-t-2 border-black">
             <button
                 type="submit"
