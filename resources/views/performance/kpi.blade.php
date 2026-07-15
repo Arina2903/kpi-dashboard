@@ -188,7 +188,7 @@
 
 {{-- ── Sticky page header ─────────────────────────────────────────────── --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#f0f2f7] no-print">
-    <div class="rounded-[18px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548] text-white px-6 py-4 shadow-xl flex items-center justify-between gap-3">
+    <div class="rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-4 shadow-xl flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
                 <span class="text-sm font-black">{{ $qLabel }}</span>
@@ -246,7 +246,7 @@
 <div class="bg-white rounded-2xl overflow-hidden doc-card border border-[#6B9080]/25">
 
     {{-- Accent strip --}}
-    <div class="h-[3px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#A4C3B2]"></div>
+    <div class="h-[3px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
 
     <div class="px-10 py-8">
 
@@ -262,7 +262,7 @@
                 <p class="text-[9px] text-slate-400 uppercase tracking-[.18em]">Accelerating Your Business Success</p>
             </div>
             <div class="flex flex-col items-end gap-1">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1a3d34] to-[#6B9080] flex items-center justify-center shadow-lg">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1A0A0A] to-[#7A0019] flex items-center justify-center shadow-lg">
                     <span class="text-2xl font-black text-white">{{ $qLabel }}</span>
                 </div>
                 <span class="text-[9px] font-bold text-[#6B9080] uppercase tracking-widest">{{ $currentFinancialYear }}</span>

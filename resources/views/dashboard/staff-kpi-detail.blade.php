@@ -52,7 +52,7 @@
 
     {{-- KPI header card --}}
     <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080] mb-4">
-        <div class="h-1 bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#A4C3B2]"></div>
+        <div class="h-1 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
         <div class="p-5 flex flex-wrap items-center gap-5">
             <div class="flex-1 min-w-[240px]">
                 <h1 class="text-base font-black text-slate-900 leading-snug">{{ $kpi['kpi_title'] ?? 'Untitled KPI' }}</h1>

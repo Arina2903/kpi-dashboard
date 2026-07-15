@@ -353,7 +353,7 @@
 
 {{-- ═══════ HEADER (sticky) ════════════════════════════════════════════════ --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#f0f2f7]">
-    <div class="rounded-[18px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548] text-white px-6 py-4 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+    <div class="rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-4 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
             <h1 class="text-xl font-black">Dashboard</h1>
             <p class="text-white/70 text-[11px] mt-0.5">{{ $currentUserName }} · {{ $user['role'] ?? '-' }} · {{ $currentDepartment }} · {{ $currentFinancialYear }}</p>
@@ -373,7 +373,7 @@
 
 {{-- ═══════ MY PERFORMANCE ══════════════════════════════════════════════════ --}}
 <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080]">
-    <div class="h-1 bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#A4C3B2]"></div>
+    <div class="h-1 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
     <div class="flex flex-col lg:flex-row">
 
         {{-- Left: score panel --}}
@@ -767,8 +767,8 @@
 {{-- ═══════ KPI TARGET LINKAGES ══════════════════════════════════════════ --}}
 @if($hasAnyLinkage || $canAssignTarget)
 <div class="bg-white rounded-2xl border border-[#6B9080] soft-card overflow-hidden">
-    <div class="h-1 bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#A4C3B2]"></div>
-    <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548]">
+    <div class="h-1 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
+    <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]">
         <div>
             <h2 class="text-sm font-black text-white">KPI Target Linkages</h2>
             <p class="text-[10px] text-white/70 mt-0.5">Cascading targets · {{ $currentFinancialYear }}</p>

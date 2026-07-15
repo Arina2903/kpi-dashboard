@@ -22,7 +22,7 @@
 <div class="p-6 space-y-5">
 
     {{-- ── HEADER ─────────────────────────────────────────────────────── --}}
-    <div class="rounded-[18px] bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#2d5548] text-white px-8 py-7 shadow-xl">
+    <div class="rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-8 py-7 shadow-xl">
         <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
             <div>
                 <a href="{{ route('kpi.my-department-kpi') }}" class="text-xs text-[#A4C3B2] hover:text-white font-semibold">← My Department KPI</a>
@@ -111,7 +111,7 @@
          data-emp="{{ $emp['id'] }}">
 
         {{-- Employee header (click to toggle) --}}
-        <div class="px-6 py-4 bg-gradient-to-r from-[#1a3d34] via-[#2d5548] to-[#6B9080] flex items-center justify-between cursor-pointer select-none"
+        <div class="px-6 py-4 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] flex items-center justify-between cursor-pointer select-none"
              onclick="toggleCard('{{ $emp['id'] }}')">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center text-white font-black text-sm shrink-0">

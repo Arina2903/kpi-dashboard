@@ -6,7 +6,7 @@
             <td align="center">
                 <table width="480" cellpadding="0" cellspacing="0" style="background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 8px 30px rgba(15,23,42,.08);">
                     <tr>
-                        <td style="background:linear-gradient(90deg,#1a3d34,#6B9080); padding:24px 32px;">
+                        <td style="background:linear-gradient(90deg,#1A0A0A,#7A0019); padding:24px 32px;">
                             <span style="color:#fff; font-weight:900; font-size:16px;">RichWorks KPI Dashboard</span>
                         </td>
                     </tr>

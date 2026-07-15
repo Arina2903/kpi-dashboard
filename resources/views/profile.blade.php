@@ -43,7 +43,7 @@
 
     {{-- HEADER --}}
     <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080]">
-        <div class="h-1 bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#A4C3B2]"></div>
+        <div class="h-1 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
         <div class="p-5 flex items-center gap-4">
             <div class="w-16 h-16 rounded-full overflow-hidden shrink-0 ring-2 ring-[#6B9080]/40">
                 <img
@@ -136,7 +136,7 @@
 
     {{-- SECURITY --}}
     <div class="bg-white rounded-2xl soft-card border border-slate-200 overflow-hidden">
-        <div class="h-1 bg-gradient-to-r from-[#1a3d34] via-[#6B9080] to-[#A4C3B2]"></div>
+        <div class="h-1 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
         <div class="p-5">
             <p class="text-[9px] uppercase tracking-widest font-black text-slate-400 mb-4">Account Security</p>
 
