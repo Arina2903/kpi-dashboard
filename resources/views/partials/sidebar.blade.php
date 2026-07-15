@@ -52,7 +52,7 @@
 
 <aside
     id="sidebar"
-    class="fixed left-0 top-0 z-40 h-screen bg-[#0d2218] text-white
+    class="fixed left-0 top-0 z-40 h-screen bg-[#111111] text-white
     border-r border-white/10 shadow-[4px_0_24px_rgba(0,0,0,0.30)]
     w-[230px] min-w-[230px] max-w-[230px]
     px-3 py-4 flex flex-col overflow-visible shrink-0 transition-all duration-300"
