@@ -880,15 +880,20 @@
                                     <filter id="bc_shadow" x="-30%" y="-80%" width="160%" height="280%">
                                         <feDropShadow dx="0" dy="2" stdDeviation="5" flood-opacity="0.18"/>
                                     </filter>
+                                    {{-- Diagonal hatch so "Meets Expectations" reads as distinct from "Below Average" without relying on hue alone (colorblind-safe) --}}
+                                    <pattern id="bc_hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                                        <line x1="0" y1="0" x2="0" y2="8" stroke="#ffffff" stroke-width="2.5" opacity="0.28"/>
+                                    </pattern>
                                 </defs>
                                 {{-- 4 equal zones of 250px each --}}
                                 <rect x="0"   y="0" width="250" height="300" fill="#ED1C24" clip-path="url(#bc_clip)"/>
                                 <rect x="250" y="0" width="250" height="300" fill="#FF8C00" clip-path="url(#bc_clip)"/>
                                 <rect x="500" y="0" width="250" height="300" fill="#FFD700" clip-path="url(#bc_clip)"/>
+                                <rect x="500" y="0" width="250" height="300" fill="url(#bc_hatch)" clip-path="url(#bc_clip)"/>
                                 <rect x="750" y="0" width="250" height="300" fill="#00B050" clip-path="url(#bc_clip)"/>
                                 {{-- Zone dividers --}}
                                 <line x1="250" y1="235" x2="250" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
-                                <line x1="500" y1="40"  x2="500" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
+                                <line x1="500" y1="40"  x2="500" y2="300" stroke="rgba(255,255,255,.85)" stroke-width="3.5"/>
                                 <line x1="750" y1="235" x2="750" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
                                 {{-- Baseline --}}
                                 <line x1="0" y1="300" x2="1000" y2="300" stroke="#e2e8f0" stroke-width="1"/>
