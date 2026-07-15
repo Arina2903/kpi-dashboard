@@ -153,10 +153,16 @@
         @endforeach
 
         @php
-            $ackDate = !empty($jobDescription['submitted_at'])
-                ? \Carbon\Carbon::parse($jobDescription['submitted_at'])->format('d/m/Y')
+            $jobholderName   = $user['full_name'] ?? $user['short_name'] ?? $user['name'] ?? '-';
+            $supervisorName  = $manager['full_name'] ?? $manager['short_name'] ?? $reportingTo;
+            $sigDate = fn($key) => !empty($jobDescription[$key])
+                ? \Carbon\Carbon::parse($jobDescription[$key])->format('j/n/Y')
                 : '';
-            $jobholderName = $user['short_name'] ?? $user['full_name'] ?? $user['name'] ?? '-';
+            $ackParties = [
+                ['key' => 'hr',         'label' => 'HR &amp; Administration', 'name' => ''],
+                ['key' => 'jobholder',  'label' => 'Jobholder',                'name' => $jobholderName],
+                ['key' => 'supervisor', 'label' => 'Supervisor',               'name' => $supervisorName],
+            ];
         @endphp
 
         <div class="doc-bar text-[11px] px-4 py-2.5 border-t-2 border-black">
@@ -170,28 +176,34 @@
             <table class="w-full text-left border-collapse border border-black">
                 <thead>
                     <tr>
-                        <th class="border border-black p-2 text-[10px] font-black uppercase w-1/3">HR &amp; Administration</th>
-                        <th class="border border-black p-2 text-[10px] font-black uppercase w-1/3">Jobholder</th>
-                        <th class="border border-black p-2 text-[10px] font-black uppercase w-1/3">Supervisor</th>
+                        @foreach($ackParties as $p)
+                        <th class="border border-black p-2 text-[10px] font-black uppercase w-1/3">{!! $p['label'] !!}</th>
+                        @endforeach
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="border border-black p-3 align-top" style="height:110px;">
-                            <div style="height:56px;"></div>
-                            <p class="text-[11px] text-slate-700">Name :</p>
-                            <p class="text-[11px] text-slate-700">Date :</p>
+                        @foreach($ackParties as $p)
+                        @php $sigId = 'sig_' . $p['key']; @endphp
+                        <td class="border border-black p-3 align-top">
+                            <div class="sig-pad-wrap" data-sig-id="{{ $sigId }}">
+                                <div style="border:1.5px dashed #cbd5e1;border-radius:8px;background:#f9fafb;position:relative;overflow:hidden;cursor:crosshair;">
+                                    <canvas class="sig-canvas" width="300" height="64" style="width:100%;height:64px;display:block;touch-action:none;"></canvas>
+                                    <div class="sig-hint" style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:9px;font-weight:600;text-align:center;padding:0 6px;">✍ Draw or upload sign</div>
+                                </div>
+                                <div style="display:flex;gap:5px;margin-top:4px;">
+                                    <button type="button" onclick="sigClear(this)" style="font-size:9px;padding:2px 8px;border-radius:5px;border:1px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;font-weight:600;">Clear</button>
+                                    <label style="font-size:9px;padding:2px 8px;border-radius:5px;border:1px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;font-weight:600;display:inline-block;">
+                                        📎 Upload<input type="file" accept="image/*" class="sr-only sig-file-input" onchange="sigUpload(this)">
+                                    </label>
+                                </div>
+                                <input type="hidden" name="{{ $sigId }}" class="sig-hidden" value="{{ $jobDescription[$sigId] ?? '' }}">
+                            </div>
+                            <p class="text-[11px] text-slate-700 mt-2">Name : {{ $p['name'] }}</p>
+                            <p class="text-[11px] text-slate-700">Date : <span class="sig-date-display" data-for="{{ $sigId }}">{{ $sigDate($sigId . '_date') }}</span></p>
+                            <input type="hidden" name="{{ $sigId }}_date" class="sig-date-hidden" data-for="{{ $sigId }}" value="{{ $jobDescription[$sigId . '_date'] ?? '' }}">
                         </td>
-                        <td class="border border-black p-3 align-top" style="height:110px;">
-                            <div style="height:56px;"></div>
-                            <p class="text-[11px] text-slate-700">Name : {{ $jobholderName }}</p>
-                            <p class="text-[11px] text-slate-700">Date : {{ $ackDate }}</p>
-                        </td>
-                        <td class="border border-black p-3 align-top" style="height:110px;">
-                            <div style="height:56px;"></div>
-                            <p class="text-[11px] text-slate-700">Name : {{ $reportingTo }}</p>
-                            <p class="text-[11px] text-slate-700">Date : {{ $ackDate }}</p>
-                        </td>
+                        @endforeach
                     </tr>
                 </tbody>
             </table>
@@ -257,6 +269,127 @@
         Object.keys(jdEditors).forEach(function (name) {
             document.getElementById('input-' + name).value = jdEditors[name].getData();
         });
+    });
+
+    // ── signature pad (draw / upload) with per-party sign-date stamping ────────
+    function sigStampDate(sigId) {
+        var dateHidden  = document.querySelector('.sig-date-hidden[data-for="' + sigId + '"]');
+        var dateDisplay = document.querySelector('.sig-date-display[data-for="' + sigId + '"]');
+        var now = new Date();
+        var iso     = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+        var display = now.getDate() + '/' + (now.getMonth() + 1) + '/' + now.getFullYear();
+        if (dateHidden)  dateHidden.value = iso;
+        if (dateDisplay) dateDisplay.textContent = display;
+    }
+
+    function sigInit(wrap) {
+        var canvas = wrap.querySelector('.sig-canvas');
+        var hint   = wrap.querySelector('.sig-hint');
+        var hidden = wrap.querySelector('.sig-hidden');
+        var sigId  = wrap.dataset.sigId;
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var drawing = false;
+
+        function pt(e) {
+            var r = canvas.getBoundingClientRect();
+            var src = e.touches ? e.touches[0] : e;
+            return {
+                x: (src.clientX - r.left) * (canvas.width  / r.width),
+                y: (src.clientY - r.top)  * (canvas.height / r.height)
+            };
+        }
+        function startDraw(e) {
+            e.preventDefault();
+            drawing = true;
+            var p = pt(e);
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+        }
+        function draw(e) {
+            if (!drawing) return;
+            e.preventDefault();
+            var p = pt(e);
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+        }
+        function endDraw() {
+            if (!drawing) return;
+            drawing = false;
+            if (hint) hint.style.display = 'none';
+            if (hidden) hidden.value = canvas.toDataURL('image/png');
+            sigStampDate(sigId);
+        }
+
+        canvas.addEventListener('mousedown',  startDraw);
+        canvas.addEventListener('mousemove',  draw);
+        canvas.addEventListener('mouseup',    endDraw);
+        canvas.addEventListener('mouseleave', endDraw);
+        canvas.addEventListener('touchstart', startDraw, { passive: false });
+        canvas.addEventListener('touchmove',  draw,      { passive: false });
+        canvas.addEventListener('touchend',   endDraw);
+    }
+
+    function sigClear(btn) {
+        var wrap   = btn.closest('.sig-pad-wrap');
+        var canvas = wrap.querySelector('.sig-canvas');
+        var hint   = wrap.querySelector('.sig-hint');
+        var hidden = wrap.querySelector('.sig-hidden');
+        var sigId  = wrap.dataset.sigId;
+        if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        if (hint)   hint.style.display = '';
+        if (hidden) hidden.value = '';
+        var dateHidden  = document.querySelector('.sig-date-hidden[data-for="' + sigId + '"]');
+        var dateDisplay = document.querySelector('.sig-date-display[data-for="' + sigId + '"]');
+        if (dateHidden)  dateHidden.value = '';
+        if (dateDisplay) dateDisplay.textContent = '';
+    }
+
+    function sigUpload(input) {
+        var wrap   = input.closest('.sig-pad-wrap');
+        var canvas = wrap.querySelector('.sig-canvas');
+        var hint   = wrap.querySelector('.sig-hint');
+        var hidden = wrap.querySelector('.sig-hidden');
+        var sigId  = wrap.dataset.sigId;
+        if (!input.files || !input.files[0] || !canvas) return;
+        var reader = new FileReader();
+        reader.onload = function (ev) {
+            var img = new Image();
+            img.onload = function () {
+                var ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                var scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+                var w = img.width * scale, h = img.height * scale;
+                ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+                if (hint)   hint.style.display = 'none';
+                if (hidden) hidden.value = canvas.toDataURL('image/png');
+                sigStampDate(sigId);
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+        input.value = '';
+    }
+
+    document.querySelectorAll('.sig-pad-wrap').forEach(function (wrap) {
+        sigInit(wrap);
+        var hidden = wrap.querySelector('.sig-hidden');
+        var canvas = wrap.querySelector('.sig-canvas');
+        var hint   = wrap.querySelector('.sig-hint');
+        if (hidden && hidden.value) {
+            var img = new Image();
+            img.onload = function () {
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                if (hint) hint.style.display = 'none';
+            };
+            img.src = hidden.value;
+        }
     });
 </script>
 

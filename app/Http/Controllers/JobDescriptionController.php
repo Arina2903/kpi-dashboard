@@ -99,6 +99,14 @@ class JobDescriptionController extends Controller
             'updated_at'       => now()->toIso8601String(),
         ];
 
+        foreach (['hr', 'jobholder', 'supervisor'] as $party) {
+            $sig = $request->input("sig_{$party}");
+            if ($sig && str_starts_with($sig, 'data:image/')) {
+                $payload["sig_{$party}"]      = $sig;
+                $payload["sig_{$party}_date"] = $request->input("sig_{$party}_date") ?: now()->toDateString();
+            }
+        }
+
         if ($isSubmit) {
             $payload['submitted_at'] = now()->toIso8601String();
         }
