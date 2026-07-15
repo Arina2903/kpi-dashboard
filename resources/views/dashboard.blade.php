@@ -370,7 +370,7 @@
         </div>
         <div class="relative flex flex-wrap items-center gap-2">
             <a href="{{ route('kpi.create') }}"  class="bg-white text-[#7A0019] hover:bg-[#fff5f5] px-4 py-2 rounded-xl shadow font-bold text-xs transition hover:-translate-y-0.5">+ Create KPI</a>
-            <a href="{{ route('kpi.index') }}"   class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-[#D4AF37]/40 hover:-translate-y-0.5">My KPIs</a>
+            <a href="{{ route('kpi.index') }}"   class="bg-[#D4AF37] hover:bg-[#c19c2f] text-[#1a1a1a] px-4 py-2 rounded-xl font-bold text-xs transition border border-[#D4AF37]/40 hover:-translate-y-0.5">My KPIs</a>
         </div>
     </div>
 </div>
