@@ -1262,7 +1262,7 @@
         g.style.display = '';
         document.getElementById('bellLine').setAttribute('x1', bx);
         document.getElementById('bellLine').setAttribute('x2', bx);
-        document.getElementById('bellLine').setAttribute('stroke', clr);
+        document.getElementById('bellLine').setAttribute('stroke', '#000000');
         document.getElementById('bellDot').setAttribute('cx', bx);
         document.getElementById('bellDot').setAttribute('cy', by);
         document.getElementById('bellDot').setAttribute('fill', clr);
