@@ -145,6 +145,13 @@
                         'match' => 'job-description*',
                         'icon' => 'jobdesc',
                     ],
+                    [
+                        'label'    => 'SLT Dashboard',
+                        'href'     => route('slt-dashboard'),
+                        'match'    => 'slt-dashboard*',
+                        'icon'     => 'analytics',
+                        'slt_only' => true,
+                    ],
                 ],
             ],
             [
@@ -266,7 +273,10 @@
     <!-- NAVIGATION -->
     <div class="relative flex-1 min-h-0 flex flex-col">
     <nav class="flex-1 overflow-y-auto text-[12px] space-y-5 pr-1 min-h-0 custom-scroll">
-        @php $isBts = session('department_code') === 'BTS'; @endphp
+        @php
+            $isBts = session('department_code') === 'BTS';
+            $isSltDept = in_array(strtoupper(trim(session('department_code') ?? '')), ['SLT OFFICE', 'BTS']);
+        @endphp
         @foreach($navSections as $section)
             @if(($section['hr_only'] ?? false) && !session('hr_access'))
                 @continue
@@ -290,6 +300,9 @@
                                 (session('company_code') === 'RGHB' && session('department_code') === 'BTS')
                             );
                         @endphp
+                        @if(($item['slt_only'] ?? false) && !$isSltDept)
+                            @continue
+                        @endif
                         @if(($item['titan_only'] ?? false) && !$hasTitanAccess)
                             @continue
                         @endif

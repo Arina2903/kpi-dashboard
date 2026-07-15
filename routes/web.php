@@ -99,6 +99,10 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::get('/dashboard/staff/{employeeId}/kpi/{kpiId}', [DashboardController::class, 'staffKpiDetail'])
         ->name('dashboard.staff.kpi.detail');
 
+    // SLT Office / BTS only — company-wide quarterly appraisal summary
+    Route::get('/slt-dashboard', [\App\Http\Controllers\SltDashboardController::class, 'index'])
+        ->name('slt-dashboard');
+
     /*
     |--------------------------------------------------------------------------
     | KPI MAIN
