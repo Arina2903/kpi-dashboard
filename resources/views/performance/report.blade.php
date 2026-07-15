@@ -882,21 +882,21 @@
                                     </filter>
                                 </defs>
                                 {{-- 4 equal zones of 250px each --}}
-                                <rect x="0"   y="0" width="250" height="300" fill="#e85d04" clip-path="url(#bc_clip)"/>
-                                <rect x="250" y="0" width="250" height="300" fill="#f97316" clip-path="url(#bc_clip)"/>
-                                <rect x="500" y="0" width="250" height="300" fill="#4ade80" clip-path="url(#bc_clip)"/>
-                                <rect x="750" y="0" width="250" height="300" fill="#22c55e" clip-path="url(#bc_clip)"/>
+                                <rect x="0"   y="0" width="250" height="300" fill="#FEE2E2" clip-path="url(#bc_clip)"/>
+                                <rect x="250" y="0" width="250" height="300" fill="#FFEDD5" clip-path="url(#bc_clip)"/>
+                                <rect x="500" y="0" width="250" height="300" fill="#FEF3C7" clip-path="url(#bc_clip)"/>
+                                <rect x="750" y="0" width="250" height="300" fill="#DCFCE7" clip-path="url(#bc_clip)"/>
                                 {{-- Zone dividers --}}
-                                <line x1="250" y1="235" x2="250" y2="300" stroke="rgba(255,255,255,.75)" stroke-width="2.5"/>
-                                <line x1="500" y1="40"  x2="500" y2="300" stroke="rgba(255,255,255,.75)" stroke-width="2.5"/>
-                                <line x1="750" y1="235" x2="750" y2="300" stroke="rgba(255,255,255,.75)" stroke-width="2.5"/>
+                                <line x1="250" y1="235" x2="250" y2="300" stroke="rgba(15,23,42,.12)" stroke-width="2.5"/>
+                                <line x1="500" y1="40"  x2="500" y2="300" stroke="rgba(15,23,42,.12)" stroke-width="2.5"/>
+                                <line x1="750" y1="235" x2="750" y2="300" stroke="rgba(15,23,42,.12)" stroke-width="2.5"/>
                                 {{-- Baseline --}}
                                 <line x1="0" y1="300" x2="1000" y2="300" stroke="#e2e8f0" stroke-width="1"/>
                                 {{-- Zone names --}}
-                                <text x="125" y="317" text-anchor="middle" fill="#e85d04" style="font-size:12px;font-weight:800;">Unsatisfactory</text>
-                                <text x="375" y="317" text-anchor="middle" fill="#c2410c" style="font-size:12px;font-weight:800;">Below Average</text>
-                                <text x="625" y="317" text-anchor="middle" fill="#16a34a" style="font-size:13px;font-weight:800;">Meets Expectations</text>
-                                <text x="875" y="317" text-anchor="middle" fill="#15803d" style="font-size:12px;font-weight:800;">Outstanding</text>
+                                <text x="125" y="317" text-anchor="middle" fill="#DC2626" style="font-size:12px;font-weight:800;">Unsatisfactory</text>
+                                <text x="375" y="317" text-anchor="middle" fill="#C2410C" style="font-size:12px;font-weight:800;">Below Average</text>
+                                <text x="625" y="317" text-anchor="middle" fill="#B45309" style="font-size:13px;font-weight:800;">Meets Expectations</text>
+                                <text x="875" y="317" text-anchor="middle" fill="#15803D" style="font-size:12px;font-weight:800;">Outstanding</text>
                                 {{-- Score ranges --}}
                                 <text x="125" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">1 – 49</text>
                                 <text x="375" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">50 – 69</text>
@@ -1224,10 +1224,10 @@
         if (!g) return;
         if (score === null || isNaN(score)) { g.style.display = 'none'; return; }
         var grade, clr;
-        if (score >= 90)      { grade = 'Outstanding';          clr = '#15803d'; }
-        else if (score >= 70) { grade = 'Meets Expectations';   clr = '#16a34a'; }
-        else if (score >= 50) { grade = 'Below Average';        clr = '#c2410c'; }
-        else                  { grade = 'Unsatisfactory';       clr = '#e85d04'; }
+        if (score >= 90)      { grade = 'Outstanding';          clr = '#15803D'; }
+        else if (score >= 70) { grade = 'Meets Expectations';   clr = '#B45309'; }
+        else if (score >= 50) { grade = 'Below Average';        clr = '#C2410C'; }
+        else                  { grade = 'Unsatisfactory';       clr = '#DC2626'; }
         var bx = scoreToX(score);
         var by = bellY(bx);
         var lx = Math.max(60, Math.min(940, bx));
