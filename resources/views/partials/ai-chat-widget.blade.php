@@ -111,7 +111,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
             </svg>
-            Draft my KPI from this conversation
+            Draft my KPI
         </button>
     </div>
 
@@ -154,18 +154,19 @@
     const STORAGE_KEY = 'anira_session_v2';
 
     // State
-    let history     = [];  // API message array
-    let uiMessages  = [];  // {type:'user'|'bot'|'kpi_card', text?, kpi?}
-    let isOpen      = false;
-    let isMaximized = false;
-    let isWaiting   = false;
+    let history          = [];  // API message array
+    let uiMessages       = [];  // {type:'user'|'bot'|'kpi_card', text?, kpi?}
+    let isOpen           = false;
+    let isMaximized      = false;
+    let isWaiting        = false;
+    let kpiReadyToFill   = false;  // true only after ANIRA signals "Your KPI is finalised."
 
     /* -----------------------------------------------------------------------
      | SESSION STORAGE — persist conversation across page navigations
      ----------------------------------------------------------------------- */
     function saveSession() {
         try {
-            sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ history, uiMessages }));
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ history, uiMessages, kpiReadyToFill }));
         } catch (_) {}
     }
 
@@ -175,8 +176,9 @@
             if (!raw) return false;
             const data = JSON.parse(raw);
             if (!data || !Array.isArray(data.history)) return false;
-            history    = data.history    ?? [];
-            uiMessages = data.uiMessages ?? [];
+            history          = data.history          ?? [];
+            uiMessages       = data.uiMessages       ?? [];
+            kpiReadyToFill   = data.kpiReadyToFill   ?? false;
             return true;
         } catch (_) {
             return false;
@@ -267,8 +269,9 @@
      | CLEAR HISTORY
      ----------------------------------------------------------------------- */
     window.aiClearHistory = function () {
-        history    = [];
-        uiMessages = [];
+        history          = [];
+        uiMessages       = [];
+        kpiReadyToFill   = false;
         saveSession();
         const wrap = document.getElementById('aiChatMessages');
         wrap.innerHTML = '';
@@ -332,6 +335,12 @@
             const reply = data.success ? data.reply : (data.message ?? 'Something went wrong.');
             renderMessage('bot', reply, true);
             history.push({ role: 'assistant', content: reply });
+
+            // Detect ANIRA's step-9 finalisation signal to unlock the Draft button
+            if (!kpiReadyToFill && /your kpi is finalised/i.test(reply)) {
+                kpiReadyToFill = true;
+                maybeShowBuildBar();
+            }
 
             saveSession();
 
@@ -480,7 +489,7 @@
      | SHOW BUILD BAR
      ----------------------------------------------------------------------- */
     function maybeShowBuildBar() {
-        if (history.length >= 3) {
+        if (kpiReadyToFill) {
             document.getElementById('aiBuildKpiBar')?.classList.remove('hidden');
         }
     }
@@ -530,48 +539,88 @@
         // Strip heading markers but keep the text
         let text = raw.replace(/^#{1,6}\s+/gm, '');
 
+        // Split into blocks: table runs vs everything else
         const lines = text.split('\n');
-        let html  = '';
-        let inOl  = false;
-        let inUl  = false;
-        let first = true;
+        const blocks = [];  // {type: 'table'|'text', lines: []}
+        let current = null;
 
-        const closeList = () => {
-            if (inOl) { html += '</ol>'; inOl = false; }
-            if (inUl) { html += '</ul>'; inUl = false; }
-        };
+        const isTableRow  = (l) => l.trim().startsWith('|') && l.trim().endsWith('|');
+        const isSeparator = (l) => /^\|[\s\-:|]+\|$/.test(l.trim());
 
         lines.forEach(line => {
-            line = line.trim();
-            if (!line) { closeList(); return; }
-
-            const olMatch = line.match(/^(\d+)\.\s+(.*)/);
-            const ulMatch = line.match(/^[-•]\s+(.*)/);
-
-            if (olMatch) {
-                if (inUl) { html += '</ul>'; inUl = false; }
-                if (!inOl) {
-                    html += `<ol class="list-decimal pl-5 ${first ? '' : 'mt-2'} space-y-1.5 text-[13px]">`;
-                    inOl = true;
+            if (isTableRow(line)) {
+                if (!current || current.type !== 'table') {
+                    current = { type: 'table', lines: [] };
+                    blocks.push(current);
                 }
-                html += `<li class="leading-snug">${inlineFormat(olMatch[2])}</li>`;
-                first = false;
-            } else if (ulMatch) {
-                if (inOl) { html += '</ol>'; inOl = false; }
-                if (!inUl) {
-                    html += `<ul class="list-disc pl-5 ${first ? '' : 'mt-2'} space-y-1.5 text-[13px]">`;
-                    inUl = true;
-                }
-                html += `<li class="leading-snug">${inlineFormat(ulMatch[1])}</li>`;
-                first = false;
+                current.lines.push(line.trim());
             } else {
-                closeList();
-                html += `<p class="leading-snug text-[13px] ${first ? '' : 'mt-2'}">${inlineFormat(line)}</p>`;
-                first = false;
+                if (!current || current.type !== 'text') {
+                    current = { type: 'text', lines: [] };
+                    blocks.push(current);
+                }
+                current.lines.push(line);
             }
         });
 
-        closeList();
+        let html  = '';
+        let first = true;
+
+        blocks.forEach(block => {
+            if (block.type === 'table') {
+                const rows = block.lines.filter(l => !isSeparator(l));
+                if (rows.length === 0) return;
+                const parseRow = (l) => l.replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+                const header = parseRow(rows[0]);
+                const body   = rows.slice(1);
+                let tHtml = `<div class="${first ? '' : 'mt-3'} overflow-x-auto"><table class="w-full text-[11px] border-collapse">`;
+                tHtml += '<thead><tr>' + header.map(h =>
+                    `<th class="px-2 py-1.5 text-left font-semibold bg-violet-100 text-violet-800 border border-violet-200 whitespace-nowrap">${inlineFormat(h)}</th>`
+                ).join('') + '</tr></thead>';
+                if (body.length) {
+                    tHtml += '<tbody>' + body.map((row, i) =>
+                        '<tr class="' + (i % 2 === 0 ? 'bg-white' : 'bg-slate-50') + '">' +
+                        parseRow(row).map(c =>
+                            `<td class="px-2 py-1.5 border border-slate-200 text-slate-700 leading-snug">${inlineFormat(c)}</td>`
+                        ).join('') + '</tr>'
+                    ).join('') + '</tbody>';
+                }
+                tHtml += '</table></div>';
+                html += tHtml;
+                first = false;
+            } else {
+                // Text block: line-by-line with lists
+                let inOl = false;
+                let inUl = false;
+                const closeList = () => {
+                    if (inOl) { html += '</ol>'; inOl = false; }
+                    if (inUl) { html += '</ul>'; inUl = false; }
+                };
+                block.lines.forEach(line => {
+                    line = line.trim();
+                    if (!line) { closeList(); return; }
+                    const olMatch = line.match(/^(\d+)\.\s+(.*)/);
+                    const ulMatch = line.match(/^[-•]\s+(.*)/);
+                    if (olMatch) {
+                        if (inUl) { html += '</ul>'; inUl = false; }
+                        if (!inOl) { html += `<ol class="list-decimal pl-5 ${first ? '' : 'mt-2'} space-y-1.5 text-[13px]">`; inOl = true; }
+                        html += `<li class="leading-snug">${inlineFormat(olMatch[2])}</li>`;
+                        first = false;
+                    } else if (ulMatch) {
+                        if (inOl) { html += '</ol>'; inOl = false; }
+                        if (!inUl) { html += `<ul class="list-disc pl-5 ${first ? '' : 'mt-2'} space-y-1.5 text-[13px]">`; inUl = true; }
+                        html += `<li class="leading-snug">${inlineFormat(ulMatch[1])}</li>`;
+                        first = false;
+                    } else {
+                        closeList();
+                        html += `<p class="leading-snug text-[13px] ${first ? '' : 'mt-2'}">${inlineFormat(line)}</p>`;
+                        first = false;
+                    }
+                });
+                closeList();
+            }
+        });
+
         return html;
     }
 

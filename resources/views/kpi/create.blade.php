@@ -3431,19 +3431,6 @@ async function aiSuggestDescription() {
 
 window.aniraKpiPage = true;
 
-// Auto-fill if redirected here from another page via ANIRA
-(function () {
-    try {
-        const raw = sessionStorage.getItem('anira_pending_kpi');
-        if (!raw) return;
-        sessionStorage.removeItem('anira_pending_kpi');
-        const kpi = JSON.parse(raw);
-        if (kpi && typeof window.aniraFillKpiForm === 'function') {
-            window.aniraFillKpiForm(kpi);
-        }
-    } catch (_) {}
-})();
-
 window.aniraFillKpiForm = function (data) {
     // Title
     const titleEl = document.getElementById('kpiTitle');
@@ -3531,6 +3518,20 @@ window.aniraFillKpiForm = function (data) {
     // Scroll to top of the form
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
+
+// Auto-fill if redirected here from another page via ANIRA
+// Must run AFTER aniraFillKpiForm is defined above
+(function () {
+    try {
+        const raw = sessionStorage.getItem('anira_pending_kpi');
+        if (!raw) return;
+        sessionStorage.removeItem('anira_pending_kpi');
+        const kpi = JSON.parse(raw);
+        if (!kpi) return;
+        // Small delay ensures all DOM event listeners (category change, etc.) are wired up
+        setTimeout(() => window.aniraFillKpiForm(kpi), 100);
+    } catch (_) {}
+})();
 
 </script>
 
