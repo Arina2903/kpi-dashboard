@@ -74,6 +74,18 @@ class SltDashboardController extends Controller
         return                   ['key' => 'unsatisfactory',     'label' => 'Unsatisfactory',      'bg' => '#ED1C24', 'text' => '#FFFFFF'];
     }
 
+    // Staff-list sort order: SLT -> VP -> Manager -> Executive -> everyone else, then name.
+    private function rolePriority(?string $role): int
+    {
+        return match (strtoupper(trim($role ?? ''))) {
+            'SLT'       => 1,
+            'VP'        => 2,
+            'MANAGER'   => 3,
+            'EXECUTIVE' => 4,
+            default     => 5,
+        };
+    }
+
     // Mirrors the appraiser total computed client-side in report.blade.php's
     // updateS6()/updateGauge(): sum of s6_s2_app (KPI, /70) + s6_s3_app
     // (Attitude, /25) + s6_s4_app (Attendance, /5) + s6_s5_app (Culture, /5,
@@ -159,10 +171,10 @@ class SltDashboardController extends Controller
 
         $bandKeys = ['unsatisfactory', 'below_average', 'meets_expectations', 'outstanding'];
         $bandCounts = array_fill_keys($bandKeys, 0);
-        $bandStaff  = array_fill_keys($bandKeys, []);
 
-        $notSubmitted = [];
-        $submittedPending = [];
+        $staffRows = [];
+        $notSubmittedCount = 0;
+        $pendingCount = 0;
         $completedCount = 0;
         $submittedOrFurtherCount = 0;
         $scoreSum = 0;
@@ -173,28 +185,34 @@ class SltDashboardController extends Controller
             $status = $report['status'] ?? 'draft';
 
             $manager = $nameById->get($emp['reports_to_id'] ?? null);
+            $role = strtoupper(trim($emp['role'] ?? ''));
             $row = [
-                'employee_id' => $emp['employee_id'] ?? '-',
-                'name'        => $emp['short_name'] ?? $emp['full_name'] ?? 'Unknown',
-                'department'  => $emp['department_code'] ?? '-',
-                'manager'     => $manager ? ($manager['short_name'] ?? $manager['full_name'] ?? '-') : '-',
+                'employee_id'    => $emp['employee_id'] ?? '-',
+                'name'           => $emp['short_name'] ?? $emp['full_name'] ?? 'Unknown',
+                'department'     => $emp['department_code'] ?? '-',
+                'manager'        => $manager ? ($manager['short_name'] ?? $manager['full_name'] ?? '-') : '-',
+                'role'           => $role ?: '-',
+                'role_priority'  => $this->rolePriority($role),
+                'score'          => null,
             ];
 
-            if (in_array($status, ['submitted', 'appraised', 'completed'])) {
-                $submittedOrFurtherCount++;
-            } else {
-                $notSubmitted[] = $row;
+            if (!in_array($status, ['submitted', 'appraised', 'completed'])) {
+                $row['status_key'] = 'not_submitted';
+                $notSubmittedCount++;
+                $staffRows[] = $row;
                 continue;
             }
 
-            if (!in_array($status, ['appraised', 'completed'])) {
-                $submittedPending[] = $row;
-                continue;
-            }
+            $submittedOrFurtherCount++;
 
-            $score = $this->scoreFromFormData($report['form_data'] ?? null, $quarter);
+            $score = in_array($status, ['appraised', 'completed'])
+                ? $this->scoreFromFormData($report['form_data'] ?? null, $quarter)
+                : null;
+
             if ($score === null) {
-                $submittedPending[] = $row;
+                $row['status_key'] = 'pending';
+                $pendingCount++;
+                $staffRows[] = $row;
                 continue;
             }
 
@@ -203,10 +221,15 @@ class SltDashboardController extends Controller
             $scoreCount++;
 
             $band = $this->bandFor($score);
-            $row['score'] = $score;
+            $row['score']      = $score;
+            $row['status_key'] = $band['key'];
             $bandCounts[$band['key']]++;
-            $bandStaff[$band['key']][] = $row;
+            $staffRows[] = $row;
         }
+
+        usort($staffRows, function ($a, $b) {
+            return $a['role_priority'] <=> $b['role_priority'] ?: strcasecmp($a['name'], $b['name']);
+        });
 
         $totalStaff = count($employees);
         $participationRate = $totalStaff > 0 ? round($submittedOrFurtherCount / $totalStaff * 100) : 0;
@@ -222,12 +245,12 @@ class SltDashboardController extends Controller
             'participationRate'    => $participationRate,
             'completedCount'       => $completedCount,
             'notCompleteCount'     => $totalStaff - $completedCount,
+            'notSubmittedCount'    => $notSubmittedCount,
+            'pendingCount'         => $pendingCount,
             'averageScore'         => $averageScore,
             'averageBand'          => $this->bandFor($averageScore),
             'bandCounts'           => $bandCounts,
-            'bandStaff'            => $bandStaff,
-            'notSubmitted'         => $notSubmitted,
-            'submittedPending'     => $submittedPending,
+            'staffRows'            => $staffRows,
         ]);
     }
 }

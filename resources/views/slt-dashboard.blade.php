@@ -15,6 +15,7 @@
         .thin-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .thin-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
         .band-pill.active { outline: 2px solid #1e293b; outline-offset: 1px; }
+        .role-group-row td { background: #F8FAFC; }
     </style>
 </head>
 <body class="bg-[#F5F5F3] min-h-screen text-slate-900">
@@ -28,6 +29,23 @@
         'meets_expectations'  => ['label' => 'Meets Expectations', 'range' => '70–89',  'bg' => '#FFD700', 'text' => '#000000'],
         'outstanding'         => ['label' => 'Outstanding',        'range' => '90–100', 'bg' => '#00B050', 'text' => '#FFFFFF'],
     ];
+    $statusMeta = [
+        'not_submitted' => ['label' => 'Not Submitted',     'bg' => '#FEE2E2', 'text' => '#DC2626'],
+        'pending'       => ['label' => 'Awaiting Appraisal', 'bg' => '#F1F5F9', 'text' => '#64748B'],
+    ];
+    $roleGroups = [
+        'SLT'       => 'SLT',
+        'VP'        => 'VP',
+        'MANAGER'   => 'Manager',
+        'EXECUTIVE' => 'Executive',
+    ];
+    $roleBadgeStyle = [
+        'SLT'       => 'background:#F3E8FF;color:#7C3AED;',
+        'VP'        => 'background:#F5EAE0;color:#6B3F2A;',
+        'MANAGER'   => 'background:#E0E7FF;color:#4338CA;',
+        'EXECUTIVE' => 'background:#F1F5F9;color:#475569;',
+    ];
+    $currentRoleGroup = null;
 @endphp
 
 <main id="mainContent" class="ml-[230px] min-h-screen">
@@ -40,7 +58,7 @@
             <h1 class="text-xl font-black tracking-tight leading-tight">
                 SLT Dashboard <span class="text-[#D4AF37]">| {{ $quarter }} {{ $currentFinancialYear }}</span>
             </h1>
-            <p class="text-[11px] text-white/60 mt-1">{{ now()->timezone('Asia/Kuala_Lumpur')->format('d M Y') }} · Quarterly appraisal summary</p>
+            <p class="text-[11px] text-white/60 mt-1">{{ now()->timezone('Asia/Kuala_Lumpur')->format('d M Y') }} · Who has completed their quarterly appraisal, and how the team scored</p>
         </div>
 
         <form method="GET" action="{{ route('slt-dashboard') }}" class="relative flex flex-wrap items-center gap-2">
@@ -68,34 +86,51 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
 
         <div class="bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] p-4">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Staff Engagement</p>
+            <div class="flex items-center gap-2 mb-3">
+                <span class="w-7 h-7 rounded-lg bg-[#D4AF37]/10 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-[#B8860B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.768-.231-1.48-.634-2.072M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.768.231-1.48.634-2.072m9.732 0A6.001 6.001 0 0012 6a6 6 0 00-4.366 9.928"/></svg>
+                </span>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Staff Engagement</p>
+            </div>
             <div class="flex items-center justify-between mb-2">
                 <span class="text-xs text-slate-500 font-semibold">Total Staff</span>
                 <span class="text-2xl font-black text-slate-900">{{ $totalStaff }}</span>
             </div>
             <div class="flex items-center justify-between">
-                <span class="text-xs text-slate-500 font-semibold">Participation Rate</span>
+                <span class="text-xs text-slate-500 font-semibold">Have Submitted</span>
                 <span class="text-2xl font-black text-[#B8860B]">{{ $participationRate }}%</span>
             </div>
+            <p class="text-[9px] text-slate-400 mt-2">% of staff who have submitted their self-assessment for {{ $quarter }}</p>
         </div>
 
         <div class="bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] p-4">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Appraisal Completion</p>
+            <div class="flex items-center gap-2 mb-3">
+                <span class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </span>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Appraisal Completion</p>
+            </div>
             <div class="flex items-center justify-between mb-2">
-                <span class="text-xs text-slate-500 font-semibold">Completed</span>
+                <span class="text-xs text-slate-500 font-semibold">Completed &amp; Scored</span>
                 <span class="text-2xl font-black text-emerald-600">{{ $completedCount }}</span>
             </div>
             <div class="flex items-center justify-between">
-                <span class="text-xs text-slate-500 font-semibold">Not Complete</span>
+                <span class="text-xs text-slate-500 font-semibold">Not Yet Complete</span>
                 <span class="text-2xl font-black text-red-500">{{ $notCompleteCount }}</span>
             </div>
+            <p class="text-[9px] text-slate-400 mt-2">"Not Yet Complete" = staff hasn't submitted, or manager hasn't finished appraising</p>
         </div>
 
         <div class="bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] p-4 flex items-center justify-between">
             <div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Average Score</p>
-                <p class="text-4xl font-black leading-none" style="color:{{ $averageBand['bg'] }};">{{ number_format($averageScore, 1) }}</p>
-                <p class="text-[10px] text-slate-400 mt-1">out of 100 · {{ $completedCount }} completed</p>
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="w-7 h-7 rounded-lg bg-[#D4AF37]/10 flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4 text-[#B8860B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </span>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Average Score</p>
+                </div>
+                <p class="text-4xl font-black leading-none" style="color:{{ $averageBand['bg'] === '#FFD700' ? '#8a6d00' : $averageBand['bg'] }};">{{ number_format($averageScore, 1) }}</p>
+                <p class="text-[10px] text-slate-400 mt-1">out of 100 · across {{ $completedCount }} completed appraisals</p>
             </div>
             <span class="text-[10px] font-black px-3 py-1.5 rounded-full" style="background:{{ $averageBand['bg'] }};color:{{ $averageBand['text'] }};">
                 {{ $averageBand['label'] }}
@@ -110,7 +145,7 @@
         {{-- Distribution chart --}}
         <div class="xl:col-span-2 bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] p-4">
             <p class="text-[11px] font-black text-slate-800 mb-1">Performance Score Distribution</p>
-            <p class="text-[9px] text-slate-400 mb-3">{{ $quarter }} {{ $currentFinancialYear }} · {{ $completedCount }} appraised staff</p>
+            <p class="text-[9px] text-slate-400 mb-3">How many staff landed in each rating band this quarter</p>
             <div style="height:180px;position:relative;">
                 <canvas id="chartBandDist"></canvas>
             </div>
@@ -128,23 +163,24 @@
 
         {{-- Staff list --}}
         <div class="xl:col-span-3 bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] overflow-hidden flex flex-col">
-            <div class="p-4 pb-2 flex items-center justify-between">
+            <div class="p-4 pb-2 flex items-center justify-between flex-wrap gap-2">
                 <div>
                     <p class="text-[11px] font-black text-slate-800">Staff List</p>
-                    <p class="text-[9px] text-slate-400 mt-0.5" id="staffListSubtitle">All staff · {{ $quarter }} {{ $currentFinancialYear }}</p>
+                    <p class="text-[9px] text-slate-400 mt-0.5" id="staffListSubtitle">All staff, grouped by seniority (SLT → VP → Manager → Executive)</p>
                 </div>
                 <div class="flex gap-1.5 flex-wrap justify-end">
                     <button type="button" onclick="filterBand('all')" data-band="all" class="band-pill active px-2.5 py-1 rounded-lg text-[9px] font-black bg-slate-100 text-slate-600">All ({{ $totalStaff }})</button>
-                    <button type="button" onclick="filterBand('not_submitted')" data-band="not_submitted" class="band-pill px-2.5 py-1 rounded-lg text-[9px] font-black bg-slate-100 text-slate-600">Not Submitted ({{ count($notSubmitted) }})</button>
-                    <button type="button" onclick="filterBand('pending')" data-band="pending" class="band-pill px-2.5 py-1 rounded-lg text-[9px] font-black bg-slate-100 text-slate-600">Awaiting Appraisal ({{ count($submittedPending) }})</button>
+                    <button type="button" onclick="filterBand('not_submitted')" data-band="not_submitted" class="band-pill px-2.5 py-1 rounded-lg text-[9px] font-black bg-red-50 text-red-600">Not Submitted ({{ $notSubmittedCount }})</button>
+                    <button type="button" onclick="filterBand('pending')" data-band="pending" class="band-pill px-2.5 py-1 rounded-lg text-[9px] font-black bg-slate-100 text-slate-500">Awaiting Appraisal ({{ $pendingCount }})</button>
                 </div>
             </div>
-            <div class="overflow-y-auto overflow-x-auto thin-scroll flex-1" style="max-height:420px;">
-                <table class="w-full min-w-[560px] text-left">
+            <div class="overflow-y-auto overflow-x-auto thin-scroll flex-1" style="max-height:460px;">
+                <table class="w-full min-w-[620px] text-left">
                     <thead class="sticky top-0 bg-white z-10">
                         <tr class="bg-slate-50 text-[9px] uppercase tracking-wider text-slate-500 font-black border-b border-[#E5E7EB]">
                             <th class="px-3 py-2">ID</th>
                             <th class="px-3 py-2">Name</th>
+                            <th class="px-3 py-2">Role</th>
                             <th class="px-3 py-2">Department</th>
                             <th class="px-3 py-2">Manager</th>
                             <th class="px-3 py-2">Status</th>
@@ -152,46 +188,40 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50" id="staffListBody">
-                        @foreach($bandMeta as $key => $b)
-                            @foreach($bandStaff[$key] as $row)
-                            <tr data-band="{{ $key }}" class="hover:bg-slate-50">
+                        @forelse($staffRows as $row)
+                            @php
+                                $group = $roleGroups[$row['role']] ?? null;
+                            @endphp
+                            @if($group !== $currentRoleGroup)
+                                @php $currentRoleGroup = $group; @endphp
+                                <tr class="role-group-row">
+                                    <td colspan="7" class="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-t border-[#E5E7EB]">
+                                        {{ $group ?? 'Other Staff' }}
+                                    </td>
+                                </tr>
+                            @endif
+                            @php
+                                $statusKey = $row['status_key'];
+                                $isBand = isset($bandMeta[$statusKey]);
+                                $meta = $isBand ? $bandMeta[$statusKey] : $statusMeta[$statusKey];
+                                $roleStyle = $roleBadgeStyle[$row['role']] ?? 'background:#F1F5F9;color:#64748B;';
+                            @endphp
+                            <tr data-band="{{ $statusKey }}" class="hover:bg-slate-50">
                                 <td class="px-3 py-2 text-[10px] font-bold text-slate-500">{{ $row['employee_id'] }}</td>
                                 <td class="px-3 py-2 text-[11px] font-black text-slate-900">{{ $row['name'] }}</td>
+                                <td class="px-3 py-2"><span class="text-[9px] font-black px-2 py-0.5 rounded" style="{{ $roleStyle }}">{{ $row['role'] }}</span></td>
                                 <td class="px-3 py-2 text-[10px] text-slate-500">{{ $row['department'] }}</td>
                                 <td class="px-3 py-2 text-[10px] text-slate-500">{{ $row['manager'] }}</td>
                                 <td class="px-3 py-2">
-                                    <span class="text-[9px] font-black px-2 py-0.5 rounded-full" style="background:{{ $b['bg'] }}22;color:{{ $b['bg'] === '#FFD700' ? '#8a6d00' : $b['bg'] }};">{{ $b['label'] }}</span>
+                                    <span class="text-[9px] font-black px-2 py-0.5 rounded-full" style="background:{{ $isBand ? $meta['bg'].'22' : $meta['bg'] }};color:{{ $isBand && $meta['bg'] === '#FFD700' ? '#8a6d00' : $meta['text'] }};">{{ $meta['label'] }}</span>
                                 </td>
-                                <td class="px-3 py-2 text-right text-[11px] font-black" style="color:{{ $b['bg'] === '#FFD700' ? '#8a6d00' : $b['bg'] }};">{{ number_format($row['score'], 1) }}</td>
-                            </tr>
-                            @endforeach
-                        @endforeach
-
-                        @foreach($submittedPending as $row)
-                            <tr data-band="pending" class="hover:bg-slate-50">
-                                <td class="px-3 py-2 text-[10px] font-bold text-slate-500">{{ $row['employee_id'] }}</td>
-                                <td class="px-3 py-2 text-[11px] font-black text-slate-900">{{ $row['name'] }}</td>
-                                <td class="px-3 py-2 text-[10px] text-slate-500">{{ $row['department'] }}</td>
-                                <td class="px-3 py-2 text-[10px] text-slate-500">{{ $row['manager'] }}</td>
-                                <td class="px-3 py-2">
-                                    <span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Awaiting Appraisal</span>
+                                <td class="px-3 py-2 text-right text-[11px] font-black" style="color:{{ $row['score'] !== null ? ($meta['bg'] === '#FFD700' ? '#8a6d00' : $meta['bg']) : '#cbd5e1' }};">
+                                    {{ $row['score'] !== null ? number_format($row['score'], 1) : '—' }}
                                 </td>
-                                <td class="px-3 py-2 text-right text-[10px] text-slate-300">—</td>
                             </tr>
-                        @endforeach
-
-                        @foreach($notSubmitted as $row)
-                            <tr data-band="not_submitted" class="hover:bg-slate-50">
-                                <td class="px-3 py-2 text-[10px] font-bold text-slate-500">{{ $row['employee_id'] }}</td>
-                                <td class="px-3 py-2 text-[11px] font-black text-slate-900">{{ $row['name'] }}</td>
-                                <td class="px-3 py-2 text-[10px] text-slate-500">{{ $row['department'] }}</td>
-                                <td class="px-3 py-2 text-[10px] text-slate-500">{{ $row['manager'] }}</td>
-                                <td class="px-3 py-2">
-                                    <span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-red-50 text-red-600">Not Submitted</span>
-                                </td>
-                                <td class="px-3 py-2 text-right text-[10px] text-slate-300">—</td>
-                            </tr>
-                        @endforeach
+                        @empty
+                            <tr><td colspan="7" class="px-3 py-8 text-center text-[11px] text-slate-400">No staff match this filter.</td></tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -234,14 +264,25 @@ function filterBand(band) {
         btn.classList.toggle('active', btn.dataset.band === band);
     });
     document.querySelectorAll('#staffListBody tr').forEach(function (tr) {
+        if (tr.classList.contains('role-group-row')) return; // group headers always follow their rows
         tr.style.display = (band === 'all' || tr.dataset.band === band) ? '' : 'none';
+    });
+    // Hide a group header if every row under it is now hidden
+    document.querySelectorAll('#staffListBody .role-group-row').forEach(function (header) {
+        var next = header.nextElementSibling;
+        var anyVisible = false;
+        while (next && !next.classList.contains('role-group-row')) {
+            if (next.style.display !== 'none') anyVisible = true;
+            next = next.nextElementSibling;
+        }
+        header.style.display = anyVisible ? '' : 'none';
     });
     var subtitle = document.getElementById('staffListSubtitle');
     if (band === 'all') {
-        subtitle.textContent = 'All staff · {{ $quarter }} {{ $currentFinancialYear }}';
+        subtitle.textContent = 'All staff, grouped by seniority (SLT → VP → Manager → Executive)';
     } else {
         var label = bandMeta[band] ? bandMeta[band].label : (band === 'not_submitted' ? 'Not Submitted' : 'Awaiting Appraisal');
-        subtitle.textContent = label + ' · {{ $quarter }} {{ $currentFinancialYear }}';
+        subtitle.textContent = 'Showing: ' + label;
     }
 }
 </script>
