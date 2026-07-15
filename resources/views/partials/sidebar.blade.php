@@ -76,11 +76,11 @@
     <button
         type="button"
         onclick="handleSidebarHeaderClick()"
-        class="group w-full flex items-center gap-3 mb-5 shrink-0 pr-10 text-left
-        hover:bg-white/10 rounded-xl p-2 transition relative"
+        class="group w-full flex items-center gap-2 mb-3 shrink-0 pr-8 text-left
+        hover:bg-white/10 rounded-xl p-1.5 transition relative"
         aria-label="Open Sidebar"
     >
-        <div class="w-10 h-10 flex items-center justify-center shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-[#C8102E] border-2 border-[#D4AF37] flex items-center justify-center shrink-0 overflow-hidden p-1">
             @php
                 $sidebarLogo = session('company_logo');
                 if (!$sidebarLogo) {
@@ -92,14 +92,14 @@
             <img
                 src="{{ asset(ltrim($sidebarLogo, '/')) }}"
                 alt="{{ session('company_display_name') ?: 'Company' }}"
-                class="w-9 h-9 object-contain sidebar-logo bg-transparent"
+                class="w-full h-full object-contain sidebar-logo bg-transparent"
                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
             />
-            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#071a12] text-white font-bold text-base items-center justify-center" style="display:none">
+            <span class="sidebar-logo w-full h-full text-white font-bold text-base items-center justify-center" style="display:none">
                 {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
             </span>
             @else
-            <span class="sidebar-logo w-9 h-9 rounded-full bg-[#071a12] text-white font-bold text-base flex items-center justify-center">
+            <span class="sidebar-logo w-full h-full text-white font-bold text-base flex items-center justify-center">
                 {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
             </span>
             @endif
