@@ -118,7 +118,7 @@
             </p>
         </div>
 
-        <div class="sidebar-tooltip hidden absolute left-[70px] top-1/2 -translate-y-1/2
+        <div class="sidebar-tooltip hidden absolute left-[58px] top-1/2 -translate-y-1/2
             bg-black text-white text-[10px] px-2 py-1 rounded-md
             opacity-0 group-hover:opacity-100 pointer-events-none transition
             whitespace-nowrap z-[9999] shadow-lg">
@@ -153,7 +153,7 @@
             </p>
         </div>
 
-        <div class="sidebar-tooltip hidden absolute left-[58px] top-1/2 -translate-y-1/2
+        <div class="sidebar-tooltip hidden absolute left-[52px] top-1/2 -translate-y-1/2
             bg-black text-white text-[10px] px-2 py-1 rounded-md
             opacity-0 group-hover:opacity-100 pointer-events-none transition duration-150
             whitespace-nowrap z-[9999] shadow-lg">
@@ -299,6 +299,7 @@
     @endphp
 
     <!-- NAVIGATION -->
+    <div class="relative flex-1 min-h-0 flex flex-col">
     <nav class="flex-1 overflow-y-auto text-[12px] space-y-5 pr-1 min-h-0 custom-scroll">
         @php $isBts = session('department_code') === 'BTS'; @endphp
         @foreach($navSections as $section)
@@ -395,10 +396,12 @@
             </div>
         @endforeach
     </nav>
+    <div class="pointer-events-none absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#111111] to-transparent"></div>
+    </div>
 
     <!-- SYSTEM ZONE -->
     <div class="sidebar-system mt-3 pt-3 border-t border-white/10 shrink-0">
-        <p class="sidebar-text text-[9px] text-[#A4C3B2] font-semibold uppercase tracking-widest mb-2 px-1">
+        <p class="sidebar-text text-[9px] text-[#A4C3B2] font-semibold uppercase tracking-widest mb-2 px-2">
             Current View
         </p>
 
