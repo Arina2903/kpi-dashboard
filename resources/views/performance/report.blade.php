@@ -873,7 +873,7 @@
                             <div style="background:linear-gradient(180deg,#f7faf9 0%,#ffffff 100%);border-radius:16px;padding:20px 12px 12px;border:1px solid rgba(107,144,128,.15);">
                             <svg viewBox="0 0 1000 370" style="width:100%;display:block;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
                                 <defs>
-                                    {{-- Gaussian bell: σ=150, 5 equal zones of 200px, peak at x=500 y=40, baseline y=300 --}}
+                                    {{-- Gaussian bell: σ=150, 4 equal zones of 250px, peak at x=500 y=40, baseline y=300 --}}
                                     <clipPath id="bc_clip">
                                         <path d="M 0,300 L 0,299 C 80,299 160,273 200,265 C 250,254 330,130 400,92 C 445,58 470,43 500,40 C 530,43 555,58 600,92 C 670,130 750,254 800,265 C 840,273 920,299 1000,299 L 1000,300 Z"/>
                                     </clipPath>
@@ -881,33 +881,27 @@
                                         <feDropShadow dx="0" dy="2" stdDeviation="5" flood-opacity="0.18"/>
                                     </filter>
                                 </defs>
-                                {{-- 5 equal zones of 200px each --}}
-                                <rect x="0"   y="0" width="200" height="300" fill="#e85d04" clip-path="url(#bc_clip)"/>
-                                <rect x="200" y="0" width="200" height="300" fill="#f97316" clip-path="url(#bc_clip)"/>
-                                <rect x="400" y="0" width="200" height="300" fill="#fbbf24" clip-path="url(#bc_clip)"/>
-                                <rect x="600" y="0" width="200" height="300" fill="#4ade80" clip-path="url(#bc_clip)"/>
-                                <rect x="800" y="0" width="200" height="300" fill="#22c55e" clip-path="url(#bc_clip)"/>
+                                {{-- 4 equal zones of 250px each --}}
+                                <rect x="0"   y="0" width="250" height="300" fill="#e85d04" clip-path="url(#bc_clip)"/>
+                                <rect x="250" y="0" width="250" height="300" fill="#f97316" clip-path="url(#bc_clip)"/>
+                                <rect x="500" y="0" width="250" height="300" fill="#4ade80" clip-path="url(#bc_clip)"/>
+                                <rect x="750" y="0" width="250" height="300" fill="#22c55e" clip-path="url(#bc_clip)"/>
                                 {{-- Zone dividers --}}
-                                <line x1="200" y1="250" x2="200" y2="300" stroke="rgba(255,255,255,.75)" stroke-width="2.5"/>
-                                <line x1="400" y1="92"  x2="400" y2="300" stroke="rgba(255,255,255,.75)" stroke-width="2.5"/>
-                                <line x1="600" y1="92"  x2="600" y2="300" stroke="rgba(255,255,255,.75)" stroke-width="2.5"/>
-                                <line x1="800" y1="250" x2="800" y2="300" stroke="rgba(255,255,255,.75)" stroke-width="2.5"/>
+                                <line x1="250" y1="235" x2="250" y2="300" stroke="rgba(255,255,255,.75)" stroke-width="2.5"/>
+                                <line x1="500" y1="40"  x2="500" y2="300" stroke="rgba(255,255,255,.75)" stroke-width="2.5"/>
+                                <line x1="750" y1="235" x2="750" y2="300" stroke="rgba(255,255,255,.75)" stroke-width="2.5"/>
                                 {{-- Baseline --}}
                                 <line x1="0" y1="300" x2="1000" y2="300" stroke="#e2e8f0" stroke-width="1"/>
                                 {{-- Zone names --}}
-                                <text x="100" y="317" text-anchor="middle" fill="#e85d04" style="font-size:12px;font-weight:800;">Unacceptable</text>
-                                <text x="300" y="315" text-anchor="middle" fill="#c2410c" style="font-size:12px;font-weight:800;">Room for</text>
-                                <text x="300" y="329" text-anchor="middle" fill="#c2410c" style="font-size:12px;font-weight:800;">Improvement</text>
-                                <text x="500" y="317" text-anchor="middle" fill="#b45309" style="font-size:13px;font-weight:800;">Meets Expectations</text>
-                                <text x="700" y="315" text-anchor="middle" fill="#16a34a" style="font-size:12px;font-weight:800;">Exceeds</text>
-                                <text x="700" y="329" text-anchor="middle" fill="#16a34a" style="font-size:12px;font-weight:800;">Expectations</text>
-                                <text x="900" y="317" text-anchor="middle" fill="#15803d" style="font-size:12px;font-weight:800;">Outstanding</text>
+                                <text x="125" y="317" text-anchor="middle" fill="#e85d04" style="font-size:12px;font-weight:800;">Unsatisfactory</text>
+                                <text x="375" y="317" text-anchor="middle" fill="#c2410c" style="font-size:12px;font-weight:800;">Below Average</text>
+                                <text x="625" y="317" text-anchor="middle" fill="#16a34a" style="font-size:13px;font-weight:800;">Meets Expectations</text>
+                                <text x="875" y="317" text-anchor="middle" fill="#15803d" style="font-size:12px;font-weight:800;">Outstanding</text>
                                 {{-- Score ranges --}}
-                                <text x="100" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">1 – 34</text>
-                                <text x="300" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">35 – 49</text>
-                                <text x="500" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">50 – 79</text>
-                                <text x="700" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">80 – 89</text>
-                                <text x="900" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">90 – 100</text>
+                                <text x="125" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">1 – 49</text>
+                                <text x="375" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">50 – 69</text>
+                                <text x="625" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">70 – 89</text>
+                                <text x="875" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">90 – 100</text>
                                 {{-- Indicator: vertical line + dot + floating score label --}}
                                 <g id="bellIndicator" style="display:none;">
                                     <line id="bellLine" x1="500" y1="0" x2="500" y2="300" stroke="#1e293b" stroke-width="3" stroke-dasharray="8,5" stroke-linecap="round"/>
@@ -1217,11 +1211,10 @@
     function s6Clr(v){ return v>=90?'#15803d':v>=80?'#16a34a':v>=50?'#d97706':v>=35?'#ea6f00':'#e85d04'; }
 
     function scoreToX(s) {
-        if (s <= 34)  return (s - 1)  / 33 * 200;
-        if (s <= 49)  return 200 + (s - 35) / 14 * 200;
-        if (s <= 79)  return 400 + (s - 50) / 29 * 200;
-        if (s <= 89)  return 600 + (s - 80) / 9  * 200;
-        return 800 + (s - 90) / 10 * 200;
+        if (s <= 49)  return (s - 1)  / 48 * 250;
+        if (s <= 69)  return 250 + (s - 50) / 19 * 250;
+        if (s <= 89)  return 500 + (s - 70) / 19 * 250;
+        return 750 + (s - 90) / 10 * 250;
     }
     function bellY(x) {
         return 300 - 260 * Math.exp(-(x - 500) * (x - 500) / 45000);
@@ -1232,10 +1225,9 @@
         if (score === null || isNaN(score)) { g.style.display = 'none'; return; }
         var grade, clr;
         if (score >= 90)      { grade = 'Outstanding';          clr = '#15803d'; }
-        else if (score >= 80) { grade = 'Exceeds Expectations'; clr = '#16a34a'; }
-        else if (score >= 50) { grade = 'Meets Expectations';   clr = '#b45309'; }
-        else if (score >= 35) { grade = 'Room for Improvement'; clr = '#c2410c'; }
-        else                  { grade = 'Unacceptable';         clr = '#e85d04'; }
+        else if (score >= 70) { grade = 'Meets Expectations';   clr = '#16a34a'; }
+        else if (score >= 50) { grade = 'Below Average';        clr = '#c2410c'; }
+        else                  { grade = 'Unsatisfactory';       clr = '#e85d04'; }
         var bx = scoreToX(score);
         var by = bellY(bx);
         var lx = Math.max(60, Math.min(940, bx));
