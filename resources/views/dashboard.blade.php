@@ -353,19 +353,30 @@
 
 {{-- ═══════ HEADER (sticky) ════════════════════════════════════════════════ --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#f0f2f7]">
-    <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-4 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+    <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-4 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
+        <div class="pointer-events-none absolute -top-10 -right-10 w-48 h-48 rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-16 left-1/3 w-56 h-56 rounded-full bg-[#C8102E]/20 blur-3xl"></div>
         @php
             $greetHour = now()->timezone('Asia/Kuala_Lumpur')->hour;
             $greeting  = $greetHour < 12 ? 'Good Morning' : ($greetHour < 18 ? 'Good Afternoon' : 'Good Evening');
+            $todayLabel = now()->timezone('Asia/Kuala_Lumpur')->format('l, d F Y');
         @endphp
-        <div>
-            <h1 class="text-xl font-black">Hi, {{ $greeting }} {{ $currentUserName }} 👋</h1>
-            <p class="text-white/70 text-[11px] mt-0.5">{{ $user['role'] ?? '-' }} · {{ $currentDepartment }} · {{ $currentFinancialYear }}</p>
+        <div class="relative">
+            <h1 class="text-xl font-black tracking-tight">Hi, {{ $greeting }} <span class="text-[#D4AF37]">{{ $currentUserName }}</span> 👋</h1>
+            <p class="text-white/70 text-[11px] mt-1 flex flex-wrap items-center gap-x-1.5">
+                <span>{{ $user['role'] ?? '-' }}</span>
+                <span class="w-1 h-1 rounded-full bg-[#D4AF37]/70 inline-block"></span>
+                <span>{{ $currentDepartment }}</span>
+                <span class="w-1 h-1 rounded-full bg-[#D4AF37]/70 inline-block"></span>
+                <span>{{ $currentFinancialYear }}</span>
+                <span class="w-1 h-1 rounded-full bg-[#D4AF37]/70 inline-block"></span>
+                <span>{{ $todayLabel }}</span>
+            </p>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-            <a href="{{ route('kpi.create') }}"  class="bg-white text-[#1a3d34] hover:bg-[#f0faf7] px-4 py-2 rounded-xl shadow font-bold text-xs transition">+ Create KPI</a>
-            <a href="{{ route('kpi.index') }}"   class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-white/20">My KPIs</a>
+        <div class="relative flex flex-wrap items-center gap-2">
+            <a href="{{ route('kpi.create') }}"  class="bg-white text-[#7A0019] hover:bg-[#fff5f5] px-4 py-2 rounded-xl shadow font-bold text-xs transition hover:-translate-y-0.5">+ Create KPI</a>
+            <a href="{{ route('kpi.index') }}"   class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-xs transition border border-[#D4AF37]/40 hover:-translate-y-0.5">My KPIs</a>
         </div>
     </div>
 </div>
