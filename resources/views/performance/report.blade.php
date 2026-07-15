@@ -882,26 +882,30 @@
                                     </filter>
                                 </defs>
                                 {{-- 4 equal zones of 250px each --}}
-                                <rect x="0"   y="0" width="250" height="300" fill="#FCA5A5" clip-path="url(#bc_clip)"/>
-                                <rect x="250" y="0" width="250" height="300" fill="#FDBA74" clip-path="url(#bc_clip)"/>
-                                <rect x="500" y="0" width="250" height="300" fill="#FCD34D" clip-path="url(#bc_clip)"/>
-                                <rect x="750" y="0" width="250" height="300" fill="#86EFAC" clip-path="url(#bc_clip)"/>
+                                <rect x="0"   y="0" width="250" height="300" fill="#ED1C24" clip-path="url(#bc_clip)"/>
+                                <rect x="250" y="0" width="250" height="300" fill="#FF8C00" clip-path="url(#bc_clip)"/>
+                                <rect x="500" y="0" width="250" height="300" fill="#FFD700" clip-path="url(#bc_clip)"/>
+                                <rect x="750" y="0" width="250" height="300" fill="#00B050" clip-path="url(#bc_clip)"/>
                                 {{-- Zone dividers --}}
-                                <line x1="250" y1="235" x2="250" y2="300" stroke="rgba(15,23,42,.18)" stroke-width="2.5"/>
-                                <line x1="500" y1="40"  x2="500" y2="300" stroke="rgba(15,23,42,.18)" stroke-width="2.5"/>
-                                <line x1="750" y1="235" x2="750" y2="300" stroke="rgba(15,23,42,.18)" stroke-width="2.5"/>
+                                <line x1="250" y1="235" x2="250" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
+                                <line x1="500" y1="40"  x2="500" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
+                                <line x1="750" y1="235" x2="750" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
                                 {{-- Baseline --}}
                                 <line x1="0" y1="300" x2="1000" y2="300" stroke="#e2e8f0" stroke-width="1"/>
-                                {{-- Zone names --}}
-                                <text x="125" y="317" text-anchor="middle" fill="#DC2626" style="font-size:12px;font-weight:800;">Unsatisfactory</text>
-                                <text x="375" y="317" text-anchor="middle" fill="#C2410C" style="font-size:12px;font-weight:800;">Below Average</text>
-                                <text x="625" y="317" text-anchor="middle" fill="#B45309" style="font-size:13px;font-weight:800;">Meets Expectations</text>
-                                <text x="875" y="317" text-anchor="middle" fill="#15803D" style="font-size:12px;font-weight:800;">Outstanding</text>
+                                {{-- Zone name badges (bg = zone colour, text = white on red/green, black on yellow/orange) --}}
+                                <rect x="50"  y="306" width="150" height="22" rx="11" fill="#ED1C24"/>
+                                <text x="125" y="321" text-anchor="middle" fill="#FFFFFF" style="font-size:11px;font-weight:800;">Unsatisfactory</text>
+                                <rect x="300" y="306" width="150" height="22" rx="11" fill="#FF8C00"/>
+                                <text x="375" y="321" text-anchor="middle" fill="#000000" style="font-size:11px;font-weight:800;">Below Average</text>
+                                <rect x="550" y="306" width="150" height="22" rx="11" fill="#FFD700"/>
+                                <text x="625" y="321" text-anchor="middle" fill="#000000" style="font-size:11px;font-weight:800;">Meets Expectations</text>
+                                <rect x="800" y="306" width="150" height="22" rx="11" fill="#00B050"/>
+                                <text x="875" y="321" text-anchor="middle" fill="#FFFFFF" style="font-size:11px;font-weight:800;">Outstanding</text>
                                 {{-- Score ranges --}}
-                                <text x="125" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">1 – 49</text>
-                                <text x="375" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">50 – 69</text>
-                                <text x="625" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">70 – 89</text>
-                                <text x="875" y="349" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">90 – 100</text>
+                                <text x="125" y="347" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">1 – 49</text>
+                                <text x="375" y="347" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">50 – 69</text>
+                                <text x="625" y="347" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">70 – 89</text>
+                                <text x="875" y="347" text-anchor="middle" fill="#94a3b8" style="font-size:11px;font-weight:600;">90 – 100</text>
                                 {{-- Indicator: vertical line + dot + floating score label --}}
                                 <g id="bellIndicator" style="display:none;">
                                     <line id="bellLine" x1="500" y1="0" x2="500" y2="300" stroke="#1e293b" stroke-width="3" stroke-dasharray="8,5" stroke-linecap="round"/>
@@ -1223,11 +1227,11 @@
         var g = document.getElementById('bellIndicator');
         if (!g) return;
         if (score === null || isNaN(score)) { g.style.display = 'none'; return; }
-        var grade, clr;
-        if (score >= 90)      { grade = 'Outstanding';          clr = '#22C55E'; }
-        else if (score >= 70) { grade = 'Meets Expectations';   clr = '#F59E0B'; }
-        else if (score >= 50) { grade = 'Below Average';        clr = '#F97316'; }
-        else                  { grade = 'Unsatisfactory';       clr = '#EF4444'; }
+        var grade, clr, textClr;
+        if (score >= 90)      { grade = 'Outstanding';          clr = '#00B050'; textClr = '#00B050'; }
+        else if (score >= 70) { grade = 'Meets Expectations';   clr = '#FFD700'; textClr = '#B8860B'; }
+        else if (score >= 50) { grade = 'Below Average';        clr = '#FF8C00'; textClr = '#FF8C00'; }
+        else                  { grade = 'Unsatisfactory';       clr = '#ED1C24'; textClr = '#ED1C24'; }
         var bx = scoreToX(score);
         var by = bellY(bx);
         var lx = Math.max(60, Math.min(940, bx));
@@ -1242,10 +1246,10 @@
         document.getElementById('bellBg').setAttribute('stroke', clr);
         document.getElementById('bellScoreNum').setAttribute('x', lx);
         document.getElementById('bellScoreNum').textContent = score.toFixed(1);
-        document.getElementById('bellScoreNum').setAttribute('fill', clr);
+        document.getElementById('bellScoreNum').setAttribute('fill', textClr);
         document.getElementById('bellGradeName').setAttribute('x', lx);
         document.getElementById('bellGradeName').textContent = grade;
-        document.getElementById('bellGradeName').setAttribute('fill', clr);
+        document.getElementById('bellGradeName').setAttribute('fill', textClr);
     }
     function setS6(key, val) {
         var num = (val !== null && !isNaN(parseFloat(val))) ? parseFloat(val) : null;
