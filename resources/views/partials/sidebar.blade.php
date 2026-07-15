@@ -131,12 +131,12 @@
 
     <a
         href="{{ route('profile') }}"
-        class="group relative w-full flex items-center gap-3 my-2 shrink-0 pr-2 text-left
+        class="group relative w-full flex items-center gap-2 my-1 shrink-0 pr-2 text-left
         {{ request()->is('profile') ? 'bg-gradient-to-r from-[#C8102E] to-[#7A0019] border-l-[3px] border-[#D4AF37]' : 'hover:bg-white/10' }}
-        rounded-xl p-2 transition"
+        rounded-lg p-1.5 transition"
         aria-label="My Profile"
     >
-        <div class="w-9 h-9 rounded-full overflow-hidden shrink-0 ring-2 ring-[#D4AF37]/60">
+        <div class="w-7 h-7 rounded-full overflow-hidden shrink-0 ring-2 ring-[#D4AF37]/60">
             <img
                 src="https://ui-avatars.com/api/?name={{ urlencode(session('short_name') ?: session('full_name') ?: session('employee_name') ?: 'User') }}&background=D4AF37&color=1a1a1a&size=36"
                 class="w-full h-full object-cover"
@@ -161,7 +161,7 @@
         </div>
     </a>
 
-    <div class="h-px w-full shrink-0 mb-4 bg-gradient-to-r from-transparent to-[#D4AF37]"></div>
+    <div class="h-px w-full shrink-0 mb-3 bg-gradient-to-r from-transparent to-[#D4AF37]"></div>
 
     @php
         $navSections = [
