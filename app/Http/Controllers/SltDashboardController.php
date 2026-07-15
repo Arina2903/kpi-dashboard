@@ -68,10 +68,10 @@ class SltDashboardController extends Controller
     // thing everywhere in the app.
     private function bandFor(float $score): array
     {
-        if ($score >= 90) return ['key' => 'outstanding',        'label' => 'Outstanding',         'color' => '#00B050'];
-        if ($score >= 70) return ['key' => 'meets_expectations',  'label' => 'Meets Expectations',  'color' => '#FFD700'];
-        if ($score >= 50) return ['key' => 'below_average',       'label' => 'Below Average',       'color' => '#FF8C00'];
-        return                   ['key' => 'unsatisfactory',      'label' => 'Unsatisfactory',      'color' => '#ED1C24'];
+        if ($score >= 90) return ['key' => 'outstanding',        'label' => 'Outstanding',         'bg' => '#00B050', 'text' => '#FFFFFF'];
+        if ($score >= 70) return ['key' => 'meets_expectations', 'label' => 'Meets Expectations',  'bg' => '#FFD700', 'text' => '#000000'];
+        if ($score >= 50) return ['key' => 'below_average',      'label' => 'Below Average',       'bg' => '#FF8C00', 'text' => '#000000'];
+        return                   ['key' => 'unsatisfactory',     'label' => 'Unsatisfactory',      'bg' => '#ED1C24', 'text' => '#FFFFFF'];
     }
 
     // Mirrors the appraiser total computed client-side in report.blade.php's
