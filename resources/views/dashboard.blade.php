@@ -127,7 +127,7 @@
         'Growth & Customer' => ['bg'=>'bg-indigo-700 text-white', 'sub'=>'bg-indigo-50 text-indigo-800 border border-indigo-200',  'left'=>'border-l-indigo-400'],
         'Initiatives'       => ['bg'=>'bg-amber-600 text-white',  'sub'=>'bg-amber-50 text-amber-800 border border-amber-200',    'left'=>'border-l-amber-400'],
         'People'            => ['bg'=>'bg-pink-700 text-white',   'sub'=>'bg-pink-50 text-pink-800 border border-pink-200',       'left'=>'border-l-pink-400'],
-        'Default'           => ['bg'=>'bg-slate-700 text-white',  'sub'=>'bg-slate-50 text-slate-800 border border-[#6B9080]',    'left'=>'border-l-slate-300'],
+        'Default'           => ['bg'=>'bg-slate-700 text-white',  'sub'=>'bg-slate-50 text-slate-800 border border-[#D4AF37]/30',    'left'=>'border-l-slate-300'],
     ];
     $myKpisByCategory = $individualKpis->groupBy('category');
     $orderedCategoryGroups = collect();
@@ -473,10 +473,10 @@
 @if($rankingCount > 0 || $deptRows->count() > 0)
 <div>
     <button onclick="toggleCompanySection()"
-        class="w-full flex items-center justify-between bg-white rounded-2xl px-5 py-4 border border-[#6B9080] soft-card hover:bg-slate-50/60 transition">
+        class="w-full flex items-center justify-between bg-white rounded-2xl px-5 py-4 border border-[#D4AF37]/30 soft-card hover:bg-slate-50/60 transition">
         <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-[#6B9080]/10 flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5 text-[#6B9080]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <div class="w-9 h-9 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-[#B8860B]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                 </svg>
             </div>
@@ -486,7 +486,7 @@
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <span id="companyToggleBadge" class="text-[9px] font-black text-[#6B9080] bg-[#6B9080]/10 px-2.5 py-1 rounded-full">Show</span>
+            <span id="companyToggleBadge" class="text-[9px] font-black text-[#B8860B] bg-[#D4AF37]/10 px-2.5 py-1 rounded-full">Show</span>
             <svg id="companyChevron" class="w-4 h-4 text-slate-400 transition-transform duration-300" style="transform:rotate(-90deg)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
@@ -501,16 +501,16 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 items-start">
 
     {{-- Card 1: Department Annual Ranking --}}
-    <div class="{{ $isManager ? 'xl:col-span-2' : 'sm:col-span-2 xl:col-span-5' }} bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080]">
+    <div class="{{ $isManager ? 'xl:col-span-2' : 'sm:col-span-2 xl:col-span-5' }} bg-white rounded-2xl overflow-hidden soft-card border border-[#D4AF37]/30">
         {{-- colour top strip --}}
-        <div class="h-1 bg-gradient-to-r from-[#6B9080] to-[#A4C3B2]"></div>
+        <div class="h-1 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
         <div class="p-4">
             <div class="flex items-start justify-between mb-3">
                 <div>
                     <h3 class="text-[11px] font-black text-slate-800 leading-tight">Department Annual Ranking</h3>
                     <p class="text-[9px] text-slate-400 mt-0.5">{{ $rankingCount }} departments · by achievement</p>
                 </div>
-                <span class="text-[9px] font-bold text-[#6B9080] bg-[#6B9080]/10 px-2 py-0.5 rounded-full">{{ $currentFinancialYear }}</span>
+                <span class="text-[9px] font-bold text-[#B8860B] bg-[#D4AF37]/10 px-2 py-0.5 rounded-full">{{ $currentFinancialYear }}</span>
             </div>
             <div style="height:{{ max(80, $rankingCount * 28) }}px; position:relative;">
                 <canvas id="chartDeptRanking"></canvas>
@@ -521,8 +521,8 @@
     @if($isManager)
 
     {{-- Card 2: Department Achievement --}}
-    <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080] flex flex-col">
-        <div class="h-1 bg-gradient-to-r from-[#6B9080] to-[#A4C3B2]"></div>
+    <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#D4AF37]/30 flex flex-col">
+        <div class="h-1 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
         <div class="p-4 flex flex-col items-center text-center flex-1">
             {{-- label --}}
             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">{{ $currentDepartment }} Achievement</p>
@@ -553,14 +553,14 @@
     </div>
 
     {{-- Card 3: Total Staff --}}
-    <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080] flex flex-col">
-        <div class="h-1 bg-gradient-to-r from-[#6B9080] to-[#A4C3B2]"></div>
+    <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#D4AF37]/30 flex flex-col">
+        <div class="h-1 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
         <div class="p-4 flex flex-col items-center text-center flex-1 justify-between">
             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest w-full text-left mb-4">Total Staff</p>
             <div class="flex flex-col items-center flex-1 justify-center">
                 {{-- icon badge --}}
-                <div class="w-12 h-12 rounded-2xl bg-[#6B9080]/10 flex items-center justify-center mb-3">
-                    <svg class="w-6 h-6 text-[#6B9080]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <div class="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center mb-3">
+                    <svg class="w-6 h-6 text-[#B8860B]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.768-.231-1.48-.634-2.072M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.768.231-1.48.634-2.072m9.732 0A6.001 6.001 0 0012 6a6 6 0 00-4.366 9.928"/>
                     </svg>
                 </div>
@@ -568,7 +568,7 @@
                 <p class="text-[10px] text-slate-400 mt-2">staff members</p>
             </div>
             <div class="w-full mt-4 pt-3 border-t border-slate-100 flex items-center justify-center gap-1.5">
-                <svg class="w-3.5 h-3.5 text-[#6B9080]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <svg class="w-3.5 h-3.5 text-[#B8860B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                 </svg>
                 <span class="text-[10px] font-bold text-slate-500">{{ $companyDeptCount ?: $deptRows->count() }} Departments</span>
@@ -577,8 +577,8 @@
     </div>
 
     {{-- Card 4: Completed Quarters --}}
-    <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080]">
-        <div class="h-1 bg-gradient-to-r from-[#6B9080] to-[#A4C3B2]"></div>
+    <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#D4AF37]/30">
+        <div class="h-1 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
         <div class="p-4">
             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Completed Quarters</p>
             @foreach(['Q1','Q2','Q3','Q4'] as $qi)
@@ -589,10 +589,10 @@
                         <span class="text-[10px] font-black text-slate-700">{{ $qi }}</span>
                         <span class="text-[8px] text-slate-400">{{ $qc }}/{{ $qt }} KPIs</span>
                     </div>
-                    <span class="text-[10px] font-black {{ $pct >= 100 ? 'text-[#6B9080]' : ($pct > 0 ? 'text-amber-500' : 'text-slate-300') }}">{{ $pct }}%</span>
+                    <span class="text-[10px] font-black {{ $pct >= 100 ? 'text-[#B8860B]' : ($pct > 0 ? 'text-amber-500' : 'text-slate-300') }}">{{ $pct }}%</span>
                 </div>
                 <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div class="h-2 rounded-full transition-all {{ $qc > 0 ? 'bg-[#A4C3B2]' : 'bg-slate-200' }}" style="width:{{ $pct }}%"></div>
+                    <div class="h-2 rounded-full transition-all {{ $qc > 0 ? 'bg-[#D4AF37]' : 'bg-slate-200' }}" style="width:{{ $pct }}%"></div>
                 </div>
             </div>
             @endforeach
@@ -600,10 +600,10 @@
                 @php $annualPct = $totalKpisVisible > 0 ? round(($totalCompletedAnnual/$totalKpisVisible)*100) : 0; @endphp
                 <div class="flex items-center justify-between mb-1.5">
                     <span class="text-[9px] font-black text-slate-500">Annual Total</span>
-                    <span class="text-[10px] font-black {{ $annualPct > 0 ? 'text-[#6B9080]' : 'text-slate-300' }}">{{ $annualPct }}%</span>
+                    <span class="text-[10px] font-black {{ $annualPct > 0 ? 'text-[#B8860B]' : 'text-slate-300' }}">{{ $annualPct }}%</span>
                 </div>
                 <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div class="h-2.5 rounded-full {{ $totalCompletedAnnual > 0 ? 'bg-gradient-to-r from-[#6B9080] to-[#A4C3B2]' : 'bg-slate-200' }}" style="width:{{ $annualPct }}%"></div>
+                    <div class="h-2.5 rounded-full {{ $totalCompletedAnnual > 0 ? 'bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]' : 'bg-slate-200' }}" style="width:{{ $annualPct }}%"></div>
                 </div>
                 <p class="text-[8px] text-slate-400 mt-1 text-right">{{ $totalCompletedAnnual }}/{{ $totalKpisVisible }} KPIs done</p>
             </div>
@@ -619,7 +619,7 @@
 @if($isManager && $deptRows->count() > 0)
 
     {{-- Quarterly trend --}}
-    <div class="bg-white rounded-2xl p-4 soft-card border border-[#6B9080]">
+    <div class="bg-white rounded-2xl p-4 soft-card border border-[#D4AF37]/30">
         <h3 class="text-xs font-black text-slate-900">Quarterly Performance — All Departments</h3>
         <p class="text-[10px] text-slate-400 mt-0.5 mb-3">Q1 → Q4 avg score per dept · {{ $currentFinancialYear }}</p>
         <div style="height:130px; position:relative;">
@@ -646,7 +646,7 @@
                 $safeCode = preg_replace('/[^A-Za-z0-9]/', '_', $dept['department_code']);
             @endphp
 
-            <div class="bg-white rounded-2xl border border-[#6B9080] overflow-hidden soft-card">
+            <div class="bg-white rounded-2xl border border-[#D4AF37]/30 overflow-hidden soft-card">
 
                 {{-- Dept accordion header --}}
                 <div class="flex items-center justify-between px-4 py-3 cursor-pointer select-none hover:bg-slate-50/60 transition"
@@ -684,7 +684,7 @@
                 </div>
 
                 {{-- Dept body — starts CLOSED --}}
-                <div id="dept-body-{{ $safeCode }}" class="dept-body closed border-t border-[#6B9080]">
+                <div id="dept-body-{{ $safeCode }}" class="dept-body closed border-t border-[#D4AF37]/30">
                     <div class="p-4">
 
                         {{-- Staff table --}}
@@ -692,7 +692,7 @@
                             <div class="overflow-x-auto thin-scroll">
                                 <table class="w-full min-w-[540px]">
                                     <thead>
-                                        <tr class="bg-slate-50 text-[9px] uppercase tracking-wider text-slate-500 font-black border-b border-[#6B9080]">
+                                        <tr class="bg-slate-50 text-[9px] uppercase tracking-wider text-slate-500 font-black border-b border-[#D4AF37]/30">
                                             <th class="px-2 py-1.5 text-left">#</th>
                                             <th class="px-2 py-1.5 text-left">Name</th>
                                             <th class="px-2 py-1.5 text-left">Role</th>
@@ -771,7 +771,7 @@
 
 {{-- ═══════ KPI TARGET LINKAGES ══════════════════════════════════════════ --}}
 @if($hasAnyLinkage || $canAssignTarget)
-<div class="bg-white rounded-2xl border border-[#6B9080] soft-card overflow-hidden">
+<div class="bg-white rounded-2xl border border-[#D4AF37]/30 soft-card overflow-hidden">
     <div class="h-1 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
     <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]">
         <div>
@@ -788,14 +788,14 @@
 
     {{-- Assign form (hidden by default) --}}
     @if($canAssignTarget)
-    <div id="assignLinkageForm" class="hidden border-b border-[#6B9080] bg-slate-50 px-4 py-3">
+    <div id="assignLinkageForm" class="hidden border-b border-[#D4AF37]/30 bg-slate-50 px-4 py-3">
         <form action="{{ route('linkage.store') }}" method="POST">
             @csrf
-            <p class="text-[9px] font-black text-[#6B9080] uppercase mb-2">New Cascading Target</p>
+            <p class="text-[9px] font-black text-[#B8860B] uppercase mb-2">New Cascading Target</p>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 items-end">
                 <div>
                     <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Person</label>
-                    <select name="assignee_id" required class="w-full rounded-xl border border-[#6B9080] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#6B9080] focus:outline-none">
+                    <select name="assignee_id" required class="w-full rounded-xl border border-[#D4AF37]/30 bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#D4AF37]/30 focus:outline-none">
                         <option value="">Select...</option>
                         @foreach($directReports as $dr)
                         <option value="{{ $dr['id'] }}">{{ $dr['short_name'] }} ({{ $dr['role'] }})</option>
@@ -805,7 +805,7 @@
                 <div>
                     <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Category</label>
                     <select id="lnkCategory" name="category" required onchange="updateLnkSubCat()"
-                            class="w-full rounded-xl border border-[#6B9080] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#6B9080] focus:outline-none">
+                            class="w-full rounded-xl border border-[#D4AF37]/30 bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#D4AF37]/30 focus:outline-none">
                         <option value="Financial">Financial</option>
                         <option value="Growth &amp; Customer">Growth &amp; Customer</option>
                         <option value="Initiatives">Initiatives</option>
@@ -815,14 +815,14 @@
                 <div>
                     <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Sub Category</label>
                     <select id="lnkSubCat" name="sub_category" required
-                            class="w-full rounded-xl border border-[#6B9080] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#6B9080] focus:outline-none">
+                            class="w-full rounded-xl border border-[#D4AF37]/30 bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#D4AF37]/30 focus:outline-none">
                         <option value="Revenue">Revenue</option>
                         <option value="Operating Cost Optimisation">Operating Cost Optimisation</option>
                     </select>
                 </div>
                 <div>
                     <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Unit</label>
-                    <select name="unit" required class="w-full rounded-xl border border-[#6B9080] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#6B9080] focus:outline-none">
+                    <select name="unit" required class="w-full rounded-xl border border-[#D4AF37]/30 bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#D4AF37]/30 focus:outline-none">
                         <option value="number">Number</option>
                         <option value="currency">Currency (RM)</option>
                         <option value="percentage">Percentage (%)</option>
@@ -831,10 +831,10 @@
                 <div>
                     <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Annual Target</label>
                     <input name="assigned_target" type="number" step="0.01" min="0" required placeholder="0"
-                           class="w-full rounded-xl border border-[#6B9080] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#6B9080] focus:outline-none">
+                           class="w-full rounded-xl border border-[#D4AF37]/30 bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#D4AF37]/30 focus:outline-none">
                 </div>
                 <div class="flex gap-1.5">
-                    <button type="submit" class="flex-1 px-3 py-2 bg-[#6B9080] hover:bg-[#5a7a6e] text-white rounded-xl text-xs font-black transition">Save</button>
+                    <button type="submit" class="flex-1 px-3 py-2 bg-gradient-to-r from-[#C8102E] to-[#7A0019] hover:opacity-90 text-white rounded-xl text-xs font-black transition">Save</button>
                     <button type="button" onclick="document.getElementById('assignLinkageForm').classList.add('hidden')" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl text-xs font-black transition">✕</button>
                 </div>
             </div>
@@ -851,25 +851,25 @@
             {{-- Targets Assigned to Me --}}
             @if($myLinkageMap->isNotEmpty())
             <div>
-                <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-wider mb-2">Targets Assigned to Me</p>
+                <p class="text-[9px] font-black text-[#B8860B] uppercase tracking-wider mb-2">Targets Assigned to Me</p>
                 <div class="space-y-2">
                     @foreach($myLinkageMap as $lnk)
                     @php $lnkMet = $lnk['met']; @endphp
-                    <div class="p-2.5 rounded-xl border {{ $lnkMet ? 'border-emerald-200 bg-emerald-50' : 'border-[#6B9080]/30 bg-[#6B9080]/5' }}">
+                    <div class="p-2.5 rounded-xl border {{ $lnkMet ? 'border-emerald-200 bg-emerald-50' : 'border-[#D4AF37]/30 bg-[#D4AF37]/5' }}">
                         <div class="flex items-center justify-between mb-1.5">
                             <div class="min-w-0">
                                 <span class="text-xs font-black text-slate-800">{{ $lnk['sub_category'] }}</span>
                                 <span class="ml-1.5 text-[9px] text-slate-400">{{ $lnk['category'] }} · from {{ $lnk['assigner_name'] ?? '-' }}</span>
                             </div>
                             @if(!$lnkMet)
-                            <span class="shrink-0 ml-2 text-[9px] font-black px-1.5 py-0.5 rounded-full border bg-[#6B9080]/10 text-[#6B9080] border-[#6B9080]/30">Gap</span>
+                            <span class="shrink-0 ml-2 text-[9px] font-black px-1.5 py-0.5 rounded-full border bg-[#D4AF37]/10 text-[#B8860B] border-[#D4AF37]/30">Gap</span>
                             @else
                             <span class="shrink-0 ml-2 text-[9px] font-black px-1.5 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200">Met ✓</span>
                             @endif
                         </div>
                         <div class="flex items-center gap-2 mb-1.5">
                             <div class="flex-1 h-1.5 rounded-full overflow-hidden bg-slate-100">
-                                <div class="h-1.5 rounded-full {{ $lnkMet ? 'bg-emerald-400' : 'bg-[#6B9080]' }}" style="width:{{ $lnk['pct'] }}%"></div>
+                                <div class="h-1.5 rounded-full {{ $lnkMet ? 'bg-emerald-400' : 'bg-[#D4AF37]' }}" style="width:{{ $lnk['pct'] }}%"></div>
                             </div>
                             <span class="text-[9px] font-black text-slate-600 w-7 text-right shrink-0">{{ $lnk['pct'] }}%</span>
                         </div>
@@ -877,7 +877,7 @@
                             <span>Target: <span class="font-black text-slate-700">{{ $fmtLinkageVal($lnk['assigned_target'], $lnk['unit']) }}</span></span>
                             <span>Covered: <span class="font-black text-slate-700">{{ $fmtLinkageVal($lnk['covered'], $lnk['unit']) }}</span></span>
                             @if(!$lnkMet)
-                            <span class="text-[#6B9080] font-black">Gap: {{ $fmtLinkageVal($lnk['gap'], $lnk['unit']) }}</span>
+                            <span class="text-[#B8860B] font-black">Gap: {{ $fmtLinkageVal($lnk['gap'], $lnk['unit']) }}</span>
                             @endif
                         </div>
                     </div>
@@ -889,11 +889,11 @@
             {{-- Targets I Assigned --}}
             @if($outgoingWithCoverage->isNotEmpty())
             <div>
-                <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-wider mb-2">Targets I Assigned</p>
+                <p class="text-[9px] font-black text-[#B8860B] uppercase tracking-wider mb-2">Targets I Assigned</p>
                 <div class="space-y-2">
                     @foreach($outgoingWithCoverage as $lnk)
                     @php $lnkMet = $lnk['met']; @endphp
-                    <div class="p-2.5 rounded-xl border border-[#6B9080]/30 bg-[#6B9080]/5 group">
+                    <div class="p-2.5 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 group">
                         <div class="flex items-center justify-between mb-1.5">
                             <div class="min-w-0">
                                 <span class="text-xs font-black text-slate-800">{{ $lnk['assignee_name'] ?? '-' }}</span>
@@ -913,7 +913,7 @@
                         </div>
                         <div class="flex items-center gap-2 mb-1.5">
                             <div class="flex-1 h-1.5 rounded-full overflow-hidden bg-slate-100">
-                                <div class="h-1.5 rounded-full {{ $lnkMet ? 'bg-emerald-400' : 'bg-[#6B9080]' }}" style="width:{{ $lnk['pct'] }}%"></div>
+                                <div class="h-1.5 rounded-full {{ $lnkMet ? 'bg-emerald-400' : 'bg-[#D4AF37]' }}" style="width:{{ $lnk['pct'] }}%"></div>
                             </div>
                             <span class="text-[9px] font-black text-slate-600 w-7 text-right shrink-0">{{ $lnk['pct'] }}%</span>
                         </div>
@@ -921,7 +921,7 @@
                             <span>Target: <span class="font-black text-slate-700">{{ $fmtLinkageVal($lnk['assigned_target'], $lnk['unit']) }}</span></span>
                             <span>Covered: <span class="font-black text-slate-700">{{ $fmtLinkageVal($lnk['covered'], $lnk['unit']) }}</span></span>
                             @if(!$lnkMet)
-                            <span class="text-[#6B9080] font-black">Gap: {{ $fmtLinkageVal($lnk['gap'], $lnk['unit']) }}</span>
+                            <span class="text-[#B8860B] font-black">Gap: {{ $fmtLinkageVal($lnk['gap'], $lnk['unit']) }}</span>
                             @endif
                         </div>
                     </div>
@@ -945,19 +945,19 @@
             <p class="text-[9px] text-slate-400 mt-0.5">{{ $individualKpiCount }} KPIs · {{ number_format($individualWeightage,0) }}% total weightage</p>
             @endif
         </div>
-        <a href="{{ route('kpi.create') }}" class="px-3 py-1.5 bg-[#6B9080] text-white rounded-xl text-xs font-black hover:bg-[#5a7a6e] transition">+ Add KPI</a>
+        <a href="{{ route('kpi.create') }}" class="px-3 py-1.5 bg-gradient-to-r from-[#C8102E] to-[#7A0019] text-white rounded-xl text-xs font-black hover:opacity-90 transition">+ Add KPI</a>
     </div>
 
     @if($individualKpiCount === 0)
-        <div class="bg-white rounded-2xl border border-dashed border-[#6B9080] p-10 soft-card text-center">
+        <div class="bg-white rounded-2xl border border-dashed border-[#D4AF37]/30 p-10 soft-card text-center">
             <p class="text-slate-400 text-sm font-bold">No KPIs yet for {{ $currentFinancialYear }}</p>
             <p class="text-slate-300 text-xs mt-1">Create your first KPI to start tracking performance</p>
-            <a href="{{ route('kpi.create') }}" class="inline-block mt-4 px-4 py-2 bg-[#6B9080] text-white rounded-xl text-xs font-black hover:bg-[#5a7a6e] transition">+ Create KPI</a>
+            <a href="{{ route('kpi.create') }}" class="inline-block mt-4 px-4 py-2 bg-gradient-to-r from-[#C8102E] to-[#7A0019] text-white rounded-xl text-xs font-black hover:opacity-90 transition">+ Create KPI</a>
         </div>
     @else
     <div class="">
         @if($orderedCategoryGroups->isEmpty())
-            <div class="bg-white rounded-2xl border border-dashed border-[#6B9080] p-8 text-center">
+            <div class="bg-white rounded-2xl border border-dashed border-[#D4AF37]/30 p-8 text-center">
                 <p class="text-slate-400 text-sm">No KPIs created yet.</p>
                 <a href="{{ route('kpi.create') }}" class="mt-3 inline-block px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-black hover:bg-indigo-700">Create First KPI</a>
             </div>
@@ -982,7 +982,7 @@
                                     $quarters     = collect($kpi['quarters'] ?? []);
                                 @endphp
                                 <div onclick="openKpiDetail('{{ $kpi['id'] }}')"
-                                     class="bg-white rounded-xl border border-l-4 border-[#6B9080] {{ $lb }} p-3 cursor-pointer hover:shadow-md transition-shadow soft-card group">
+                                     class="bg-white rounded-xl border border-l-4 border-[#D4AF37]/30 {{ $lb }} p-3 cursor-pointer hover:shadow-md transition-shadow soft-card group">
                                     <div class="flex items-start justify-between gap-2 mb-2">
                                         <div class="flex flex-wrap gap-1 min-w-0">
                                             <span class="px-1.5 py-0.5 rounded text-[9px] font-black {{ $catStyle['sub'] }}">{{ $kpi['sub_category'] ?? '-' }}</span>
@@ -1041,7 +1041,7 @@
         $modalStatus = $kpi['status'] ?? 'not_started';
         $modalStatusLabel = match($modalStatus) { 'not_started'=>'Not Started','on_track'=>'On Track','monitoring'=>'Monitoring','at_risk'=>'At Risk','risk'=>'Risk','in_trouble'=>'In Trouble','critical'=>'Critical','completed'=>'Completed',default=>'Not Started' };
         $modalStatusClass = match($modalStatus) { 'on_track','monitoring'=>'bg-[#F5EAE0] text-[#6B3F2A]','at_risk','risk'=>'bg-amber-100 text-amber-700','in_trouble','critical'=>'bg-red-100 text-red-700','completed'=>'bg-emerald-100 text-emerald-700',default=>'bg-slate-100 text-slate-700' };
-        $mc = ['Financial'=>['bg-emerald-700 text-white',['bg-emerald-50 text-emerald-800 border border-emerald-200']],'Growth & Customer'=>['bg-indigo-700 text-white',['bg-indigo-50 text-indigo-800 border border-indigo-200']],'Initiatives'=>['bg-amber-600 text-white',['bg-amber-50 text-amber-800 border border-amber-200']],'People'=>['bg-pink-700 text-white',['bg-pink-50 text-pink-800 border border-pink-200']],'Default'=>['bg-slate-700 text-white',['bg-slate-50 text-slate-800 border border-[#6B9080]']]];
+        $mc = ['Financial'=>['bg-emerald-700 text-white',['bg-emerald-50 text-emerald-800 border border-emerald-200']],'Growth & Customer'=>['bg-indigo-700 text-white',['bg-indigo-50 text-indigo-800 border border-indigo-200']],'Initiatives'=>['bg-amber-600 text-white',['bg-amber-50 text-amber-800 border border-amber-200']],'People'=>['bg-pink-700 text-white',['bg-pink-50 text-pink-800 border border-pink-200']],'Default'=>['bg-slate-700 text-white',['bg-slate-50 text-slate-800 border border-[#D4AF37]/30']]];
         $mset = $mc[$kpi['category']??'Default'] ?? $mc['Default'];
         $mCatClass = $mset[0]; $mSubClass = $mset[1][0];
         $mBase = max(0,(float)($kpi['base_target']??0));
@@ -1057,7 +1057,7 @@
         else                   $mBarColor = 'bg-emerald-700';
     @endphp
     <div id="kpi-modal-{{ $kpi['id'] }}" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/50 px-4" onclick="closeKpiDetail('{{ $kpi['id'] }}')">
-        <div class="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-[#6B9080] overflow-hidden" onclick="event.stopPropagation()">
+        <div class="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-[#D4AF37]/30 overflow-hidden" onclick="event.stopPropagation()">
             <div class="px-4 py-3 brand-panel text-white flex items-start justify-between gap-3">
                 <div class="min-w-0">
                     <p class="text-[10px] uppercase tracking-wide text-slate-400">KPI Detail</p>
@@ -1067,11 +1067,11 @@
             </div>
             <div class="p-4 space-y-4 max-h-[70vh] overflow-y-auto thin-scroll">
                 <div class="grid grid-cols-3 gap-2">
-                    <div class="rounded-xl bg-slate-50 border border-[#6B9080] p-2"><p class="text-[9px] text-slate-400 uppercase">Base Target</p><p class="text-xs font-black text-slate-900">{{ $mFmt($mBase) }}</p></div>
-                    <div class="rounded-xl bg-slate-50 border border-[#6B9080] p-2"><p class="text-[9px] text-slate-400 uppercase">Stretch</p><p class="text-xs font-black text-slate-900">{{ $mFmt(max(0,(float)($kpi['stretch_target']??0))) }}</p></div>
-                    <div class="rounded-xl bg-[#FBF5EF] border border-[#6B9080] p-2"><p class="text-[9px] text-[#A07060] uppercase">Actual</p><p class="text-xs font-black text-[#4a2a1a]">{{ $mFmt($mActual) }}</p></div>
+                    <div class="rounded-xl bg-slate-50 border border-[#D4AF37]/30 p-2"><p class="text-[9px] text-slate-400 uppercase">Base Target</p><p class="text-xs font-black text-slate-900">{{ $mFmt($mBase) }}</p></div>
+                    <div class="rounded-xl bg-slate-50 border border-[#D4AF37]/30 p-2"><p class="text-[9px] text-slate-400 uppercase">Stretch</p><p class="text-xs font-black text-slate-900">{{ $mFmt(max(0,(float)($kpi['stretch_target']??0))) }}</p></div>
+                    <div class="rounded-xl bg-[#FBF5EF] border border-[#D4AF37]/30 p-2"><p class="text-[9px] text-[#A07060] uppercase">Actual</p><p class="text-xs font-black text-[#4a2a1a]">{{ $mFmt($mActual) }}</p></div>
                 </div>
-                <div class="rounded-xl border border-[#6B9080] p-3">
+                <div class="rounded-xl border border-[#D4AF37]/30 p-3">
                     <div class="flex items-center justify-between mb-2">
                         <div><p class="text-[10px] text-slate-400 uppercase">Progress</p><p class="text-sm font-black text-slate-900">{{ number_format($mAch,2) }}%</p></div>
                         <span class="text-[10px] font-bold px-2 py-1 rounded-lg {{ $modalStatusClass }}">{{ $modalStatusLabel }}</span>
@@ -1079,13 +1079,13 @@
                     <div class="h-2 bg-slate-100 rounded-full overflow-hidden"><div class="{{ $mBarColor }} h-2 rounded-full" style="width:{{ min($mAch,100) }}%"></div></div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <div class="rounded-xl border border-[#6B9080] p-3"><p class="text-[10px] text-slate-400 uppercase mb-1">Category</p><span class="inline-block px-2 py-1 rounded-lg text-[10px] font-bold {{ $mCatClass }}">{{ $kpi['category']??'-' }}</span></div>
-                    <div class="rounded-xl border border-[#6B9080] p-3"><p class="text-[10px] text-slate-400 uppercase mb-1">Sub Category</p><span class="inline-block px-2 py-1 rounded-lg text-[10px] font-semibold {{ $mSubClass }}">{{ $kpi['sub_category']??'-' }}</span></div>
+                    <div class="rounded-xl border border-[#D4AF37]/30 p-3"><p class="text-[10px] text-slate-400 uppercase mb-1">Category</p><span class="inline-block px-2 py-1 rounded-lg text-[10px] font-bold {{ $mCatClass }}">{{ $kpi['category']??'-' }}</span></div>
+                    <div class="rounded-xl border border-[#D4AF37]/30 p-3"><p class="text-[10px] text-slate-400 uppercase mb-1">Sub Category</p><span class="inline-block px-2 py-1 rounded-lg text-[10px] font-semibold {{ $mSubClass }}">{{ $kpi['sub_category']??'-' }}</span></div>
                 </div>
-                <div class="rounded-xl bg-slate-50 border border-[#6B9080] p-3"><p class="text-[10px] text-slate-400 uppercase mb-1">Description</p><p class="text-xs text-slate-700 leading-relaxed">{{ $kpi['kpi_description']??'No description.' }}</p></div>
+                <div class="rounded-xl bg-slate-50 border border-[#D4AF37]/30 p-3"><p class="text-[10px] text-slate-400 uppercase mb-1">Description</p><p class="text-xs text-slate-700 leading-relaxed">{{ $kpi['kpi_description']??'No description.' }}</p></div>
                 <div class="rounded-xl bg-amber-50 border border-amber-100 p-3"><p class="text-[10px] text-amber-500 uppercase mb-1">Remark</p><p class="text-xs text-amber-800 leading-relaxed">{{ $kpi['remark']??'No remark.' }}</p></div>
                 <div class="grid grid-cols-2 gap-2">
-                    <div class="rounded-xl bg-white border border-[#6B9080] p-3"><p class="text-[10px] text-slate-400 uppercase">Unit</p><p class="font-bold text-slate-800 mt-1 text-xs">{{ $mUnitLabel }}</p></div>
+                    <div class="rounded-xl bg-white border border-[#D4AF37]/30 p-3"><p class="text-[10px] text-slate-400 uppercase">Unit</p><p class="font-bold text-slate-800 mt-1 text-xs">{{ $mUnitLabel }}</p></div>
                     @php
                         $ciRaw = (!empty($kpi['updated_at']) && $kpi['updated_at'] !== ($kpi['created_at'] ?? null))
                             ? $kpi['updated_at']
@@ -1094,11 +1094,11 @@
                             ? \Carbon\Carbon::parse($ciRaw)->timezone('Asia/Kuala_Lumpur')->format('d M Y, h:i A')
                             : '-';
                     @endphp
-                    <div class="rounded-xl bg-slate-50 border border-[#6B9080] p-3"><p class="text-[10px] text-slate-400 uppercase">Last Check-In</p><p class="font-bold text-slate-800 mt-1 text-[11px]">{{ $ciDate }}</p></div>
+                    <div class="rounded-xl bg-slate-50 border border-[#D4AF37]/30 p-3"><p class="text-[10px] text-slate-400 uppercase">Last Check-In</p><p class="font-bold text-slate-800 mt-1 text-[11px]">{{ $ciDate }}</p></div>
                 </div>
             </div>
-            <div class="px-4 py-3 bg-slate-50 border-t border-[#6B9080] flex justify-end gap-2">
-                <button type="button" onclick="closeKpiDetail('{{ $kpi['id'] }}')" class="px-3 py-2 rounded-lg bg-white border border-[#6B9080] text-slate-700 text-xs font-bold hover:bg-slate-100">Close</button>
+            <div class="px-4 py-3 bg-slate-50 border-t border-[#D4AF37]/30 flex justify-end gap-2">
+                <button type="button" onclick="closeKpiDetail('{{ $kpi['id'] }}')" class="px-3 py-2 rounded-lg bg-white border border-[#D4AF37]/30 text-slate-700 text-xs font-bold hover:bg-slate-100">Close</button>
                 <a href="{{ route('kpi.edit',$kpi['id']) }}" class="px-3 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800">Edit KPI</a>
             </div>
         </div>
@@ -1139,8 +1139,8 @@ const bandColors = ['#10b981','#6366f1','#f59e0b','#ef4444'];
             datasets: [{
                 label: 'Annual Score (%)',
                 data: sorted.map(d => d.score),
-                backgroundColor: '#A4C3B2cc',
-                borderColor:     '#A4C3B2',
+                backgroundColor: '#D4AF37cc',
+                borderColor:     '#D4AF37',
                 borderWidth: 1.5,
                 borderRadius: 6,
             }]
