@@ -880,10 +880,6 @@
                                     <filter id="bc_shadow" x="-30%" y="-80%" width="160%" height="280%">
                                         <feDropShadow dx="0" dy="2" stdDeviation="5" flood-opacity="0.18"/>
                                     </filter>
-                                    {{-- Diagonal hatch so "Meets Expectations" reads as distinct from "Below Average" without relying on hue alone (colorblind-safe) --}}
-                                    <pattern id="bc_hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-                                        <line x1="0" y1="0" x2="0" y2="8" stroke="#ffffff" stroke-width="2.5" opacity="0.28"/>
-                                    </pattern>
                                     {{-- Soft glow for the live-score dot --}}
                                     <filter id="bc_glow" x="-150%" y="-150%" width="400%" height="400%">
                                         <feGaussianBlur stdDeviation="6" result="blur"/>
@@ -909,7 +905,6 @@
                                 <rect x="0"   y="0" width="250" height="300" fill="url(#gradZone1)" clip-path="url(#bc_clip)"/>
                                 <rect x="250" y="0" width="250" height="300" fill="url(#gradZone2)" clip-path="url(#bc_clip)"/>
                                 <rect x="500" y="0" width="250" height="300" fill="url(#gradZone3)" clip-path="url(#bc_clip)"/>
-                                <rect x="500" y="0" width="250" height="300" fill="url(#bc_hatch)" clip-path="url(#bc_clip)"/>
                                 <rect x="750" y="0" width="250" height="300" fill="url(#gradZone4)" clip-path="url(#bc_clip)"/>
                                 {{-- Zone dividers --}}
                                 <line x1="250" y1="235" x2="250" y2="300" stroke="rgba(255,255,255,.6)" stroke-width="2.5"/>
