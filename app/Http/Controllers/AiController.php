@@ -3,15 +3,43 @@
 namespace App\Http\Controllers;
 
 use App\Services\AiService;
+use App\Services\SupabaseService;
 use Illuminate\Http\Request;
 
 class AiController extends Controller
 {
     protected AiService $ai;
+    protected SupabaseService $supabase;
 
-    public function __construct(AiService $ai)
+    public function __construct(AiService $ai, SupabaseService $supabase)
     {
-        $this->ai = $ai;
+        $this->ai       = $ai;
+        $this->supabase = $supabase;
+    }
+
+    private function fetchJobDescription(): string
+    {
+        try {
+            $employeeId = session('employee_uuid');
+            if (!$employeeId) return '';
+
+            $jd = $this->supabase->first('job_descriptions', [
+                'employee_id' => 'eq.' . $employeeId,
+                'select'      => 'summary,responsibilities,requirements,competencies',
+            ]);
+
+            if (!$jd) return '';
+
+            $parts = [];
+            if (!empty($jd['summary']))          $parts[] = 'Summary: '          . strip_tags($jd['summary']);
+            if (!empty($jd['responsibilities'])) $parts[] = 'Responsibilities: ' . strip_tags($jd['responsibilities']);
+            if (!empty($jd['requirements']))     $parts[] = 'Requirements: '      . strip_tags($jd['requirements']);
+            if (!empty($jd['competencies']))     $parts[] = 'Competencies: '      . strip_tags($jd['competencies']);
+
+            return implode("\n\n", $parts);
+        } catch (\Throwable $e) {
+            return '';
+        }
     }
 
     /*
@@ -61,16 +89,17 @@ class AiController extends Controller
     public function chat(Request $request)
     {
         $request->validate([
-            'messages'         => 'required|array|min:1|max:20',
-            'messages.*.role'  => 'required|in:user,assistant',
-            'messages.*.content' => 'required|string|max:1000',
+            'messages'           => 'required|array|min:1|max:20',
+            'messages.*.role'    => 'required|in:user,assistant',
+            'messages.*.content' => 'required|string|max:8000',
         ]);
 
-        $employee = session('employee', []);
+        $employee       = session('employee', []);
+        $jobDescription = $this->fetchJobDescription();
 
         try {
 
-            $reply = $this->ai->chat($request->messages, $employee);
+            $reply = $this->ai->chat($request->messages, $employee, $jobDescription);
 
             return response()->json([
                 'success' => true,
@@ -167,6 +196,41 @@ class AiController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'AI suggestion failed. Please try again.',
+            ], 500);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUGGEST COMPLETE KPI (used by Build My KPI button in ANIRA)
+    |--------------------------------------------------------------------------
+    */
+
+    public function suggestKpi(Request $request)
+    {
+        $request->validate([
+            'messages'           => 'required|array|min:1|max:40',
+            'messages.*.role'    => 'required|in:user,assistant',
+            'messages.*.content' => 'required|string|max:8000',
+        ]);
+
+        $employee       = session('employee', []);
+        $jobDescription = $this->fetchJobDescription();
+
+        try {
+
+            $kpi = $this->ai->suggestKpi($request->messages, $employee, $jobDescription);
+
+            return response()->json([
+                'success' => true,
+                'kpi'     => $kpi,
+            ]);
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not generate KPI suggestion. Please try again.',
             ], 500);
         }
     }
