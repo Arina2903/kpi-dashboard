@@ -1223,26 +1223,29 @@
         var g = document.getElementById('bellIndicator');
         if (!g) return;
         if (score === null || isNaN(score)) { g.style.display = 'none'; return; }
-        var grade, clr;
-        if (score >= 90)      { grade = 'Outstanding';          clr = '#15803D'; }
-        else if (score >= 70) { grade = 'Meets Expectations';   clr = '#B45309'; }
-        else if (score >= 50) { grade = 'Below Average';        clr = '#C2410C'; }
-        else                  { grade = 'Unsatisfactory';       clr = '#DC2626'; }
+        var grade, clr, textClr;
+        if (score >= 90)      { grade = 'Outstanding';          clr = '#86EFAC'; textClr = '#15803D'; }
+        else if (score >= 70) { grade = 'Meets Expectations';   clr = '#FCD34D'; textClr = '#B45309'; }
+        else if (score >= 50) { grade = 'Below Average';        clr = '#FDBA74'; textClr = '#C2410C'; }
+        else                  { grade = 'Unsatisfactory';       clr = '#FCA5A5'; textClr = '#DC2626'; }
         var bx = scoreToX(score);
         var by = bellY(bx);
         var lx = Math.max(60, Math.min(940, bx));
         g.style.display = '';
         document.getElementById('bellLine').setAttribute('x1', bx);
         document.getElementById('bellLine').setAttribute('x2', bx);
+        document.getElementById('bellLine').setAttribute('stroke', clr);
         document.getElementById('bellDot').setAttribute('cx', bx);
         document.getElementById('bellDot').setAttribute('cy', by);
         document.getElementById('bellDot').setAttribute('fill', clr);
         document.getElementById('bellBg').setAttribute('x', lx - 60);
+        document.getElementById('bellBg').setAttribute('stroke', clr);
         document.getElementById('bellScoreNum').setAttribute('x', lx);
         document.getElementById('bellScoreNum').textContent = score.toFixed(1);
-        document.getElementById('bellScoreNum').setAttribute('fill', clr);
+        document.getElementById('bellScoreNum').setAttribute('fill', textClr);
         document.getElementById('bellGradeName').setAttribute('x', lx);
         document.getElementById('bellGradeName').textContent = grade;
+        document.getElementById('bellGradeName').setAttribute('fill', textClr);
     }
     function setS6(key, val) {
         var num = (val !== null && !isNaN(parseFloat(val))) ? parseFloat(val) : null;
