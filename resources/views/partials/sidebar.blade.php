@@ -58,6 +58,8 @@
     px-3 py-4 flex flex-col overflow-visible shrink-0 transition-all duration-300"
 >
 
+    <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
+
     <button
         id="sidebarCloseBtn"
         type="button"
@@ -111,7 +113,7 @@
                 {!! nl2br(e(session('company_display_name') ?: 'RICHWORKS KPI')) !!}
             </h1>
 
-            <p class="text-[9px] text-[#A4C3B2] uppercase tracking-[0.14em] mt-1 font-semibold">
+            <p class="text-[9px] text-[#D4AF37] uppercase tracking-[0.14em] mt-1 font-semibold">
                 Performance System
             </p>
         </div>
@@ -303,9 +305,12 @@
                 @continue
             @endif
             <div>
-                <p class="sidebar-text text-[9px] text-[#A4C3B2] font-semibold mb-1 px-2 uppercase tracking-widest">
-                    {{ $section['title'] }}
-                </p>
+                <div class="sidebar-text flex items-center gap-2 mb-1 px-2">
+                    <p class="text-[9px] text-[#D4AF37] font-semibold uppercase tracking-widest shrink-0">
+                        {{ $section['title'] }}
+                    </p>
+                    <div class="h-px flex-1 bg-gradient-to-r from-[#D4AF37] to-transparent"></div>
+                </div>
 
                 <div class="space-y-1">
                     @foreach($section['items'] as $item)
