@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://ui-avatars.com">
 
     {{-- Inter font — loaded here once for the whole page --}}
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     {{-- Tailwind Play CDN — must be sync (it generates styles by scanning DOM) --}}
     <script src="https://cdn.tailwindcss.com"></script>
@@ -362,10 +362,10 @@
             $greeting  = $greetHour < 12 ? 'Good Morning' : ($greetHour < 18 ? 'Good Afternoon' : 'Good Evening');
         @endphp
         <div class="relative">
-            <h1 class="text-[26px] leading-tight" style="font-family:'Playfair Display',serif;">
-                <span class="italic font-medium text-white/90">Hi, {{ $greeting }}</span>
-                <span class="font-semibold text-[#D4AF37]">{{ $currentUserName }}</span>
-                <span class="not-italic">👋</span>
+            <h1 class="text-2xl font-black tracking-tight leading-tight">
+                <span class="text-white/90">Hi, {{ $greeting }}</span>
+                <span class="text-[#D4AF37]">{{ $currentUserName }}</span>
+                👋
             </h1>
         </div>
         <div class="relative flex flex-wrap items-center gap-2">
@@ -399,22 +399,28 @@
                     </div>
                 </div>
                 @if($individualKpiCount === 0)
-                    <p class="text-4xl font-black text-white/30 mb-2">—</p>
-                    <p class="text-xs text-white/50">No KPIs for {{ $currentFinancialYear }}</p>
+                    <div class="bg-white rounded-xl p-3">
+                        <p class="text-3xl font-black text-slate-300 mb-1">—</p>
+                        <p class="text-xs text-slate-400">No KPIs for {{ $currentFinancialYear }}</p>
+                    </div>
                 @elseif($individualWeightage <= 0)
-                    <p class="text-4xl font-black text-white/30 mb-2">—</p>
-                    <p class="text-xs text-white/50">{{ $individualKpiCount }} KPIs · weightage not set</p>
-                    <a href="{{ route('weightage') }}" class="inline-block mt-2 text-xs font-black text-[#D4AF37] underline">Set weightage →</a>
+                    <div class="bg-white rounded-xl p-3">
+                        <p class="text-3xl font-black text-slate-300 mb-1">—</p>
+                        <p class="text-xs text-slate-400">{{ $individualKpiCount }} KPIs · weightage not set</p>
+                        <a href="{{ route('weightage') }}" class="inline-block mt-2 text-xs font-black text-[#7A0019] underline">Set weightage →</a>
+                    </div>
                 @else
-                    <div class="flex items-end gap-1.5 mb-2">
-                        <span class="text-5xl font-black leading-none {{ $individualScoreStyle['text'] }}">{{ number_format($individualPerformance,1) }}</span>
-                        <span class="text-xl font-black text-white/40 mb-1">%</span>
+                    <div class="bg-white rounded-xl p-3">
+                        <div class="flex items-end gap-1.5 mb-2">
+                            <span class="text-4xl font-black leading-none {{ $individualScoreStyle['text'] }}">{{ number_format($individualPerformance,1) }}</span>
+                            <span class="text-lg font-black text-slate-300 mb-0.5">%</span>
+                        </div>
+                        <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden mb-2">
+                            <div class="h-1.5 rounded-full {{ $individualScoreStyle['bar'] }}" style="width:{{ min($individualPerformance,100) }}%"></div>
+                        </div>
+                        <span class="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black border {{ $individualScoreStyle['badge'] }}">{{ $individualScoreStyle['label'] }}</span>
+                        <p class="text-[9px] text-slate-400 mt-1.5">{{ $individualKpiCount }} KPIs · {{ number_format($individualWeightage,0) }}% weightage</p>
                     </div>
-                    <div class="h-1.5 bg-white/10 rounded-full overflow-hidden mb-2">
-                        <div class="h-1.5 rounded-full {{ $individualScoreStyle['bar'] }}" style="width:{{ min($individualPerformance,100) }}%"></div>
-                    </div>
-                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black border {{ $individualScoreStyle['badge'] }}">{{ $individualScoreStyle['label'] }}</span>
-                    <p class="text-[9px] text-white/50 mt-1.5">{{ $individualKpiCount }} KPIs · {{ number_format($individualWeightage,0) }}% weightage</p>
                 @endif
             </div>
             <div class="flex gap-2 mt-5 pt-4 border-t border-white/10">
