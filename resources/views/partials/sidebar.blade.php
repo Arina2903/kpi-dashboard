@@ -158,6 +158,14 @@
                 'title' => 'KPI Work',
                 'items' => [
                     [
+                        'label' => 'Create New KPI',
+                        'href' => '/kpi/create',
+                        'match' => [
+                            'kpi/create'
+                        ],
+                        'icon' => 'plus',
+                    ],
+                    [
                         'label' => 'View My KPI',
                         'href' => '/kpi',
                         'match' => [
@@ -167,12 +175,13 @@
                         'icon' => 'list',
                     ],
                     [
-                        'label' => 'Create New KPI',
-                        'href' => '/kpi/create',
+                        'label' => 'Manage Weightage',
+                        'href' => route('weightage'),
                         'match' => [
-                            'kpi/create'
+                            'weightage',
+                            'weightage/*'
                         ],
-                        'icon' => 'plus',
+                        'icon' => 'weightage',
                     ],
                     [
                         'label' => 'My Department KPI',
@@ -186,15 +195,6 @@
                         'match'     => 'titan-kpi*',
                         'icon'      => 'report',
                         'titan_only' => true,
-                    ],
-                    [
-                        'label' => 'Manage Weightage',
-                        'href' => route('weightage'),
-                        'match' => [
-                            'weightage',
-                            'weightage/*'
-                        ],
-                        'icon' => 'weightage',
                     ],
                 ],
             ],
