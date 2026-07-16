@@ -103,15 +103,33 @@
     $myAtRisk     = $individualKpis->whereIn('status',['at_risk','risk','in_trouble','critical'])->count();
     $myCompletedByQ = ['Q1'=>0,'Q2'=>0,'Q3'=>0,'Q4'=>0];
     $myTotalByQ     = ['Q1'=>0,'Q2'=>0,'Q3'=>0,'Q4'=>0];
+    // Weighted progress (actual/target, scaled by each KPI's weightage) — distinct
+    // from completion above, which only tracks whether a quarter was formally
+    // signed off. A KPI can show real progress here while still 0% "completed".
+    $myProgressByQ  = ['Q1'=>0,'Q2'=>0,'Q3'=>0,'Q4'=>0];
     foreach ($individualKpis as $kpi) {
+        $weight = (float)($kpi['_weightage'] ?? 0);
         foreach (['Q1','Q2','Q3','Q4'] as $q) {
             $qr = collect($kpi['quarters'] ?? [])->firstWhere('quarter', $q);
             if ($qr) {
                 $myTotalByQ[$q]++;
                 if (($qr['status'] ?? '') === 'completed' && !empty($qr['completion_submitted_at'])) $myCompletedByQ[$q]++;
+
+                $qTarget = max(0,(float)($qr['quarter_target'] ?? 0));
+                $qActual = max(0,(float)($qr['quarter_actual'] ?? 0));
+                $qPct    = $qTarget > 0 ? ($qActual/$qTarget)*100 : 0;
+                $myProgressByQ[$q] += $qPct * $weight / 100;
             }
         }
     }
+    $myProgressByQ = array_map(fn($v) => round(min($v,100),1), $myProgressByQ);
+
+    // Up to 3 at-risk KPI titles for the "Needs Attention" callout.
+    $myAtRiskKpis = $individualKpis
+        ->whereIn('status', ['at_risk','risk','in_trouble','critical'])
+        ->take(3)
+        ->map(fn($k) => $k['kpi_title'] ?? $k['title'] ?? 'Untitled KPI')
+        ->values();
     $myCompletedAnnual = $individualKpis->filter(function($kpi) {
         $qs = collect($kpi['quarters'] ?? []);
         return collect(['Q1','Q2','Q3','Q4'])->every(fn($q) => ($qs->firstWhere('quarter',$q)['status'] ?? '') === 'completed' && !empty($qs->firstWhere('quarter',$q)['completion_submitted_at'] ?? ''));
@@ -456,20 +474,44 @@
                     <p class="text-[9px] text-[#B8860B]/80 uppercase tracking-wide mt-1">Weightage</p>
                 </div>
             </div>
+
+            @if($myAtRiskKpis->isNotEmpty())
+            <div class="bg-red-50 border border-red-100 rounded-2xl p-3 mb-5">
+                <p class="text-[9px] font-black text-red-500 uppercase tracking-widest mb-1.5">⚠ Needs Attention</p>
+                <ul class="space-y-0.5">
+                    @foreach($myAtRiskKpis as $title)
+                    <li class="text-[11px] text-red-700 font-semibold truncate">· {{ $title }}</li>
+                    @endforeach
+                </ul>
+                @if($myAtRisk > $myAtRiskKpis->count())
+                <a href="{{ route('kpi.index') }}" class="text-[9px] text-red-500 underline font-bold">+{{ $myAtRisk - $myAtRiskKpis->count() }} more →</a>
+                @endif
+            </div>
+            @endif
+
             <div>
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">My Quarterly Completion</p>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">My Quarterly Progress</p>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     @foreach(['Q1','Q2','Q3','Q4'] as $qi)
-                    @php $qc = $myCompletedByQ[$qi]; $qt = $myTotalByQ[$qi]; $pct = $qt > 0 ? round(($qc/$qt)*100) : 0; @endphp
+                    @php
+                        $qc  = $myCompletedByQ[$qi]; $qt = $myTotalByQ[$qi];
+                        $ppct = $myProgressByQ[$qi];
+                        $pstyle = $scoreStyle($ppct);
+                    @endphp
                     <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-[10px] font-black text-slate-700">{{ $qi }}</span>
-                            <span class="text-[10px] font-black {{ $pct >= 100 ? 'text-[#B8860B]' : ($pct > 0 ? 'text-amber-500' : 'text-slate-300') }}">{{ $pct }}%</span>
+                            <span class="text-[10px] font-black {{ $pstyle['text'] }}">{{ $ppct }}%</span>
                         </div>
                         <div class="h-1.5 bg-slate-200 rounded-full overflow-hidden mb-1.5">
-                            <div class="h-1.5 rounded-full {{ $qc > 0 ? 'bg-[#D4AF37]' : 'bg-slate-200' }}" style="width:{{ $pct }}%"></div>
+                            <div class="h-1.5 rounded-full {{ $pstyle['bar'] }}" style="width:{{ min($ppct,100) }}%"></div>
                         </div>
-                        <p class="text-[8px] text-slate-400">{{ $qc }}/{{ $qt }} KPIs</p>
+                        <p class="text-[8px] text-slate-400">
+                            {{ $qt > 0 ? number_format($ppct,0).'% of target' : 'No KPIs' }}
+                            @if($qt > 0)
+                                · {{ $qc == $qt ? '✓ Signed off' : $qc.'/'.$qt.' signed off' }}
+                            @endif
+                        </p>
                     </div>
                     @endforeach
                 </div>
