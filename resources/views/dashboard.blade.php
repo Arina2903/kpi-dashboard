@@ -584,7 +584,7 @@
             </span>
             <p class="text-[8px] text-slate-400 mb-3">{{ $totalStaffCount }} staff · {{ $currentFinancialYear }}</p>
             {{-- band breakdown --}}
-            @php $bandList = [['#10b981','Excellent'],['#6366f1','Good'],['#f59e0b','Watch'],['#ef4444','Critical']]; @endphp
+            @php $bandList = [['#059669','Excellent'],['#D4AF37','Good'],['#F97316','Watch'],['#EF4444','Critical']]; @endphp
             <div class="w-full grid grid-cols-2 gap-x-3 gap-y-1.5 pt-3 border-t border-slate-100">
                 @foreach($bandList as $bi => $b)
                 <div class="flex items-center gap-1.5">
@@ -1168,7 +1168,7 @@ function scoreHex(v) {
 }
 
 const palette = ['#3b82f6','#8b5cf6','#f59e0b','#10b981','#ef4444','#06b6d4','#f97316','#ec4899','#14b8a6','#a855f7'];
-const bandColors = ['#10b981','#6366f1','#f59e0b','#ef4444'];
+const bandColors = ['#059669','#D4AF37','#F97316','#EF4444'];
 
 // ── CHART: DEPT RANKING (horizontal bar — all company depts) ────────────────
 (function() {
