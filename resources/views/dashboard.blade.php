@@ -141,11 +141,11 @@
     // ── CATEGORY GROUPS ─────────────────────────────────────────────────────
     $categoryOrder  = ['Financial','Growth & Customer','Initiatives','People'];
     $categoryStyles = [
-        'Financial'         => ['bg'=>'bg-emerald-700 text-white','sub'=>'bg-emerald-50 text-emerald-800 border border-emerald-200','left'=>'border-l-emerald-400'],
-        'Growth & Customer' => ['bg'=>'bg-indigo-700 text-white', 'sub'=>'bg-indigo-50 text-indigo-800 border border-indigo-200',  'left'=>'border-l-indigo-400'],
-        'Initiatives'       => ['bg'=>'bg-amber-600 text-white',  'sub'=>'bg-amber-50 text-amber-800 border border-amber-200',    'left'=>'border-l-amber-400'],
-        'People'            => ['bg'=>'bg-pink-700 text-white',   'sub'=>'bg-pink-50 text-pink-800 border border-pink-200',       'left'=>'border-l-pink-400'],
-        'Default'           => ['bg'=>'bg-slate-700 text-white',  'sub'=>'bg-slate-50 text-slate-800 border border-[#E5E7EB]',    'left'=>'border-l-slate-300'],
+        'Financial'         => ['bg'=>'bg-emerald-700 text-white','sub'=>'bg-emerald-50 text-emerald-800 border border-emerald-200','left'=>'border-l-emerald-400','line'=>'#059669'],
+        'Growth & Customer' => ['bg'=>'bg-indigo-700 text-white', 'sub'=>'bg-indigo-50 text-indigo-800 border border-indigo-200',  'left'=>'border-l-indigo-400', 'line'=>'#4F46E5'],
+        'Initiatives'       => ['bg'=>'bg-amber-600 text-white',  'sub'=>'bg-amber-50 text-amber-800 border border-amber-200',    'left'=>'border-l-amber-400',  'line'=>'#D97706'],
+        'People'            => ['bg'=>'bg-pink-700 text-white',   'sub'=>'bg-pink-50 text-pink-800 border border-pink-200',       'left'=>'border-l-pink-400',   'line'=>'#BE185D'],
+        'Default'           => ['bg'=>'bg-slate-700 text-white',  'sub'=>'bg-slate-50 text-slate-800 border border-[#E5E7EB]',    'left'=>'border-l-slate-300',  'line'=>'#64748B'],
     ];
     $myKpisByCategory = $individualKpis->groupBy('category');
     $orderedCategoryGroups = collect();
@@ -1009,9 +1009,11 @@
                     @php $catStyle = $categoryStyles[$category] ?? $categoryStyles['Default']; @endphp
                     <div>
                         <div class="flex items-center gap-2 mb-2">
-                            <span class="px-2.5 py-0.5 rounded-lg text-xs font-black {{ $catStyle['bg'] }}">{{ $category ?: 'General' }}</span>
+                            <span class="px-2.5 py-0.5 rounded-lg text-xs font-black shadow-sm {{ $catStyle['bg'] }}">{{ $category ?: 'General' }}</span>
                             <span class="text-xs text-slate-400 shrink-0">{{ $categoryKpis->count() }} KPI</span>
-                            <div class="h-px flex-1 bg-gradient-to-r from-[#D4AF37] to-transparent"></div>
+                            <div class="relative flex-1 h-[3px] rounded-full overflow-hidden" style="background:linear-gradient(90deg,{{ $catStyle['line'] }} 0%,{{ $catStyle['line'] }}55 45%,transparent 100%);box-shadow:0 1px 2px rgba(15,23,42,.18);">
+                                <div class="absolute inset-x-0 top-0 h-[1px]" style="background:linear-gradient(90deg,rgba(255,255,255,.65),transparent 70%);"></div>
+                            </div>
                         </div>
                         <div class="grid grid-cols-1 xl:grid-cols-3 gap-2">
                             @foreach($categoryKpis as $kpi)
