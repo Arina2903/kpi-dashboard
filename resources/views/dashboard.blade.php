@@ -449,30 +449,26 @@
 
         {{-- Right: Stats + quarterly completion --}}
         <div class="flex-1 p-5 flex flex-col justify-between">
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-                <div class="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
-                    <p class="text-2xl font-black text-slate-900">{{ $individualKpiCount }}</p>
-                    <p class="text-[9px] text-slate-400 uppercase tracking-wide mt-1">Total KPIs</p>
+            <div class="grid grid-cols-3 gap-3 mb-5">
+                <div class="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                    <p class="text-3xl font-black text-slate-900">{{ $individualKpiCount }}</p>
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide mt-1.5">Total KPIs</p>
                 </div>
-                <div class="bg-emerald-50 rounded-2xl p-3 text-center border border-emerald-100">
-                    <p class="text-2xl font-black text-emerald-600">{{ $myOnTrack }}</p>
-                    <p class="text-[9px] text-emerald-500 uppercase tracking-wide mt-1">On Track</p>
+                <div class="bg-emerald-50 rounded-2xl p-4 text-center border border-emerald-100">
+                    <p class="text-3xl font-black text-emerald-600">{{ $myOnTrack }}</p>
+                    <p class="text-[9px] text-emerald-500 uppercase tracking-wide mt-1.5">On Track</p>
                 </div>
                 @if($myAtRisk > 0)
-                <div class="bg-red-50 rounded-2xl p-3 text-center border border-red-100">
-                    <p class="text-2xl font-black text-red-600">{{ $myAtRisk }}</p>
-                    <p class="text-[9px] text-red-400 uppercase tracking-wide mt-1">At Risk</p>
+                <div class="bg-red-50 rounded-2xl p-4 text-center border border-red-100">
+                    <p class="text-3xl font-black text-red-600">{{ $myAtRisk }}</p>
+                    <p class="text-[9px] text-red-400 uppercase tracking-wide mt-1.5">At Risk</p>
                 </div>
                 @else
-                <div class="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
-                    <p class="text-2xl font-black text-slate-300">0</p>
-                    <p class="text-[9px] text-slate-400 uppercase tracking-wide mt-1">At Risk</p>
+                <div class="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                    <p class="text-3xl font-black text-slate-300">0</p>
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide mt-1.5">At Risk</p>
                 </div>
                 @endif
-                <div class="bg-[#D4AF37]/10 rounded-2xl p-3 text-center border border-[#E5E7EB]">
-                    <p class="text-2xl font-black text-[#B8860B]">{{ number_format($individualWeightage,0) }}%</p>
-                    <p class="text-[9px] text-[#B8860B]/80 uppercase tracking-wide mt-1">Weightage</p>
-                </div>
             </div>
 
             @if($myAtRiskKpis->isNotEmpty())
