@@ -49,9 +49,9 @@
 @endphp
 
 <main id="mainContent" class="ml-[230px] min-h-screen">
-<div class="px-4 pt-4 pb-4 space-y-3">
 
-    {{-- ═══════ HEADER ═══════ --}}
+{{-- ═══════ HEADER (sticky) ═══════ --}}
+<div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#F5F5F3]">
     <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-5 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
         <div class="relative">
@@ -81,6 +81,9 @@
             </div>
         </form>
     </div>
+</div>
+
+<div class="px-4 pb-4 space-y-3">
 
     {{-- ═══════ STAT CARDS ═══════ --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
