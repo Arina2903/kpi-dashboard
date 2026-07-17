@@ -496,7 +496,7 @@ class PerformanceController extends Controller
         ]);
     }
 
-    public function saveReport(string $quarter, \Illuminate\Http\Request $request, SupabaseService $supabase)
+    public function saveReport(string $quarter, \Illuminate\Http\Request $request, SupabaseService $supabase, \App\Services\NotificationService $notifications)
     {
         if (!session()->has('employee_uuid')) {
             return response()->json(['error' => 'Unauthenticated'], 401);
@@ -546,6 +546,28 @@ class PerformanceController extends Controller
             'updated_at'     => now()->toISOString(),
         ], 'employee_id,financial_year,quarter');
 
+        if ($action === 'submit') {
+            $employee = $supabase->first('employees', [
+                'id'     => 'eq.' . session('employee_uuid'),
+                'select' => 'id,full_name,short_name',
+            ]);
+            $employeeName = $employee['full_name'] ?? $employee['short_name'] ?? 'An employee';
+
+            $recipients = $notifications->appraiserChainFor(session('employee_uuid'));
+            if (!empty($recipients)) {
+                $notifications->notify(
+                    $recipients,
+                    'appraisal_submitted',
+                    ['id' => session('employee_uuid'), 'name' => $employeeName],
+                    "{$employeeName} submitted their {$q} appraisal",
+                    'Ready for your review.',
+                    route('performance.appraise.report', [session('employee_uuid'), strtolower($q)]),
+                    $q,
+                    $this->currentFinancialYear
+                );
+            }
+        }
+
         return response()->json(['success' => true, 'quarter' => $q, 'status' => $status]);
     }
 
@@ -578,57 +600,6 @@ class PerformanceController extends Controller
         }
 
         return null;
-    }
-
-    public function appraiserInbox(SupabaseService $supabase)
-    {
-        if (!session()->has('employee_uuid')) {
-            return redirect()->route('login');
-        }
-
-        $viewerId = session('employee_uuid');
-        $viewer = $supabase->first('employees', ['id' => 'eq.' . $viewerId, 'select' => 'company_code']);
-
-        $allActive = $supabase->get('employees', [
-            'company_code' => 'eq.' . ($viewer['company_code'] ?? ''),
-            'is_active'     => 'eq.true',
-            'select'        => 'id,short_name,full_name,position,department_code,reports_to_id',
-        ]) ?? [];
-
-        $byId = collect($allActive)->keyBy('id');
-        $getParent = fn($id) => $byId->get($id);
-
-        $subordinates = [];
-        foreach ($allActive as $emp) {
-            if ($emp['id'] === $viewerId) {
-                continue;
-            }
-            $level = $this->resolveAppraiserLevel($emp, $viewerId, $getParent);
-            if ($level) {
-                $emp['appraiser_level'] = $level;
-                $subordinates[] = $emp;
-            }
-        }
-
-        $reportMap = [];
-        if (!empty($subordinates)) {
-            $subIds  = array_column($subordinates, 'id');
-            $reports = $supabase->get('performance_reports', [
-                'employee_id'    => 'in.(' . implode(',', $subIds) . ')',
-                'financial_year' => 'eq.' . $this->currentFinancialYear,
-                'select'         => 'employee_id,quarter,status,updated_at,form_data',
-            ]) ?? [];
-            foreach ($reports as $r) {
-                $reportMap[$r['employee_id']][$r['quarter']] = $r;
-            }
-        }
-
-        return view('performance.appraise-inbox', [
-            'subordinates'         => $subordinates,
-            'reportMap'            => $reportMap,
-            'currentFinancialYear' => $this->currentFinancialYear,
-            'quarters'             => ['Q1','Q2','Q3','Q4'],
-        ]);
     }
 
     public function appraiserReport(string $employeeId, string $quarter, SupabaseService $supabase)

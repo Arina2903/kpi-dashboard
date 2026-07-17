@@ -140,6 +140,13 @@
                         'icon' => 'dashboard',
                     ],
                     [
+                        'label' => 'Notifications',
+                        'href'  => route('notifications'),
+                        'match' => 'notifications*',
+                        'icon'  => 'bell',
+                        'badge' => $unreadNotificationCount ?? 0,
+                    ],
+                    [
                         'label' => 'Job Description',
                         'href' => route('job-description'),
                         'match' => 'job-description*',
@@ -237,7 +244,6 @@
                     ['label' => 'Q2 Evaluation', 'href' => '/performance/report/q2', 'match' => 'performance/report/q2*', 'icon' => 'report'],
                     ['label' => 'Q3 Evaluation', 'href' => '/performance/report/q3', 'match' => 'performance/report/q3*', 'icon' => 'report'],
                     ['label' => 'Q4 Evaluation', 'href' => '/performance/report/q4', 'match' => 'performance/report/q4*', 'icon' => 'report'],
-                    ['label' => 'Appraise Team', 'href' => '/performance/appraise', 'match' => 'performance/appraise*', 'icon' => 'report', 'manager_vp_only' => true],
                 ],
             ],
             [

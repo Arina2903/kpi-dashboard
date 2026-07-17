@@ -83,7 +83,7 @@ class JobDescriptionController extends Controller
         return preg_replace('/\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html);
     }
 
-    public function update(Request $request, SupabaseService $supabase)
+    public function update(Request $request, SupabaseService $supabase, \App\Services\NotificationService $notifications)
     {
         $user = $this->currentUser($supabase);
 
@@ -112,6 +112,17 @@ class JobDescriptionController extends Controller
         }
 
         $supabase->upsert('job_descriptions', $payload, 'employee_id');
+
+        if ($isSubmit && !empty($user['reports_to_id'])) {
+            $employeeName = $user['full_name'] ?? $user['short_name'] ?? 'An employee';
+            $notifications->notify(
+                [$user['reports_to_id']],
+                'job_description_submitted',
+                ['id' => $user['id'], 'name' => $employeeName],
+                "{$employeeName} submitted their Job Description",
+                'Ready for your review.'
+            );
+        }
 
         return redirect()->route('job-description')->with(
             'success',

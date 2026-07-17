@@ -326,6 +326,16 @@ Route::middleware(['kpi.auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | NOTIFICATIONS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications');
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+
+    /*
+    |--------------------------------------------------------------------------
     | PERFORMANCE EVALUATION
     |--------------------------------------------------------------------------
     */
@@ -339,7 +349,6 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::get('/performance/report',                       fn() => redirect('/performance/report/q2'))->name('performance.report');
     Route::get('/performance/report/{quarter}',             [\App\Http\Controllers\PerformanceController::class, 'reportQuarter'])->middleware('no-cache')->name('performance.report.quarter');
     Route::post('/performance/report/{quarter}/save',       [\App\Http\Controllers\PerformanceController::class, 'saveReport'])->name('performance.report.save');
-    Route::get('/performance/appraise',                     [\App\Http\Controllers\PerformanceController::class, 'appraiserInbox'])->name('performance.appraise.inbox');
     Route::get('/performance/appraise/{employeeId}/{quarter}', [\App\Http\Controllers\PerformanceController::class, 'appraiserReport'])->middleware('no-cache')->name('performance.appraise.report');
     Route::post('/performance/appraise/{employeeId}/{quarter}/save', [\App\Http\Controllers\PerformanceController::class, 'appraiserSave'])->name('performance.appraise.save');
 

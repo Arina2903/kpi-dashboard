@@ -1500,7 +1500,7 @@ window.saveEvaluation = function(action) {
             if (_isAppraiserView) {
                 if (action === 'submit' && _appraiserLevel === 'manager') {
                     showToast('Marked as Appraised ✓', true);
-                    setTimeout(function(){ window.location.href = '/performance/appraise'; }, 1200);
+                    setTimeout(function(){ window.location.href = '/notifications'; }, 1200);
                 } else if (action === 'submit') {
                     showToast('Submitted ✓', true);
                     setTimeout(function(){ location.reload(); }, 1200);
