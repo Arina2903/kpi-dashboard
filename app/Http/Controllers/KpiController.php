@@ -7,18 +7,36 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use App\Services\SupabaseService;
 use App\Services\ApprovalHierarchyService;
+use App\Services\NotificationService;
 
 class KpiController extends Controller
 {
     protected $supabase;
     protected ApprovalHierarchyService $hierarchyService;
+    protected NotificationService $notifications;
 
     public function __construct(
         SupabaseService $supabase,
-        ApprovalHierarchyService $hierarchyService
+        ApprovalHierarchyService $hierarchyService,
+        NotificationService $notifications
     ){
         $this->supabase = $supabase;
         $this->hierarchyService = $hierarchyService;
+        $this->notifications = $notifications;
+    }
+
+    // Every approval-request insert site notifies the approver the same way —
+    // one place to keep the message/link shape consistent.
+    private function notifyApprover(string $approverId, string $type, string $requesterName, string $kpiTitle, string $summary): void
+    {
+        $this->notifications->notify(
+            [$approverId],
+            $type,
+            ['name' => $requesterName],
+            "{$requesterName} needs your approval",
+            "{$summary}: {$kpiTitle}",
+            route('approval.index')
+        );
     }
 
     private function currentFY(): string
@@ -1369,6 +1387,14 @@ class KpiController extends Controller
             'created_at'        => $this->nowMy(),
         ]);
 
+        $this->notifyApprover(
+            $approverId,
+            'kpi_completion_approval',
+            $user['short_name'] ?? $user['full_name'] ?? 'Unknown',
+            $kpi['kpi_title'] ?? 'a KPI',
+            'Quarter completion needs your approval'
+        );
+
         return response()->json([
             'success'     => true,
             'message'     => 'Completion submitted for approval.',
@@ -2424,6 +2450,14 @@ class KpiController extends Controller
             );
         }
 
+        $this->notifyApprover(
+            $approver['id'],
+            'kpi_target_change_approval',
+            $user['short_name'] ?? 'Unknown',
+            $kpi['kpi_title'] ?? 'a KPI',
+            'Target change needs your approval'
+        );
+
         return response()->json([
 
             'success' => true,
@@ -2739,6 +2773,14 @@ class KpiController extends Controller
                 $user['short_name']
             );
         }
+
+        $this->notifyApprover(
+            $approverId,
+            'kpi_delete_approval',
+            $user['short_name'] ?? $user['full_name'] ?? $user['name'] ?? 'Unknown',
+            $kpi['kpi_title'] ?? 'a KPI',
+            'Delete request needs your approval'
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -3086,6 +3128,15 @@ class KpiController extends Controller
                 );
             }
 
+            $kpiForNotify = $this->supabase->first('kpis', ['id' => 'eq.' . $validated['kpi_id'], 'select' => 'kpi_title']);
+            $this->notifyApprover(
+                $approverId,
+                'kpi_actual_approval',
+                $user['short_name'] ?? 'Unknown',
+                $kpiForNotify['kpi_title'] ?? 'a KPI',
+                'Actual value update needs your approval'
+            );
+
         return response()->json([
                 'success' => true,
                 'message' => 'Approval request submitted successfully.'
@@ -3136,7 +3187,7 @@ class KpiController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $this->findKpiOrFail(
+        $kpi = $this->findKpiOrFail(
             $this->supabase,
             $kpiId
         );
@@ -3454,6 +3505,14 @@ class KpiController extends Controller
                 'message' => 'Failed to submit request.'
             ], 500);
         }
+
+        $this->notifyApprover(
+            $approverId,
+            'kpi_actual_approval',
+            $user['short_name'] ?? 'Unknown',
+            $kpi['kpi_title'] ?? 'a KPI',
+            'Actual value update needs your approval'
+        );
 
         return response()->json([
 

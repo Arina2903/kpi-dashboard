@@ -6,18 +6,22 @@ use Illuminate\Http\Request;
 use App\Services\SupabaseService;
 use App\Services\ApprovalActionService;
 use App\Services\ApprovalHierarchyService;
+use App\Services\NotificationService;
 
 class ApprovalController extends Controller
 {
     protected ApprovalActionService $approvalActionService;
     protected ApprovalHierarchyService $hierarchyService;
+    protected NotificationService $notifications;
 
     public function __construct(
         ApprovalActionService $approvalActionService,
-        ApprovalHierarchyService $hierarchyService
+        ApprovalHierarchyService $hierarchyService,
+        NotificationService $notifications
     ){
         $this->approvalActionService = $approvalActionService;
         $this->hierarchyService      = $hierarchyService;
+        $this->notifications         = $notifications;
     }
 
 
@@ -860,6 +864,15 @@ class ApprovalController extends Controller
                 'message' => 'Failed to submit request: ' . $e->getMessage(),
             ], 500);
         }
+
+        $this->notifications->notify(
+            [$approver['id']],
+            'kpi_weightage_approval',
+            ['name' => session('short_name') ?? 'Someone'],
+            (session('short_name') ?? 'Someone') . ' needs your approval',
+            'Weightage change needs your approval: ' . ($kpi['kpi_title'] ?? 'a KPI'),
+            route('approval.index')
+        );
 
         return response()->json([
             'success'       => true,
