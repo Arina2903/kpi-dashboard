@@ -65,9 +65,14 @@
                         <div class="p-4 flex items-center gap-4">
 
                             {{-- Company logo / initials --}}
+                            @php
+                                $cardLogo = $dashboard['company_code'] === 'RCG'
+                                    ? asset('images/RCG-Logo-black.png')
+                                    : ($dashboard['company_logo'] ?? null);
+                            @endphp
                             <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden border border-[#E5E7EB]">
-                                @if(!empty($dashboard['company_logo']) && $dashboard['company_logo'] !== '/images/default-logo.png')
-                                    <img src="{{ $dashboard['company_logo'] }}" class="w-full h-full object-contain p-1">
+                                @if(!empty($cardLogo) && $cardLogo !== '/images/default-logo.png')
+                                    <img src="{{ $cardLogo }}" class="w-full h-full object-contain p-1">
                                 @else
                                     <span class="text-sm font-black text-[#7A0019]">{{ strtoupper(substr($dashboard['company_code'],0,2)) }}</span>
                                 @endif
