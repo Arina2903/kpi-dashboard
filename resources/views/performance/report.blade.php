@@ -1092,7 +1092,7 @@
 
 @if(($isAppraiserView ?? false) && !($myLevelLocked ?? false))
 {{-- ── Appraiser's fixed bottom action bar (hidden on print) — sits last, mirrors the appraisee's own Save Draft / Submit bar ── --}}
-<div class="no-print" style="position:fixed;bottom:0;left:230px;right:0;z-index:50;background:#ffffff;border-top:1px solid rgba(107,144,128,.20);padding:14px 110px 14px 32px;display:flex;align-items:center;justify-content:flex-end;gap:10px;box-shadow:0 -4px 24px rgba(15,23,42,.08);">
+<div id="apprActionBar" class="no-print" style="position:fixed;bottom:0;left:230px;right:0;z-index:50;background:#ffffff;border-top:1px solid rgba(107,144,128,.20);padding:14px 110px 14px 32px;display:flex;align-items:center;justify-content:flex-end;gap:10px;box-shadow:0 -4px 24px rgba(15,23,42,.08);">
     <span style="font-size:11px;font-weight:600;color:#94a3b8;margin-right:6px;">Appraiser view — {{ $currentUserName }}</span>
     <button id="apprDraftBtn" onclick="saveEvaluation('draft')" style="display:flex;align-items:center;gap:6px;padding:10px 20px;border-radius:12px;font-size:12px;font-weight:700;border:1.5px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
         <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -1595,6 +1595,13 @@ function unlockAppraiserSections() {
     // Already submitted — leave the form-body-level lock (set by the caller)
     // in place instead of unlocking this level's section again.
     if (_myLevelLocked) return;
+
+    // The fixed Save Draft/Submit bar lives inside <main>, so it inherits the
+    // pointer-events:none the caller set on the whole form body — without this
+    // it's visually there but physically unclickable. Not one of the section
+    // IDs below since it isn't part of the editable form content.
+    var actionBar = document.getElementById('apprActionBar');
+    if (actionBar) { actionBar.style.pointerEvents = 'auto'; actionBar.style.opacity = '1'; }
 
     var sectionIds = _appraiserLevel === 'manager'
         ? ['sec6b', 'sec6b_sig', 'sec7_manager']
