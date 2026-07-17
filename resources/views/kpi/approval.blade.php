@@ -45,10 +45,10 @@
             <div>
 
                 <a
-                    href="/dashboard"
+                    href="{{ route('notifications') }}"
                     class="text-xs text-blue-100 hover:text-white"
                 >
-                    ← Dashboard
+                    ← Notifications
                 </a>
 
                 <h1 class="text-3xl font-black mt-3">
