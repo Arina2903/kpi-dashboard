@@ -72,7 +72,11 @@
                         // remarks even after the manager has already marked it appraised).
                         $myLevel  = $sub['appraiser_level'] ?? null;
                         $myLocked = $myLevel && !empty($report['form_data']["_{$myLevel}_locked"] ?? null);
-                        $canAct   = in_array($status, ['submitted', 'appraised', 'completed']) && !$myLocked;
+                        // Appraisers can open and start appraising any time, even before
+                        // the employee has submitted their own self-assessment — the only
+                        // thing that actually locks a quarter is the appraiser's own
+                        // section already being submitted.
+                        $canAct   = !$myLocked;
                     @endphp
                     <tr class="hover:bg-slate-50/60 transition">
                         <td class="px-5 py-4">
@@ -118,13 +122,11 @@
                                class="inline-flex items-center gap-1 bg-[#1a3d34] hover:bg-[#2d5548] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition">
                                 Review &amp; Appraise →
                             </a>
-                            @elseif(in_array($status, ['submitted', 'appraised', 'completed']))
+                            @else
                             <a href="/performance/appraise/{{ $sub['id'] }}/{{ strtolower($q) }}"
                                class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold px-3 py-1.5 rounded-lg transition">
                                 View
                             </a>
-                            @else
-                            <span class="text-slate-300 text-[11px]">Waiting for submission</span>
                             @endif
                         </td>
                     </tr>
