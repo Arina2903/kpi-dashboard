@@ -155,13 +155,7 @@
                         required
                         class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] focus:ring-2 focus:ring-[#6B9080]/40 focus:border-[#6B9080] focus:outline-none"
                     >
-                    <input
-                        type="password"
-                        name="current_password"
-                        placeholder="Current password (to confirm)"
-                        required
-                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] focus:ring-2 focus:ring-[#6B9080]/40 focus:border-[#6B9080] focus:outline-none"
-                    >
+                    @include('partials.password-input', ['id' => 'curPwdForEmail', 'name' => 'current_password', 'placeholder' => 'Current password (to confirm)'])
                     <button type="submit" class="w-full text-[11px] font-black px-3 py-2.5 rounded-xl bg-[#1a3d34] text-white hover:bg-[#2d5548] transition">
                         Update Email
                     </button>
@@ -174,29 +168,9 @@
                         <svg class="w-3.5 h-3.5 text-[#6B9080]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="9" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
                         Change Password
                     </p>
-                    <input
-                        type="password"
-                        name="current_password"
-                        placeholder="Current password"
-                        required
-                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] focus:ring-2 focus:ring-[#6B9080]/40 focus:border-[#6B9080] focus:outline-none"
-                    >
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="New password (min 8 characters)"
-                        minlength="8"
-                        required
-                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] focus:ring-2 focus:ring-[#6B9080]/40 focus:border-[#6B9080] focus:outline-none"
-                    >
-                    <input
-                        type="password"
-                        name="password_confirmation"
-                        placeholder="Confirm new password"
-                        minlength="8"
-                        required
-                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] focus:ring-2 focus:ring-[#6B9080]/40 focus:border-[#6B9080] focus:outline-none"
-                    >
+                    @include('partials.password-input', ['id' => 'curPwdForChange', 'name' => 'current_password', 'placeholder' => 'Current password'])
+                    @include('partials.password-input', ['id' => 'newPwd', 'name' => 'password', 'placeholder' => 'New password (min 8 characters)', 'minlength' => 8])
+                    @include('partials.password-input', ['id' => 'newPwdConfirm', 'name' => 'password_confirmation', 'placeholder' => 'Confirm new password', 'minlength' => 8])
                     <button type="submit" class="w-full text-[11px] font-black px-3 py-2.5 rounded-xl bg-[#1a3d34] text-white hover:bg-[#2d5548] transition">
                         Update Password
                     </button>

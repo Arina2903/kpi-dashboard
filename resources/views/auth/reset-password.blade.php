@@ -56,28 +56,28 @@
                 <label class="block text-sm font-medium text-slate-700 mb-1">
                     New Password
                 </label>
-                <input
-                    type="password"
-                    name="password"
-                    minlength="8"
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none"
-                    placeholder="At least 8 characters"
-                    required
-                >
+                @include('partials.password-input', [
+                    'id' => 'newPassword',
+                    'name' => 'password',
+                    'placeholder' => 'At least 8 characters',
+                    'minlength' => 8,
+                    'inputClass' => 'w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none',
+                    'iconHoverClass' => 'hover:text-slate-800',
+                ])
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">
                     Confirm New Password
                 </label>
-                <input
-                    type="password"
-                    name="password_confirmation"
-                    minlength="8"
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none"
-                    placeholder="Re-enter new password"
-                    required
-                >
+                @include('partials.password-input', [
+                    'id' => 'newPasswordConfirm',
+                    'name' => 'password_confirmation',
+                    'placeholder' => 'Re-enter new password',
+                    'minlength' => 8,
+                    'inputClass' => 'w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none',
+                    'iconHoverClass' => 'hover:text-slate-800',
+                ])
             </div>
 
             <button
