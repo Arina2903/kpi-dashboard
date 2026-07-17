@@ -611,6 +611,19 @@
         .card-hover:hover{
             transform:translateY(-2px);
         }
+
+        @keyframes submitGlow{
+            0%, 100% {
+                box-shadow: 0 4px 14px rgba(212,175,55,.35), 0 0 0 0 rgba(212,175,55,.45);
+            }
+            50% {
+                box-shadow: 0 4px 20px rgba(212,175,55,.55), 0 0 0 8px rgba(212,175,55,0);
+            }
+        }
+
+        .submit-ready{
+            animation: submitGlow 1.8s ease-in-out infinite;
+        }
     </style>
 </head>
 
@@ -620,39 +633,43 @@
 
 <main id="mainContent" class="ml-[230px] min-h-screen transition-all duration-300">
 
-<div class="p-6">
-<div class="max-w-7xl mx-auto space-y-5">
-
-    <!-- HEADER -->
-    <div class="hero-gradient rounded-[2rem] text-white p-6 soft-glow overflow-hidden">
-        <a href="{{ route('kpi.index') }}" class="text-sm text-[#D4AF37] hover:text-white">
+<!-- HEADER (sticky) -->
+<div class="sticky top-0 z-30 px-6 pt-4 pb-3 bg-[#F5F5F3]">
+<div class="max-w-7xl mx-auto">
+    <div class="hero-gradient rounded-[1.5rem] text-white p-4 soft-glow overflow-hidden">
+        <a href="{{ route('kpi.index') }}" class="text-xs text-[#D4AF37] hover:text-white">
             ← Back to KPI List
         </a>
 
-        <div class="mt-3">
-            <h1 class="text-3xl font-black tracking-tight">Create My KPI</h1>
-            <p class="text-sm text-white/70 mt-1">
+        <div class="mt-2">
+            <h1 class="text-2xl font-black tracking-tight">Create My KPI</h1>
+            <p class="text-xs text-white/70 mt-1">
                 {{ $fy ?? 'FY' . now()->year }} · KPI ini akan direkod atas nama anda sendiri.
             </p>
         </div>
 
-        <div class="mt-4 flex flex-wrap gap-3 text-sm">
-            <div class="bg-white/10 border border-white/15 rounded-xl px-3 py-2">
-                <p class="text-white/70 text-xs">Owner</p>
-                <p class="font-black text-lg">{{ $user['short_name'] ?? '-' }}</p>
+        <div class="mt-3 flex flex-wrap gap-2 text-sm">
+            <div class="bg-white/10 border border-white/15 rounded-xl px-2.5 py-1.5">
+                <p class="text-white/70 text-[10px]">Owner</p>
+                <p class="font-black text-sm">{{ $user['short_name'] ?? '-' }}</p>
             </div>
 
-            <div class="bg-white/10 border border-white/15 rounded-xl px-3 py-2">
-                <p class="text-white/70 text-xs">Role</p>
-                <p class="font-black text-lg">{{ $user['role'] ?? '-' }}</p>
+            <div class="bg-white/10 border border-white/15 rounded-xl px-2.5 py-1.5">
+                <p class="text-white/70 text-[10px]">Role</p>
+                <p class="font-black text-sm">{{ $user['role'] ?? '-' }}</p>
             </div>
 
-            <div class="bg-white/10 border border-white/15 rounded-xl px-3 py-2">
-                <p class="text-white/70 text-xs">Department</p>
-                <p class="font-black text-lg">{{ $user['department_code'] ?? '-' }}</p>
+            <div class="bg-white/10 border border-white/15 rounded-xl px-2.5 py-1.5">
+                <p class="text-white/70 text-[10px]">Department</p>
+                <p class="font-black text-sm">{{ $user['department_code'] ?? '-' }}</p>
             </div>
         </div>
     </div>
+</div>
+</div>
+
+<div class="px-6 pb-6">
+<div class="max-w-7xl mx-auto space-y-5">
 
     @if($errors->any())
         <div class="bg-red-50 text-red-700 px-4 py-3 rounded-2xl text-sm border border-red-200 shadow-sm">
@@ -674,7 +691,7 @@
 
                     <section
                         id="section1"
-                        class="section-card p-6 scroll-mt-24">
+                        class="section-card p-5 scroll-mt-24">
 
                     <div class="absolute top-0 right-0 w-40 h-40 bg-cyan-200/20 blur-3xl rounded-full"></div>
 
@@ -704,7 +721,7 @@
                             </div>
 
                             <!-- CONTENT -->
-                            <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 mt-6">
+                            <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 mt-5">
 
                                 <!-- ASSIGNMENT -->
                                 <div class="xl:col-span-4">
@@ -831,7 +848,7 @@
                 <!-- 2. KPI CATEGORY -->
                 <section
                     id="section2"
-                    class="section-card p-6 scroll-mt-24">
+                    class="section-card p-5 scroll-mt-24">
                     <div class="absolute top-0 right-0 w-40 h-40 bg-emerald-200/20 blur-3xl rounded-full"></div>
 
                     <div class="relative flex gap-4">
@@ -862,7 +879,7 @@
                             </div>
 
                             <!-- CONTENT -->
-                            <div class="grid grid-cols-1 xl:grid-cols-5 gap-5 mt-6">
+                            <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mt-5">
 
                                 <!-- CATEGORY -->
                                 <div class="xl:col-span-2">
@@ -1010,7 +1027,7 @@
                 <!-- 3. KPI DETAILS -->
                 <section
                     id="section3"
-                    class="section-card p-6 scroll-mt-24">
+                    class="section-card p-5 scroll-mt-24">
 
                 <div class="absolute top-0 right-0 w-40 h-40 bg-indigo-200/20 blur-3xl rounded-full"></div>
 
@@ -1042,7 +1059,7 @@
                         </div>
 
                         <!-- CONTENT -->
-                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-5 mt-6">
+                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mt-5">
 
                             <!-- KPI TITLE -->
                             <div class="xl:col-span-2">
@@ -1149,7 +1166,7 @@
 
                 <section
                     id="section4"
-                    class="section-card p-6 scroll-mt-24">
+                    class="section-card p-5 scroll-mt-24">
                 <div class="absolute top-0 right-0 w-40 h-40 bg-sky-200/20 blur-3xl rounded-full"></div>
 
                 <div class="relative flex gap-4">
@@ -1180,7 +1197,7 @@
                         </div>
 
                         <!-- CONTENT -->
-                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-5 mt-6">
+                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mt-5">
 
                             <!-- UNIT -->
                             <div class="xl:col-span-2">
@@ -1329,7 +1346,7 @@
                 <!-- 5. CURRENT STATUS -->
                 <section
                     id="section5"
-                    class="section-card p-6 scroll-mt-24">
+                    class="section-card p-5 scroll-mt-24">
 
                 <div class="absolute top-0 right-0 w-40 h-40 bg-amber-200/20 blur-3xl rounded-full"></div>
 
@@ -1361,7 +1378,7 @@
                         </div>
 
                         <!-- CONTENT -->
-                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-5 mt-6">
+                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mt-5">
 
                             <!-- STATUS -->
                             <div class="xl:col-span-2">
@@ -1490,7 +1507,7 @@
                 <!-- 6. QUARTERS -->
                 <section
                     id="section6"
-                    class="section-card p-6 scroll-mt-24">
+                    class="section-card p-5 scroll-mt-24">
 
                     <div class="absolute top-0 right-0 w-40 h-40 bg-purple-200/20 blur-3xl rounded-full"></div>
 
@@ -1528,9 +1545,9 @@
 
                             </div>
 
-                            <div class="mt-6 space-y-5">
+                            <div class="mt-5 space-y-4">
 
-                            <div class="space-y-5">
+                            <div class="space-y-4">
 
                                 @foreach(['Q1','Q2','Q3','Q4'] as $quarter)
 
@@ -1811,8 +1828,8 @@
             <aside class="lg:col-span-4">
 
                 <div
-                    class="sticky top-4
-                        max-h-[calc(100vh-2rem)]
+                    class="sticky top-[226px]
+                        max-h-[calc(100vh-242px)]
                         overflow-y-auto
                         rounded-[28px]
                         border border-slate-200
@@ -2066,6 +2083,7 @@
 
                         <button
                             type="submit"
+                            id="createKpiSubmitBtn"
                             class="w-full
                                 bg-[#D4AF37]
                                 hover:bg-[#c19c2f]
@@ -2658,6 +2676,12 @@
         input.addEventListener('input', updateSummary);
     });
 
+    // Quarter title/description/dates aren't wired to updateSummary() above,
+    // but they're still required fields — catch them via delegation so the
+    // submit button's glow state (form.checkValidity()) stays accurate.
+    form.addEventListener('input', updateCompletion);
+    form.addEventListener('change', updateCompletion);
+
     /*
     |--------------------------------------------------------------------------
     | INITIALIZE
@@ -2864,6 +2888,13 @@ function updateCompletion(){
         completionBar.style.width =
             percent + '%';
 
+    }
+
+    // Glow the submit button once every required field on the whole form
+    // (including all 4 quarters, not just the 6 tracked above) is filled.
+    const submitBtn = document.getElementById('createKpiSubmitBtn');
+    if(submitBtn){
+        submitBtn.classList.toggle('submit-ready', form.checkValidity());
     }
 }
 
