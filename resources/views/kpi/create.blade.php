@@ -1817,31 +1817,32 @@
                         rounded-[28px]
                         border border-slate-200
                         bg-white
-                        p-6
+                        p-4
                         shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
 
                     <!-- HEADER -->
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-3">
 
                         <div
-                            class="w-12 h-12
-                                rounded-2xl
+                            class="w-9 h-9
+                                rounded-xl
                                 bg-gradient-to-br from-[#1A0A0A] to-[#7A0019]
                                 text-white
                                 flex
                                 items-center
                                 justify-center
                                 font-black
-                                shadow-lg">
+                                shadow-lg
+                                flex-shrink-0">
                             ✓
                         </div>
 
                         <div>
-                            <h2 class="font-black text-lg text-slate-900">
+                            <h2 class="font-black text-sm text-slate-900">
                                 KPI Summary
                             </h2>
 
-                            <p class="text-xs text-slate-500">
+                            <p class="text-[11px] text-slate-500">
                                 Semak sebelum submit.
                             </p>
                         </div>
@@ -1849,77 +1850,77 @@
                     </div>
 
                     <!-- DIVIDER -->
-                    <div class="h-px bg-slate-200 my-5"></div>
+                    <div class="h-px bg-slate-200 my-3"></div>
 
                     <!-- OWNER -->
                     <div
-                        class="rounded-2xl
+                        class="rounded-xl
                             bg-slate-50
                             border
                             border-slate-200
-                            p-4">
+                            px-3 py-2">
 
-                        <p class="text-xs text-slate-400">
+                        <p class="text-[10px] text-slate-400">
                             Owner
                         </p>
 
-                        <p class="font-black text-[#7A0019] mt-1">
+                        <p class="font-black text-sm text-[#7A0019] mt-0.5">
                             {{ $user['short_name'] ?? '-' }}
                         </p>
 
                     </div>
 
                     <!-- TITLE -->
-                    <div class="mt-4">
+                    <div class="mt-2.5">
 
-                        <p class="text-xs text-slate-400">
+                        <p class="text-[10px] text-slate-400">
                             KPI Title
                         </p>
 
                         <p
                             id="summaryTitle"
-                            class="font-black text-slate-900 mt-1">
+                            class="font-black text-sm text-slate-900 mt-0.5 line-clamp-2">
                             Not entered yet
                         </p>
 
                     </div>
 
                     <!-- CATEGORY -->
-                    <div class="grid grid-cols-2 gap-3 mt-4">
+                    <div class="grid grid-cols-2 gap-2 mt-2.5">
 
                         <div
-                            class="rounded-2xl
+                            class="rounded-xl
                                 bg-[#FBF5EF]
                                 border
                                 border-[#6B3F2A]/20
-                                p-3">
+                                px-2.5 py-2">
 
-                            <p class="text-xs text-[#8B5E4A]">
+                            <p class="text-[10px] text-[#8B5E4A]">
                                 Category
                             </p>
 
                             <p
                                 id="summaryCategory"
-                                class="font-bold text-[#7A0019] mt-1">
+                                class="font-bold text-sm text-[#7A0019] mt-0.5">
                                 -
                             </p>
 
                         </div>
 
                         <div
-                            class="rounded-2xl
+                            class="rounded-xl
                                 bg-[#FBF5EF]
                                 border
                                 border-[#6B3F2A]/20
-                                p-3">
+                                px-2.5 py-2">
 
-                            <p class="text-xs text-[#8B5E4A]">
+                            <p class="text-[10px] text-[#8B5E4A]">
                                 Sub Category
                             </p>
 
                             <p
                                 id="summarySubCategory"
-                                class="font-bold text-[#7A0019] mt-1">
+                                class="font-bold text-sm text-[#7A0019] mt-0.5">
                                 -
                             </p>
 
@@ -1928,41 +1929,41 @@
                     </div>
 
                     <!-- TARGET -->
-                    <div class="grid grid-cols-2 gap-3 mt-4">
+                    <div class="grid grid-cols-2 gap-2 mt-2.5">
 
                         <div
-                            class="rounded-2xl
+                            class="rounded-xl
                                 border
                                 border-[#6B3F2A]/20
                                 bg-white
-                                p-4">
+                                px-3 py-2">
 
-                            <p class="text-xs text-slate-400">
+                            <p class="text-[10px] text-slate-400">
                                 Base Target
                             </p>
 
                             <p
                                 id="summaryBase"
-                                class="font-black text-lg text-[#7A0019] mt-1">
+                                class="font-black text-base text-[#7A0019] mt-0.5">
                                 0.00
                             </p>
 
                         </div>
 
                         <div
-                            class="rounded-2xl
+                            class="rounded-xl
                                 border
                                 border-purple-100
                                 bg-white
-                                p-4">
+                                px-3 py-2">
 
-                            <p class="text-xs text-slate-400">
+                            <p class="text-[10px] text-slate-400">
                                 Stretch Target
                             </p>
 
                             <p
                                 id="summaryStretch"
-                                class="font-black text-lg text-[#7A0019] mt-1">
+                                class="font-black text-base text-[#7A0019] mt-0.5">
                                 0.00
                             </p>
 
@@ -1971,17 +1972,17 @@
                     </div>
 
                     <!-- STATUS -->
-                    <div class="rounded-[20px] border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-4 mt-4">
+                    <div class="rounded-xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white px-3 py-2 mt-2.5">
 
-                        <p class="text-[11px] uppercase tracking-wider text-amber-600 font-black">
+                        <p class="text-[10px] uppercase tracking-wider text-amber-600 font-black">
                             CURRENT STATUS
                         </p>
 
-                        <div class="mt-2">
+                        <div class="mt-0.5">
 
                             <p
                                 id="summaryStatus"
-                                class="font-black">
+                                class="font-black text-sm">
 
                                 <span class="text-slate-500">
                                     Not Started
@@ -1994,20 +1995,20 @@
                     </div>
                     <!-- QUARTER TOTAL -->
                     <div
-                        class="mt-4
-                            rounded-2xl
+                        class="mt-2.5
+                            rounded-xl
                             bg-[#FBF5EF]
                             border
                             border-[#6B3F2A]/20
-                            p-4">
+                            px-3 py-2">
 
-                        <p class="quarter-total-label text-xs text-[#8B5E4A]">
+                        <p class="quarter-total-label text-[10px] text-[#8B5E4A]">
                             Quarter Target Total
                         </p>
 
                         <p
                             id="sidebarQuarterTargetTotal"
-                            class="text-xl font-black text-[#7A0019] mt-1">
+                            class="text-base font-black text-[#7A0019] mt-0.5">
                             0.00
                         </p>
 
@@ -2016,42 +2017,42 @@
 
                     <!-- LINKED TARGET (shown when sub_category has a linkage) -->
                     <div id="summaryLinkage"
-                         style="display:none;margin-top:16px;padding:12px 14px;border-radius:16px;border:1.5px solid #fcd34d;background:#fffbeb;">
+                         style="display:none;margin-top:10px;padding:8px 12px;border-radius:14px;border:1.5px solid #fcd34d;background:#fffbeb;">
                     </div>
 
                     <!-- AI SCORE -->
-                    <div class="mt-4 rounded-[20px] border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-4">
+                    <div class="mt-2.5 rounded-xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white px-3 py-2">
 
                         <div class="flex items-center justify-between">
 
                             <div>
-                                <p class="text-[11px] uppercase tracking-wider text-violet-500 font-black">ANIRA Score</p>
-                                <p class="text-xs text-slate-400 mt-0.5">AI quality check on your KPI</p>
+                                <p class="text-[10px] uppercase tracking-wider text-violet-500 font-black">ANIRA Score</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">AI quality check</p>
                             </div>
 
                             <button
                                 type="button"
                                 id="aiScoreBtn"
                                 onclick="aiScoreDescription()"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold transition"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-bold transition flex-shrink-0"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                                 <span id="aiScoreLabel">Score</span>
                             </button>
 
                         </div>
 
                         <!-- Result -->
-                        <div id="aiScoreBadge" class="hidden mt-3">
+                        <div id="aiScoreBadge" class="hidden mt-2">
 
                             <div class="flex items-center gap-3">
 
-                                <div id="aiScoreCircle" class="w-14 h-14 rounded-2xl flex flex-col items-center justify-center text-white font-black flex-shrink-0">
-                                    <span id="aiScoreNumber" class="text-xl leading-none"></span>
-                                    <span class="text-[10px] font-medium opacity-80">/10</span>
+                                <div id="aiScoreCircle" class="w-10 h-10 rounded-xl flex flex-col items-center justify-center text-white font-black flex-shrink-0">
+                                    <span id="aiScoreNumber" class="text-sm leading-none"></span>
+                                    <span class="text-[9px] font-medium opacity-80">/10</span>
                                 </div>
 
-                                <p id="aiScoreFeedback" class="text-xs text-slate-500 leading-snug"></p>
+                                <p id="aiScoreFeedback" class="text-[11px] text-slate-500 leading-snug"></p>
 
                             </div>
 
@@ -2062,7 +2063,7 @@
                     </div>
 
                     <!-- SUBMIT -->
-                    <div class="mt-4">
+                    <div class="mt-3">
 
                         <button
                             type="submit"
@@ -2072,8 +2073,8 @@
                                 hover:bg-[#c19c2f]
                                 text-[#1a1a1a]
                                 font-black
-                                py-4
-                                rounded-2xl
+                                py-3
+                                rounded-xl
                                 transition
                                 shadow-lg
                                 hover:-translate-y-0.5">
