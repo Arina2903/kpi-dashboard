@@ -318,6 +318,7 @@
             @endphp
 
             <div
+                id="approval-{{ $approval['id'] }}"
                 class="approval-card glass card-hover rounded-[24px] border p-5
                 @if($priority === 'critical')
                     border-red-300
@@ -1060,6 +1061,20 @@ document.addEventListener(
     function(){
 
         filterCards();
+
+        // Deep link from a notification — ?highlight=<request id> scrolls
+        // straight to that card and rings it gold for a moment instead of
+        // dumping the user on the generic list.
+        var highlightId = new URLSearchParams(window.location.search).get('highlight');
+        if (highlightId) {
+            var target = document.getElementById('approval-' + highlightId);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                target.style.transition = 'box-shadow .3s ease';
+                target.style.boxShadow = '0 0 0 3px #D4AF37';
+                setTimeout(function () { target.style.boxShadow = ''; }, 2500);
+            }
+        }
 
     }
 );

@@ -210,14 +210,6 @@
                 'items' => [
 
                     [
-                        'label' => 'Approval',
-                        'href' => '/approval',
-                        'match' => 'approval*',
-                        'icon' => 'approval',
-                        'badge' => $pendingApprovalCount ?? 0,
-                    ],
-
-                    [
                         'label' => 'User Activity Log',
                         'href' => '/activity-log',
                         'match' => 'activity-log*',

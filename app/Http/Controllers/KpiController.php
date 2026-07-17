@@ -26,16 +26,20 @@ class KpiController extends Controller
     }
 
     // Every approval-request insert site notifies the approver the same way —
-    // one place to keep the message/link shape consistent.
-    private function notifyApprover(string $approverId, string $type, string $requesterName, string $kpiTitle, string $summary): void
+    // one place to keep the message/link shape consistent. $requestId (when
+    // known) deep-links straight to that card on the approval page instead of
+    // dropping the approver on the generic list.
+    private function notifyApprover(string $approverId, string $type, string $requesterName, string $kpiTitle, string $summary, ?string $requestId = null): void
     {
+        $link = $requestId ? route('approval.index') . '?highlight=' . $requestId : route('approval.index');
+
         $this->notifications->notify(
             [$approverId],
             $type,
             ['name' => $requesterName],
             "{$requesterName} needs your approval",
             "{$summary}: {$kpiTitle}",
-            route('approval.index')
+            $link
         );
     }
 
@@ -1370,29 +1374,35 @@ class KpiController extends Controller
         }
 
         // Create completion approval request
-        $this->supabase->safeInsert('kpi_update_approvals', [
-            'kpi_id'            => $quarter['kpi_id'],
-            'quarter'           => $quarter['quarter'],
-            'quarter_id'        => $id,
-            'requested_actual'  => $quarter['quarter_actual'] ?? 0,
-            'old_actual'        => $quarter['quarter_actual'] ?? 0,
-            'quarter_target'    => $quarter['quarter_target'] ?? 0,
-            'reason'            => '[[COMPLETION]]' . $validated['completion_review'],
-            'attachment_url'    => $proofUrl,
-            'attachment_urls'   => json_encode($proofFiles),
-            'requested_by'      => $user['id'],
-            'requested_by_name' => $user['short_name'] ?? $user['full_name'] ?? 'Unknown',
-            'approver_id'       => $approverId,
-            'status'            => 'pending',
-            'created_at'        => $this->nowMy(),
-        ]);
+        try {
+            $completionInsert = $this->supabase->insert('kpi_update_approvals', [
+                'kpi_id'            => $quarter['kpi_id'],
+                'quarter'           => $quarter['quarter'],
+                'quarter_id'        => $id,
+                'requested_actual'  => $quarter['quarter_actual'] ?? 0,
+                'old_actual'        => $quarter['quarter_actual'] ?? 0,
+                'quarter_target'    => $quarter['quarter_target'] ?? 0,
+                'reason'            => '[[COMPLETION]]' . $validated['completion_review'],
+                'attachment_url'    => $proofUrl,
+                'attachment_urls'   => json_encode($proofFiles),
+                'requested_by'      => $user['id'],
+                'requested_by_name' => $user['short_name'] ?? $user['full_name'] ?? 'Unknown',
+                'approver_id'       => $approverId,
+                'status'            => 'pending',
+                'created_at'        => $this->nowMy(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('completeQuarter: approval insert failed', ['error' => $e->getMessage()]);
+            $completionInsert = null;
+        }
 
         $this->notifyApprover(
             $approverId,
             'kpi_completion_approval',
             $user['short_name'] ?? $user['full_name'] ?? 'Unknown',
             $kpi['kpi_title'] ?? 'a KPI',
-            'Quarter completion needs your approval'
+            'Quarter completion needs your approval',
+            $completionInsert[0]['id'] ?? null
         );
 
         return response()->json([
@@ -2455,7 +2465,8 @@ class KpiController extends Controller
             'kpi_target_change_approval',
             $user['short_name'] ?? 'Unknown',
             $kpi['kpi_title'] ?? 'a KPI',
-            'Target change needs your approval'
+            'Target change needs your approval',
+            $insertResult[0]['id'] ?? null
         );
 
         return response()->json([
@@ -2779,7 +2790,8 @@ class KpiController extends Controller
             'kpi_delete_approval',
             $user['short_name'] ?? $user['full_name'] ?? $user['name'] ?? 'Unknown',
             $kpi['kpi_title'] ?? 'a KPI',
-            'Delete request needs your approval'
+            'Delete request needs your approval',
+            $result[0]['id'] ?? null
         );
 
         /*
@@ -3134,7 +3146,8 @@ class KpiController extends Controller
                 'kpi_actual_approval',
                 $user['short_name'] ?? 'Unknown',
                 $kpiForNotify['kpi_title'] ?? 'a KPI',
-                'Actual value update needs your approval'
+                'Actual value update needs your approval',
+                $insertResult[0]['id'] ?? null
             );
 
         return response()->json([
@@ -3437,68 +3450,73 @@ class KpiController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $inserted = $this->supabase->safeInsert(
-            'kpi_update_approvals',
-            [
+        try {
+            $actualInsert = $this->supabase->insert(
+                'kpi_update_approvals',
+                [
 
-                'kpi_id'
-                    => $kpiId,
+                    'kpi_id'
+                        => $kpiId,
 
-                'quarter_id'
-                    => $quarterId,
+                    'quarter_id'
+                        => $quarterId,
 
-                'quarter'
-                    => $quarter['quarter'] ?? null,
+                    'quarter'
+                        => $quarter['quarter'] ?? null,
 
-                'old_actual'
-                    => $currentActual,
+                    'old_actual'
+                        => $currentActual,
 
-                'quarter_target'
-                    => $quarter['quarter_target'] ?? 0,
+                    'quarter_target'
+                        => $quarter['quarter_target'] ?? 0,
 
-                'requested_actual'
-                    => $validated['requested_actual'],
+                    'requested_actual'
+                        => $validated['requested_actual'],
 
-                'reason'
-                    => $validated['reason'],
+                    'reason'
+                        => $validated['reason'],
 
-                'variance'
-                    => round($variance, 2),
+                    'variance'
+                        => round($variance, 2),
 
-                'risk_level'
-                    => $riskLevel,
+                    'risk_level'
+                        => $riskLevel,
 
-                'requested_by'
-                    => $user['id'],
+                    'requested_by'
+                        => $user['id'],
 
-                'requested_by_name'
-                    => $user['short_name'] ?? 'Unknown',
+                    'requested_by_name'
+                        => $user['short_name'] ?? 'Unknown',
 
-                'requested_by_role'
-                    => $user['role']
-                    ?? null,
+                    'requested_by_role'
+                        => $user['role']
+                        ?? null,
 
-                'approver_id'
-                    => $approverId,
+                    'approver_id'
+                        => $approverId,
 
-                'approver_name'
-                    => $approver['short_name']
-                    ?? null,
+                    'approver_name'
+                        => $approver['short_name']
+                        ?? null,
 
-                'approver_role'
-                    => $approver['role']
-                    ?? null,
+                    'approver_role'
+                        => $approver['role']
+                        ?? null,
 
-                'status'
-                    => 'pending',
+                    'status'
+                        => 'pending',
 
-                'created_at'
-                    => $this->nowMy(),
+                    'created_at'
+                        => $this->nowMy(),
 
-            ]
-        );
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::error('submitActualUpdateRequest: insert failed', ['error' => $e->getMessage()]);
+            $actualInsert = null;
+        }
 
-        if (!$inserted) {
+        if (!$actualInsert) {
 
             return response()->json([
                 'success' => false,
@@ -3511,7 +3529,8 @@ class KpiController extends Controller
             'kpi_actual_approval',
             $user['short_name'] ?? 'Unknown',
             $kpi['kpi_title'] ?? 'a KPI',
-            'Actual value update needs your approval'
+            'Actual value update needs your approval',
+            $actualInsert[0]['id'] ?? null
         );
 
         return response()->json([

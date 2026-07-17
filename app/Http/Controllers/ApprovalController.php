@@ -838,7 +838,7 @@ class ApprovalController extends Controller
         $newWt = round((float) $validated['new_weightage'], 2);
 
         try {
-            $supabase->insert('kpi_target_change_requests', [
+            $wcInsert = $supabase->insert('kpi_target_change_requests', [
                 'kpi_id'             => $id,
                 'requested_by'       => $userId,
                 'requested_by_name'  => session('short_name') ?? '',
@@ -865,13 +865,14 @@ class ApprovalController extends Controller
             ], 500);
         }
 
+        $wcId = $wcInsert[0]['id'] ?? null;
         $this->notifications->notify(
             [$approver['id']],
             'kpi_weightage_approval',
             ['name' => session('short_name') ?? 'Someone'],
             (session('short_name') ?? 'Someone') . ' needs your approval',
             'Weightage change needs your approval: ' . ($kpi['kpi_title'] ?? 'a KPI'),
-            route('approval.index')
+            $wcId ? route('approval.index') . '?highlight=' . $wcId : route('approval.index')
         );
 
         return response()->json([
