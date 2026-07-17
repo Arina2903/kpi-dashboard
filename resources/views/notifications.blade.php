@@ -22,6 +22,7 @@
     $typeMeta = [
         'job_description_submitted' => ['icon' => '📋', 'label' => 'Job Description'],
         'appraisal_submitted'       => ['icon' => '📝', 'label' => 'Appraisal'],
+        'appraisal_appraised'       => ['icon' => '✅', 'label' => 'Ready to Sign'],
     ];
     $unreadCount = collect($notifications)->where('is_read', false)->count();
 @endphp

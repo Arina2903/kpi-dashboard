@@ -1457,6 +1457,29 @@ window.saveEvaluation = function(action) {
     // has submitted, but the server also rejects this — this just avoids a
     // pointless round trip.
     if (_isAppraiserView && _myLevelLocked) { showToast('Your section is already submitted and locked.', false); return; }
+    // Mirrors the server-side check in PerformanceController::missingAppraiserFields()
+    // — catches it before the round trip, server still enforces it either way.
+    if (_isAppraiserView && action === 'submit') {
+        var apprData = collectFormData();
+        var apprMissing = [];
+        if (_appraiserLevel === 'manager') {
+            if (!apprData['s6_s2_app'])          apprMissing.push('Appraiser score (Section 2)');
+            if (!apprData['s6_s3_app'])          apprMissing.push('Superior rating (Section 3)');
+            if (!apprData['s7_manager_remarks']) apprMissing.push('Recommendations & remarks (Section 7)');
+            if (!apprData['sig_appraiser'])      apprMissing.push('Appraiser signature');
+            if (!apprData['s7_manager_sig'])     apprMissing.push('Section 7 signature');
+        } else if (_appraiserLevel === 'vp') {
+            if (!apprData['s7_vp_remarks']) apprMissing.push('VP remarks (Section 7)');
+            if (!apprData['s7_vp_sig'])     apprMissing.push('VP signature (Section 7)');
+        } else if (_appraiserLevel === 'slt') {
+            if (!apprData['s7_slt_remarks']) apprMissing.push('SLT remarks (Section 7)');
+            if (!apprData['s7_slt_sig'])     apprMissing.push('SLT signature (Section 7)');
+        }
+        if (apprMissing.length > 0) {
+            showToast('Please complete: ' + apprMissing.join(', ') + '.', false);
+            return;
+        }
+    }
     // 'acknowledge' happens after the submission window closes, so it's exempt from the window check.
     if (!_isAppraiserView && action !== 'acknowledge' && !_isWindowOpen) { showToast('Evaluation window is closed.', false); return; }
     // Validate Section 3 only for appraisee submit

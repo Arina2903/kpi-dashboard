@@ -824,7 +824,46 @@ class PerformanceController extends Controller
         ]);
     }
 
-    public function appraiserSave(string $employeeId, string $quarter, \Illuminate\Http\Request $request, SupabaseService $supabase)
+    // What must be filled before an appraiser level is allowed to submit (and
+    // therefore lock) their section. Manager's submit is the one that advances
+    // the whole appraisal to "appraised" and unlocks the appraisee's own
+    // acknowledgment signature, so it's held to the fullest standard: their
+    // KPI/attitude scores, Section 7 remarks, and both signature fields
+    // (the overall appraiser sign-off plus their Section 7 one).
+    private function missingAppraiserFields(string $level, array $data): array
+    {
+        $isBlank = fn($v) => !isset($v) || $v === '' || $v === null;
+
+        $checks = match ($level) {
+            'manager' => [
+                'Appraiser score (Section 2)'        => $data['s6_s2_app'] ?? null,
+                'Superior rating (Section 3)'        => $data['s6_s3_app'] ?? null,
+                'Recommendations & remarks (Section 7)' => $data['s7_manager_remarks'] ?? null,
+                'Appraiser signature'                => $data['sig_appraiser'] ?? null,
+                'Section 7 signature'                => $data['s7_manager_sig'] ?? null,
+            ],
+            'vp' => [
+                'VP remarks (Section 7)'    => $data['s7_vp_remarks'] ?? null,
+                'VP signature (Section 7)'  => $data['s7_vp_sig'] ?? null,
+            ],
+            'slt' => [
+                'SLT remarks (Section 7)'   => $data['s7_slt_remarks'] ?? null,
+                'SLT signature (Section 7)' => $data['s7_slt_sig'] ?? null,
+            ],
+            default => [],
+        };
+
+        $missing = [];
+        foreach ($checks as $label => $value) {
+            if ($isBlank($value)) {
+                $missing[] = $label;
+            }
+        }
+
+        return $missing;
+    }
+
+    public function appraiserSave(string $employeeId, string $quarter, \Illuminate\Http\Request $request, SupabaseService $supabase, \App\Services\NotificationService $notifications)
     {
         if (!session()->has('employee_uuid')) {
             return response()->json(['error' => 'Unauthenticated'], 401);
@@ -900,11 +939,36 @@ class PerformanceController extends Controller
             }
         }
 
+        $mergedData = array_merge($existingData, $allowedData);
+
+        // Submitting locks this level's section, so require everything it's
+        // responsible for to actually be filled in first — otherwise a
+        // half-empty appraisal could get locked with no way to fix it. The
+        // fields they *did* fill in are still saved as a draft so nothing
+        // typed gets lost, just not locked/advanced.
         if ($action === 'submit') {
-            $allowedData[$lockKey] = true;
+            $missing = $this->missingAppraiserFields($appraiserLevel, $mergedData);
+            if (!empty($missing)) {
+                $supabase->upsert('performance_reports', [
+                    'employee_id'    => $employeeId,
+                    'company_code'   => session('company_code'),
+                    'financial_year' => $this->currentFinancialYear,
+                    'quarter'        => $q,
+                    'form_data'      => $mergedData,
+                    'status'         => $currentStatus,
+                    'updated_at'     => now()->toISOString(),
+                ], 'employee_id,financial_year,quarter');
+
+                return response()->json([
+                    'error'   => 'Please complete before submitting: ' . implode(', ', $missing) . '.',
+                    'missing' => $missing,
+                ], 422);
+            }
+
+            $mergedData[$lockKey] = true;
         }
 
-        $newData = array_merge($existingData, $allowedData);
+        $newData = $mergedData;
 
         // Only the manager's explicit submit ("Mark as Appraised") advances the
         // overall status — everything else (a draft save, or a VP/SLT submitting
@@ -925,6 +989,24 @@ class PerformanceController extends Controller
             'status'         => $status,
             'updated_at'     => now()->toISOString(),
         ], 'employee_id,financial_year,quarter');
+
+        // Manager's submit is what unlocks the appraisee's own acknowledgment
+        // signature — tell them their turn has come, in-app and via Telegram.
+        if ($action === 'submit' && $appraiserLevel === 'manager' && $status === 'appraised') {
+            $appraiser     = $supabase->first('employees', ['id' => 'eq.' . $viewerId, 'select' => 'full_name,short_name']);
+            $appraiserName = $appraiser['full_name'] ?? $appraiser['short_name'] ?? 'Your appraiser';
+
+            $notifications->notify(
+                [$employeeId],
+                'appraisal_appraised',
+                ['id' => $viewerId, 'name' => $appraiserName],
+                "Your {$q} appraisal is ready for your signature",
+                "{$appraiserName} has completed your review. Please sign to acknowledge.",
+                route('performance.report.quarter', strtolower($q)),
+                $q,
+                $this->currentFinancialYear
+            );
+        }
 
         return response()->json(['success' => true, 'status' => $status, 'locked' => $action === 'submit']);
     }
