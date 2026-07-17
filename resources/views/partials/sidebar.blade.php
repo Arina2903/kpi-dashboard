@@ -159,12 +159,6 @@
                         'icon'     => 'analytics',
                         'slt_only' => true,
                     ],
-                    [
-                        'label' => 'Help & Guide',
-                        'href'  => route('help'),
-                        'match' => 'help*',
-                        'icon'  => 'help',
-                    ],
                 ],
             ],
             [
@@ -383,6 +377,30 @@
 
     <!-- SYSTEM ZONE -->
     <div class="sidebar-system mt-3 pt-3 border-t border-white/10 shrink-0">
+
+        <a
+            href="{{ route('help') }}"
+            class="group relative flex items-center gap-3 px-3 py-2 mb-2 rounded-xl transition
+            {{ request()->is('help*')
+                ? 'bg-gradient-to-r from-[#C8102E] to-[#7A0019] border-l-[3px] border-[#D4AF37] text-white font-black shadow-md'
+                : 'text-white/85 font-medium hover:bg-white/10 hover:text-white'
+            }}"
+        >
+            <span class="w-5 h-5 flex items-center justify-center shrink-0">
+                @include('partials.sidebar-icons', ['icon' => 'help'])
+            </span>
+
+            <span class="sidebar-text truncate">
+                Help &amp; Guide
+            </span>
+
+            <div class="sidebar-tooltip hidden absolute left-[58px] top-1/2 -translate-y-1/2
+                bg-black text-white text-[10px] px-2 py-1 rounded-md
+                opacity-0 group-hover:opacity-100 pointer-events-none transition duration-150
+                whitespace-nowrap z-[9999] shadow-lg">
+                Help & Guide
+            </div>
+        </a>
 
         <a
             href="{{ route('profile') }}"
