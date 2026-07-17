@@ -159,6 +159,12 @@
                         'icon'     => 'analytics',
                         'slt_only' => true,
                     ],
+                    [
+                        'label' => 'Help & Guide',
+                        'href'  => route('help'),
+                        'match' => 'help*',
+                        'icon'  => 'help',
+                    ],
                 ],
             ],
             [
