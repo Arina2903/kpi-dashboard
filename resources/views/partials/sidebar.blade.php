@@ -371,26 +371,21 @@
                 </div>
             </div>
         @endforeach
-    </nav>
-    <div class="pointer-events-none absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#111111] to-transparent"></div>
-    </div>
 
-    <!-- SYSTEM ZONE -->
-    <div class="sidebar-system mt-3 pt-3 border-t border-white/10 shrink-0">
-
+        <!-- HELP & GUIDE — last item in the scrollable nav, smaller than regular items -->
         <a
             href="{{ route('help') }}"
-            class="group relative flex items-center gap-3 px-3 py-2 mb-2 rounded-xl transition
+            class="group relative flex items-center gap-2 px-3 py-1.5 rounded-lg transition mt-1
             {{ request()->is('help*')
-                ? 'bg-gradient-to-r from-[#C8102E] to-[#7A0019] border-l-[3px] border-[#D4AF37] text-white font-black shadow-md'
-                : 'text-white/85 font-medium hover:bg-white/10 hover:text-white'
+                ? 'bg-gradient-to-r from-[#C8102E] to-[#7A0019] border-l-[3px] border-[#D4AF37] text-white font-bold shadow-md'
+                : 'text-white/60 font-medium hover:bg-white/10 hover:text-white'
             }}"
         >
-            <span class="w-5 h-5 flex items-center justify-center shrink-0">
+            <span class="w-4 h-4 flex items-center justify-center shrink-0">
                 @include('partials.sidebar-icons', ['icon' => 'help'])
             </span>
 
-            <span class="sidebar-text truncate">
+            <span class="sidebar-text truncate text-[11px]">
                 Help &amp; Guide
             </span>
 
@@ -401,6 +396,12 @@
                 Help & Guide
             </div>
         </a>
+    </nav>
+    <div class="pointer-events-none absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#111111] to-transparent"></div>
+    </div>
+
+    <!-- SYSTEM ZONE -->
+    <div class="sidebar-system mt-3 pt-3 border-t border-white/10 shrink-0">
 
         <a
             href="{{ route('profile') }}"
