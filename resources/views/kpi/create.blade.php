@@ -647,23 +647,6 @@
                 {{ $fy ?? 'FY' . now()->year }} · KPI ini akan direkod atas nama anda sendiri.
             </p>
         </div>
-
-        <div class="mt-3 flex flex-wrap gap-2 text-sm">
-            <div class="bg-white/10 border border-white/15 rounded-xl px-2.5 py-1.5">
-                <p class="text-white/70 text-[10px]">Owner</p>
-                <p class="font-black text-sm">{{ $user['short_name'] ?? '-' }}</p>
-            </div>
-
-            <div class="bg-white/10 border border-white/15 rounded-xl px-2.5 py-1.5">
-                <p class="text-white/70 text-[10px]">Role</p>
-                <p class="font-black text-sm">{{ $user['role'] ?? '-' }}</p>
-            </div>
-
-            <div class="bg-white/10 border border-white/15 rounded-xl px-2.5 py-1.5">
-                <p class="text-white/70 text-[10px]">Department</p>
-                <p class="font-black text-sm">{{ $user['department_code'] ?? '-' }}</p>
-            </div>
-        </div>
     </div>
 </div>
 </div>
@@ -1828,8 +1811,8 @@
             <aside class="lg:col-span-4">
 
                 <div
-                    class="sticky top-[226px]
-                        max-h-[calc(100vh-242px)]
+                    class="sticky top-[160px]
+                        max-h-[calc(100vh-176px)]
                         overflow-y-auto
                         rounded-[28px]
                         border border-slate-200
