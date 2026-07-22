@@ -87,7 +87,15 @@
 <div class="px-4 pb-4 space-y-3">
 
     {{-- ═══════ STAT CARDS ═══════ --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+    @php
+        $stages = [
+            ['key' => 'not_submitted',    'label' => 'Not Submitted',      'count' => $notSubmittedCount,    'bg' => '#DC2626', 'soft' => '#FEE2E2', 'text' => '#DC2626', 'hint' => 'Staff hasn\'t started'],
+            ['key' => 'pending',          'label' => 'Awaiting Appraisal', 'count' => $pendingCount,         'bg' => '#94A3B8', 'soft' => '#F1F5F9', 'text' => '#64748B', 'hint' => 'Waiting on their boss'],
+            ['key' => 'awaiting_signoff', 'label' => 'Awaiting Sign-off',  'count' => $awaitingSignoffCount, 'bg' => '#F59E0B', 'soft' => '#FEF3C7', 'text' => '#B45309', 'hint' => 'Waiting on staff to sign'],
+            ['key' => 'completed',        'label' => 'Completed',          'count' => $completedCount,       'bg' => '#10B981', 'soft' => '#D1FAE5', 'text' => '#047857', 'hint' => 'Fully signed off & scored'],
+        ];
+    @endphp
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
 
         <div class="bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] p-4">
             <div class="flex items-center gap-2 mb-3">
@@ -107,22 +115,42 @@
             <p class="text-[9px] text-slate-400 mt-2">% of staff who have submitted their self-assessment for {{ $quarter }}</p>
         </div>
 
-        <div class="bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] p-4">
+        {{-- APPRAISAL PROGRESS FUNNEL — shows exactly what stage every staff member is at --}}
+        <div class="md:col-span-2 bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] p-4">
             <div class="flex items-center gap-2 mb-3">
                 <span class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </span>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Appraisal Completion</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Appraisal Progress</p>
             </div>
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-xs text-slate-500 font-semibold">Completed &amp; Scored</span>
-                <span class="text-2xl font-black text-emerald-600">{{ $completedCount }}</span>
+
+            {{-- Segmented stage bar --}}
+            <div class="h-3 rounded-full overflow-hidden flex bg-slate-100">
+                @foreach($stages as $s)
+                    @if($s['count'] > 0)
+                    <div title="{{ $s['label'] }}: {{ $s['count'] }}" style="width:{{ $totalStaff > 0 ? max(2, round($s['count'] / $totalStaff * 100, 1)) : 0 }}%;background:{{ $s['bg'] }};"></div>
+                    @endif
+                @endforeach
             </div>
-            <div class="flex items-center justify-between">
-                <span class="text-xs text-slate-500 font-semibold">Not Yet Complete</span>
-                <span class="text-2xl font-black text-red-500">{{ $notCompleteCount }}</span>
+
+            {{-- 4-stage legend, clickable to filter the staff list below --}}
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+                @foreach($stages as $s)
+                <button type="button" onclick="filterBand('{{ $s['key'] }}')" data-band="{{ $s['key'] }}"
+                    class="band-pill stage-pill text-left rounded-xl px-2.5 py-2 border transition hover:-translate-y-0.5"
+                    style="background:{{ $s['soft'] }};border-color:{{ $s['bg'] }}33;">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:{{ $s['bg'] }};"></span>
+                        <span class="text-[9px] font-black uppercase tracking-wide truncate" style="color:{{ $s['text'] }};">{{ $s['label'] }}</span>
+                    </div>
+                    <div class="flex items-baseline justify-between mt-0.5">
+                        <span class="text-lg font-black" style="color:{{ $s['text'] }};">{{ $s['count'] }}</span>
+                        <span class="text-[8px] text-slate-400">{{ $totalStaff > 0 ? round($s['count'] / $totalStaff * 100) : 0 }}%</span>
+                    </div>
+                </button>
+                @endforeach
             </div>
-            <p class="text-[9px] text-slate-400 mt-2">"Not Yet Complete" = staff hasn't submitted, manager hasn't finished appraising, or staff hasn't signed off yet</p>
+            <p class="text-[9px] text-slate-400 mt-2.5">Click a stage to filter the staff list · a name only counts as "Completed" once staff has signed the appraiser's review back</p>
         </div>
 
         <div class="bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] p-4 flex items-center justify-between">
@@ -265,12 +293,17 @@ new Chart(document.getElementById('chartBandDist'), {
 });
 
 function filterBand(band) {
+    var scoreBandKeys = Object.keys(bandMeta); // unsatisfactory, below_average, meets_expectations, outstanding
     document.querySelectorAll('.band-pill').forEach(function (btn) {
         btn.classList.toggle('active', btn.dataset.band === band);
     });
     document.querySelectorAll('#staffListBody tr').forEach(function (tr) {
         if (tr.classList.contains('role-group-row')) return; // group headers always follow their rows
-        tr.style.display = (band === 'all' || tr.dataset.band === band) ? '' : 'none';
+        var rowBand = tr.dataset.band;
+        var matches = band === 'all'
+            || rowBand === band
+            || (band === 'completed' && scoreBandKeys.indexOf(rowBand) !== -1);
+        tr.style.display = matches ? '' : 'none';
     });
     // Hide a group header if every row under it is now hidden
     document.querySelectorAll('#staffListBody .role-group-row').forEach(function (header) {
@@ -286,7 +319,7 @@ function filterBand(band) {
     if (band === 'all') {
         subtitle.textContent = 'All staff, grouped by seniority (SLT → VP → Manager → Executive)';
     } else {
-        var statusLabels = { not_submitted: 'Not Submitted', pending: 'Awaiting Appraisal', awaiting_signoff: 'Awaiting Sign-off' };
+        var statusLabels = { not_submitted: 'Not Submitted', pending: 'Awaiting Appraisal', awaiting_signoff: 'Awaiting Sign-off', completed: 'Completed' };
         var label = bandMeta[band] ? bandMeta[band].label : (statusLabels[band] || band);
         subtitle.textContent = 'Showing: ' + label;
     }
