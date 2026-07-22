@@ -155,31 +155,39 @@ class KpiController extends Controller
         $kpis = [];
 
         if ($role === 'VP') {
-            $kpis = $supabase->get('kpis', [
-                'company_code'  => 'eq.' . $user['company_code'],
-                'department_code' => 'eq.' . $user['department_code'],
-                'financial_year' => 'eq.' . $fy,
-                'select' => '*',
-                'order' => 'created_at.desc',
-            ]) ?? [];
+            // These three reads don't depend on each other, so they're fetched
+            // concurrently instead of one after another (same queries, same
+            // results — just sent over the wire at the same time).
+            $vpBatch = $supabase->getMany([
+                'kpis' => ['table' => 'kpis', 'query' => [
+                    'company_code'  => 'eq.' . $user['company_code'],
+                    'department_code' => 'eq.' . $user['department_code'],
+                    'financial_year' => 'eq.' . $fy,
+                    'select' => '*',
+                    'order' => 'created_at.desc',
+                ]],
+                'employees' => ['table' => 'employees', 'query' => [
+                    'company_code'   => 'eq.' . $user['company_code'],
+                    'department_code' => 'eq.' . $user['department_code'],
+                    'is_active' => 'eq.true',
+                    'select' => 'id,employee_id,short_name,role,department_code',
+                ]],
+                'allCompanyKpis' => ['table' => 'kpis', 'query' => [
+                    'company_code'   => 'eq.' . $user['company_code'],
+                    'financial_year' => 'eq.' . $fy,
+                    'select'         => 'department_code,base_target,actual_value',
+                ]],
+            ]);
 
-            $employees = $supabase->get('employees', [
-                'company_code'   => 'eq.' . $user['company_code'],
-                'department_code' => 'eq.' . $user['department_code'],
-                'is_active' => 'eq.true',
-                'select' => 'id,employee_id,short_name,role,department_code',
-            ]) ?? [];
+            $kpis      = $vpBatch['kpis'] ?? [];
+            $employees = $vpBatch['employees'] ?? [];
 
             /*
             |------------------------------------------------------------------
             | COMPANY-WIDE DEPT SUMMARY (lightweight, no quarters)
             |------------------------------------------------------------------
             */
-            $allCompanyKpis = $supabase->get('kpis', [
-                'company_code'   => 'eq.' . $user['company_code'],
-                'financial_year' => 'eq.' . $fy,
-                'select'         => 'department_code,base_target,actual_value',
-            ]) ?? [];
+            $allCompanyKpis = $vpBatch['allCompanyKpis'] ?? [];
 
             $deptNameMap = collect($supabase->get('departments', [
                 'company_code' => 'eq.' . $user['company_code'],
@@ -204,20 +212,25 @@ class KpiController extends Controller
                 ->toArray();
 
         } elseif ($role === 'MANAGER') {
-            $kpis = $supabase->get('kpis', [
-                'company_code'  => 'eq.' . $user['company_code'],
-                'department_code' => 'eq.' . $user['department_code'],
-                'financial_year' => 'eq.' . $fy,
-                'select' => '*',
-                'order' => 'created_at.desc',
-            ]) ?? [];
+            // Independent reads — fetched concurrently, same as the VP branch above.
+            $managerBatch = $supabase->getMany([
+                'kpis' => ['table' => 'kpis', 'query' => [
+                    'company_code'  => 'eq.' . $user['company_code'],
+                    'department_code' => 'eq.' . $user['department_code'],
+                    'financial_year' => 'eq.' . $fy,
+                    'select' => '*',
+                    'order' => 'created_at.desc',
+                ]],
+                'employees' => ['table' => 'employees', 'query' => [
+                    'company_code'   => 'eq.' . $user['company_code'],
+                    'department_code' => 'eq.' . $user['department_code'],
+                    'is_active' => 'eq.true',
+                    'select' => 'id,employee_id,short_name,role,department_code',
+                ]],
+            ]);
 
-            $employees = $supabase->get('employees', [
-                'company_code'   => 'eq.' . $user['company_code'],
-                'department_code' => 'eq.' . $user['department_code'],
-                'is_active' => 'eq.true',
-                'select' => 'id,employee_id,short_name,role,department_code',
-            ]) ?? [];
+            $kpis      = $managerBatch['kpis'] ?? [];
+            $employees = $managerBatch['employees'] ?? [];
         } else {
 
         /*

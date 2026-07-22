@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use App\Services\ApprovalActionService;
 
 class SupabaseService
@@ -10,6 +11,14 @@ class SupabaseService
     protected string $url;
 
     protected string $key;
+
+    // These reference tables are never written to by the app (managed
+    // directly in Supabase) and change extremely rarely, so a short cache
+    // avoids re-fetching them on every single page load — every controller
+    // re-reads "departments" for the sidebar/switcher on every request.
+    private const CACHEABLE_TABLES = ['companies', 'departments', 'kpi_permissions'];
+
+    private const CACHE_TTL_SECONDS = 180;
 
     public function __construct()
     {
@@ -69,6 +78,24 @@ class SupabaseService
         array $query = []
     ){
 
+        if (in_array($table, self::CACHEABLE_TABLES, true)) {
+            $cacheKey = 'supabase:' . $table . ':' . md5(json_encode($query));
+
+            return Cache::remember(
+                $cacheKey,
+                self::CACHE_TTL_SECONDS,
+                fn () => $this->fetch($table, $query)
+            );
+        }
+
+        return $this->fetch($table, $query);
+    }
+
+    private function fetch(
+        string $table,
+        array $query
+    ){
+
         return $this->request()
 
             ->get(
@@ -79,6 +106,61 @@ class SupabaseService
             ->throw()
 
             ->json();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET MANY (concurrent)
+    |--------------------------------------------------------------------------
+    | Runs several independent GET requests over the wire in parallel instead
+    | of one after another. Each Supabase REST call pays a full network
+    | round-trip (commonly 300-700ms from this app to Supabase), so a
+    | controller issuing N sequential calls pays N round-trips; this pays
+    | roughly the cost of the single slowest one. Only use this for calls
+    | that don't depend on each other's results — it does not change what
+    | gets requested, just when the requests are sent.
+    |
+    | $requests: ['key' => ['table' => 'kpis', 'query' => [...]], ...]
+    | Returns:   ['key' => <decoded json response>, ...] — same shape as
+    |            calling get() for each entry one at a time.
+    */
+
+    public function getMany(array $requests): array
+    {
+        if (empty($requests)) {
+            return [];
+        }
+
+        $headers = [
+            'apikey'        => $this->key,
+            'Authorization' => 'Bearer ' . $this->key,
+            'Content-Type'  => 'application/json',
+            'Accept'        => 'application/json',
+            'Prefer'        => 'return=representation',
+        ];
+
+        $responses = Http::pool(function (\Illuminate\Http\Client\Pool $pool) use ($requests, $headers) {
+            $calls = [];
+            foreach ($requests as $key => $req) {
+                $calls[] = $pool->as($key)
+                    ->timeout(15)
+                    ->connectTimeout(5)
+                    ->withHeaders($headers)
+                    ->get($this->endpoint($req['table']), $req['query'] ?? []);
+            }
+            return $calls;
+        });
+
+        $results = [];
+        foreach ($requests as $key => $req) {
+            $response = $responses[$key];
+            if ($response instanceof \Throwable) {
+                throw $response;
+            }
+            $results[$key] = $response->throw()->json();
+        }
+
+        return $results;
     }
 
     /*

@@ -119,59 +119,74 @@ class DashboardController extends Controller
         $allCompanyEmployees = $rankingResult['employees'] ?? [];
 
         // ── KPI LINKAGES (cascading targets) ────────────────────────────────
+        // These are all independent of one another (different filters, no
+        // shared data dependency), so they're fetched concurrently instead of
+        // one after another — same requests, same results, just sent at once.
         $fy       = $this->currentFinancialYear;
         $userId   = $user['id'];
         $userRole = strtoupper(trim($user['role'] ?? ''));
 
-        $incomingLinkages = $supabase->get('kpi_linkages', [
-            'assignee_id'    => 'eq.' . $userId,
-            'financial_year' => 'eq.' . $fy,
-            'company_code'   => 'eq.' . $companyCode,
-            'select'         => '*',
-        ]) ?? [];
+        $batch = [
+            'incoming' => ['table' => 'kpi_linkages', 'query' => [
+                'assignee_id'    => 'eq.' . $userId,
+                'financial_year' => 'eq.' . $fy,
+                'company_code'   => 'eq.' . $companyCode,
+                'select'         => '*',
+            ]],
+            'outgoing' => ['table' => 'kpi_linkages', 'query' => [
+                'assigner_id'    => 'eq.' . $userId,
+                'financial_year' => 'eq.' . $fy,
+                'company_code'   => 'eq.' . $companyCode,
+                'select'         => '*',
+            ]],
+        ];
 
-        $outgoingLinkages = $supabase->get('kpi_linkages', [
-            'assigner_id'    => 'eq.' . $userId,
-            'financial_year' => 'eq.' . $fy,
-            'company_code'   => 'eq.' . $companyCode,
-            'select'         => '*',
-        ]) ?? [];
-
-        $directReports = [];
         if ($userRole === 'SLT') {
-            $directReports = $supabase->get('employees', [
+            $batch['directReports'] = ['table' => 'employees', 'query' => [
                 'company_code' => 'eq.' . $companyCode,
                 'role'         => 'eq.VP',
                 'is_active'    => 'eq.true',
                 'select'       => 'id,short_name,role',
                 'order'        => 'short_name.asc',
-            ]) ?? [];
+            ]];
         } elseif ($userRole === 'VP') {
-            $byVpId = $supabase->get('employees', [
+            $batch['byVpId'] = ['table' => 'employees', 'query' => [
                 'company_code' => 'eq.' . $companyCode,
                 'vp_id'        => 'eq.' . $userId,
                 'is_active'    => 'eq.true',
                 'select'       => 'id,short_name,role',
-            ]) ?? [];
-            $byReportsTo = $supabase->get('employees', [
+            ]];
+            $batch['byReportsTo'] = ['table' => 'employees', 'query' => [
                 'company_code'  => 'eq.' . $companyCode,
                 'reports_to_id' => 'eq.' . $userId,
                 'is_active'     => 'eq.true',
                 'select'        => 'id,short_name,role',
-            ]) ?? [];
-            $drIds = collect($byVpId)->pluck('id')->toArray();
-            foreach ($byReportsTo as $r) {
-                if (!in_array($r['id'], $drIds)) { $byVpId[] = $r; $drIds[] = $r['id']; }
-            }
-            $directReports = $byVpId;
+            ]];
         } elseif ($userRole === 'MANAGER') {
-            $directReports = $supabase->get('employees', [
+            $batch['directReports'] = ['table' => 'employees', 'query' => [
                 'company_code' => 'eq.' . $companyCode,
                 'manager_id'   => 'eq.' . $userId,
                 'is_active'    => 'eq.true',
                 'select'       => 'id,short_name,role',
                 'order'        => 'short_name.asc',
-            ]) ?? [];
+            ]];
+        }
+
+        $batchResults     = $supabase->getMany($batch);
+        $incomingLinkages = $batchResults['incoming'] ?? [];
+        $outgoingLinkages = $batchResults['outgoing'] ?? [];
+
+        $directReports = [];
+        if ($userRole === 'SLT' || $userRole === 'MANAGER') {
+            $directReports = $batchResults['directReports'] ?? [];
+        } elseif ($userRole === 'VP') {
+            $byVpId      = $batchResults['byVpId'] ?? [];
+            $byReportsTo = $batchResults['byReportsTo'] ?? [];
+            $drIds       = collect($byVpId)->pluck('id')->toArray();
+            foreach ($byReportsTo as $r) {
+                if (!in_array($r['id'], $drIds)) { $byVpId[] = $r; $drIds[] = $r['id']; }
+            }
+            $directReports = $byVpId;
         }
 
         return view('dashboard', [
