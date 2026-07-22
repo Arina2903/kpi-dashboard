@@ -553,10 +553,14 @@ class PerformanceController extends Controller
             ]);
             $employeeName = $employee['full_name'] ?? $employee['short_name'] ?? 'An employee';
 
-            $recipients = $notifications->appraiserChainFor(session('employee_uuid'));
-            if (!empty($recipients)) {
+            // Only the direct manager reviews a freshly-submitted self-assessment —
+            // VP/SLT are notified separately once the manager has scored and signed
+            // (see appraiserSave()), so they aren't alerted before there's anything
+            // to add remarks on.
+            $directManager = $notifications->appraiserChainFor(session('employee_uuid'))[0] ?? null;
+            if ($directManager) {
                 $notifications->notify(
-                    $recipients,
+                    [$directManager],
                     'appraisal_submitted',
                     ['id' => session('employee_uuid'), 'name' => $employeeName],
                     "{$employeeName} submitted their {$q} appraisal",
@@ -1006,6 +1010,25 @@ class PerformanceController extends Controller
                 $q,
                 $this->currentFinancialYear
             );
+
+            // VP/SLT only need to add their own Section 7 remarks — no point
+            // alerting them before the manager has actually scored and signed,
+            // so that notification is sent here rather than on initial submit.
+            $upperChain = array_slice($notifications->appraiserChainFor($employeeId), 1);
+            if (!empty($upperChain)) {
+                $appraiseeName = $employees[0]['full_name'] ?? $employees[0]['short_name'] ?? 'An employee';
+
+                $notifications->notify(
+                    $upperChain,
+                    'appraisal_appraised',
+                    ['id' => $employeeId, 'name' => $appraiseeName],
+                    "{$appraiseeName}'s {$q} appraisal is ready for your remarks",
+                    "{$appraiserName} has completed scoring and signed. Please add your remarks.",
+                    route('performance.appraise.report', [$employeeId, strtolower($q)]),
+                    $q,
+                    $this->currentFinancialYear
+                );
+            }
         }
 
         return response()->json(['success' => true, 'status' => $status, 'locked' => $action === 'submit']);
