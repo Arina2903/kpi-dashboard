@@ -175,6 +175,7 @@ class SltDashboardController extends Controller
         $staffRows = [];
         $notSubmittedCount = 0;
         $pendingCount = 0;
+        $awaitingSignoffCount = 0;
         $completedCount = 0;
         $submittedOrFurtherCount = 0;
         $scoreSum = 0;
@@ -205,7 +206,19 @@ class SltDashboardController extends Controller
 
             $submittedOrFurtherCount++;
 
-            $score = in_array($status, ['appraised', 'completed'])
+            // Only a fully-closed cycle — appraisee submitted, manager scored
+            // and signed, appraisee acknowledged/signed back — counts as
+            // complete and surfaces a score here. "appraised" means the
+            // manager is done but the appraisee hasn't signed off yet, so it
+            // must not show a score or count towards completion.
+            if ($status === 'appraised') {
+                $row['status_key'] = 'awaiting_signoff';
+                $awaitingSignoffCount++;
+                $staffRows[] = $row;
+                continue;
+            }
+
+            $score = $status === 'completed'
                 ? $this->scoreFromFormData($report['form_data'] ?? null, $quarter)
                 : null;
 
@@ -247,6 +260,7 @@ class SltDashboardController extends Controller
             'notCompleteCount'     => $totalStaff - $completedCount,
             'notSubmittedCount'    => $notSubmittedCount,
             'pendingCount'         => $pendingCount,
+            'awaitingSignoffCount' => $awaitingSignoffCount,
             'averageScore'         => $averageScore,
             'averageBand'          => $this->bandFor($averageScore),
             'bandCounts'           => $bandCounts,

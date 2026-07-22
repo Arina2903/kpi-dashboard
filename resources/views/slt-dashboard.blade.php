@@ -30,8 +30,9 @@
         'outstanding'         => ['label' => 'Outstanding',        'range' => '90–100', 'bg' => '#00B050', 'text' => '#FFFFFF'],
     ];
     $statusMeta = [
-        'not_submitted' => ['label' => 'Not Submitted',     'bg' => '#FEE2E2', 'text' => '#DC2626'],
-        'pending'       => ['label' => 'Awaiting Appraisal', 'bg' => '#F1F5F9', 'text' => '#64748B'],
+        'not_submitted'    => ['label' => 'Not Submitted',      'bg' => '#FEE2E2', 'text' => '#DC2626'],
+        'pending'          => ['label' => 'Awaiting Appraisal', 'bg' => '#F1F5F9', 'text' => '#64748B'],
+        'awaiting_signoff' => ['label' => 'Awaiting Sign-off',  'bg' => '#FEF3C7', 'text' => '#B45309'],
     ];
     $roleGroups = [
         'SLT'       => 'SLT',
@@ -121,7 +122,7 @@
                 <span class="text-xs text-slate-500 font-semibold">Not Yet Complete</span>
                 <span class="text-2xl font-black text-red-500">{{ $notCompleteCount }}</span>
             </div>
-            <p class="text-[9px] text-slate-400 mt-2">"Not Yet Complete" = staff hasn't submitted, or manager hasn't finished appraising</p>
+            <p class="text-[9px] text-slate-400 mt-2">"Not Yet Complete" = staff hasn't submitted, manager hasn't finished appraising, or staff hasn't signed off yet</p>
         </div>
 
         <div class="bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] p-4 flex items-center justify-between">
@@ -175,6 +176,7 @@
                     <button type="button" onclick="filterBand('all')" data-band="all" class="band-pill active px-2.5 py-1 rounded-lg text-[9px] font-black bg-slate-100 text-slate-600">All ({{ $totalStaff }})</button>
                     <button type="button" onclick="filterBand('not_submitted')" data-band="not_submitted" class="band-pill px-2.5 py-1 rounded-lg text-[9px] font-black bg-red-50 text-red-600">Not Submitted ({{ $notSubmittedCount }})</button>
                     <button type="button" onclick="filterBand('pending')" data-band="pending" class="band-pill px-2.5 py-1 rounded-lg text-[9px] font-black bg-slate-100 text-slate-500">Awaiting Appraisal ({{ $pendingCount }})</button>
+                    <button type="button" onclick="filterBand('awaiting_signoff')" data-band="awaiting_signoff" class="band-pill px-2.5 py-1 rounded-lg text-[9px] font-black bg-amber-50 text-amber-700">Awaiting Sign-off ({{ $awaitingSignoffCount }})</button>
                 </div>
             </div>
             <div class="overflow-y-auto overflow-x-auto thin-scroll flex-1" style="max-height:460px;">
@@ -284,7 +286,8 @@ function filterBand(band) {
     if (band === 'all') {
         subtitle.textContent = 'All staff, grouped by seniority (SLT → VP → Manager → Executive)';
     } else {
-        var label = bandMeta[band] ? bandMeta[band].label : (band === 'not_submitted' ? 'Not Submitted' : 'Awaiting Appraisal');
+        var statusLabels = { not_submitted: 'Not Submitted', pending: 'Awaiting Appraisal', awaiting_signoff: 'Awaiting Sign-off' };
+        var label = bandMeta[band] ? bandMeta[band].label : (statusLabels[band] || band);
         subtitle.textContent = 'Showing: ' + label;
     }
 }
