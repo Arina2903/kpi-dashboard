@@ -372,6 +372,31 @@
             </div>
         @endforeach
 
+        <!-- ACCOUNT SETTINGS — smaller than regular nav items, sits right above Help & Guide -->
+        <a
+            href="{{ route('settings') }}"
+            class="group relative flex items-center gap-2 px-3 py-1.5 rounded-lg transition mt-1
+            {{ request()->is('settings*')
+                ? 'bg-gradient-to-r from-[#C8102E] to-[#7A0019] border-l-[3px] border-[#D4AF37] text-white font-bold shadow-md'
+                : 'text-white/60 font-medium hover:bg-white/10 hover:text-white'
+            }}"
+        >
+            <span class="w-4 h-4 flex items-center justify-center shrink-0">
+                @include('partials.sidebar-icons', ['icon' => 'settings'])
+            </span>
+
+            <span class="sidebar-text truncate text-[11px]">
+                Account Settings
+            </span>
+
+            <div class="sidebar-tooltip hidden absolute left-[58px] top-1/2 -translate-y-1/2
+                bg-black text-white text-[10px] px-2 py-1 rounded-md
+                opacity-0 group-hover:opacity-100 pointer-events-none transition duration-150
+                whitespace-nowrap z-[9999] shadow-lg">
+                Account Settings
+            </div>
+        </a>
+
         <!-- HELP & GUIDE — last item in the scrollable nav, smaller than regular items -->
         <a
             href="{{ route('help') }}"
@@ -432,30 +457,6 @@
                 opacity-0 group-hover:opacity-100 pointer-events-none transition duration-150
                 whitespace-nowrap z-[9999] shadow-lg">
                 My Profile
-            </div>
-        </a>
-
-        <a
-            href="{{ route('settings') }}"
-            class="group relative flex items-center gap-2 px-3 py-1.5 mb-2 rounded-lg transition
-            {{ request()->is('settings*')
-                ? 'bg-gradient-to-r from-[#C8102E] to-[#7A0019] border-l-[3px] border-[#D4AF37] text-white font-bold shadow-md'
-                : 'text-white/60 font-medium hover:bg-white/10 hover:text-white'
-            }}"
-        >
-            <span class="w-4 h-4 flex items-center justify-center shrink-0">
-                @include('partials.sidebar-icons', ['icon' => 'settings'])
-            </span>
-
-            <span class="sidebar-text truncate text-[11px]">
-                Account Settings
-            </span>
-
-            <div class="sidebar-tooltip hidden absolute left-[58px] top-1/2 -translate-y-1/2
-                bg-black text-white text-[10px] px-2 py-1 rounded-md
-                opacity-0 group-hover:opacity-100 pointer-events-none transition duration-150
-                whitespace-nowrap z-[9999] shadow-lg">
-                Account Settings
             </div>
         </a>
 
