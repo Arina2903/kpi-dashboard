@@ -68,6 +68,15 @@ class ProfileController extends Controller
         ], $this->sidebarData($supabase, $user)));
     }
 
+    public function settings(Request $request, SupabaseService $supabase)
+    {
+        $user = $this->currentUser($supabase);
+
+        return view('settings', array_merge([
+            'user' => $user,
+        ], $this->sidebarData($supabase, $user)));
+    }
+
     public function connectTelegram(Request $request, SupabaseService $supabase)
     {
         $code = Str::upper(Str::random(8));

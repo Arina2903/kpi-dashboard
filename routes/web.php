@@ -310,6 +310,7 @@ Route::middleware(['kpi.auth'])->group(function () {
     */
 
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
+    Route::get('/settings', [\App\Http\Controllers\ProfileController::class, 'settings'])->name('settings');
     Route::post('/profile/telegram/connect', [\App\Http\Controllers\ProfileController::class, 'connectTelegram'])->name('profile.telegram.connect');
     Route::get('/profile/telegram/status', [\App\Http\Controllers\ProfileController::class, 'telegramStatus'])->name('profile.telegram.status');
     Route::post('/profile/email', [\App\Http\Controllers\ProfileController::class, 'updateEmail'])->name('profile.email.update');
