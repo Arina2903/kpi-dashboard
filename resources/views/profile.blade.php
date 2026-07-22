@@ -31,12 +31,8 @@
         <div class="relative">
             <a href="/dashboard" class="text-[11px] text-[#D4AF37] hover:text-white transition">← Dashboard</a>
             <h1 class="text-2xl font-black tracking-tight mt-1">My Profile</h1>
-            <p class="text-white/70 text-xs mt-1">Who you are on the system — for account &amp; notification settings, head to Account Settings</p>
+            <p class="text-white/70 text-xs mt-1">Who you are on the system</p>
         </div>
-
-        <a href="{{ route('settings') }}" class="relative inline-flex items-center gap-1.5 bg-[#D4AF37] hover:bg-[#c19c2f] text-[#1a1a1a] px-4 py-2.5 rounded-xl shadow font-black text-xs transition hover:-translate-y-0.5 shrink-0 whitespace-nowrap">
-            Account Settings
-        </a>
     </div>
 </div>
 
@@ -124,15 +120,6 @@
             @endforeach
         </div>
     </div>
-
-    {{-- POINTER TO SETTINGS --}}
-    <a href="{{ route('settings') }}" class="flex items-center justify-between gap-3 bg-white rounded-2xl soft-card border border-[#E5E7EB] border-l-[4px] border-l-[#D4AF37] px-5 py-4 hover:bg-slate-50/60 transition">
-        <div class="min-w-0">
-            <p class="text-[13px] font-black text-slate-800">Looking for Telegram, email, or password settings?</p>
-            <p class="text-[11px] text-slate-400 mt-0.5">Manage notifications and account security in Account Settings</p>
-        </div>
-        <span class="text-[#B8860B] font-black text-lg shrink-0">→</span>
-    </a>
 
 </div>
 </main>
