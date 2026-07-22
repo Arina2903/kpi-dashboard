@@ -250,6 +250,76 @@ class ActivityLogController extends Controller
             }
         }
 
+        // ── Quarter Evaluation / Performance Appraisal ───────────────────────
+        // performance_reports has no separate audit trail (unlike KPIs), just
+        // the current status + submitted_at/updated_at — so only two actions
+        // are unambiguous from the data alone: the report owner submitting
+        // their own self-assessment, and the report owner signing off once
+        // their manager appraised them. A third — the direct manager doing
+        // the appraising — is derivable too: only a "manager"-level submit
+        // advances status to 'appraised' (see PerformanceController), so if
+        // this employee's reports_to_id is the current user, the current
+        // user is who did it.
+        $directReports = $supabase->get('employees', [
+            'reports_to_id' => 'eq.' . $user['id'],
+            'is_active'     => 'eq.true',
+            'select'        => 'id,short_name,full_name',
+        ]) ?? [];
+        $directReportIds  = array_column($directReports, 'id');
+        $directReportName = collect($directReports)->keyBy('id')
+            ->map(fn($e) => $e['short_name'] ?? $e['full_name'] ?? '-');
+
+        $perfEmployeeIds = array_unique(array_merge([$user['id']], $directReportIds));
+        $perfReports = $supabase->get('performance_reports', [
+            'employee_id'    => 'in.(' . implode(',', $perfEmployeeIds) . ')',
+            'financial_year' => 'eq.' . $fy,
+            'status'         => 'in.(submitted,appraised,completed)',
+            'select'         => 'employee_id,quarter,status,submitted_at,updated_at',
+        ]) ?? [];
+
+        foreach ($perfReports as $p) {
+            $isOwn = $p['employee_id'] === $user['id'];
+            $label = ($p['quarter'] ?? '') . ' ' . $fy . ' Appraisal';
+
+            if ($isOwn) {
+                if (!empty($p['submitted_at'])) {
+                    $logs->push([
+                        'type'      => 'appraisal_submitted',
+                        'label'     => 'Appraisal Submitted',
+                        'color'     => 'teal',
+                        'who'       => $user['short_name'] ?? $user['full_name'] ?? '-',
+                        'kpi_title' => $label,
+                        'detail'    => 'Self-assessment submitted for review',
+                        'at'        => $p['submitted_at'],
+                        'actor_id'  => $user['id'],
+                    ]);
+                }
+                if ($p['status'] === 'completed') {
+                    $logs->push([
+                        'type'      => 'appraisal_signed',
+                        'label'     => 'Appraisal Signed',
+                        'color'     => 'cyan',
+                        'who'       => $user['short_name'] ?? $user['full_name'] ?? '-',
+                        'kpi_title' => $label,
+                        'detail'    => 'Signed to acknowledge appraiser\'s review',
+                        'at'        => $p['updated_at'] ?? '',
+                        'actor_id'  => $user['id'],
+                    ]);
+                }
+            } elseif (in_array($p['status'], ['appraised', 'completed'], true)) {
+                $logs->push([
+                    'type'      => 'appraisal_reviewed',
+                    'label'     => 'Appraisal Reviewed',
+                    'color'     => 'orange',
+                    'who'       => $user['short_name'] ?? $user['full_name'] ?? '-',
+                    'kpi_title' => $label . ' — ' . ($directReportName[$p['employee_id']] ?? '-'),
+                    'detail'    => 'Scored and signed as appraiser',
+                    'at'        => $p['updated_at'] ?? '',
+                    'actor_id'  => $user['id'],
+                ]);
+            }
+        }
+
         // ── Own activity only — this log is "what did I do", not "what
         // happened on KPIs I can see". A manager approving a subordinate's
         // update, for example, is filtered out of the subordinate's own log.
@@ -277,20 +347,6 @@ class ActivityLogController extends Controller
             'logs'       => $logs,
             'typeFilter' => $typeFilter,
             'fy'         => $fy,
-        ], $this->sidebarData($supabase, $user)));
-    }
-
-    public function report(SupabaseService $supabase)
-    {
-        $user = $this->currentUser($supabase);
-        $fy   = 'FY' . now()->year;
-
-        $logs = $this->gatherOwnActivity($supabase, $user, $fy);
-
-        return view('kpi.activity-report', array_merge([
-            'user' => $user,
-            'logs' => $logs,
-            'fy'   => $fy,
         ], $this->sidebarData($supabase, $user)));
     }
 }
