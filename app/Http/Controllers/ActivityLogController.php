@@ -50,12 +50,16 @@ class ActivityLogController extends Controller
         return compact('departments', 'department', 'canSwitchDepartment', 'selectedDepartmentCode', 'pendingApprovalCount');
     }
 
-    public function index(Request $request, SupabaseService $supabase)
+    /**
+     * Builds the current user's own activity feed — every entry's actor_id
+     * is checked against $user['id'] before it's returned, so this is
+     * "what did I do", not "what happened on KPIs visible to me". Shared by
+     * both the timeline view (index) and the printable report view (report).
+     */
+    private function gatherOwnActivity(SupabaseService $supabase, array $user, string $fy): \Illuminate\Support\Collection
     {
-        $user        = $this->currentUser($supabase);
         $role        = strtoupper(trim($user['role'] ?? ''));
         $companyCode = $user['company_code'];
-        $fy          = 'FY' . now()->year;
 
         // ── Determine which KPIs this user can see ─────────────────────────
         $kpiFilters = [
@@ -77,7 +81,10 @@ class ActivityLogController extends Controller
         $kpiIds      = array_column($visibleKpis, 'id');
 
         // ── Fetch employee names for KPI owners ────────────────────────────
-        $empIds = array_unique(array_filter(array_column($visibleKpis, 'employee_id')));
+        $empIds = array_unique(array_filter(array_merge(
+            array_column($visibleKpis, 'employee_id'),
+            [$user['id']]
+        )));
         $empMap = [];
         if (!empty($empIds)) {
             $emps = $supabase->get('employees', [
@@ -92,19 +99,9 @@ class ActivityLogController extends Controller
         $logs = collect();
 
         // ── KPI Created ────────────────────────────────────────────────────
-        foreach ($visibleKpis as $k) {
-            $kpiCreationFilters = [
-                'company_code'   => 'eq.' . $companyCode,
-                'financial_year' => 'eq.' . $fy,
-                'id'             => 'eq.' . $k['id'],
-                'select'         => 'id,kpi_title,created_at,employee_id',
-            ];
-            // We already have the data in $visibleKpis, but need created_at
-        }
-        // Re-fetch with created_at
         $kpiCreations = $supabase->get('kpis', array_merge(
             $kpiFilters,
-            ['select' => 'id,kpi_title,created_at,employee_id']
+            ['select' => 'id,kpi_title,created_at,employee_id,created_by']
         )) ?? [];
 
         foreach ($kpiCreations as $k) {
@@ -112,10 +109,11 @@ class ActivityLogController extends Controller
                 'type'      => 'kpi_created',
                 'label'     => 'KPI Created',
                 'color'     => 'blue',
-                'who'       => $empMap[$k['employee_id']] ?? '-',
+                'who'       => $empMap[$k['created_by']] ?? $empMap[$k['employee_id']] ?? '-',
                 'kpi_title' => $k['kpi_title'] ?? '-',
                 'detail'    => 'New KPI added for ' . $fy,
                 'at'        => $k['created_at'] ?? '',
+                'actor_id'  => $k['created_by'] ?? $k['employee_id'] ?? null,
             ]);
         }
 
@@ -141,6 +139,7 @@ class ActivityLogController extends Controller
                     'kpi_title' => $kpi['kpi_title'] ?? '-',
                     'detail'    => $fieldLabel . ': "' . ($h['old_value'] ?? '-') . '" → "' . ($h['new_value'] ?? '-') . '"',
                     'at'        => $h['created_at'] ?? '',
+                    'actor_id'  => $h['edited_by'] ?? null,
                 ]);
             }
 
@@ -163,6 +162,7 @@ class ActivityLogController extends Controller
                     'kpi_title' => $kpi['kpi_title'] ?? '-',
                     'detail'    => ($a['quarter'] ?? '') . ' — Actual: ' . number_format((float)($a['requested_actual'] ?? 0), 1),
                     'at'        => $a['created_at'] ?? '',
+                    'actor_id'  => $a['requested_by'] ?? null,
                 ]);
 
                 if (!empty($a['approved_at'])) {
@@ -174,6 +174,7 @@ class ActivityLogController extends Controller
                         'kpi_title' => $kpi['kpi_title'] ?? '-',
                         'detail'    => ($a['quarter'] ?? '') . ' approved' . ($a['approver_remark'] ? ' — ' . $a['approver_remark'] : ''),
                         'at'        => $a['approved_at'],
+                        'actor_id'  => $a['approved_by'] ?? null,
                     ]);
                 }
 
@@ -186,6 +187,7 @@ class ActivityLogController extends Controller
                         'kpi_title' => $kpi['kpi_title'] ?? '-',
                         'detail'    => ($a['quarter'] ?? '') . ' rejected' . ($a['rejection_reason'] ? ' — ' . $a['rejection_reason'] : ''),
                         'at'        => $a['rejected_at'],
+                        'actor_id'  => $a['rejected_by'] ?? null,
                     ]);
                 }
             }
@@ -221,6 +223,7 @@ class ActivityLogController extends Controller
                     'kpi_title' => $kpi['kpi_title'] ?? '-',
                     'detail'    => ($q['quarter'] ?? '') . ' — quarter completion submitted for review',
                     'at'        => $q['completion_submitted_at'] ?? '',
+                    'actor_id'  => $q['completion_submitted_by'] ?? null,
                 ]);
             }
 
@@ -242,23 +245,52 @@ class ActivityLogController extends Controller
                     'kpi_title' => $kpi['kpi_title'] ?? '-',
                     'detail'    => 'Status: ' . ucfirst($d['status'] ?? 'pending') . ($d['reason'] ? ' — ' . $d['reason'] : ''),
                     'at'        => $d['created_at'] ?? '',
+                    'actor_id'  => $d['requested_by'] ?? null,
                 ]);
             }
         }
 
-        // ── Filter & sort ──────────────────────────────────────────────────
+        // ── Own activity only — this log is "what did I do", not "what
+        // happened on KPIs I can see". A manager approving a subordinate's
+        // update, for example, is filtered out of the subordinate's own log.
+        return $logs
+            ->filter(fn($l) => ($l['actor_id'] ?? null) === $user['id'])
+            ->filter(fn($l) => !empty($l['at']))
+            ->sortByDesc('at')
+            ->values();
+    }
+
+    public function index(Request $request, SupabaseService $supabase)
+    {
+        $user = $this->currentUser($supabase);
+        $fy   = 'FY' . now()->year;
+
+        $logs = $this->gatherOwnActivity($supabase, $user, $fy);
+
         $typeFilter = $request->get('type', '');
         if ($typeFilter) {
-            $logs = $logs->filter(fn($l) => $l['type'] === $typeFilter);
+            $logs = $logs->filter(fn($l) => $l['type'] === $typeFilter)->values();
         }
-
-        $logs = $logs->filter(fn($l) => !empty($l['at']))->sortByDesc('at')->values();
 
         return view('kpi.activity-log', array_merge([
             'user'       => $user,
             'logs'       => $logs,
             'typeFilter' => $typeFilter,
             'fy'         => $fy,
+        ], $this->sidebarData($supabase, $user)));
+    }
+
+    public function report(SupabaseService $supabase)
+    {
+        $user = $this->currentUser($supabase);
+        $fy   = 'FY' . now()->year;
+
+        $logs = $this->gatherOwnActivity($supabase, $user, $fy);
+
+        return view('kpi.activity-report', array_merge([
+            'user' => $user,
+            'logs' => $logs,
+            'fy'   => $fy,
         ], $this->sidebarData($supabase, $user)));
     }
 }

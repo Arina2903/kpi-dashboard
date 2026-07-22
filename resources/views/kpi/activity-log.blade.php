@@ -25,9 +25,14 @@
                 {{ $user['short_name'] ?? $user['full_name'] ?? '-' }} · {{ $user['role'] }} · {{ $user['department_code'] }} · {{ $fy }}
             </p>
         </div>
-        <div class="text-right">
-            <p class="text-[10px] text-blue-200">Total Events</p>
-            <p class="text-2xl font-black">{{ $logs->count() }}</p>
+        <div class="text-right flex items-center gap-3">
+            <div>
+                <p class="text-[10px] text-blue-200">Total Events</p>
+                <p class="text-2xl font-black">{{ $logs->count() }}</p>
+            </div>
+            <a href="{{ route('activity-log.report') }}" class="bg-[#D4AF37] hover:bg-[#c19c2f] text-[#1a1a1a] px-3 py-2 rounded-xl shadow font-black text-[11px] transition whitespace-nowrap">
+                📄 View Report
+            </a>
         </div>
     </div>
 

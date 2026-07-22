@@ -302,6 +302,7 @@ Route::middleware(['kpi.auth'])->group(function () {
     */
 
     Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log');
+    Route::get('/activity-log/report', [ActivityLogController::class, 'report'])->name('activity-log.report');
 
     /*
     |--------------------------------------------------------------------------
