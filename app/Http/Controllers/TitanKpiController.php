@@ -37,11 +37,9 @@ class TitanKpiController extends Controller
     {
         // BTS has cross-company admin/support access (same as the "BTS Admin —
         // View As" feature elsewhere), so it's checked by department alone —
-        // not tied to a specific company_code the way TITAN is.
-        return $user['role'] !== 'VP' && (
-            ($user['company_code'] === 'RCG' && $user['department_code'] === 'TITAN') ||
-            $user['department_code'] === 'BTS'
-        );
+        // not tied to company_code or the VP exclusion the way TITAN is.
+        return ($user['role'] !== 'VP' && $user['company_code'] === 'RCG' && $user['department_code'] === 'TITAN')
+            || $user['department_code'] === 'BTS';
     }
 
     private function isTitanManager(array $user): bool

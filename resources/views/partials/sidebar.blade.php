@@ -293,10 +293,8 @@
                 <div class="space-y-1">
                     @foreach($section['items'] as $item)
                         @php
-                            $hasTitanAccess = session('role') !== 'VP' && (
-                                (session('company_code') === 'RCG' && session('department_code') === 'TITAN') ||
-                                session('department_code') === 'BTS'
-                            );
+                            $hasTitanAccess = (session('role') !== 'VP' && session('company_code') === 'RCG' && session('department_code') === 'TITAN')
+                                || session('department_code') === 'BTS';
                         @endphp
                         @if(($item['slt_only'] ?? false) && !$isSltDept)
                             @continue
