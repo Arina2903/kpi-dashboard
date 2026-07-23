@@ -239,7 +239,12 @@ class TitanKpiController extends Controller
 
                 if ($labelIdx === $potentialIdx || $labelIdx === $totalCollectIdx) {
                     $field = ($labelIdx === $potentialIdx) ? 'base_target' : 'actual';
-                    preg_match_all('/<c r="([H-S])\d+"[^>]*><v>([^<]+)<\/v>/', $rowContent, $cm);
+                    // These month cells are array formulas (IFERROR/SUM/SUMIF), so the
+                    // <v> value sits after an <f>...</f> block, not right after the
+                    // cell's opening tag — the (?:<f>...</f>)? makes that optional.
+                    // Some formulas (e.g. the multi-line IFERROR/FILTER ones) contain
+                    // literal newlines, hence the /s (dotall) modifier.
+                    preg_match_all('/<c r="([H-S])\d+"[^>]*>(?:<f\b[^>]*>.*?<\/f>)?<v>([^<]+)<\/v>/s', $rowContent, $cm);
                     foreach ($cm[1] as $j => $col) {
                         $mn = self::COL_MONTH[$col] ?? null;
                         if ($mn) $result[$mn]['revenue'][$field] = (float)$cm[2][$j];
