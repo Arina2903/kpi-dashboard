@@ -35,9 +35,12 @@ class TitanKpiController extends Controller
 
     private function isTitanUser(array $user): bool
     {
+        // BTS has cross-company admin/support access (same as the "BTS Admin —
+        // View As" feature elsewhere), so it's checked by department alone —
+        // not tied to a specific company_code the way TITAN is.
         return $user['role'] !== 'VP' && (
-            ($user['company_code'] === 'RCG'  && $user['department_code'] === 'TITAN') ||
-            ($user['company_code'] === 'RGHB' && $user['department_code'] === 'BTS')
+            ($user['company_code'] === 'RCG' && $user['department_code'] === 'TITAN') ||
+            $user['department_code'] === 'BTS'
         );
     }
 
@@ -67,7 +70,7 @@ class TitanKpiController extends Controller
         usort($allStaff, fn($a, $b) => strcasecmp($a['short_name'] ?? '', $b['short_name'] ?? ''));
 
         $isManager = in_array($user['role'], ['MANAGER', 'SLT'])
-            || ($user['company_code'] === 'RGHB' && $user['department_code'] === 'BTS');
+            || $user['department_code'] === 'BTS';
         $viewStaff = $isManager ? $allStaff
             : array_values(array_filter($allStaff, fn($e) => $e['id'] === $user['id']));
 

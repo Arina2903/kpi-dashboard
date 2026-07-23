@@ -294,8 +294,8 @@
                     @foreach($section['items'] as $item)
                         @php
                             $hasTitanAccess = session('role') !== 'VP' && (
-                                (session('company_code') === 'RCG'  && session('department_code') === 'TITAN') ||
-                                (session('company_code') === 'RGHB' && session('department_code') === 'BTS')
+                                (session('company_code') === 'RCG' && session('department_code') === 'TITAN') ||
+                                session('department_code') === 'BTS'
                             );
                         @endphp
                         @if(($item['slt_only'] ?? false) && !$isSltDept)
