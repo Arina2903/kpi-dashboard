@@ -282,7 +282,8 @@ class DashboardController extends Controller
 
     private function canSwitchDepartment(array $user): bool
     {
-        return ($user['role'] ?? '') === 'SLT';
+        // BTS has cross-department admin/support access, same level as SLT.
+        return ($user['role'] ?? '') === 'SLT' || ($user['department_code'] ?? '') === 'BTS';
     }
 
     private function getAllDepartments(SupabaseService $supabase, string $companyCode): array
@@ -315,7 +316,8 @@ class DashboardController extends Controller
     ): array {
         $role = $user['role'] ?? '';
 
-        if ($role === 'SLT') {
+        // BTS has cross-department admin/support access, same level as SLT.
+        if ($role === 'SLT' || ($user['department_code'] ?? '') === 'BTS') {
             $filters = [
                 'company_code' => 'eq.' . $companyCode,
                 'is_active' => 'eq.true',

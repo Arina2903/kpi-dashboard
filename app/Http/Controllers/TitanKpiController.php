@@ -44,6 +44,13 @@ class TitanKpiController extends Controller
         );
     }
 
+    private function isTitanManager(array $user): bool
+    {
+        // BTS has cross-company admin/support access, same level as SLT —
+        // manager-equivalent regardless of the employee's actual role.
+        return in_array($user['role'], ['MANAGER', 'SLT']) || $user['department_code'] === 'BTS';
+    }
+
     /*
     |--------------------------------------------------------------------------
     | INDEX — Titan KPI dashboard (auto-sync from Google Sheet on every load)
@@ -69,8 +76,7 @@ class TitanKpiController extends Controller
         ));
         usort($allStaff, fn($a, $b) => strcasecmp($a['short_name'] ?? '', $b['short_name'] ?? ''));
 
-        $isManager = in_array($user['role'], ['MANAGER', 'SLT'])
-            || $user['department_code'] === 'BTS';
+        $isManager = $this->isTitanManager($user);
         $viewStaff = $isManager ? $allStaff
             : array_values(array_filter($allStaff, fn($e) => $e['id'] === $user['id']));
 
@@ -292,7 +298,7 @@ class TitanKpiController extends Controller
     public function sync(Request $request, SupabaseService $supabase)
     {
         $user = $this->currentUser($supabase);
-        if (!$this->isTitanUser($user) || !in_array($user['role'], ['MANAGER', 'SLT'])) {
+        if (!$this->isTitanUser($user) || !$this->isTitanManager($user)) {
             return response()->json(['error' => 'Access denied.'], 403);
         }
         return response()->json(['success' => true, 'message' => 'Auto-sync runs on every page load.']);
@@ -307,7 +313,7 @@ class TitanKpiController extends Controller
     public function updateWeightage(Request $request, SupabaseService $supabase)
     {
         $user = $this->currentUser($supabase);
-        if (!$this->isTitanUser($user) || !in_array($user['role'], ['MANAGER', 'SLT'])) {
+        if (!$this->isTitanUser($user) || !$this->isTitanManager($user)) {
             return response()->json(['error' => 'Access denied.'], 403);
         }
 

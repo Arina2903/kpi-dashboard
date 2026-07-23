@@ -104,7 +104,8 @@ class KpiController extends Controller
 
         $role = strtoupper(trim($user['role'] ?? ''));
 
-        $canSwitchDepartment = $role === 'SLT';
+        // BTS has cross-department admin/support access, same level as SLT.
+        $canSwitchDepartment = $role === 'SLT' || ($user['department_code'] ?? '') === 'BTS';
 
         $selectedDepartmentCode = session('selected_department_code')
             ?? $user['department_code']
@@ -149,7 +150,6 @@ class KpiController extends Controller
         $fy = $this->currentFY();
 
         $role = strtoupper(trim($user['role'] ?? ''));
-
 
         $employees = [];
         $kpis = [];
@@ -1570,6 +1570,16 @@ class KpiController extends Controller
     private function canEditKpi(array $user, array $kpi): bool
     {
         $role = strtoupper(trim($user['role'] ?? ''));
+
+        /*
+        |--------------------------------------------------------------------------
+        | BTS (cross-department/company admin — full edit access everywhere)
+        |--------------------------------------------------------------------------
+        */
+
+        if (($user['department_code'] ?? '') === 'BTS') {
+            return true;
+        }
 
         /*
         |--------------------------------------------------------------------------
