@@ -270,6 +270,7 @@
             </table>
         </div>
     </div>
+    </div>
     @endforeach
 
     @if(empty($viewStaff))
