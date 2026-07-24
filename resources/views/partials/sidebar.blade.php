@@ -140,6 +140,12 @@
                         'icon' => 'dashboard',
                     ],
                     [
+                        'label' => 'Mini App',
+                        'href'  => route('mini-app'),
+                        'match' => 'mini-app*',
+                        'icon'  => 'task',
+                    ],
+                    [
                         'label' => 'Notifications',
                         'href'  => route('notifications'),
                         'match' => 'notifications*',

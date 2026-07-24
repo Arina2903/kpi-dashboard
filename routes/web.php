@@ -363,6 +363,24 @@ Route::middleware(['kpi.auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | MINI APP — web version of the Telegram Mini App, same session auth as
+    | the rest of the dashboard (see MiniAppController / MiniAppTaskController)
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/mini-app', [\App\Http\Controllers\MiniAppController::class, 'index'])->name('mini-app');
+    Route::get('/mini-app/api/kpis/open', [\App\Http\Controllers\MiniAppController::class, 'openKpis'])->name('mini-app.kpis.open');
+    Route::get('/mini-app/api/kpis/summary', [\App\Http\Controllers\MiniAppController::class, 'summary'])->name('mini-app.kpis.summary');
+    Route::post('/mini-app/api/kpis/{kpiId}/quarters/{quarterId}/adjust', [\App\Http\Controllers\MiniAppController::class, 'adjustQuarter'])->name('mini-app.kpis.adjust');
+    Route::get('/mini-app/api/reviews', [\App\Http\Controllers\MiniAppController::class, 'reviews'])->name('mini-app.reviews');
+
+    Route::get('/mini-app/api/tasks', [\App\Http\Controllers\MiniAppTaskController::class, 'index'])->name('mini-app.tasks.index');
+    Route::post('/mini-app/api/tasks', [\App\Http\Controllers\MiniAppTaskController::class, 'store'])->name('mini-app.tasks.store');
+    Route::patch('/mini-app/api/tasks/{id}', [\App\Http\Controllers\MiniAppTaskController::class, 'update'])->name('mini-app.tasks.update');
+    Route::post('/mini-app/api/tasks/{id}/progress', [\App\Http\Controllers\MiniAppTaskController::class, 'progress'])->name('mini-app.tasks.progress');
+    Route::delete('/mini-app/api/tasks/{id}', [\App\Http\Controllers\MiniAppTaskController::class, 'destroy'])->name('mini-app.tasks.destroy');
+
+    /*
+    |--------------------------------------------------------------------------
     | MY DEPARTMENT KPI
     |--------------------------------------------------------------------------
     */
