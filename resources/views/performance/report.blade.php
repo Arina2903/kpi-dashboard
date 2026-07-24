@@ -156,8 +156,17 @@
             .cat-hdr td    { background: #1a3d34 !important; color: #fff !important; }
             .subcat-hdr td { background: rgba(107,144,128,.08) !important; }
 
+            /* Print happens after the appraisal is fully filled in — show the
+               chosen rating as a plain value instead of the on-screen 1–5
+               picker, and drop the legend explaining what each number means
+               (only useful while actively rating, not once complete). */
+            .rating-scale-legend { display: none !important; }
+            .rating-group label { display: none !important; }
             .rating-group input[type=radio]:checked + label {
-                background: #1a3d34 !important; border-color: #1a3d34 !important; color: #fff !important;
+                display: inline-flex !important;
+                width: auto !important; height: auto !important;
+                border: none !important; background: transparent !important;
+                color: #1a3d34 !important; font-size: 13px !important; font-weight: 900 !important;
             }
 
             /* ── Flatten the "live web form" look for print ─────
@@ -183,9 +192,11 @@
                 border-color: rgba(100,116,139,.30) !important;
                 border-radius: 6px !important;
             }
-            .rating-group label {
-                border-color: rgba(100,116,139,.30) !important;
-                cursor: default !important;
+            /* Textarea height is expanded to fit content by the beforeprint
+               handler — drop the resize handle and any leftover scrollbar. */
+            .f-area {
+                overflow: hidden !important;
+                resize: none !important;
             }
             /* Hide placeholder prompt text ("Write your summary here…" etc.)
                — empty fields should print as blank lines, not form hints. */
@@ -632,7 +643,7 @@
         <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
             <div class="sec-bar"><div class="sec-num">3</div><span class="sec-title">Attitude &amp; Competency Assessment</span></div>
 
-            <div class="px-6 pt-5 pb-4 border-b border-slate-100">
+            <div class="px-6 pt-5 pb-4 border-b border-slate-100 rating-scale-legend">
                 <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-widest mb-3">Rating Scale</p>
                 <div class="flex gap-2 flex-wrap">
                     @php $ratingLegend=[
@@ -1887,7 +1898,7 @@ if (_isAppraiserView) {
     lockForm();
 }
 
-// ── Print: hide empty signature pads ──────────────────────────────────────────
+// ── Print: hide empty signature pads, expand textareas so no text is clipped ──
 window.addEventListener('beforeprint', function() {
     document.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
         var hidden = wrap.querySelector('.sig-hidden');
@@ -1895,10 +1906,22 @@ window.addEventListener('beforeprint', function() {
             wrap.classList.add('no-sig');
         }
     });
+    // Textareas have a fixed on-screen height (with a scrollbar for overflow) —
+    // browsers print only what's visible inside that box, cutting off the rest.
+    // Grow each one to fit its full content just before printing.
+    document.querySelectorAll('.f-area').forEach(function(ta) {
+        ta.dataset.origHeight = ta.style.height || '';
+        ta.style.height = 'auto';
+        ta.style.height = (ta.scrollHeight + 2) + 'px';
+    });
 });
 window.addEventListener('afterprint', function() {
     document.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
         wrap.classList.remove('no-sig');
+    });
+    document.querySelectorAll('.f-area').forEach(function(ta) {
+        ta.style.height = ta.dataset.origHeight || '';
+        delete ta.dataset.origHeight;
     });
 });
 </script>
