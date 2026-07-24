@@ -62,6 +62,12 @@
         }
         .f-area:focus { border-color: #6B9080; }
 
+        /* Print-only stand-in for a textarea — see beforeprint handler below.
+           A <textarea> can't grow to fit its content, so on-screen long text
+           just scrolled inside the fixed box and printed truncated. This is
+           a plain block element instead, so it always lays out at full height. */
+        .f-area-print { display: none; }
+
         .n-input {
             width: 60px; text-align: center;
             border: 1.5px solid rgba(107,144,128,.30); border-radius: 8px;
@@ -188,19 +194,49 @@
             .f-input, .t-input {
                 border-bottom-color: rgba(100,116,139,.25) !important;
             }
-            .f-area, .n-input {
+            .n-input {
                 border-color: rgba(100,116,139,.30) !important;
                 border-radius: 6px !important;
-            }
-            /* Textarea height is expanded to fit content by the beforeprint
-               handler — drop the resize handle and any leftover scrollbar. */
-            .f-area {
-                overflow: hidden !important;
-                resize: none !important;
             }
             /* Hide placeholder prompt text ("Write your summary here…" etc.)
                — empty fields should print as blank lines, not form hints. */
             ::placeholder { color: transparent !important; }
+
+            /* A <textarea> can only show as much text as its fixed height
+               allows — the rest just sits below a scrollbar and gets cut
+               off on paper. Hide the textarea and print the plain-text
+               stand-in (filled in by the beforeprint handler) instead,
+               which lays out to its full height and is free to flow onto
+               the next page rather than clipping. */
+            .f-area { display: none !important; }
+            .f-area-print {
+                display: block !important;
+                width: 100%;
+                border: 1px solid rgba(100,116,139,.30);
+                border-radius: 6px;
+                padding: 10px 14px;
+                font-size: 12px;
+                color: #1e293b;
+                line-height: 1.6;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                min-height: 20px;
+            }
+
+            /* Attendance count boxes look like a live spinner input — on
+               print (always filled in by then) just show the number. */
+            .att-count-input {
+                border: none !important;
+                background: transparent !important;
+                width: auto !important;
+                padding: 0 !important;
+                -moz-appearance: textfield !important;
+            }
+            .att-count-input::-webkit-inner-spin-button,
+            .att-count-input::-webkit-outer-spin-button {
+                -webkit-appearance: none !important;
+                margin: 0 !important;
+            }
 
             /* ── Signature pads ──────────────────────────────── */
             /* Hide the placeholder hint text */
@@ -1898,7 +1934,7 @@ if (_isAppraiserView) {
     lockForm();
 }
 
-// ── Print: hide empty signature pads, expand textareas so no text is clipped ──
+// ── Print: hide empty signature pads, swap textareas for full-text print divs ──
 window.addEventListener('beforeprint', function() {
     document.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
         var hidden = wrap.querySelector('.sig-hidden');
@@ -1906,22 +1942,24 @@ window.addEventListener('beforeprint', function() {
             wrap.classList.add('no-sig');
         }
     });
-    // Textareas have a fixed on-screen height (with a scrollbar for overflow) —
-    // browsers print only what's visible inside that box, cutting off the rest.
-    // Grow each one to fit its full content just before printing.
+    // A <textarea> is capped to its fixed on-screen height — anything past
+    // that just scrolled and printed cut off. The print CSS hides the
+    // textarea and shows this plain-text div instead, which always lays
+    // out to its full height (and can flow onto the next page) so nothing
+    // is ever lost.
     document.querySelectorAll('.f-area').forEach(function(ta) {
-        ta.dataset.origHeight = ta.style.height || '';
-        ta.style.height = 'auto';
-        ta.style.height = (ta.scrollHeight + 2) + 'px';
+        var printDiv = ta.nextElementSibling;
+        if (!printDiv || !printDiv.classList.contains('f-area-print')) {
+            printDiv = document.createElement('div');
+            printDiv.className = 'f-area-print';
+            ta.insertAdjacentElement('afterend', printDiv);
+        }
+        printDiv.textContent = ta.value || '';
     });
 });
 window.addEventListener('afterprint', function() {
     document.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
         wrap.classList.remove('no-sig');
-    });
-    document.querySelectorAll('.f-area').forEach(function(ta) {
-        ta.style.height = ta.dataset.origHeight || '';
-        delete ta.dataset.origHeight;
     });
 });
 </script>
