@@ -138,7 +138,7 @@
 
             #sidebar, #sidebarCloseBtn, .no-print, .sticky { display: none !important; }
             #mainContent { margin-left: 0 !important; }
-            body { background: #f0f2f7 !important; }
+            html, body { background: #fff !important; }
             .px-4 { padding-left: 4px !important; padding-right: 4px !important; }
             .pt-3 { padding-top: 0 !important; }
             .pb-10 { padding-bottom: 0 !important; }
@@ -160,6 +160,37 @@
                 background: #1a3d34 !important; border-color: #1a3d34 !important; color: #fff !important;
             }
 
+            /* ── Flatten the "live web form" look for print ─────
+               On screen, locked/read-only fields are faded (opacity, grey
+               fill, not-allowed cursor) to signal they're not editable by
+               the current viewer. On a printed page that just reads as
+               half-invisible boxes, so print at full legibility instead. */
+            input, textarea, select, .rating-group, .sig-pad-wrap {
+                opacity: 1 !important;
+            }
+            input, textarea, select {
+                background: #fff !important;
+                color: #1e293b !important;
+                -webkit-text-fill-color: #1e293b !important;
+            }
+            /* Underlined/boxed inputs read as clickable form fields — drop
+               the colored border/underline so filled values sit as plain
+               document text; keep a faint line only where still empty. */
+            .f-input, .t-input {
+                border-bottom-color: rgba(100,116,139,.25) !important;
+            }
+            .f-area, .n-input {
+                border-color: rgba(100,116,139,.30) !important;
+                border-radius: 6px !important;
+            }
+            .rating-group label {
+                border-color: rgba(100,116,139,.30) !important;
+                cursor: default !important;
+            }
+            /* Hide placeholder prompt text ("Write your summary here…" etc.)
+               — empty fields should print as blank lines, not form hints. */
+            ::placeholder { color: transparent !important; }
+
             /* ── Signature pads ──────────────────────────────── */
             /* Hide the placeholder hint text */
             .sig-hint { display: none !important; }
@@ -179,6 +210,12 @@
             .print-sec + .print-sec {
                 break-before: page;
                 page-break-before: always;
+            }
+            /* Section 1 always starts on its own page, separate from the
+               title / purpose-of-review / employee-strip block above it */
+            #sec1-particulars {
+                break-before: page !important;
+                page-break-before: always !important;
             }
             /* Section header must stay with its content — never orphaned at bottom of page */
             .sec-bar {
@@ -411,7 +448,7 @@
         {{-- ═══════════════════════════════════════════════════════
              SECTION 1 — EMPLOYEE PARTICULARS
         ═══════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
+        <div id="sec1-particulars" class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
             <div class="sec-bar"><div class="sec-num">1</div><span class="sec-title">To Be Completed by Employee Under Review</span></div>
             <div class="px-6 py-6 space-y-7">
 
