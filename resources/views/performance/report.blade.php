@@ -154,15 +154,16 @@
             .px-10 { padding-left: 10px !important; padding-right: 10px !important; }
             .py-8  { padding-top: 8px !important; padding-bottom: 8px !important; }
 
-            /* Plain print palette — blue / black / white only, no brand-green
-               gradients, traffic-light score colors, or rainbow status colors. */
+            /* Plain corporate print palette — black / gray / white only,
+               no brand-green gradients, no blue accent, no rainbow status
+               colors. */
             .doc-card { box-shadow: none !important; border: 1px solid #94a3b8 !important; border-radius: 12px !important; }
-            .sec-bar { background: #1e3a8a !important; }
-            .doc-tbl th { background: #1e3a8a !important; color: #fff !important; }
-            .part-label { color: #1e3a8a !important; }
-            .h-\[3px\] { background: #1e3a8a !important; }
-            .cat-hdr td    { background: #1e3a8a !important; color: #fff !important; }
-            .subcat-hdr td { background: #eef2f7 !important; }
+            .sec-bar { background: #1e293b !important; }
+            .doc-tbl th { background: #1e293b !important; color: #fff !important; }
+            .part-label { color: #1e293b !important; }
+            .h-\[3px\] { background: #1e293b !important; }
+            .cat-hdr td    { background: #1e293b !important; color: #fff !important; }
+            .subcat-hdr td { background: #f1f5f9 !important; }
             .q-tag { color: #1e293b !important; background: #fff !important; border-color: #94a3b8 !important; }
 
             /* Field/label text carrying the brand-green color — plain black,
