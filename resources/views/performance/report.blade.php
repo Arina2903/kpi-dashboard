@@ -164,11 +164,10 @@
             .cat-hdr td    { background: #1e3a8a !important; color: #fff !important; }
             .subcat-hdr td { background: #eef2f7 !important; }
             .q-tag { color: #1e293b !important; background: #fff !important; border-color: #94a3b8 !important; }
-            .sc-great, .sc-good, .sc-warn, .sc-poor { color: #1e293b !important; }
 
-            /* Any brand-green text/border, at any opacity, is safe to
-               recolor — it never needs to stay filled to remain legible. */
-            [class*="text-[#6B9080]"], [class*="text-[#1a3d34]"] { color: #1e3a8a !important; }
+            /* Field/label text carrying the brand-green color — plain black,
+               not blue (blue is reserved for header bars above). */
+            [class*="text-[#6B9080]"], [class*="text-[#1a3d34]"] { color: #1e293b !important; }
             [class*="border-[#6B9080]"] { border-color: #94a3b8 !important; }
             /* Divider lines / panel washes — recolor but keep visible */
             [class~="bg-[#6B9080]/30"] { background-color: #94a3b8 !important; }
@@ -177,19 +176,11 @@
                filled (so ticked boxes stay visible), just not green */
             [class~="bg-[#6B9080]"] { background-color: #1e293b !important; }
 
-            /* Attendance stat cards and other rainbow status text
-               (emerald/red/amber/purple/violet) — flatten to black; blue
-               stays as-is since it's part of the allowed print palette */
-            [class*="text-emerald-"], [class*="text-red-"], [class*="text-amber-"],
-            [class*="text-purple-"], [class*="text-violet-"] {
-                color: #1e293b !important;
-            }
-            /* Traffic-light scores set inline by JS (attendance score rows,
-               Section 6 rating summary) — flatten to black on print too */
-            [id^="att-row-score-"], #att-score-total,
-            [id^="disp_s6_"], #s6SelfTotal, #s6AppTotal {
-                color: #1e293b !important;
-            }
+            /* Red/amber/green status indicators (KPI achievement score,
+               attendance stat cards, attendance score rows, Section 6
+               rating summary) print exactly as the system shows them —
+               only the decorative brand-green/blue header accents and
+               field-label text are flattened above. */
 
             /* Print happens after the appraisal is fully filled in — show the
                chosen rating as a plain value instead of the on-screen 1–5
