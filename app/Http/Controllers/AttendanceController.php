@@ -14,7 +14,9 @@ class AttendanceController extends Controller
 
     private function authorise(): bool
     {
-        return session('hr_access') === true;
+        // BTS keeps full access here too, including while impersonating
+        // someone via View As whose own hr_access flag is false.
+        return session('hr_access') === true || $this->isBtsSession();
     }
 
     public function index(SupabaseService $supabase)

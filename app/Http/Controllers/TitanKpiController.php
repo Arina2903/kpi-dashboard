@@ -52,17 +52,19 @@ class TitanKpiController extends Controller
     private function isTitanUser(array $user): bool
     {
         // BTS has cross-company admin/support access (same as the "BTS Admin —
-        // View As" feature elsewhere), so it's checked by department alone —
-        // not tied to company_code or the VP exclusion the way TITAN is.
+        // View As" feature elsewhere), so it's checked via isBtsSession() —
+        // not tied to company_code or the VP exclusion the way TITAN is, and
+        // still true while impersonating someone outside TITAN via View As.
         return ($user['role'] !== 'VP' && $user['company_code'] === 'RCG' && $user['department_code'] === 'TITAN')
-            || $user['department_code'] === 'BTS';
+            || $this->isBtsSession();
     }
 
     private function isTitanManager(array $user): bool
     {
         // BTS has cross-company admin/support access, same level as SLT —
-        // manager-equivalent regardless of the employee's actual role.
-        return in_array($user['role'], ['MANAGER', 'SLT']) || $user['department_code'] === 'BTS';
+        // manager-equivalent regardless of the employee's actual role, and
+        // still true while impersonating someone via View As.
+        return in_array($user['role'], ['MANAGER', 'SLT']) || $this->isBtsSession();
     }
 
     /*

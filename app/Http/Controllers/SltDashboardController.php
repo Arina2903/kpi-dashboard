@@ -26,11 +26,12 @@ class SltDashboardController extends Controller
     }
 
     // Same department gate used for the SLT-Office staff KPI drill-down —
-    // this page is restricted the same way.
+    // this page is restricted the same way. isBtsSession() keeps BTS's
+    // access even while impersonating someone outside SLT Office via View As.
     private function requireSltAccess(array $user): void
     {
         $dept = strtoupper(trim($user['department_code'] ?? ''));
-        if (!in_array($dept, ['SLT OFFICE', 'BTS'])) {
+        if ($dept !== 'SLT OFFICE' && !$this->isBtsSession()) {
             abort(403, 'This page is only accessible to SLT Office.');
         }
     }
