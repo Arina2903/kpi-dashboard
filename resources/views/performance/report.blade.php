@@ -642,14 +642,10 @@
                         <th class="c" style="width:68px;">B<br><span style="font-weight:500;text-transform:none;font-size:8px;">Target</span></th>
                         <th class="c" style="width:72px;">C · Score<br><span style="font-weight:400;text-transform:none;font-size:8px;">(A÷B)×5</span></th>
                         <th class="c" style="width:72px;">Appraiser<br><span style="font-weight:400;text-transform:none;font-size:8px;">Score</span></th>
-                        @if($isAppraiserView ?? false)
-                        <th class="c no-print" style="width:56px;">View</th>
-                        @endif
                     </tr>
                 </thead>
                 <tbody>
                 @php
-                    $sec2Colspan = ($isAppraiserView ?? false) ? 7 : 6;
                     $categoryOrder = ['Financial', 'Growth & Customer', 'Initiatives', 'People'];
                     $sec2Raw = [];
                     foreach ($kpis as $kpi) {
@@ -672,10 +668,10 @@
                     $subCatNo = 0;
                 @endphp
                 @foreach($sec2Grouped as $catName => $subCats)
-                <tr class="cat-hdr"><td colspan="{{ $sec2Colspan }}">{{ $catName }}</td></tr>
+                <tr class="cat-hdr"><td colspan="6">{{ $catName }}</td></tr>
                 @foreach($subCats as $subName => $subKpis)
                 @php $subCatNo++; $subItemNo = 0; @endphp
-                <tr class="subcat-hdr"><td colspan="{{ $sec2Colspan }}">{{ $subName }}</td></tr>
+                <tr class="subcat-hdr"><td colspan="6">{{ $subName }}</td></tr>
                 @foreach($subKpis as $kpi)
                 @php
                     $subItemNo++;
@@ -703,11 +699,6 @@
                         <input type="hidden" name="kpi_self_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" class="kpi-self-hidden">
                     </td>
                     <td class="text-center"><input type="number" name="kpi_app_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" step="0.1" min="0" max="5" placeholder="—" class="n-input kpi-app-input" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;"></td>
-                    @if($isAppraiserView ?? false)
-                    <td class="text-center no-print">
-                        <button type="button" data-view-kpi-id="{{ $kpi['id'] }}" class="kpi-view-btn" style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;color:#4a7c6b;background:#f0f9f6;border:1px solid #d1e7e0;border-radius:8px;padding:5px 9px;cursor:pointer;">👁 View</button>
-                    </td>
-                    @endif
                 </tr>
                 @endforeach
                 @endforeach
@@ -718,16 +709,10 @@
                         <td colspan="4" class="text-right font-black text-xs text-[#1a3d34] uppercase tracking-wide px-4 py-3">Total Score Section 2</td>
                         <td class="text-center py-3"><span id="sec2Total" class="font-black text-base sc-none">—</span></td>
                         <td class="text-center"><span id="sec2AppPct" class="text-xs font-bold text-slate-400">—</span></td>
-                        @if($isAppraiserView ?? false)
-                        <td class="no-print"></td>
-                        @endif
                     </tr>
                     <tr style="background:rgba(26,61,52,.03);">
                         <td colspan="4" class="text-right text-[9px] font-bold text-slate-400 uppercase tracking-wide px-4 py-2">% Total (Score ÷ 30 × 70)</td>
                         <td colspan="2" class="text-center"><span id="sec2Pct" class="text-sm font-black text-slate-400">—</span></td>
-                        @if($isAppraiserView ?? false)
-                        <td class="no-print"></td>
-                        @endif
                     </tr>
                 </tfoot>
             </table>
@@ -1259,29 +1244,6 @@
 </table>
 </div>{{-- /form-body --}}
 </main>
-
-@if($isAppraiserView ?? false)
-{{-- ── KPI View Modal (Section 2 "View" column) — appraiser-only, never printed ── --}}
-<div id="kpiViewModal" class="no-print" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.55);align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this) closeKpiViewModal()">
-    <div style="background:#fff;border-radius:20px;max-width:760px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 20px 60px rgba(15,23,42,.35);">
-        <div style="position:sticky;top:0;background:#fff;border-bottom:1px solid #e2e8f0;padding:18px 22px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;border-radius:20px 20px 0 0;z-index:1;">
-            <div style="flex:1;min-width:0;">
-                <p id="kvTitle" style="font-size:15px;font-weight:900;color:#0f172a;"></p>
-                <div id="kvBadges" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;"></div>
-            </div>
-            <div id="kvAvgBox" style="text-align:center;padding:10px 18px;border-radius:14px;flex-shrink:0;border:1px solid transparent;">
-                <p style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;opacity:.7;">Average Progress</p>
-                <p id="kvAvgPct" style="font-size:20px;font-weight:900;line-height:1.2;margin-top:2px;"></p>
-                <p style="font-size:8px;font-weight:700;opacity:.6;margin-top:2px;">across quarters shown</p>
-            </div>
-            <button type="button" onclick="closeKpiViewModal()" style="background:#f1f5f9;border:none;width:28px;height:28px;border-radius:50%;font-size:14px;color:#64748b;cursor:pointer;flex-shrink:0;">✕</button>
-        </div>
-        <div style="padding:20px 22px;">
-            <div id="kvQuarters" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;"></div>
-        </div>
-    </div>
-</div>
-@endif
 
 <script>
 (function(){
@@ -2049,170 +2011,5 @@ window.addEventListener('afterprint', function() {
 });
 </script>
 
-@if($isAppraiserView ?? false)
-<script>
-// ── Section 2 "View" popup — per-KPI overview + quarter-by-quarter trail
-// (remarks + proof attachments) up to the quarter being evaluated. Data is
-// baked in server-side by PerformanceController::buildKpiViewData(), same
-// kpi_quarters rows used for the rest of Section 2 — nothing computed
-// independently here.
-const KPI_VIEW_DATA = @json($kpiViewData ?? []);
-
-// Same score bands and category palette as the SLT staff KPI drill-down
-// (resources/views/dashboard/staff-kpi-detail.blade.php's $scoreStyle /
-// $categoryThemes) — the canonical "KPI quarter card" look used across the
-// dashboard and Mini App, so this popup reads as the same system instead
-// of a one-off style.
-function kvScoreStyle(pct) {
-    if (pct <= 25)  return { bar: '#dc2626',                              text: '#b91c1c', badgeBg: '#fef2f2', badgeText: '#b91c1c', badgeBorder: '#fee2e2', label: 'Critical' };
-    if (pct <= 50)  return { bar: 'linear-gradient(90deg,#dc2626,#f97316)', text: '#c2410c', badgeBg: '#fff7ed', badgeText: '#c2410c', badgeBorder: '#ffedd5', label: 'Risk' };
-    if (pct <= 75)  return { bar: 'linear-gradient(90deg,#f97316,#facc15)', text: '#b45309', badgeBg: '#fffbeb', badgeText: '#b45309', badgeBorder: '#fef3c7', label: 'Watch' };
-    if (pct <= 100) return { bar: 'linear-gradient(90deg,#facc15,#059669)', text: '#047857', badgeBg: '#ecfdf5', badgeText: '#047857', badgeBorder: '#d1fae5', label: 'Good' };
-    return               { bar: '#047857',                              text: '#065f46', badgeBg: '#ecfdf5', badgeText: '#065f46', badgeBorder: '#d1fae5', label: 'Exceeded' };
-}
-
-const KV_CATEGORY_THEMES = {
-    'Financial':         { catBg: '#047857', catFg: '#fff', subBg: '#d1fae5', subFg: '#047857' },
-    'Growth & Customer': { catBg: '#4338ca', catFg: '#fff', subBg: '#e0e7ff', subFg: '#4338ca' },
-    'Initiatives':       { catBg: '#d97706', catFg: '#fff', subBg: '#fef3c7', subFg: '#b45309' },
-    'People':            { catBg: '#be185d', catFg: '#fff', subBg: '#fce7f3', subFg: '#be185d' },
-};
-const KV_CATEGORY_DEFAULT = { catBg: '#475569', catFg: '#fff', subBg: '#f1f5f9', subFg: '#475569' };
-
-function kvEscapeHtml(str) {
-    return String(str ?? '').replace(/[&<>"']/g, function (c) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-}
-
-function kvQuarterBlock(q) {
-    const target = Number(q.target || 0);
-    const actual = Number(q.actual || 0);
-    const pct = target > 0 ? Math.round((actual / target) * 1000) / 10 : 0;
-    const barPct = Math.max(0, Math.min(100, pct));
-    const hasData = actual > 0 || target > 0;
-    const style = kvScoreStyle(pct);
-
-    const remarkText = (q.remark && q.remark.trim())
-        ? q.remark.trim()
-        : (q.completion_review && q.completion_review.trim() ? q.completion_review.trim() : null);
-
-    const files = q.proof_files || [];
-    const attachmentsHtml = files.length
-        ? '<div style="display:flex;flex-wrap:wrap;gap:6px;">' + files.map(function (f) {
-            const isImg = (f.type || '').startsWith('image/');
-            const name = kvEscapeHtml(f.name || 'File');
-            return isImg
-                ? '<a href="' + f.url + '" target="_blank" rel="noopener"><img src="' + f.url + '" alt="' + name + '" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;"></a>'
-                : '<a href="' + f.url + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:5px 9px;text-decoration:none;">📎 ' + name + '</a>';
-        }).join('') + '</div>'
-        : '<span style="font-size:11px;font-weight:700;color:#94a3b8;">NON</span>';
-
-    return `
-        <div style="background:#fff;border:1px solid #6B9080;border-radius:16px;padding:16px;box-shadow:0 4px 16px rgba(15,23,42,.05);">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                <p style="font-size:12px;font-weight:900;color:#0f172a;">${q.quarter}</p>
-                <span style="font-size:8px;font-weight:900;padding:2px 8px;border-radius:8px;background:${style.badgeBg};color:${style.badgeText};border:1px solid ${style.badgeBorder};">${hasData ? style.label : 'No Data'}</span>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                    <span style="font-size:9px;font-weight:900;color:#94a3b8;text-transform:uppercase;">Target</span>
-                    <span style="font-size:12px;font-weight:900;color:#334155;">${target.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                    <span style="font-size:9px;font-weight:900;color:#94a3b8;text-transform:uppercase;">Actual</span>
-                    <span style="font-size:12px;font-weight:900;color:#334155;">${actual.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-                <div style="flex:1;height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden;">
-                    <div style="height:100%;width:${barPct}%;background:${style.bar};border-radius:999px;"></div>
-                </div>
-                <span style="font-size:10px;font-weight:900;color:${style.text};flex-shrink:0;">${pct.toFixed(1)}%</span>
-            </div>
-            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9;">
-                <p style="font-size:9px;font-weight:900;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;">Remark</p>
-                <p style="font-size:11px;color:#475569;line-height:1.5;">${remarkText ? kvEscapeHtml(remarkText) : 'NON'}</p>
-            </div>
-            <div style="margin-top:10px;">
-                <p style="font-size:9px;font-weight:900;color:#94a3b8;text-transform:uppercase;margin-bottom:5px;">Attachment</p>
-                ${attachmentsHtml}
-            </div>
-        </div>
-    `;
-}
-
-function openKpiViewModal(kpiId, btnEl) {
-    // Visible proof the click was received, independent of anything below —
-    // if this text never changes, the click itself never reached JS (a
-    // caching/overlay issue); if it changes but nothing else happens, the
-    // bug is inside this function and the catch below will alert it.
-    const originalLabel = btnEl ? btnEl.innerHTML : null;
-    if (btnEl) btnEl.innerHTML = '⏳';
-
-    try {
-        const modal = document.getElementById('kpiViewModal');
-        if (!modal) {
-            throw new Error('#kpiViewModal element not found in the page.');
-        }
-
-        const data = KPI_VIEW_DATA[kpiId];
-        if (!data) {
-            throw new Error('No KPI data found for id ' + kpiId + '.');
-        }
-
-        document.getElementById('kvTitle').textContent = data.kpi_title || '';
-
-        const theme = KV_CATEGORY_THEMES[data.category] || KV_CATEGORY_DEFAULT;
-        const badges = [];
-        if (data.category) badges.push('<span style="font-size:10px;font-weight:900;padding:3px 9px;border-radius:8px;background:' + theme.catBg + ';color:' + theme.catFg + ';">' + kvEscapeHtml(data.category) + '</span>');
-        if (data.sub_category) badges.push('<span style="font-size:10px;font-weight:900;padding:3px 9px;border-radius:8px;background:' + theme.subBg + ';color:' + theme.subFg + ';">' + kvEscapeHtml(data.sub_category) + '</span>');
-        badges.push('<span style="font-size:10px;font-weight:900;padding:3px 9px;border-radius:8px;background:#eef2ff;color:#4338ca;border:1px solid #e0e7ff;">Weightage ' + (data.weightage ?? 0) + '%</span>');
-        badges.push('<span style="font-size:10px;font-weight:900;padding:3px 9px;border-radius:8px;background:#f1f5f9;color:#475569;">Base Target: ' + (data.base_target ?? 0) + '</span>');
-        badges.push('<span style="font-size:10px;font-weight:900;padding:3px 9px;border-radius:8px;background:#f1f5f9;color:#475569;">Actual: ' + (data.actual_value ?? 0) + '</span>');
-        document.getElementById('kvBadges').innerHTML = badges.join('');
-
-        // Average progress across just the quarters shown (up to the quarter
-        // being evaluated), same score bands as each quarter card.
-        const quarters = data.quarters || [];
-        const withData = quarters.filter(q => Number(q.target || 0) > 0);
-        const avgPct = withData.length
-            ? withData.reduce((sum, q) => sum + Math.min(999, (Number(q.actual || 0) / Number(q.target || 1)) * 100), 0) / withData.length
-            : 0;
-        const avgStyle = kvScoreStyle(avgPct);
-        const avgBox = document.getElementById('kvAvgBox');
-        avgBox.style.background = avgStyle.badgeBg;
-        avgBox.style.borderColor = avgStyle.badgeBorder;
-        avgBox.style.color = avgStyle.badgeText;
-        document.getElementById('kvAvgPct').textContent = avgPct.toFixed(1) + '%';
-
-        const quartersHtml = quarters.map(kvQuarterBlock).join('');
-        document.getElementById('kvQuarters').innerHTML = quartersHtml || '<p style="font-size:12px;color:#94a3b8;">No quarter data yet.</p>';
-
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    } catch (err) {
-        console.error('openKpiViewModal failed:', err);
-        alert("Couldn't open this KPI's details: " + err.message);
-    } finally {
-        if (btnEl && originalLabel !== null) btnEl.innerHTML = originalLabel;
-    }
-}
-
-function closeKpiViewModal() {
-    document.getElementById('kpiViewModal').style.display = 'none';
-    document.body.style.overflow = '';
-}
-
-// Event delegation instead of inline onclick — one listener on the document
-// catches every .kpi-view-btn regardless of how many rows render, and
-// isn't affected by whatever inline-handler quirk (if any) was silently
-// swallowing clicks before.
-document.addEventListener('click', function (e) {
-    const btn = e.target.closest('.kpi-view-btn');
-    if (btn) openKpiViewModal(btn.dataset.viewKpiId, btn);
-});
-</script>
-@endif
 </body>
 </html>

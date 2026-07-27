@@ -8,57 +8,6 @@ class PerformanceController extends Controller
 {
     private string $currentFinancialYear = 'FY2026';
 
-    /**
-     * Data for Section 2's "View" popup — each KPI's overview plus its
-     * quarters from Q1 up to (and including) the quarter being evaluated,
-     * with each quarter's remark/completion review and proof attachments
-     * so the appraisee/appraiser can see the trail behind the number
-     * without leaving the report.
-     */
-    private function buildKpiViewData(array $kpis, array $allQuarters, string $qLabel): array
-    {
-        $quartersUpToNow = array_slice(['Q1', 'Q2', 'Q3', 'Q4'], 0, (int) substr($qLabel, 1));
-
-        $viewData = [];
-        foreach ($kpis as $kpi) {
-            $quarters = [];
-            foreach ($quartersUpToNow as $qKey) {
-                $qr = ($allQuarters[$kpi['id']] ?? [])[$qKey] ?? null;
-
-                $proofFiles = [];
-                if (!empty($qr['completion_proof_urls'])) {
-                    $decoded = json_decode($qr['completion_proof_urls'], true);
-                    if (is_array($decoded)) {
-                        $proofFiles = $decoded;
-                    }
-                }
-
-                $quarters[] = [
-                    'quarter'           => $qKey,
-                    'target'            => (float) ($qr['quarter_target'] ?? 0),
-                    'actual'            => (float) ($qr['quarter_actual'] ?? 0),
-                    'status'            => $qr['status'] ?? 'not_started',
-                    'remark'            => $qr['remark'] ?? null,
-                    'completion_review' => $qr['completion_review'] ?? null,
-                    'proof_files'       => $proofFiles,
-                ];
-            }
-
-            $viewData[$kpi['id']] = [
-                'kpi_title'    => $kpi['kpi_title'],
-                'category'     => $kpi['category'] ?? null,
-                'sub_category' => $kpi['sub_category'] ?? null,
-                'weightage'    => $kpi['weightage'] ?? 0,
-                'base_target'  => (float) ($kpi['base_target'] ?? 0),
-                'actual_value' => (float) ($kpi['actual_value'] ?? 0),
-                'unit'         => $kpi['unit'] ?? null,
-                'quarters'     => $quarters,
-            ];
-        }
-
-        return $viewData;
-    }
-
     public function kpiAppraisal(SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid') || !session()->has('company_code')) {
@@ -411,7 +360,7 @@ class PerformanceController extends Controller
         foreach ($kpis as $kpi) {
             $qRows = $supabase->get('kpi_quarters', [
                 'kpi_id' => 'eq.' . $kpi['id'],
-                'select' => 'quarter,quarter_title,quarter_target,quarter_actual,status,remark,completion_review,completion_proof_urls',
+                'select' => 'quarter,quarter_title,quarter_target,quarter_actual,status',
             ]);
             foreach ($qRows as $row) {
                 $allQuarters[$kpi['id']][$row['quarter']] = $row;
@@ -537,7 +486,6 @@ class PerformanceController extends Controller
             'kpis'                 => $kpis,
             'quarterScores'        => $quarterScores,
             'allQuarters'          => $allQuarters,
-            'kpiViewData'          => $this->buildKpiViewData($kpis, $allQuarters, $q),
             'assessmentAreas'      => $assessmentAreas,
             'attendanceSummary'    => $attendanceSummary,
             'attendanceYTD'        => $attendanceYTD,
@@ -767,7 +715,7 @@ class PerformanceController extends Controller
         foreach ($kpis as $kpi) {
             $qRows = $supabase->get('kpi_quarters', [
                 'kpi_id' => 'eq.' . $kpi['id'],
-                'select' => 'quarter,quarter_title,quarter_target,quarter_actual,status,remark,completion_review,completion_proof_urls',
+                'select' => 'quarter,quarter_title,quarter_target,quarter_actual,status',
             ]);
             foreach ($qRows as $row) {
                 $allQuarters[$kpi['id']][$row['quarter']] = $row;
@@ -893,7 +841,6 @@ class PerformanceController extends Controller
             'kpis'                 => $kpis,
             'quarterScores'        => $quarterScores,
             'allQuarters'          => $allQuarters,
-            'kpiViewData'          => $this->buildKpiViewData($kpis, $allQuarters, $q),
             'assessmentAreas'      => $assessmentAreas,
             'attendanceSummary'    => $attendanceSummary,
             'attendanceYTD'        => $attendanceYTD,
