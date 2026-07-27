@@ -116,7 +116,19 @@
                         <span class="text-[10px] font-black {{ $qstyle['text'] }} shrink-0">{{ number_format($pct, 1) }}%</span>
                     </div>
                     @php
-                        $remarkText = trim($row['remark'] ?? $row['completion_review'] ?? '');
+                        // The remark field sometimes just echoes the status word
+                        // (e.g. "Completed", "On track") rather than an actual
+                        // note from the appraisee — that's not a real remark, so
+                        // treat it the same as empty and fall through.
+                        $statusEchoes = ['not started', 'on track', 'at risk', 'in trouble', 'completed'];
+                        $isRealRemark = fn ($text) => $text !== '' && !in_array(strtolower($text), $statusEchoes, true);
+
+                        $remarkCandidate = trim($row['remark'] ?? '');
+                        $reviewCandidate = trim($row['completion_review'] ?? '');
+                        $remarkText = $isRealRemark($remarkCandidate)
+                            ? $remarkCandidate
+                            : ($isRealRemark($reviewCandidate) ? $reviewCandidate : '');
+
                         $proofFiles = [];
                         if (!empty($row['completion_proof_urls'])) {
                             $decoded = json_decode($row['completion_proof_urls'], true);
