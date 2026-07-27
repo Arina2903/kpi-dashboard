@@ -53,6 +53,19 @@ class KpiController extends Controller
         return now()->timezone('Asia/Kuala_Lumpur')->toDateTimeString();
     }
 
+    /**
+     * Q1/Q2 2026 stay updatable without an approval reason through 31 Jul
+     * 2026 (mid-year appraisal grace period), even though their normal
+     * end_date (31 Mar / 30 Jun) has already passed. From 1 Aug 2026 this
+     * reverts to the standard past-quarter reason requirement on its own —
+     * no manual toggle needed.
+     */
+    private function inQ1Q2GracePeriod(array $quarter): bool
+    {
+        return in_array($quarter['quarter'] ?? null, ['Q1', 'Q2'], true)
+            && now('Asia/Kuala_Lumpur')->startOfDay()->lte(Carbon::parse('2026-07-31'));
+    }
+
     private function currentUser(SupabaseService $supabase): array
     {
         $employeeUuid = session('employee_uuid');
@@ -1573,11 +1586,12 @@ class KpiController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | BTS (cross-department/company admin — full edit access everywhere)
+        | BTS (cross-department/company admin — full edit access everywhere,
+        | including while impersonating someone via View As)
         |--------------------------------------------------------------------------
         */
 
-        if (($user['department_code'] ?? '') === 'BTS') {
+        if ($this->isBtsSession()) {
             return true;
         }
 
@@ -2939,6 +2953,7 @@ class KpiController extends Controller
             $today->gt(
                 $endDate
             )
+            && !$this->inQ1Q2GracePeriod($quarter)
         ){
 
             return response()->json([
@@ -3271,7 +3286,7 @@ class KpiController extends Controller
             )->startOfDay();
 
         $reasonRequired =
-            $today->gt($endDate)
+            ($today->gt($endDate) && !$this->inQ1Q2GracePeriod($quarter))
 
             ||
 

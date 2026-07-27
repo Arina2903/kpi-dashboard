@@ -2481,7 +2481,12 @@ function renderKpiDetail(activeQuarter) {
     const startDate     = new Date(quarter.start_date);
     const endDate       = new Date(quarter.end_date);
     const beforeQuarter = today < startDate;
-    const afterQuarter  = today > endDate;
+    // Q1/Q2 2026 stay updatable without an approval reason through 31 Jul
+    // 2026 (mid-year appraisal grace period), even past their normal end
+    // date — reverts to the standard past-quarter behaviour on its own
+    // from 1 Aug 2026, no manual toggle needed.
+    const inQ1Q2GracePeriod = ['Q1', 'Q2'].includes(quarter.quarter) && today <= new Date('2026-07-31T23:59:59');
+    const afterQuarter  = today > endDate && !inQ1Q2GracePeriod;
     const completed     = quarter.status === 'completed' || quarter.status === 'pending_completion';
     const reasonRequired = afterQuarter || completed;
 
