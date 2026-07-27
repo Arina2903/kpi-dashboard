@@ -8,6 +8,57 @@ class PerformanceController extends Controller
 {
     private string $currentFinancialYear = 'FY2026';
 
+    /**
+     * Data for Section 2's "View" popup — each KPI's overview plus its
+     * quarters from Q1 up to (and including) the quarter being evaluated,
+     * with each quarter's remark/completion review and proof attachments
+     * so the appraisee/appraiser can see the trail behind the number
+     * without leaving the report.
+     */
+    private function buildKpiViewData(array $kpis, array $allQuarters, string $qLabel): array
+    {
+        $quartersUpToNow = array_slice(['Q1', 'Q2', 'Q3', 'Q4'], 0, (int) substr($qLabel, 1));
+
+        $viewData = [];
+        foreach ($kpis as $kpi) {
+            $quarters = [];
+            foreach ($quartersUpToNow as $qKey) {
+                $qr = ($allQuarters[$kpi['id']] ?? [])[$qKey] ?? null;
+
+                $proofFiles = [];
+                if (!empty($qr['completion_proof_urls'])) {
+                    $decoded = json_decode($qr['completion_proof_urls'], true);
+                    if (is_array($decoded)) {
+                        $proofFiles = $decoded;
+                    }
+                }
+
+                $quarters[] = [
+                    'quarter'           => $qKey,
+                    'target'            => (float) ($qr['quarter_target'] ?? 0),
+                    'actual'            => (float) ($qr['quarter_actual'] ?? 0),
+                    'status'            => $qr['status'] ?? 'not_started',
+                    'remark'            => $qr['remark'] ?? null,
+                    'completion_review' => $qr['completion_review'] ?? null,
+                    'proof_files'       => $proofFiles,
+                ];
+            }
+
+            $viewData[$kpi['id']] = [
+                'kpi_title'    => $kpi['kpi_title'],
+                'category'     => $kpi['category'] ?? null,
+                'sub_category' => $kpi['sub_category'] ?? null,
+                'weightage'    => $kpi['weightage'] ?? 0,
+                'base_target'  => (float) ($kpi['base_target'] ?? 0),
+                'actual_value' => (float) ($kpi['actual_value'] ?? 0),
+                'unit'         => $kpi['unit'] ?? null,
+                'quarters'     => $quarters,
+            ];
+        }
+
+        return $viewData;
+    }
+
     public function kpiAppraisal(SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid') || !session()->has('company_code')) {
@@ -360,7 +411,7 @@ class PerformanceController extends Controller
         foreach ($kpis as $kpi) {
             $qRows = $supabase->get('kpi_quarters', [
                 'kpi_id' => 'eq.' . $kpi['id'],
-                'select' => 'quarter,quarter_title,quarter_target,quarter_actual,status',
+                'select' => 'quarter,quarter_title,quarter_target,quarter_actual,status,remark,completion_review,completion_proof_urls',
             ]);
             foreach ($qRows as $row) {
                 $allQuarters[$kpi['id']][$row['quarter']] = $row;
@@ -486,6 +537,7 @@ class PerformanceController extends Controller
             'kpis'                 => $kpis,
             'quarterScores'        => $quarterScores,
             'allQuarters'          => $allQuarters,
+            'kpiViewData'          => $this->buildKpiViewData($kpis, $allQuarters, $q),
             'assessmentAreas'      => $assessmentAreas,
             'attendanceSummary'    => $attendanceSummary,
             'attendanceYTD'        => $attendanceYTD,
@@ -576,13 +628,22 @@ class PerformanceController extends Controller
     }
 
     /**
-     * Walks up an employee's reports_to_id chain (manager, then that
-     * manager's manager = VP, then that VP's manager = SLT) to find which
-     * level — if any — $viewerId sits at relative to $employee. Section 7
-     * of the appraisal form has a separate remarks block for each of these
-     * three levels, so appraiser access isn't just "the direct manager".
-     * $getParent resolves a reports_to_id into that employee's own record —
-     * either a live Supabase lookup or a pre-fetched map, depending on caller.
+     * Walks up an employee's approver chain (manager, then that manager's
+     * approver = VP, then that VP's approver = SLT) to find which level —
+     * if any — $viewerId sits at relative to $employee. Section 7 of the
+     * appraisal form has a separate remarks block for each of these three
+     * levels, so appraiser access isn't just "the direct manager".
+     *
+     * Each step's parent id is resolved with the exact same per-role field
+     * priority as ApprovalHierarchyService::getApprover() (manager_id/vp_id
+     * with reports_to_id as fallback) — this used to walk reports_to_id
+     * only, which disagreed with who actually got the "submitted for
+     * appraisal" notification whenever manager_id/vp_id was set but
+     * reports_to_id wasn't pointing at the same person, 403ing the very
+     * appraiser the notification was sent to.
+     *
+     * $getParent resolves an id into that employee's own record — either a
+     * live Supabase lookup or a pre-fetched map, depending on caller.
      */
     private function resolveAppraiserLevel(?array $employee, string $viewerId, callable $getParent): ?string
     {
@@ -590,14 +651,22 @@ class PerformanceController extends Controller
         $current = $employee;
 
         foreach ($levels as $level) {
-            $reportsTo = $current['reports_to_id'] ?? null;
-            if (empty($reportsTo)) {
+            $role = strtoupper(trim($current['role'] ?? ''));
+
+            $parentId = match ($role) {
+                'EXECUTIVE' => $current['manager_id'] ?? $current['vp_id'] ?? null,
+                'MANAGER'   => $current['vp_id'] ?? $current['reports_to_id'] ?? null,
+                'VP'        => $current['reports_to_id'] ?? null,
+                default     => null,
+            };
+
+            if (empty($parentId)) {
                 return null;
             }
-            if ($reportsTo === $viewerId) {
+            if ($parentId === $viewerId) {
                 return $level;
             }
-            $current = $getParent($reportsTo);
+            $current = $getParent($parentId);
             if (empty($current)) {
                 return null;
             }
@@ -623,7 +692,7 @@ class PerformanceController extends Controller
             'is_active' => 'eq.true',
             'select'    => '*',
         ]);
-        if (empty($employees)) abort(403);
+        if (empty($employees)) abort(403, 'Employee not found or inactive.');
         $user = $employees[0];
 
         $appraiserLevel = $this->resolveAppraiserLevel(
@@ -631,7 +700,17 @@ class PerformanceController extends Controller
             $viewerId,
             fn($id) => $supabase->first('employees', ['id' => 'eq.' . $id, 'select' => '*'])
         );
-        if (!$appraiserLevel) abort(403);
+        // BTS gets full support access regardless of the actual approver
+        // chain — including while impersonating someone via View As, where
+        // the impersonated employee's own chain is irrelevant to BTS's role.
+        // Defaults to 'manager', the widest level (KPI scores + all
+        // sections), not just Section 7 remarks.
+        if (!$appraiserLevel && $this->isBtsSession()) {
+            $appraiserLevel = 'manager';
+        }
+        if (!$appraiserLevel) {
+            abort(403, "You aren't in {$user['short_name']}'s approver chain (manager/VP/SLT), so you can't open their appraisal. If you're using View As, check the profile you're impersonating is still active — it may have reverted.");
+        }
 
         // Tenure
         $joinDate = $user['join_date'] ?? null;
@@ -688,7 +767,7 @@ class PerformanceController extends Controller
         foreach ($kpis as $kpi) {
             $qRows = $supabase->get('kpi_quarters', [
                 'kpi_id' => 'eq.' . $kpi['id'],
-                'select' => 'quarter,quarter_title,quarter_target,quarter_actual,status',
+                'select' => 'quarter,quarter_title,quarter_target,quarter_actual,status,remark,completion_review,completion_proof_urls',
             ]);
             foreach ($qRows as $row) {
                 $allQuarters[$kpi['id']][$row['quarter']] = $row;
@@ -814,6 +893,7 @@ class PerformanceController extends Controller
             'kpis'                 => $kpis,
             'quarterScores'        => $quarterScores,
             'allQuarters'          => $allQuarters,
+            'kpiViewData'          => $this->buildKpiViewData($kpis, $allQuarters, $q),
             'assessmentAreas'      => $assessmentAreas,
             'attendanceSummary'    => $attendanceSummary,
             'attendanceYTD'        => $attendanceYTD,
@@ -895,6 +975,11 @@ class PerformanceController extends Controller
             $viewerId,
             fn($id) => $supabase->first('employees', ['id' => 'eq.' . $id, 'select' => '*'])
         );
+        // BTS gets full support access regardless of the actual approver
+        // chain — see the same bypass in appraiserReport() above.
+        if (!$appraiserLevel && $this->isBtsSession()) {
+            $appraiserLevel = 'manager';
+        }
         if (!$appraiserLevel) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }

@@ -616,10 +616,14 @@
                         <th class="c" style="width:68px;">B<br><span style="font-weight:500;text-transform:none;font-size:8px;">Target</span></th>
                         <th class="c" style="width:72px;">C · Score<br><span style="font-weight:400;text-transform:none;font-size:8px;">(A÷B)×5</span></th>
                         <th class="c" style="width:72px;">Appraiser<br><span style="font-weight:400;text-transform:none;font-size:8px;">Score</span></th>
+                        @if($isAppraiserView ?? false)
+                        <th class="c no-print" style="width:56px;">View</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
                 @php
+                    $sec2Colspan = ($isAppraiserView ?? false) ? 7 : 6;
                     $categoryOrder = ['Financial', 'Growth & Customer', 'Initiatives', 'People'];
                     $sec2Raw = [];
                     foreach ($kpis as $kpi) {
@@ -642,10 +646,10 @@
                     $subCatNo = 0;
                 @endphp
                 @foreach($sec2Grouped as $catName => $subCats)
-                <tr class="cat-hdr"><td colspan="6">{{ $catName }}</td></tr>
+                <tr class="cat-hdr"><td colspan="{{ $sec2Colspan }}">{{ $catName }}</td></tr>
                 @foreach($subCats as $subName => $subKpis)
                 @php $subCatNo++; $subItemNo = 0; @endphp
-                <tr class="subcat-hdr"><td colspan="6">{{ $subName }}</td></tr>
+                <tr class="subcat-hdr"><td colspan="{{ $sec2Colspan }}">{{ $subName }}</td></tr>
                 @foreach($subKpis as $kpi)
                 @php
                     $subItemNo++;
@@ -673,6 +677,11 @@
                         <input type="hidden" name="kpi_self_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" class="kpi-self-hidden">
                     </td>
                     <td class="text-center"><input type="number" name="kpi_app_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" step="0.1" min="0" max="5" placeholder="—" class="n-input kpi-app-input" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;"></td>
+                    @if($isAppraiserView ?? false)
+                    <td class="text-center no-print">
+                        <button type="button" onclick="openKpiViewModal('{{ $kpi['id'] }}')" style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;color:#4a7c6b;background:#f0f9f6;border:1px solid #d1e7e0;border-radius:8px;padding:5px 9px;cursor:pointer;">👁 View</button>
+                    </td>
+                    @endif
                 </tr>
                 @endforeach
                 @endforeach
@@ -683,10 +692,16 @@
                         <td colspan="4" class="text-right font-black text-xs text-[#1a3d34] uppercase tracking-wide px-4 py-3">Total Score Section 2</td>
                         <td class="text-center py-3"><span id="sec2Total" class="font-black text-base sc-none">—</span></td>
                         <td class="text-center"><span id="sec2AppPct" class="text-xs font-bold text-slate-400">—</span></td>
+                        @if($isAppraiserView ?? false)
+                        <td class="no-print"></td>
+                        @endif
                     </tr>
                     <tr style="background:rgba(26,61,52,.03);">
                         <td colspan="4" class="text-right text-[9px] font-bold text-slate-400 uppercase tracking-wide px-4 py-2">% Total (Score ÷ 30 × 70)</td>
                         <td colspan="2" class="text-center"><span id="sec2Pct" class="text-sm font-black text-slate-400">—</span></td>
+                        @if($isAppraiserView ?? false)
+                        <td class="no-print"></td>
+                        @endif
                     </tr>
                 </tfoot>
             </table>
@@ -1218,6 +1233,34 @@
 </table>
 </div>{{-- /form-body --}}
 </main>
+
+@if($isAppraiserView ?? false)
+{{-- ── KPI View Modal (Section 2 "View" column) — appraiser-only, never printed ── --}}
+<div id="kpiViewModal" class="no-print" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.55);align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this) closeKpiViewModal()">
+    <div style="background:#fff;border-radius:20px;max-width:640px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 20px 60px rgba(15,23,42,.35);">
+        <div style="position:sticky;top:0;background:#fff;border-bottom:1px solid #e2e8f0;padding:18px 22px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-radius:20px 20px 0 0;z-index:1;">
+            <div>
+                <p id="kvTitle" style="font-size:15px;font-weight:900;color:#1a3d34;"></p>
+                <div id="kvBadges" style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;"></div>
+            </div>
+            <button type="button" onclick="closeKpiViewModal()" style="background:#f1f5f9;border:none;width:28px;height:28px;border-radius:50%;font-size:14px;color:#64748b;cursor:pointer;flex-shrink:0;">✕</button>
+        </div>
+        <div style="padding:20px 22px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
+                <div style="background:#f8fafc;border-radius:12px;padding:12px 14px;">
+                    <p style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;">Base Target</p>
+                    <p id="kvBaseTarget" style="font-size:16px;font-weight:900;color:#1e293b;margin-top:2px;"></p>
+                </div>
+                <div style="background:#f8fafc;border-radius:12px;padding:12px 14px;">
+                    <p style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;">Actual (Full Year)</p>
+                    <p id="kvActual" style="font-size:16px;font-weight:900;color:#1e293b;margin-top:2px;"></p>
+                </div>
+            </div>
+            <div id="kvQuarters" style="display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+    </div>
+</div>
+@endif
 
 <script>
 (function(){
@@ -1984,5 +2027,123 @@ window.addEventListener('afterprint', function() {
     });
 });
 </script>
+
+@if($isAppraiserView ?? false)
+<script>
+// ── Section 2 "View" popup — per-KPI overview + quarter-by-quarter trail
+// (remarks + proof attachments) up to the quarter being evaluated. Data is
+// baked in server-side by PerformanceController::buildKpiViewData(), same
+// kpi_quarters rows used for the rest of Section 2 — nothing computed
+// independently here.
+const KPI_VIEW_DATA = @json($kpiViewData ?? []);
+
+// Same 4-tier palette as this page's own Section 2/3 score bands (see the
+// sc-great/sc-good/sc-warn/sc-poor classes + the sc(v,mx) helper above) so
+// the popup reads as part of the same document, not a bolt-on widget.
+const KV_TIER_COLORS = {
+    great: { fg: '#059669', bg: 'rgba(5,150,105,.12)' },
+    good:  { fg: '#1a3d34', bg: 'rgba(107,144,128,.15)' },
+    warn:  { fg: '#d97706', bg: 'rgba(217,119,6,.12)' },
+    poor:  { fg: '#dc2626', bg: 'rgba(220,38,38,.12)' },
+    none:  { fg: '#94a3b8', bg: '#f1f5f9' },
+};
+
+const KV_STATUS_STYLES = {
+    completed:           { label: 'Completed',        tier: 'great' },
+    pending_completion:  { label: 'Pending Approval', tier: 'good' },
+    on_track:            { label: 'On Track',         tier: 'good' },
+    at_risk:             { label: 'Watch',             tier: 'warn' },
+    in_trouble:          { label: 'Critical',          tier: 'poor' },
+    not_started:         { label: 'Not Started',       tier: 'none' },
+};
+
+// Same tiering as the sc(v,mx) helper above (>=90% great, >=70% good, >=50%
+// warn, else poor) applied to a quarter's achievement percentage.
+function kvPctTier(pct) {
+    if (pct >= 90) return 'great';
+    if (pct >= 70) return 'good';
+    if (pct >= 50) return 'warn';
+    return 'poor';
+}
+
+function kvEscapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+}
+
+function kvQuarterBlock(q) {
+    const target = Number(q.target || 0);
+    const actual = Number(q.actual || 0);
+    const pct = target > 0 ? Math.round((actual / target) * 1000) / 10 : 0;
+    const barPct = Math.max(0, Math.min(100, pct));
+    const st = KV_STATUS_STYLES[q.status] || KV_STATUS_STYLES.not_started;
+    const statusColor = KV_TIER_COLORS[st.tier];
+    const pctColor = KV_TIER_COLORS[target > 0 ? kvPctTier(pct) : 'none'];
+
+    const remarkText = (q.remark && q.remark.trim())
+        ? q.remark.trim()
+        : (q.completion_review && q.completion_review.trim() ? q.completion_review.trim() : null);
+
+    const files = q.proof_files || [];
+    const attachmentsHtml = files.length
+        ? '<div style="display:flex;flex-wrap:wrap;gap:8px;">' + files.map(function (f) {
+            const isImg = (f.type || '').startsWith('image/');
+            const name = kvEscapeHtml(f.name || 'File');
+            return isImg
+                ? '<a href="' + f.url + '" target="_blank" rel="noopener"><img src="' + f.url + '" alt="' + name + '" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;"></a>'
+                : '<a href="' + f.url + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#1a3d34;background:rgba(107,144,128,.12);border:1px solid rgba(107,144,128,.30);border-radius:8px;padding:6px 10px;text-decoration:none;">📎 ' + name + '</a>';
+        }).join('') + '</div>'
+        : '<span style="font-size:11px;font-weight:700;color:#94a3b8;">NON</span>';
+
+    return `
+        <div style="border:1px solid #e2e8f0;border-radius:14px;padding:14px 16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <p style="font-size:12px;font-weight:900;color:#1a3d34;">${q.quarter}</p>
+                <span style="font-size:9px;font-weight:800;background:${statusColor.bg};color:${statusColor.fg};padding:3px 9px;border-radius:999px;">${st.label}</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#64748b;margin-bottom:6px;">
+                <span>Target: <strong style="color:#1e293b;">${target}</strong></span>
+                <span>Actual: <strong style="color:#1e293b;">${actual}</strong></span>
+                <span style="font-weight:900;color:${pctColor.fg};">${pct}%</span>
+            </div>
+            <div style="width:100%;height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden;margin-bottom:12px;">
+                <div style="height:100%;width:${barPct}%;background:${pctColor.fg};border-radius:999px;"></div>
+            </div>
+            <p style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px;">Remarks</p>
+            <p style="font-size:12px;color:#334155;margin-bottom:10px;">${remarkText ? kvEscapeHtml(remarkText) : 'NON'}</p>
+            <p style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:5px;">Attachment</p>
+            ${attachmentsHtml}
+        </div>
+    `;
+}
+
+function openKpiViewModal(kpiId) {
+    const data = KPI_VIEW_DATA[kpiId];
+    if (!data) return;
+
+    document.getElementById('kvTitle').textContent = data.kpi_title || '';
+    document.getElementById('kvBaseTarget').textContent = data.base_target;
+    document.getElementById('kvActual').textContent = data.actual_value;
+
+    const badges = [];
+    if (data.category) badges.push('<span style="font-size:9px;font-weight:800;background:#1a3d34;color:#fff;padding:3px 8px;border-radius:999px;">' + kvEscapeHtml(data.category) + '</span>');
+    if (data.sub_category) badges.push('<span style="font-size:9px;font-weight:800;background:#e2e8f0;color:#334155;padding:3px 8px;border-radius:999px;">' + kvEscapeHtml(data.sub_category) + '</span>');
+    badges.push('<span style="font-size:9px;font-weight:900;color:#6B9080;background:#fff;border:1px solid rgba(107,144,128,.25);padding:3px 8px;border-radius:999px;">' + (data.weightage ?? 0) + '% weight</span>');
+    document.getElementById('kvBadges').innerHTML = badges.join('');
+
+    const quartersHtml = (data.quarters || []).map(kvQuarterBlock).join('');
+    document.getElementById('kvQuarters').innerHTML = quartersHtml || '<p style="font-size:12px;color:#94a3b8;">No quarter data yet.</p>';
+
+    document.getElementById('kpiViewModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeKpiViewModal() {
+    document.getElementById('kpiViewModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+</script>
+@endif
 </body>
 </html>
