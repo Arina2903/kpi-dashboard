@@ -624,23 +624,31 @@ class PerformanceController extends Controller
     }
 
     /**
-     * Section 2's "View" link — reuses the SLT staff-KPI-drilldown page
-     * (dashboard/staff-kpi-detail.blade.php: header card + Q1-Q4 quarter
-     * cards with target/actual/progress/remark/attachment) for any
-     * appraiser in the employee's chain, not just SLT Office. A plain page
-     * navigation rather than a JS popup — simplest possible interaction,
-     * no click-handler surface to break.
+     * Section 2's "View" — reuses the SLT staff-KPI-drilldown design
+     * (dashboard/staff-kpi-detail.blade.php: header card + quarter cards
+     * with target/actual/progress/remark/attachment) for any appraiser in
+     * the employee's chain, not just SLT Office. Scoped to Q1 up through
+     * whichever quarter is being evaluated — an appraiser reviewing Q1
+     * only sees Q1, not unstarted future quarters.
+     *
+     * Serves two callers: a normal page load (full HTML, with sidebar) and
+     * the Section 2 "View" popup, which passes ?partial=1 and gets back
+     * just this content's markup to inject into its modal — same data,
+     * same authorization, no separate endpoint to keep in sync.
      */
     public function viewAppraiseeKpi(string $employeeId, string $kpiId, \Illuminate\Http\Request $request, SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid')) {
-            return redirect()->route('login');
+            return $request->query('partial')
+                ? response()->json(['error' => 'Not logged in.'], 401)
+                : redirect()->route('login');
         }
 
         $fromQuarter = strtolower($request->query('quarter', 'q2'));
         if (!in_array($fromQuarter, ['q1', 'q2', 'q3', 'q4'], true)) {
             $fromQuarter = 'q2';
         }
+        $quartersToShow = array_slice(['Q1', 'Q2', 'Q3', 'Q4'], 0, (int) substr($fromQuarter, 1));
 
         $viewerId = session('employee_uuid');
         $staff = $supabase->first('employees', [
@@ -706,14 +714,24 @@ class PerformanceController extends Controller
             ? round($filledQuarters->avg('progress_pct'), 1)
             : 0;
 
-        return view('dashboard.staff-kpi-detail', [
-            'user'                 => $viewer,
-            'department'           => $viewerDepartment,
+        $viewData = [
             'staff'                => $staff,
             'kpi'                  => $kpi,
             'quarters'             => $quarters,
+            'quartersToShow'       => $quartersToShow,
             'average'              => $average,
             'currentFinancialYear' => $this->currentFinancialYear,
+        ];
+
+        if ($request->query('partial')) {
+            return response(
+                view('dashboard.partials.kpi-detail-content', $viewData)->render()
+            )->header('Content-Type', 'text/html');
+        }
+
+        return view('dashboard.staff-kpi-detail', $viewData + [
+            'user'                 => $viewer,
+            'department'           => $viewerDepartment,
             'backUrl'              => route('performance.appraise.report', [$employeeId, $fromQuarter]),
             'backLabel'            => 'Back to ' . ($staff['short_name'] ?? $staff['full_name'] ?? 'Staff') . "'s Appraisal",
         ]);

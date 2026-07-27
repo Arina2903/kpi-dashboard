@@ -705,7 +705,15 @@
                     <td class="text-center"><input type="number" name="kpi_app_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" step="0.1" min="0" max="5" placeholder="—" class="n-input kpi-app-input" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;"></td>
                     @if($isAppraiserView ?? false)
                     <td class="text-center no-print">
-                        <a href="{{ route('performance.appraise.kpi', [$user['id'], $kpi['id']]) }}?quarter={{ strtolower($qLabel) }}" style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;color:#4a7c6b;background:#f0f9f6;border:1px solid #d1e7e0;border-radius:8px;padding:5px 9px;text-decoration:none;">👁 View</a>
+                        {{-- href is the full working page — middle-click / ctrl-click /
+                             right-click "open in new tab" all still work untouched, and
+                             if JS fails for any reason this still navigates there normally.
+                             The click handler below only intercepts a plain left-click to
+                             show the same content in a popup instead. --}}
+                        <a href="{{ route('performance.appraise.kpi', [$user['id'], $kpi['id']]) }}?quarter={{ strtolower($qLabel) }}"
+                           data-popup-url="{{ route('performance.appraise.kpi', [$user['id'], $kpi['id']]) }}?quarter={{ strtolower($qLabel) }}&partial=1"
+                           class="kpi-view-link"
+                           style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;color:#4a7c6b;background:#f0f9f6;border:1px solid #d1e7e0;border-radius:8px;padding:5px 9px;text-decoration:none;">👁 View</a>
                     </td>
                     @endif
                 </tr>
@@ -1259,6 +1267,20 @@
 </table>
 </div>{{-- /form-body --}}
 </main>
+
+@if($isAppraiserView ?? false)
+{{-- ── KPI View popup (Section 2) — content is fetched from the exact same
+     page the "View" link's href points to (?partial=1), so the popup and
+     the full-page fallback can never drift out of sync. ── --}}
+<div id="kpiViewModal" class="no-print" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.55);align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this) closeKpiViewModal()">
+    <div style="background:#f0f2f7;border-radius:20px;max-width:900px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(15,23,42,.35);">
+        <div style="position:sticky;top:0;background:#f0f2f7;padding:14px 20px;display:flex;align-items:center;justify-content:flex-end;z-index:1;">
+            <button type="button" onclick="closeKpiViewModal()" style="background:#fff;border:1px solid #e2e8f0;width:28px;height:28px;border-radius:50%;font-size:14px;color:#64748b;cursor:pointer;flex-shrink:0;">✕</button>
+        </div>
+        <div id="kpiViewModalBody" style="padding:0 20px 24px;"></div>
+    </div>
+</div>
+@endif
 
 <script>
 (function(){
@@ -2025,6 +2047,65 @@ window.addEventListener('afterprint', function() {
     });
 });
 </script>
+
+@if($isAppraiserView ?? false)
+<script>
+// ── Section 2 "View" popup ──────────────────────────────────────────────
+// Pulls the same content the "View" link's href points to (?partial=1 asks
+// PerformanceController::viewAppraiseeKpi for just the inner markup instead
+// of the full page), so there's exactly one source of truth for this data
+// — the popup can never show something different from what the link's
+// normal navigation would show. Event delegation (one listener, not one
+// per row) + preventDefault only on a plain left-click, so middle-click /
+// ctrl-click / right-click "open in new tab" still work via the href.
+document.addEventListener('click', function (e) {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; // let modified clicks through to the href
+    const link = e.target.closest('.kpi-view-link');
+    if (!link) return;
+    e.preventDefault();
+    openKpiViewPopup(link);
+});
+
+async function openKpiViewPopup(link) {
+    const originalLabel = link.innerHTML;
+    link.innerHTML = '⏳';
+
+    try {
+        const modal = document.getElementById('kpiViewModal');
+        const body = document.getElementById('kpiViewModalBody');
+        if (!modal || !body) throw new Error('Popup elements not found on the page.');
+
+        const res = await fetch(link.dataset.popupUrl, {
+            headers: { 'Accept': 'application/json, text/html', 'X-Requested-With': 'XMLHttpRequest' },
+        });
+
+        if (!res.ok) {
+            let message = 'Request failed (' + res.status + ').';
+            try {
+                const data = await res.clone().json();
+                if (data && data.message) message = data.message;
+            } catch (_) { /* not JSON — keep the generic message */ }
+            throw new Error(message);
+        }
+
+        body.innerHTML = await res.text();
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    } catch (err) {
+        console.error('openKpiViewPopup failed:', err);
+        alert("Couldn't load this KPI's details: " + err.message + '\n\nOpening the full page instead.');
+        window.location.href = link.href; // graceful fallback to the proven-working full page
+    } finally {
+        link.innerHTML = originalLabel;
+    }
+}
+
+function closeKpiViewModal() {
+    document.getElementById('kpiViewModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+</script>
+@endif
 
 </body>
 </html>
