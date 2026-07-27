@@ -679,7 +679,7 @@
                     <td class="text-center"><input type="number" name="kpi_app_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" step="0.1" min="0" max="5" placeholder="—" class="n-input kpi-app-input" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;"></td>
                     @if($isAppraiserView ?? false)
                     <td class="text-center no-print">
-                        <button type="button" onclick="openKpiViewModal('{{ $kpi['id'] }}')" style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;color:#4a7c6b;background:#f0f9f6;border:1px solid #d1e7e0;border-radius:8px;padding:5px 9px;cursor:pointer;">👁 View</button>
+                        <button type="button" onclick="openKpiViewModal('{{ $kpi['id'] }}', this)" style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;color:#4a7c6b;background:#f0f9f6;border:1px solid #d1e7e0;border-radius:8px;padding:5px 9px;cursor:pointer;">👁 View</button>
                     </td>
                     @endif
                 </tr>
@@ -2118,36 +2118,46 @@ function kvQuarterBlock(q) {
     `;
 }
 
-function openKpiViewModal(kpiId) {
-    const modal = document.getElementById('kpiViewModal');
-    if (!modal) {
-        console.error('openKpiViewModal: #kpiViewModal not found in the DOM.');
-        alert("Couldn't open the KPI details popup — please refresh the page and try again.");
-        return;
+function openKpiViewModal(kpiId, btnEl) {
+    // Visible proof the click was received, independent of anything below —
+    // if this text never changes, the click itself never reached JS (a
+    // caching/overlay issue); if it changes but nothing else happens, the
+    // bug is inside this function and the catch below will alert it.
+    const originalLabel = btnEl ? btnEl.innerHTML : null;
+    if (btnEl) btnEl.innerHTML = '⏳';
+
+    try {
+        const modal = document.getElementById('kpiViewModal');
+        if (!modal) {
+            throw new Error('#kpiViewModal element not found in the page.');
+        }
+
+        const data = KPI_VIEW_DATA[kpiId];
+        if (!data) {
+            throw new Error('No KPI data found for id ' + kpiId + '.');
+        }
+
+        document.getElementById('kvTitle').textContent = data.kpi_title || '';
+        document.getElementById('kvBaseTarget').textContent = data.base_target;
+        document.getElementById('kvActual').textContent = data.actual_value;
+
+        const badges = [];
+        if (data.category) badges.push('<span style="font-size:9px;font-weight:800;background:#1a3d34;color:#fff;padding:3px 8px;border-radius:999px;">' + kvEscapeHtml(data.category) + '</span>');
+        if (data.sub_category) badges.push('<span style="font-size:9px;font-weight:800;background:#e2e8f0;color:#334155;padding:3px 8px;border-radius:999px;">' + kvEscapeHtml(data.sub_category) + '</span>');
+        badges.push('<span style="font-size:9px;font-weight:900;color:#6B9080;background:#fff;border:1px solid rgba(107,144,128,.25);padding:3px 8px;border-radius:999px;">' + (data.weightage ?? 0) + '% weight</span>');
+        document.getElementById('kvBadges').innerHTML = badges.join('');
+
+        const quartersHtml = (data.quarters || []).map(kvQuarterBlock).join('');
+        document.getElementById('kvQuarters').innerHTML = quartersHtml || '<p style="font-size:12px;color:#94a3b8;">No quarter data yet.</p>';
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    } catch (err) {
+        console.error('openKpiViewModal failed:', err);
+        alert("Couldn't open this KPI's details: " + err.message);
+    } finally {
+        if (btnEl && originalLabel !== null) btnEl.innerHTML = originalLabel;
     }
-
-    const data = KPI_VIEW_DATA[kpiId];
-    if (!data) {
-        console.error('openKpiViewModal: no KPI_VIEW_DATA entry for', kpiId, KPI_VIEW_DATA);
-        alert("Couldn't load this KPI's details — please refresh the page and try again.");
-        return;
-    }
-
-    document.getElementById('kvTitle').textContent = data.kpi_title || '';
-    document.getElementById('kvBaseTarget').textContent = data.base_target;
-    document.getElementById('kvActual').textContent = data.actual_value;
-
-    const badges = [];
-    if (data.category) badges.push('<span style="font-size:9px;font-weight:800;background:#1a3d34;color:#fff;padding:3px 8px;border-radius:999px;">' + kvEscapeHtml(data.category) + '</span>');
-    if (data.sub_category) badges.push('<span style="font-size:9px;font-weight:800;background:#e2e8f0;color:#334155;padding:3px 8px;border-radius:999px;">' + kvEscapeHtml(data.sub_category) + '</span>');
-    badges.push('<span style="font-size:9px;font-weight:900;color:#6B9080;background:#fff;border:1px solid rgba(107,144,128,.25);padding:3px 8px;border-radius:999px;">' + (data.weightage ?? 0) + '% weight</span>');
-    document.getElementById('kvBadges').innerHTML = badges.join('');
-
-    const quartersHtml = (data.quarters || []).map(kvQuarterBlock).join('');
-    document.getElementById('kvQuarters').innerHTML = quartersHtml || '<p style="font-size:12px;color:#94a3b8;">No quarter data yet.</p>';
-
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
 }
 
 function closeKpiViewModal() {
