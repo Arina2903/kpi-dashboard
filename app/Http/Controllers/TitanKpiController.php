@@ -22,6 +22,22 @@ class TitanKpiController extends Controller
         'retention' => ['no' => '1.2', 'title' => 'Client Retention',                       'desc' => 'To retain client.',                                           'unit' => 'clients'],
     ];
 
+    // Which regular-KPI title keyword identifies the matching Financial KPI
+    // for each Titan KPI key — titles vary per employee ("Total Collection
+    // (Revenue)" vs "Total Collection Achievement (Revenue)"), so match on
+    // a keyword rather than an exact string.
+    const KPI_TITLE_KEYWORD = [
+        'revenue'   => 'Collection',
+        'retention' => 'Retention',
+    ];
+
+    const QUARTER_MONTHS = [
+        'Q1' => [1, 2, 3],
+        'Q2' => [4, 5, 6],
+        'Q3' => [7, 8, 9],
+        'Q4' => [10, 11, 12],
+    ];
+
     private function currentUser(SupabaseService $supabase): array
     {
         $uuid = session('employee_uuid');
@@ -106,6 +122,11 @@ class TitanKpiController extends Controller
             }
             // Single bulk API call instead of 240 individual ones
             $supabase->upsert('titan_monthly_kpi', $rows, 'employee_id,financial_year,kpi_key,month_number');
+
+            // Mirror the same monthly data into each CAM's real appraisal KPI
+            // (category "Financial"), summed per quarter, so the Titan Sheet
+            // stays the single source of truth instead of needing manual re-entry.
+            $this->syncToRegularKpi($supabase, $allStaff, $sheetData, $fy);
         }
 
         // Read back from DB (preserves any manual weightage edits)
@@ -122,6 +143,76 @@ class TitanKpiController extends Controller
         }
 
         return view('titan.kpi', compact('user', 'fy', 'allStaff', 'viewStaff', 'monthlyData', 'isManager'));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SYNC TO REGULAR KPI — push Titan Sheet monthly data (summed per quarter)
+    |    into each CAM's own "Financial" category KPI, so managers/appraisers
+    |    see the same numbers without the CAM re-typing them into /kpi.
+    |--------------------------------------------------------------------------
+    */
+
+    private function syncToRegularKpi(SupabaseService $supabase, array $allStaff, array $sheetData, string $fy): void
+    {
+        $employeeIds = collect($allStaff)->pluck('id')->filter()->values()->toArray();
+        if (empty($employeeIds)) return;
+
+        // One batch read of every "Financial" KPI these employees own, instead
+        // of a per-employee/per-kpi-key query (9 staff x 2 keys = 18 round
+        // trips) — matching is then just string search done in memory.
+        $financialKpis = $supabase->get('kpis', [
+            'employee_id'    => 'in.(' . implode(',', $employeeIds) . ')',
+            'financial_year' => 'eq.' . $fy,
+            'category'       => 'eq.Financial',
+            'select'         => 'id,employee_id,kpi_title',
+        ]) ?? [];
+        $kpisByEmployee = collect($financialKpis)->groupBy('employee_id');
+
+        $now  = now()->toDateTimeString();
+        $rows = [];
+
+        foreach ($allStaff as $emp) {
+            $camKey  = strtolower(trim($emp['short_name'] ?? ''));
+            $camData = $sheetData[$camKey] ?? [];
+            if (empty($camData)) continue;
+
+            $candidateKpis = $kpisByEmployee->get($emp['id'], collect());
+
+            foreach (self::KPI_TITLE_KEYWORD as $kpiKey => $keyword) {
+                $matched = $candidateKpis->first(
+                    fn ($k) => stripos($k['kpi_title'] ?? '', $keyword) !== false
+                );
+
+                if (!$matched) {
+                    \Log::info("Titan KPI sync: no matching Financial KPI for {$emp['short_name']} ({$kpiKey}), skipped.");
+                    continue;
+                }
+
+                foreach (self::QUARTER_MONTHS as $quarter => $months) {
+                    $qActual = 0;
+                    $qTarget = 0;
+                    foreach ($months as $mn) {
+                        $qActual += (float) ($camData[$mn][$kpiKey]['actual']      ?? 0);
+                        $qTarget += (float) ($camData[$mn][$kpiKey]['base_target'] ?? 0);
+                    }
+
+                    $rows[] = [
+                        'kpi_id'         => $matched['id'],
+                        'quarter'        => $quarter,
+                        'quarter_actual' => $qActual,
+                        'quarter_target' => $qTarget,
+                        'updated_at'     => $now,
+                    ];
+                }
+            }
+        }
+
+        if (!empty($rows)) {
+            // Single bulk upsert instead of one PATCH per kpi/quarter combo
+            // (up to 72 calls for 9 staff x 2 KPIs x 4 quarters).
+            $supabase->upsert('kpi_quarters', $rows, 'kpi_id,quarter');
+        }
     }
 
     /*
