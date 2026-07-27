@@ -11,6 +11,15 @@
     <style>
         *, body { font-family: 'Inter', sans-serif; }
 
+        /* The fixed Save Draft/Submit bar at the bottom of the screen sits on
+           top of the last ~90px of the viewport without occupying real layout
+           space, so the browser's native scroll-into-view (used by clicks,
+           Tab-focus, and Playwright/automation alike) doesn't know to leave
+           room for it — it happily aligns a row flush with the true bottom
+           edge, landing it right under the bar where clicks get swallowed.
+           scroll-padding-bottom reserves that space for scroll targeting. */
+        html { scroll-padding-bottom: 100px; }
+
         .doc-card { box-shadow: 0 8px 40px rgba(15,23,42,.10); }
 
         .sec-bar {
@@ -1196,13 +1205,13 @@
 
 @if(!($isAppraiserView ?? false) && $isWindowOpen && ($status ?? 'draft') === 'draft')
 {{-- ── Fixed bottom action bar (hidden on print) ── --}}
-<div class="no-print" style="position:fixed;bottom:0;left:230px;right:0;z-index:50;background:#ffffff;border-top:1px solid rgba(107,144,128,.20);padding:14px 110px 14px 32px;display:flex;align-items:center;justify-content:flex-end;gap:10px;box-shadow:0 -4px 24px rgba(15,23,42,.08);">
+<div class="no-print" style="position:fixed;bottom:0;left:230px;right:0;z-index:50;background:#ffffff;border-top:1px solid rgba(107,144,128,.20);padding:14px 110px 14px 32px;display:flex;align-items:center;justify-content:flex-end;gap:10px;box-shadow:0 -4px 24px rgba(15,23,42,.08);pointer-events:none;">
     <span style="font-size:11px;font-weight:600;color:#94a3b8;margin-right:6px;">Evaluation window open until {{ $windowEnd }}</span>
-    <button id="draftBtn" onclick="saveEvaluation('draft')" style="display:flex;align-items:center;gap:6px;padding:10px 20px;border-radius:12px;font-size:12px;font-weight:700;border:1.5px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
+    <button id="draftBtn" onclick="saveEvaluation('draft')" style="pointer-events:auto;display:flex;align-items:center;gap:6px;padding:10px 20px;border-radius:12px;font-size:12px;font-weight:700;border:1.5px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
         <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Save Draft
     </button>
-    <button id="submitBtn" onclick="confirmSubmit()" style="display:flex;align-items:center;gap:6px;padding:10px 22px;border-radius:12px;font-size:12px;font-weight:700;border:none;background:linear-gradient(135deg,#2d5548,#4a7c6b);color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(45,85,72,.30);transition:opacity .15s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+    <button id="submitBtn" onclick="confirmSubmit()" style="pointer-events:auto;display:flex;align-items:center;gap:6px;padding:10px 22px;border-radius:12px;font-size:12px;font-weight:700;border:none;background:linear-gradient(135deg,#2d5548,#4a7c6b);color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(45,85,72,.30);transition:opacity .15s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
         ↑ Submit to Appraiser
     </button>
 </div>
@@ -1212,13 +1221,13 @@
 
 @if(($isAppraiserView ?? false) && !($myLevelLocked ?? false))
 {{-- ── Appraiser's fixed bottom action bar (hidden on print) — sits last, mirrors the appraisee's own Save Draft / Submit bar ── --}}
-<div id="apprActionBar" class="no-print" style="position:fixed;bottom:0;left:230px;right:0;z-index:50;background:#ffffff;border-top:1px solid rgba(107,144,128,.20);padding:14px 110px 14px 32px;display:flex;align-items:center;justify-content:flex-end;gap:10px;box-shadow:0 -4px 24px rgba(15,23,42,.08);">
+<div id="apprActionBar" class="no-print" style="position:fixed;bottom:0;left:230px;right:0;z-index:50;background:#ffffff;border-top:1px solid rgba(107,144,128,.20);padding:14px 110px 14px 32px;display:flex;align-items:center;justify-content:flex-end;gap:10px;box-shadow:0 -4px 24px rgba(15,23,42,.08);pointer-events:none;">
     <span style="font-size:11px;font-weight:600;color:#94a3b8;margin-right:6px;">Appraiser view — {{ $currentUserName }}</span>
-    <button id="apprDraftBtn" onclick="saveEvaluation('draft')" style="display:flex;align-items:center;gap:6px;padding:10px 20px;border-radius:12px;font-size:12px;font-weight:700;border:1.5px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
+    <button id="apprDraftBtn" onclick="saveEvaluation('draft')" style="pointer-events:auto;display:flex;align-items:center;gap:6px;padding:10px 20px;border-radius:12px;font-size:12px;font-weight:700;border:1.5px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
         <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Save Draft
     </button>
-    <button id="apprSubmitBtn" onclick="confirmAppraiserSubmit()" style="display:flex;align-items:center;gap:6px;padding:10px 22px;border-radius:12px;font-size:12px;font-weight:700;border:none;background:linear-gradient(135deg,#2d5548,#4a7c6b);color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(45,85,72,.30);transition:opacity .15s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+    <button id="apprSubmitBtn" onclick="confirmAppraiserSubmit()" style="pointer-events:auto;display:flex;align-items:center;gap:6px;padding:10px 22px;border-radius:12px;font-size:12px;font-weight:700;border:none;background:linear-gradient(135deg,#2d5548,#4a7c6b);color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(45,85,72,.30);transition:opacity .15s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
         {{ ($appraiserLevel ?? '') === 'manager' ? '✓ Submit & Mark as Appraised' : '✓ Submit' }}
     </button>
 </div>
