@@ -115,12 +115,39 @@
                         </div>
                         <span class="text-[10px] font-black {{ $qstyle['text'] }} shrink-0">{{ number_format($pct, 1) }}%</span>
                     </div>
-                    @if(!empty($row['remark']))
-                        <div class="mt-3 pt-3 border-t border-slate-100">
-                            <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Remark</p>
-                            <p class="text-[10px] text-slate-600 leading-relaxed">{{ $row['remark'] }}</p>
-                        </div>
-                    @endif
+                    @php
+                        $remarkText = trim($row['remark'] ?? $row['completion_review'] ?? '');
+                        $proofFiles = [];
+                        if (!empty($row['completion_proof_urls'])) {
+                            $decoded = json_decode($row['completion_proof_urls'], true);
+                            if (is_array($decoded)) $proofFiles = $decoded;
+                        }
+                    @endphp
+                    <div class="mt-3 pt-3 border-t border-slate-100">
+                        <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Remark</p>
+                        <p class="text-[10px] text-slate-600 leading-relaxed">{{ $remarkText !== '' ? $remarkText : 'NON' }}</p>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-100">
+                        <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Attachment</p>
+                        @if(count($proofFiles))
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach($proofFiles as $file)
+                                    @php $isImg = str_starts_with($file['type'] ?? '', 'image/'); @endphp
+                                    @if($isImg)
+                                        <a href="{{ $file['url'] ?? '#' }}" target="_blank" rel="noopener">
+                                            <img src="{{ $file['url'] ?? '' }}" alt="{{ $file['name'] ?? 'attachment' }}" class="w-10 h-10 rounded-lg object-cover border border-slate-200">
+                                        </a>
+                                    @else
+                                        <a href="{{ $file['url'] ?? '#' }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[9px] font-bold text-[#1a3d34] bg-[#6B9080]/10 border border-[#6B9080]/30 rounded-lg px-2 py-1">
+                                            📎 {{ $file['name'] ?? 'File' }}
+                                        </a>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-[10px] text-slate-600">NON</p>
+                        @endif
+                    </div>
                 @else
                     <p class="text-[10px] text-slate-300 italic">This quarter hasn't been set up yet.</p>
                 @endif
