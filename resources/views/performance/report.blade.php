@@ -2119,8 +2119,19 @@ function kvQuarterBlock(q) {
 }
 
 function openKpiViewModal(kpiId) {
+    const modal = document.getElementById('kpiViewModal');
+    if (!modal) {
+        console.error('openKpiViewModal: #kpiViewModal not found in the DOM.');
+        alert("Couldn't open the KPI details popup — please refresh the page and try again.");
+        return;
+    }
+
     const data = KPI_VIEW_DATA[kpiId];
-    if (!data) return;
+    if (!data) {
+        console.error('openKpiViewModal: no KPI_VIEW_DATA entry for', kpiId, KPI_VIEW_DATA);
+        alert("Couldn't load this KPI's details — please refresh the page and try again.");
+        return;
+    }
 
     document.getElementById('kvTitle').textContent = data.kpi_title || '';
     document.getElementById('kvBaseTarget').textContent = data.base_target;
@@ -2135,7 +2146,7 @@ function openKpiViewModal(kpiId) {
     const quartersHtml = (data.quarters || []).map(kvQuarterBlock).join('');
     document.getElementById('kvQuarters').innerHTML = quartersHtml || '<p style="font-size:12px;color:#94a3b8;">No quarter data yet.</p>';
 
-    document.getElementById('kpiViewModal').style.display = 'flex';
+    modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
 
