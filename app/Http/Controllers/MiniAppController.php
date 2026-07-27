@@ -26,9 +26,16 @@ class MiniAppController extends Controller
         return now('Asia/Kuala_Lumpur')->toDateString();
     }
 
-    public function index()
+    public function index(SupabaseService $supabase)
     {
-        return view('mini-app.index');
+        $user = $supabase->first('users', [
+            'id' => 'eq.' . session('user_uuid'),
+            'select' => 'telegram_username,telegram_linked_at',
+        ]);
+
+        return view('mini-app.index', [
+            'telegramLinked' => !empty($user['telegram_linked_at']),
+        ]);
     }
 
     /*

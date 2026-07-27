@@ -26,12 +26,77 @@
 
 <main id="mainContent" class="ml-[230px] min-h-screen flex justify-center py-4 px-4">
 
+@if(!$telegramLinked)
+
+{{-- CONNECT GATE — Mini App reminders/adjustments only make sense once we    --}}
+{{-- can reach the employee on Telegram, so the app itself is withheld until --}}
+{{-- they link it (same connect/status endpoints as Account Settings).       --}}
+<div class="w-full max-w-md bg-[#F5EEDC] rounded-[26px] overflow-hidden shadow-2xl flex flex-col" style="min-height: calc(100vh - 32px);">
+    <div class="bg-[#6B3F2A] text-white px-4 py-3.5 shrink-0">
+        <h1 class="text-[15px] font-black">📱 Mini App</h1>
+    </div>
+    <div class="flex-1 p-6 flex flex-col items-center justify-center text-center gap-4">
+        <div class="w-14 h-14 rounded-full bg-[#229ED9]/10 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" class="w-7 h-7" fill="#229ED9"><path d="M21.94 4.53a1.6 1.6 0 0 0-1.63-.27L2.98 10.98a1.53 1.53 0 0 0 .1 2.88l4.54 1.42 1.76 5.5c.14.44.5.72.94.72.03 0 .06 0 .1-.01.34-.03.63-.24.77-.55l2.15-3.9 4.5 3.3c.24.18.53.27.82.27.14 0 .29-.02.43-.07a1.5 1.5 0 0 0 1-1.1l3.03-13.7a1.6 1.6 0 0 0-.62-1.74Zm-3.35 2.68-8.03 7.28-.31 3.35-1.35-4.22 8.6-6.9c.2-.16.42.1.24.28l-6.9 6.24a.5.5 0 0 0-.15.3l-.2 2.13 8.6-9.7c.2-.23.5.03.33.24Z"/></svg>
+        </div>
+        <div>
+            <p class="text-[14px] font-black text-slate-900">Connect Telegram to continue</p>
+            <p id="tg-gate-text" class="text-[12px] text-slate-500 mt-1.5 leading-relaxed">The Mini App needs your Telegram account linked so we can send you reminders and updates.</p>
+        </div>
+        <button id="tg-gate-btn" type="button" onclick="connectTelegramGate()" class="w-full text-[12px] font-black px-4 py-3 rounded-xl bg-[#6B9080] text-white hover:bg-[#5a7a6d] transition">
+            Connect Telegram
+        </button>
+    </div>
+</div>
+
+<script>
+    const TG_CSRF = '{{ csrf_token() }}';
+    let tgGatePollTimer = null;
+
+    async function refreshTelegramGateStatus() {
+        const res = await fetch('{{ route("profile.telegram.status") }}', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        const data = await res.json();
+        if (data.linked) {
+            if (tgGatePollTimer) { clearInterval(tgGatePollTimer); tgGatePollTimer = null; }
+            document.getElementById('tg-gate-text').textContent = 'Connected! Loading your Mini App…';
+            window.location.reload();
+        }
+    }
+
+    async function connectTelegramGate() {
+        const res = await fetch('{{ route("profile.telegram.connect") }}', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': TG_CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        const data = await res.json();
+
+        window.open(data.deep_link, '_blank');
+        document.getElementById('tg-gate-text').textContent = 'Waiting for confirmation in Telegram…';
+        document.getElementById('tg-gate-btn').textContent = 'Reconnect';
+
+        let attempts = 0;
+        if (tgGatePollTimer) clearInterval(tgGatePollTimer);
+        tgGatePollTimer = setInterval(async () => {
+            attempts++;
+            await refreshTelegramGateStatus();
+            if (attempts >= 40) { clearInterval(tgGatePollTimer); tgGatePollTimer = null; } // ~2 min at 3s
+        }, 3000);
+    }
+</script>
+
+@else
+
 <div class="w-full max-w-md bg-[#F5EEDC] rounded-[26px] overflow-hidden shadow-2xl flex flex-col" style="min-height: calc(100vh - 32px);">
 
     <div id="topbar" class="bg-[#6B3F2A] text-white px-4 py-3.5 shrink-0">
         <h1 class="text-[15px] font-black mb-2.5">📱 Mini App</h1>
         <div class="flex items-center gap-1.5">
-            <button id="tab-kpis" onclick="switchTab('kpis')" class="nav-btn active flex-1 py-2 rounded-xl text-[11px] font-black">📊 My KPIs</button>
+            <button id="tab-kpis" onclick="switchTab('kpis')" class="nav-btn active flex-1 py-2 rounded-xl text-[11px] font-black relative">
+                📊 My KPIs
+                <span id="kpi-alert-badge" class="hidden absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center px-1 shadow-lg shadow-red-500/30"></span>
+            </button>
             <button id="tab-todo" onclick="switchTab('todo')" class="nav-btn flex-1 py-2 rounded-xl text-[11px] font-black">✅ To-Do</button>
             <button id="tab-score" onclick="switchTab('score')" class="nav-btn flex-1 py-2 rounded-xl text-[11px] font-black">📈 Score</button>
         </div>
@@ -43,6 +108,8 @@
         <p class="text-center text-slate-400 text-[12px] mt-10">Loading…</p>
     </div>
 </div>
+
+@endif
 
 </main>
 
@@ -137,6 +204,21 @@ function card(inner, extra = '') {
     return `<div class="bg-[#FFFCF4] rounded-2xl soft-card border-2 border-[#D9C4A0] p-4 ${extra}">${inner}</div>`;
 }
 
+// Red counter on the "My KPIs" tab — same visual language as the sidebar's
+// notification bell badge — counting distinct KPIs that need attention
+// (not logged today, or status at_risk/in_trouble), so it's visible from
+// whichever tab the user is currently on.
+function updateKpiAlertBadge(count) {
+    const badge = document.getElementById('kpi-alert-badge');
+    if (!badge) return;
+    if (count > 0) {
+        badge.textContent = count > 9 ? '9+' : count;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
 let currentTab = 'kpis';
 function switchTab(tab) {
     currentTab = tab;
@@ -166,6 +248,12 @@ async function renderMyKpis() {
     }
 
     const notLogged = (openData.kpis || []).filter(k => !k.already_logged_today);
+    const warningKpiIds = (summaryData.kpis || [])
+        .filter(k => ['at_risk', 'in_trouble'].includes(k.status))
+        .map(k => k.kpi_id);
+    const alertKpiIds = new Set([...notLogged.map(k => k.kpi_id), ...warningKpiIds]);
+    updateKpiAlertBadge(alertKpiIds.size);
+
     const banner = notLogged.length ? `
         <div class="rounded-2xl bg-red-50 border-2 border-red-300 px-4 py-3">
             <p class="text-[12px] font-black text-red-700">⏰ Reminder — ${notLogged.length} KPI(s) not updated today</p>
@@ -634,7 +722,9 @@ function renderReviewDetail(index) {
     document.getElementById('app').innerHTML = reviewCard(r);
 }
 
-switchTab('kpis');
+if (document.getElementById('tab-kpis')) {
+    switchTab('kpis');
+}
 </script>
 
 </body>

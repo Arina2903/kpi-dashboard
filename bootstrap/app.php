@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'telegram.webhook.secret' => \App\Http\Middleware\TelegramWebhookSecret::class,
             'telegram.cron.secret' => \App\Http\Middleware\TelegramCronSecret::class,
             'no-cache' => \App\Http\Middleware\NoCacheHeaders::class,
+            'telegram.linked' => \App\Http\Middleware\EnsureTelegramLinked::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
