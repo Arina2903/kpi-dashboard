@@ -134,6 +134,20 @@
         #print-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         #print-thead { display: none; }
 
+        /* #print-table/#print-thead exist purely so the printed page gets a
+           repeating header via table-header-group — real <table> layout is
+           only needed while printing. Left as a table on screen too, it
+           wraps the ENTIRE page's live, interactive content in one giant
+           table cell, which breaks click hit-testing for anything deeply
+           nested inside it (buttons ending up geometrically "in" the page
+           per getBoundingClientRect but not what elementFromPoint finds at
+           that point — verified directly in a real browser). Reverting to
+           plain block flow on screen fixes that; @media print below
+           restores real table display so the print trick keeps working. */
+        #print-table, #print-table > tbody, #print-table > tbody > tr, #print-table > tbody > tr > td {
+            display: block;
+        }
+
         /* ── Print ─────────────────────────────────────────── */
         @media print {
             .partd-cal, .partd-clr { display: none !important; }
@@ -146,7 +160,10 @@
 
             @page { size: A4 portrait; margin: 10mm 10mm 12mm; }
 
-            #print-table { width: 100% !important; border-collapse: collapse !important; zoom: 0.85 !important; }
+            #print-table { display: table !important; width: 100% !important; border-collapse: collapse !important; zoom: 0.85 !important; }
+            #print-table > tbody { display: table-row-group !important; }
+            #print-table > tbody > tr { display: table-row !important; }
+            #print-table > tbody > tr > td { display: table-cell !important; }
             #print-thead { display: table-header-group !important; }
             #print-thead td { padding: 4mm 0 3mm; background: white !important; }
             #doc-hdr { display: none !important; }
