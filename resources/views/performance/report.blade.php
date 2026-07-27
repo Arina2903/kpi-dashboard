@@ -679,7 +679,7 @@
                     <td class="text-center"><input type="number" name="kpi_app_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" step="0.1" min="0" max="5" placeholder="—" class="n-input kpi-app-input" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;"></td>
                     @if($isAppraiserView ?? false)
                     <td class="text-center no-print">
-                        <button type="button" onclick="openKpiViewModal('{{ $kpi['id'] }}', this)" style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;color:#4a7c6b;background:#f0f9f6;border:1px solid #d1e7e0;border-radius:8px;padding:5px 9px;cursor:pointer;">👁 View</button>
+                        <button type="button" data-view-kpi-id="{{ $kpi['id'] }}" class="kpi-view-btn" style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;color:#4a7c6b;background:#f0f9f6;border:1px solid #d1e7e0;border-radius:8px;padding:5px 9px;cursor:pointer;">👁 View</button>
                     </td>
                     @endif
                 </tr>
@@ -2177,6 +2177,15 @@ function closeKpiViewModal() {
     document.getElementById('kpiViewModal').style.display = 'none';
     document.body.style.overflow = '';
 }
+
+// Event delegation instead of inline onclick — one listener on the document
+// catches every .kpi-view-btn regardless of how many rows render, and
+// isn't affected by whatever inline-handler quirk (if any) was silently
+// swallowing clicks before.
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.kpi-view-btn');
+    if (btn) openKpiViewModal(btn.dataset.viewKpiId, btn);
+});
 </script>
 @endif
 </body>
