@@ -1237,26 +1237,21 @@
 @if($isAppraiserView ?? false)
 {{-- ── KPI View Modal (Section 2 "View" column) — appraiser-only, never printed ── --}}
 <div id="kpiViewModal" class="no-print" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.55);align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this) closeKpiViewModal()">
-    <div style="background:#fff;border-radius:20px;max-width:640px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 20px 60px rgba(15,23,42,.35);">
-        <div style="position:sticky;top:0;background:#fff;border-bottom:1px solid #e2e8f0;padding:18px 22px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-radius:20px 20px 0 0;z-index:1;">
-            <div>
-                <p id="kvTitle" style="font-size:15px;font-weight:900;color:#1a3d34;"></p>
-                <div id="kvBadges" style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;"></div>
+    <div style="background:#fff;border-radius:20px;max-width:760px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 20px 60px rgba(15,23,42,.35);">
+        <div style="position:sticky;top:0;background:#fff;border-bottom:1px solid #e2e8f0;padding:18px 22px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;border-radius:20px 20px 0 0;z-index:1;">
+            <div style="flex:1;min-width:0;">
+                <p id="kvTitle" style="font-size:15px;font-weight:900;color:#0f172a;"></p>
+                <div id="kvBadges" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;"></div>
+            </div>
+            <div id="kvAvgBox" style="text-align:center;padding:10px 18px;border-radius:14px;flex-shrink:0;border:1px solid transparent;">
+                <p style="font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;opacity:.7;">Average Progress</p>
+                <p id="kvAvgPct" style="font-size:20px;font-weight:900;line-height:1.2;margin-top:2px;"></p>
+                <p style="font-size:8px;font-weight:700;opacity:.6;margin-top:2px;">across quarters shown</p>
             </div>
             <button type="button" onclick="closeKpiViewModal()" style="background:#f1f5f9;border:none;width:28px;height:28px;border-radius:50%;font-size:14px;color:#64748b;cursor:pointer;flex-shrink:0;">✕</button>
         </div>
         <div style="padding:20px 22px;">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
-                <div style="background:#f8fafc;border-radius:12px;padding:12px 14px;">
-                    <p style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;">Base Target</p>
-                    <p id="kvBaseTarget" style="font-size:16px;font-weight:900;color:#1e293b;margin-top:2px;"></p>
-                </div>
-                <div style="background:#f8fafc;border-radius:12px;padding:12px 14px;">
-                    <p style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;">Actual (Full Year)</p>
-                    <p id="kvActual" style="font-size:16px;font-weight:900;color:#1e293b;margin-top:2px;"></p>
-                </div>
-            </div>
-            <div id="kvQuarters" style="display:flex;flex-direction:column;gap:12px;"></div>
+            <div id="kvQuarters" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;"></div>
         </div>
     </div>
 </div>
@@ -2037,34 +2032,26 @@ window.addEventListener('afterprint', function() {
 // independently here.
 const KPI_VIEW_DATA = @json($kpiViewData ?? []);
 
-// Same 4-tier palette as this page's own Section 2/3 score bands (see the
-// sc-great/sc-good/sc-warn/sc-poor classes + the sc(v,mx) helper above) so
-// the popup reads as part of the same document, not a bolt-on widget.
-const KV_TIER_COLORS = {
-    great: { fg: '#059669', bg: 'rgba(5,150,105,.12)' },
-    good:  { fg: '#1a3d34', bg: 'rgba(107,144,128,.15)' },
-    warn:  { fg: '#d97706', bg: 'rgba(217,119,6,.12)' },
-    poor:  { fg: '#dc2626', bg: 'rgba(220,38,38,.12)' },
-    none:  { fg: '#94a3b8', bg: '#f1f5f9' },
-};
-
-const KV_STATUS_STYLES = {
-    completed:           { label: 'Completed',        tier: 'great' },
-    pending_completion:  { label: 'Pending Approval', tier: 'good' },
-    on_track:            { label: 'On Track',         tier: 'good' },
-    at_risk:             { label: 'Watch',             tier: 'warn' },
-    in_trouble:          { label: 'Critical',          tier: 'poor' },
-    not_started:         { label: 'Not Started',       tier: 'none' },
-};
-
-// Same tiering as the sc(v,mx) helper above (>=90% great, >=70% good, >=50%
-// warn, else poor) applied to a quarter's achievement percentage.
-function kvPctTier(pct) {
-    if (pct >= 90) return 'great';
-    if (pct >= 70) return 'good';
-    if (pct >= 50) return 'warn';
-    return 'poor';
+// Same score bands and category palette as the SLT staff KPI drill-down
+// (resources/views/dashboard/staff-kpi-detail.blade.php's $scoreStyle /
+// $categoryThemes) — the canonical "KPI quarter card" look used across the
+// dashboard and Mini App, so this popup reads as the same system instead
+// of a one-off style.
+function kvScoreStyle(pct) {
+    if (pct <= 25)  return { bar: '#dc2626',                              text: '#b91c1c', badgeBg: '#fef2f2', badgeText: '#b91c1c', badgeBorder: '#fee2e2', label: 'Critical' };
+    if (pct <= 50)  return { bar: 'linear-gradient(90deg,#dc2626,#f97316)', text: '#c2410c', badgeBg: '#fff7ed', badgeText: '#c2410c', badgeBorder: '#ffedd5', label: 'Risk' };
+    if (pct <= 75)  return { bar: 'linear-gradient(90deg,#f97316,#facc15)', text: '#b45309', badgeBg: '#fffbeb', badgeText: '#b45309', badgeBorder: '#fef3c7', label: 'Watch' };
+    if (pct <= 100) return { bar: 'linear-gradient(90deg,#facc15,#059669)', text: '#047857', badgeBg: '#ecfdf5', badgeText: '#047857', badgeBorder: '#d1fae5', label: 'Good' };
+    return               { bar: '#047857',                              text: '#065f46', badgeBg: '#ecfdf5', badgeText: '#065f46', badgeBorder: '#d1fae5', label: 'Exceeded' };
 }
+
+const KV_CATEGORY_THEMES = {
+    'Financial':         { catBg: '#047857', catFg: '#fff', subBg: '#d1fae5', subFg: '#047857' },
+    'Growth & Customer': { catBg: '#4338ca', catFg: '#fff', subBg: '#e0e7ff', subFg: '#4338ca' },
+    'Initiatives':       { catBg: '#d97706', catFg: '#fff', subBg: '#fef3c7', subFg: '#b45309' },
+    'People':            { catBg: '#be185d', catFg: '#fff', subBg: '#fce7f3', subFg: '#be185d' },
+};
+const KV_CATEGORY_DEFAULT = { catBg: '#475569', catFg: '#fff', subBg: '#f1f5f9', subFg: '#475569' };
 
 function kvEscapeHtml(str) {
     return String(str ?? '').replace(/[&<>"']/g, function (c) {
@@ -2077,9 +2064,8 @@ function kvQuarterBlock(q) {
     const actual = Number(q.actual || 0);
     const pct = target > 0 ? Math.round((actual / target) * 1000) / 10 : 0;
     const barPct = Math.max(0, Math.min(100, pct));
-    const st = KV_STATUS_STYLES[q.status] || KV_STATUS_STYLES.not_started;
-    const statusColor = KV_TIER_COLORS[st.tier];
-    const pctColor = KV_TIER_COLORS[target > 0 ? kvPctTier(pct) : 'none'];
+    const hasData = actual > 0 || target > 0;
+    const style = kvScoreStyle(pct);
 
     const remarkText = (q.remark && q.remark.trim())
         ? q.remark.trim()
@@ -2087,33 +2073,45 @@ function kvQuarterBlock(q) {
 
     const files = q.proof_files || [];
     const attachmentsHtml = files.length
-        ? '<div style="display:flex;flex-wrap:wrap;gap:8px;">' + files.map(function (f) {
+        ? '<div style="display:flex;flex-wrap:wrap;gap:6px;">' + files.map(function (f) {
             const isImg = (f.type || '').startsWith('image/');
             const name = kvEscapeHtml(f.name || 'File');
             return isImg
-                ? '<a href="' + f.url + '" target="_blank" rel="noopener"><img src="' + f.url + '" alt="' + name + '" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;"></a>'
-                : '<a href="' + f.url + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#1a3d34;background:rgba(107,144,128,.12);border:1px solid rgba(107,144,128,.30);border-radius:8px;padding:6px 10px;text-decoration:none;">📎 ' + name + '</a>';
+                ? '<a href="' + f.url + '" target="_blank" rel="noopener"><img src="' + f.url + '" alt="' + name + '" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;"></a>'
+                : '<a href="' + f.url + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:5px 9px;text-decoration:none;">📎 ' + name + '</a>';
         }).join('') + '</div>'
         : '<span style="font-size:11px;font-weight:700;color:#94a3b8;">NON</span>';
 
     return `
-        <div style="border:1px solid #e2e8f0;border-radius:14px;padding:14px 16px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                <p style="font-size:12px;font-weight:900;color:#1a3d34;">${q.quarter}</p>
-                <span style="font-size:9px;font-weight:800;background:${statusColor.bg};color:${statusColor.fg};padding:3px 9px;border-radius:999px;">${st.label}</span>
+        <div style="background:#fff;border:1px solid #6B9080;border-radius:16px;padding:16px;box-shadow:0 4px 16px rgba(15,23,42,.05);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <p style="font-size:12px;font-weight:900;color:#0f172a;">${q.quarter}</p>
+                <span style="font-size:8px;font-weight:900;padding:2px 8px;border-radius:8px;background:${style.badgeBg};color:${style.badgeText};border:1px solid ${style.badgeBorder};">${hasData ? style.label : 'No Data'}</span>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#64748b;margin-bottom:6px;">
-                <span>Target: <strong style="color:#1e293b;">${target}</strong></span>
-                <span>Actual: <strong style="color:#1e293b;">${actual}</strong></span>
-                <span style="font-weight:900;color:${pctColor.fg};">${pct}%</span>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-size:9px;font-weight:900;color:#94a3b8;text-transform:uppercase;">Target</span>
+                    <span style="font-size:12px;font-weight:900;color:#334155;">${target.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-size:9px;font-weight:900;color:#94a3b8;text-transform:uppercase;">Actual</span>
+                    <span style="font-size:12px;font-weight:900;color:#334155;">${actual.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
             </div>
-            <div style="width:100%;height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden;margin-bottom:12px;">
-                <div style="height:100%;width:${barPct}%;background:${pctColor.fg};border-radius:999px;"></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div style="flex:1;height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden;">
+                    <div style="height:100%;width:${barPct}%;background:${style.bar};border-radius:999px;"></div>
+                </div>
+                <span style="font-size:10px;font-weight:900;color:${style.text};flex-shrink:0;">${pct.toFixed(1)}%</span>
             </div>
-            <p style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px;">Remarks</p>
-            <p style="font-size:12px;color:#334155;margin-bottom:10px;">${remarkText ? kvEscapeHtml(remarkText) : 'NON'}</p>
-            <p style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:5px;">Attachment</p>
-            ${attachmentsHtml}
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9;">
+                <p style="font-size:9px;font-weight:900;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;">Remark</p>
+                <p style="font-size:11px;color:#475569;line-height:1.5;">${remarkText ? kvEscapeHtml(remarkText) : 'NON'}</p>
+            </div>
+            <div style="margin-top:10px;">
+                <p style="font-size:9px;font-weight:900;color:#94a3b8;text-transform:uppercase;margin-bottom:5px;">Attachment</p>
+                ${attachmentsHtml}
+            </div>
         </div>
     `;
 }
@@ -2138,16 +2136,31 @@ function openKpiViewModal(kpiId, btnEl) {
         }
 
         document.getElementById('kvTitle').textContent = data.kpi_title || '';
-        document.getElementById('kvBaseTarget').textContent = data.base_target;
-        document.getElementById('kvActual').textContent = data.actual_value;
 
+        const theme = KV_CATEGORY_THEMES[data.category] || KV_CATEGORY_DEFAULT;
         const badges = [];
-        if (data.category) badges.push('<span style="font-size:9px;font-weight:800;background:#1a3d34;color:#fff;padding:3px 8px;border-radius:999px;">' + kvEscapeHtml(data.category) + '</span>');
-        if (data.sub_category) badges.push('<span style="font-size:9px;font-weight:800;background:#e2e8f0;color:#334155;padding:3px 8px;border-radius:999px;">' + kvEscapeHtml(data.sub_category) + '</span>');
-        badges.push('<span style="font-size:9px;font-weight:900;color:#6B9080;background:#fff;border:1px solid rgba(107,144,128,.25);padding:3px 8px;border-radius:999px;">' + (data.weightage ?? 0) + '% weight</span>');
+        if (data.category) badges.push('<span style="font-size:10px;font-weight:900;padding:3px 9px;border-radius:8px;background:' + theme.catBg + ';color:' + theme.catFg + ';">' + kvEscapeHtml(data.category) + '</span>');
+        if (data.sub_category) badges.push('<span style="font-size:10px;font-weight:900;padding:3px 9px;border-radius:8px;background:' + theme.subBg + ';color:' + theme.subFg + ';">' + kvEscapeHtml(data.sub_category) + '</span>');
+        badges.push('<span style="font-size:10px;font-weight:900;padding:3px 9px;border-radius:8px;background:#eef2ff;color:#4338ca;border:1px solid #e0e7ff;">Weightage ' + (data.weightage ?? 0) + '%</span>');
+        badges.push('<span style="font-size:10px;font-weight:900;padding:3px 9px;border-radius:8px;background:#f1f5f9;color:#475569;">Base Target: ' + (data.base_target ?? 0) + '</span>');
+        badges.push('<span style="font-size:10px;font-weight:900;padding:3px 9px;border-radius:8px;background:#f1f5f9;color:#475569;">Actual: ' + (data.actual_value ?? 0) + '</span>');
         document.getElementById('kvBadges').innerHTML = badges.join('');
 
-        const quartersHtml = (data.quarters || []).map(kvQuarterBlock).join('');
+        // Average progress across just the quarters shown (up to the quarter
+        // being evaluated), same score bands as each quarter card.
+        const quarters = data.quarters || [];
+        const withData = quarters.filter(q => Number(q.target || 0) > 0);
+        const avgPct = withData.length
+            ? withData.reduce((sum, q) => sum + Math.min(999, (Number(q.actual || 0) / Number(q.target || 1)) * 100), 0) / withData.length
+            : 0;
+        const avgStyle = kvScoreStyle(avgPct);
+        const avgBox = document.getElementById('kvAvgBox');
+        avgBox.style.background = avgStyle.badgeBg;
+        avgBox.style.borderColor = avgStyle.badgeBorder;
+        avgBox.style.color = avgStyle.badgeText;
+        document.getElementById('kvAvgPct').textContent = avgPct.toFixed(1) + '%';
+
+        const quartersHtml = quarters.map(kvQuarterBlock).join('');
         document.getElementById('kvQuarters').innerHTML = quartersHtml || '<p style="font-size:12px;color:#94a3b8;">No quarter data yet.</p>';
 
         modal.style.display = 'flex';
