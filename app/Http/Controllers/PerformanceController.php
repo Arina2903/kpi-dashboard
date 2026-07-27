@@ -623,6 +623,102 @@ class PerformanceController extends Controller
         return null;
     }
 
+    /**
+     * Section 2's "View" link — reuses the SLT staff-KPI-drilldown page
+     * (dashboard/staff-kpi-detail.blade.php: header card + Q1-Q4 quarter
+     * cards with target/actual/progress/remark/attachment) for any
+     * appraiser in the employee's chain, not just SLT Office. A plain page
+     * navigation rather than a JS popup — simplest possible interaction,
+     * no click-handler surface to break.
+     */
+    public function viewAppraiseeKpi(string $employeeId, string $kpiId, \Illuminate\Http\Request $request, SupabaseService $supabase)
+    {
+        if (!session()->has('employee_uuid')) {
+            return redirect()->route('login');
+        }
+
+        $fromQuarter = strtolower($request->query('quarter', 'q2'));
+        if (!in_array($fromQuarter, ['q1', 'q2', 'q3', 'q4'], true)) {
+            $fromQuarter = 'q2';
+        }
+
+        $viewerId = session('employee_uuid');
+        $staff = $supabase->first('employees', [
+            'id'        => 'eq.' . $employeeId,
+            'is_active' => 'eq.true',
+            'select'    => '*',
+        ]);
+        if (!$staff) {
+            abort(404, 'Employee not found.');
+        }
+
+        $appraiserLevel = $this->resolveAppraiserLevel(
+            $staff,
+            $viewerId,
+            fn ($id) => $supabase->first('employees', ['id' => 'eq.' . $id, 'select' => '*'])
+        );
+        if (!$appraiserLevel && $this->isBtsSession()) {
+            $appraiserLevel = 'manager';
+        }
+        if (!$appraiserLevel) {
+            abort(403, "You aren't in {$staff['short_name']}'s approver chain (manager/VP/SLT), so you can't view their KPI.");
+        }
+
+        $kpi = $supabase->first('kpis', [
+            'id'          => 'eq.' . $kpiId,
+            'employee_id' => 'eq.' . $employeeId,
+            'select'      => '*',
+        ]);
+        if (!$kpi) {
+            abort(404, 'KPI not found.');
+        }
+
+        $viewer = $supabase->first('employees', [
+            'id'     => 'eq.' . $viewerId,
+            'select' => '*',
+        ]);
+
+        $viewerDepartment = null;
+        if (!empty($viewer['department_code'])) {
+            $viewerDepartment = $supabase->first('departments', [
+                'code'   => 'eq.' . $viewer['department_code'],
+                'select' => '*',
+            ]);
+        }
+
+        $quarters = $supabase->get('kpi_quarters', [
+            'kpi_id' => 'eq.' . $kpiId,
+            'select' => '*',
+        ]) ?? [];
+
+        $quarters = collect($quarters)->map(function ($q) {
+            $target = max(0, (float) ($q['quarter_target'] ?? 0));
+            $actual = max(0, (float) ($q['quarter_actual'] ?? 0));
+            $q['progress_pct'] = $target > 0 ? round(($actual / $target) * 100, 1) : 0;
+            return $q;
+        })->sortBy('quarter')->values()->all();
+
+        $filledQuarters = collect($quarters)->filter(
+            fn ($q) => (float) ($q['quarter_actual'] ?? 0) > 0
+        );
+
+        $average = $filledQuarters->count() > 0
+            ? round($filledQuarters->avg('progress_pct'), 1)
+            : 0;
+
+        return view('dashboard.staff-kpi-detail', [
+            'user'                 => $viewer,
+            'department'           => $viewerDepartment,
+            'staff'                => $staff,
+            'kpi'                  => $kpi,
+            'quarters'             => $quarters,
+            'average'              => $average,
+            'currentFinancialYear' => $this->currentFinancialYear,
+            'backUrl'              => route('performance.appraise.report', [$employeeId, $fromQuarter]),
+            'backLabel'            => 'Back to ' . ($staff['short_name'] ?? $staff['full_name'] ?? 'Staff') . "'s Appraisal",
+        ]);
+    }
+
     public function appraiserReport(string $employeeId, string $quarter, SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid')) {

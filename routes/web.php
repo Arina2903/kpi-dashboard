@@ -360,6 +360,7 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::post('/performance/report/{quarter}/save',       [\App\Http\Controllers\PerformanceController::class, 'saveReport'])->name('performance.report.save');
     Route::get('/performance/appraise/{employeeId}/{quarter}', [\App\Http\Controllers\PerformanceController::class, 'appraiserReport'])->middleware('no-cache')->name('performance.appraise.report');
     Route::post('/performance/appraise/{employeeId}/{quarter}/save', [\App\Http\Controllers\PerformanceController::class, 'appraiserSave'])->name('performance.appraise.save');
+    Route::get('/performance/appraise/{employeeId}/kpi/{kpiId}', [\App\Http\Controllers\PerformanceController::class, 'viewAppraiseeKpi'])->middleware('no-cache')->name('performance.appraise.kpi');
 
     /*
     |--------------------------------------------------------------------------
