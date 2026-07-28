@@ -43,7 +43,7 @@
             <p class="text-[14px] font-black text-slate-900">Connect Telegram to continue</p>
             <p id="tg-gate-text" class="text-[12px] text-slate-500 mt-1.5 leading-relaxed">The Mini App needs your Telegram account linked so we can send you reminders and updates.</p>
         </div>
-        <button id="tg-gate-btn" type="button" onclick="connectTelegramGate()" class="w-full text-[12px] font-black px-4 py-3 rounded-xl bg-[#E97C7F] text-white hover:bg-[#5a7a6d] transition">
+        <button id="tg-gate-btn" type="button" onclick="connectTelegramGate()" class="w-full text-[12px] font-black px-4 py-3 rounded-xl bg-[#6B9080] text-white hover:bg-[#5a7a6d] transition">
             Connect Telegram
         </button>
     </div>
@@ -444,7 +444,7 @@ function taskCard(t) {
     const pct = t.target > 0 ? Math.max(0, Math.min(100, (t.actual / t.target) * 100)) : 0;
     const badge = achvBadge(pct);
     const kpiChips = (t.linked_kpis || []).length
-        ? `<div class="flex flex-wrap gap-1.5 mt-2">${t.linked_kpis.map(k => `<span class="px-2 py-0.5 rounded-full bg-[#CCE3DE] text-[#9D5268] text-[8px] font-black">🔗 ${k.kpi_title}</span>`).join('')}</div>`
+        ? `<div class="flex flex-wrap gap-1.5 mt-2">${t.linked_kpis.map(k => `<span class="px-2 py-0.5 rounded-full bg-[#CCE3DE] text-[#1a3d34] text-[8px] font-black">🔗 ${k.kpi_title}</span>`).join('')}</div>`
         : '';
 
     return card(`

@@ -13,17 +13,17 @@
 
 {{-- ═══════ HEADER (sticky) ════════════════════════════════════════════════ --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#F5F5F3]">
-    <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#9D5268] to-[#E97C7F] text-white px-6 py-5 shadow-[0_10px_35px_rgba(233,124,127,0.45)] flex flex-row items-center justify-between gap-4">
-        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#E3B341] via-[#E3B341] to-[#E3B341]/10"></div>
-        <div class="pointer-events-none absolute -top-10 -right-10 w-48 h-48 rounded-full bg-[#E3B341]/10 blur-3xl"></div>
+    <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-5 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex flex-row items-center justify-between gap-4">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
+        <div class="pointer-events-none absolute -top-10 -right-10 w-48 h-48 rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
         <div class="pointer-events-none absolute -bottom-16 left-1/3 w-56 h-56 rounded-full bg-[#C8102E]/20 blur-3xl"></div>
 
         <div class="relative flex items-center gap-4">
             <div class="w-11 h-11 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5 text-[#E3B341]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <svg class="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <div>
-                <a href="{{ route('kpi.index') }}" class="text-[11px] text-[#E3B341] hover:text-white transition">← KPI List</a>
+                <a href="{{ route('kpi.index') }}" class="text-[11px] text-[#D4AF37] hover:text-white transition">← KPI List</a>
                 <h1 class="text-2xl font-black tracking-tight mt-1">Help &amp; Guide</h1>
                 <p class="text-white/70 text-xs mt-1">Understand what every score, colour, and status means</p>
             </div>
@@ -34,7 +34,7 @@
 <div class="px-4 pb-6 space-y-4">
 
     {{-- SCORE BANDS --}}
-    <div class="bg-white rounded-[20px] border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] shadow-sm p-5">
+    <div class="bg-white rounded-[20px] border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] shadow-sm p-5">
         <div class="flex items-center gap-2 mb-4">
             <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
@@ -74,7 +74,7 @@
     </div>
 
     {{-- QUARTER STATUS --}}
-    <div class="bg-white rounded-[20px] border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] shadow-sm p-5">
+    <div class="bg-white rounded-[20px] border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] shadow-sm p-5">
         <div class="flex items-center gap-2 mb-4">
             <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -123,7 +123,7 @@
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
 
         {{-- HOW SCORE IS CALCULATED --}}
-        <div class="bg-white rounded-[20px] border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] shadow-sm p-5">
+        <div class="bg-white rounded-[20px] border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] shadow-sm p-5">
             <div class="flex items-center gap-2 mb-4">
                 <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
@@ -156,7 +156,7 @@
         </div>
 
         {{-- QUICK REFERENCE --}}
-        <div class="bg-white rounded-[20px] border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] shadow-sm p-5">
+        <div class="bg-white rounded-[20px] border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] shadow-sm p-5">
             <div class="flex items-center gap-2 mb-4">
                 <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>

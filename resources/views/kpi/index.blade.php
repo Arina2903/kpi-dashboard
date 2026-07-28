@@ -151,23 +151,23 @@
 
 {{-- ═══════ HEADER (sticky, with live score ring) ═════════════════════════ --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#F5F5F3]">
-    <div class="relative overflow-hidden rounded-[20px] bg-gradient-to-r from-[#9D5268] via-[#3d0511] to-[#E97C7F] text-white px-7 py-6 shadow-[0_10px_35px_rgba(233,124,127,0.45)] flex flex-row items-center justify-between gap-6">
-        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#E3B341] via-[#E3B341] to-[#E3B341]/10"></div>
-        <div class="pointer-events-none absolute -top-14 -right-14 w-64 h-64 rounded-full bg-[#E3B341]/10 blur-3xl"></div>
+    <div class="relative overflow-hidden rounded-[20px] bg-gradient-to-r from-[#1A0A0A] via-[#3d0511] to-[#7A0019] text-white px-7 py-6 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex flex-row items-center justify-between gap-6">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
+        <div class="pointer-events-none absolute -top-14 -right-14 w-64 h-64 rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
         <div class="pointer-events-none absolute -bottom-20 left-1/3 w-64 h-64 rounded-full bg-[#C8102E]/20 blur-3xl"></div>
         <div class="pointer-events-none absolute inset-0 opacity-[0.05]" style="background-image:radial-gradient(circle,#fff 1px,transparent 1px);background-size:20px 20px;"></div>
 
         <div class="relative flex items-center gap-5 min-w-0">
             <!-- LIVE SCORE RING -->
-            <div class="w-[68px] h-[68px] rounded-full shrink-0 p-[3px]" style="background: conic-gradient(#E3B341 {{ $individualPerformanceWidth * 3.6 }}deg, rgba(255,255,255,.18) 0deg);">
+            <div class="w-[68px] h-[68px] rounded-full shrink-0 p-[3px]" style="background: conic-gradient(#D4AF37 {{ $individualPerformanceWidth * 3.6 }}deg, rgba(255,255,255,.18) 0deg);">
                 <div class="w-full h-full rounded-full bg-[#2A0910] flex flex-col items-center justify-center">
                     <span class="text-base font-black leading-none">{{ number_format($individualPerformanceDisplay,0) }}%</span>
-                    <span class="text-[7px] text-[#E3B341] font-black uppercase tracking-wider mt-0.5">Score</span>
+                    <span class="text-[7px] text-[#D4AF37] font-black uppercase tracking-wider mt-0.5">Score</span>
                 </div>
             </div>
 
             <div class="min-w-0">
-                <a href="/dashboard" class="text-[11px] text-[#E3B341] hover:text-white transition">← Dashboard</a>
+                <a href="/dashboard" class="text-[11px] text-[#D4AF37] hover:text-white transition">← Dashboard</a>
                 <h1 class="text-2xl font-black tracking-tight mt-1">KPI List</h1>
                 <p class="text-white/70 text-xs mt-1 truncate">
                     {{ $user['short_name'] }} · {{ $user['role'] }} · {{ $user['department_code'] }} · {{ $fy }}
@@ -182,7 +182,7 @@
 
             @if($permission['can_create'])
                 <a href="{{ route('kpi.create') }}"
-                   class="bg-[#E3B341] hover:bg-[#c19c2f] text-[#1a1a1a] px-4 py-2.5 rounded-xl shadow font-black text-xs transition hover:-translate-y-0.5 shrink-0">
+                   class="bg-[#D4AF37] hover:bg-[#c19c2f] text-[#1a1a1a] px-4 py-2.5 rounded-xl shadow font-black text-xs transition hover:-translate-y-0.5 shrink-0">
                     + Create KPI
                 </a>
             @endif
@@ -209,7 +209,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-2.5">
 
         <!-- INDIVIDUAL PERFORMANCE SPLASH CARD -->
-        <div class="card-hover px-3.5 py-2.5 rounded-2xl bg-white border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] shadow-sm md:col-span-2 xl:col-span-1">
+        <div class="card-hover px-3.5 py-2.5 rounded-2xl bg-white border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] shadow-sm md:col-span-2 xl:col-span-1">
             <div class="flex items-center justify-between gap-3">
                 <div>
                     <p class="text-slate-400 text-[9px] font-semibold uppercase">KPI Score</p>
@@ -223,25 +223,25 @@
         </div>
 
         <!-- FY -->
-        <div class="card-hover px-3.5 py-2.5 rounded-2xl bg-white border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] shadow-sm">
+        <div class="card-hover px-3.5 py-2.5 rounded-2xl bg-white border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] shadow-sm">
             <p class="text-slate-400 text-[9px] font-semibold uppercase">Financial Year</p>
-            <h3 class="text-base font-black text-[#E97C7F] mt-0.5">{{ $fy }}</h3>
+            <h3 class="text-base font-black text-[#7A0019] mt-0.5">{{ $fy }}</h3>
         </div>
 
         <!-- TOTAL KPI -->
-        <div class="card-hover px-3.5 py-2.5 rounded-2xl bg-white border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] shadow-sm">
+        <div class="card-hover px-3.5 py-2.5 rounded-2xl bg-white border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] shadow-sm">
             <p class="text-slate-400 text-[9px] font-semibold uppercase">Total KPI</p>
             <h3 class="text-base font-black text-slate-900 mt-0.5">{{ $individualKpiCount }}</h3>
         </div>
 
         <!-- WEIGHTAGE -->
-        <div class="card-hover px-3.5 py-2.5 rounded-2xl bg-white border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] shadow-sm">
+        <div class="card-hover px-3.5 py-2.5 rounded-2xl bg-white border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] shadow-sm">
             <p class="text-slate-400 text-[9px] font-semibold uppercase">Weightage</p>
             <h3 class="text-base font-black mt-0.5 {{ $individualTotalWeightage == 100 ? 'text-emerald-700' : ($individualTotalWeightage > 100 ? 'text-red-700' : 'text-[#B8860B]') }}">{{ number_format($individualTotalWeightage,2) }}%</h3>
         </div>
 
         <!-- QUARTERLY SCORES -->
-        <div class="card-hover px-3.5 py-2.5 rounded-2xl bg-white border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] shadow-sm">
+        <div class="card-hover px-3.5 py-2.5 rounded-2xl bg-white border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] shadow-sm">
             <p class="text-slate-400 text-[9px] font-semibold uppercase mb-1">Quarter Score</p>
             <div class="space-y-0.5">
                 @foreach(['Q1','Q2','Q3','Q4'] as $qi)
@@ -257,9 +257,9 @@
 
     {{-- ── VP: COMPANY DEPARTMENTS OVERVIEW (read-only, no individual user detail) ── --}}
     @if(strtoupper($user['role'] ?? '') === 'VP' && !empty($vpDeptSummaries ?? []))
-    <div class="bg-white rounded-[20px] border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] shadow-sm p-5">
+    <div class="bg-white rounded-[20px] border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] shadow-sm p-5">
         <div class="flex items-center gap-3 mb-4">
-            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-[#9D5268] to-[#E97C7F] flex items-center justify-center shrink-0">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-[#1A0A0A] to-[#7A0019] flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
             </div>
             <div>
@@ -279,14 +279,14 @@
                     default       => ['bar' => 'from-red-400 to-red-500',       'text' => 'text-red-700',    'badge' => 'bg-red-50 text-red-700',    'label' => 'Critical'],
                 };
             @endphp
-            <div class="rounded-[16px] p-4 border {{ ($ds['is_own'] ?? false) ? 'bg-[#FBF5EF] border-[#E3B341]/40 shadow-sm' : 'bg-white border-slate-100' }}">
+            <div class="rounded-[16px] p-4 border {{ ($ds['is_own'] ?? false) ? 'bg-[#FBF5EF] border-[#D4AF37]/40 shadow-sm' : 'bg-white border-slate-100' }}">
                 <div class="flex items-start justify-between gap-2 mb-2">
                     <div class="min-w-0">
                         <p class="text-[11px] font-black text-slate-700 truncate">{{ $ds['dept_name'] }}</p>
                         <p class="text-[9px] text-slate-400 font-semibold uppercase mt-0.5">{{ $ds['dept_code'] }}</p>
                     </div>
                     @if($ds['is_own'] ?? false)
-                    <span class="shrink-0 text-[8px] font-black bg-[#E3B341] text-[#1a1a1a] px-1.5 py-0.5 rounded-full">MY DEPT</span>
+                    <span class="shrink-0 text-[8px] font-black bg-[#D4AF37] text-[#1a1a1a] px-1.5 py-0.5 rounded-full">MY DEPT</span>
                     @endif
                 </div>
                 <h3 class="text-2xl font-black {{ $dsColor['text'] }} mt-1">{{ number_format($dsPerf, 1) }}%</h3>
@@ -304,7 +304,7 @@
     @endif
 
     <!-- FILTER -->
-    <div class="bg-white rounded-[20px] shadow-sm border border-[#E5E7EB] border-l-[4px] border-l-[#E3B341] p-5">
+    <div class="bg-white rounded-[20px] shadow-sm border border-[#E5E7EB] border-l-[4px] border-l-[#D4AF37] p-5">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
                 <label class="text-xs font-bold text-slate-500 uppercase">Search</label>

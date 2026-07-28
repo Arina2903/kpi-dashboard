@@ -38,7 +38,7 @@
 <div class="p-6 space-y-6">
 
     <!-- HEADER -->
-    <div class="rounded-[20px] bg-gradient-to-r from-[#9D5268] to-[#E97C7F] text-white p-6 shadow-xl">
+    <div class="rounded-[20px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white p-6 shadow-xl">
 
         <div class="flex justify-between items-center">
 
@@ -1071,7 +1071,7 @@ document.addEventListener(
             if (target) {
                 target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 target.style.transition = 'box-shadow .3s ease';
-                target.style.boxShadow = '0 0 0 3px #E3B341';
+                target.style.boxShadow = '0 0 0 3px #D4AF37';
                 setTimeout(function () { target.style.boxShadow = ''; }, 2500);
             }
         }

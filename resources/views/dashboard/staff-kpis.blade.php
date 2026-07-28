@@ -23,11 +23,11 @@
 @php
     $scoreStyle = function($s) {
         $s = (float)$s;
-        if ($s <= 25)  return ['bar'=>'bg-[#D96368]',                                'text'=>'text-[#D96368]', 'badge'=>'bg-[#FCEDEC] text-[#D96368] border-[#D96368]/20', 'label'=>'Critical'];
-        if ($s <= 50)  return ['bar'=>'bg-gradient-to-r from-[#D96368] to-[#E6AA37]', 'text'=>'text-[#E6AA37]', 'badge'=>'bg-[#FFF5DC] text-[#E6AA37] border-[#E6AA37]/20', 'label'=>'Risk'];
-        if ($s <= 75)  return ['bar'=>'bg-gradient-to-r from-[#E6AA37] to-[#4D9A69]', 'text'=>'text-[#E6AA37]', 'badge'=>'bg-[#FFF5DC] text-[#E6AA37] border-[#E6AA37]/20', 'label'=>'Watch'];
-        if ($s <= 100) return ['bar'=>'bg-[#4D9A69]',                                'text'=>'text-[#4D9A69]', 'badge'=>'bg-[#EAF6EE] text-[#4D9A69] border-[#4D9A69]/20', 'label'=>'Good'];
-        return                 ['bar'=>'bg-[#4D9A69]',                                'text'=>'text-[#4D9A69]', 'badge'=>'bg-[#4D9A69] text-white border-[#4D9A69]',        'label'=>'Exceeded'];
+        if ($s <= 25)  return ['bar'=>'bg-red-600',                                     'text'=>'text-red-700',     'badge'=>'bg-red-50 text-red-700 border-red-100',        'label'=>'Critical'];
+        if ($s <= 50)  return ['bar'=>'bg-gradient-to-r from-red-600 to-orange-500',    'text'=>'text-orange-700',  'badge'=>'bg-orange-50 text-orange-700 border-orange-100','label'=>'Risk'];
+        if ($s <= 75)  return ['bar'=>'bg-gradient-to-r from-orange-500 to-yellow-400', 'text'=>'text-amber-700',   'badge'=>'bg-amber-50 text-amber-700 border-amber-100',  'label'=>'Watch'];
+        if ($s <= 100) return ['bar'=>'bg-gradient-to-r from-yellow-400 to-emerald-600','text'=>'text-emerald-700', 'badge'=>'bg-emerald-50 text-emerald-700 border-emerald-100','label'=>'Good'];
+        return                 ['bar'=>'bg-emerald-700',                                'text'=>'text-emerald-800', 'badge'=>'bg-emerald-50 text-emerald-800 border-emerald-100','label'=>'Exceeded'];
     };
     $overallStyle = $scoreStyle($weightedScore);
 
@@ -54,14 +54,14 @@
 <div class="px-4 pt-4 pb-10">
 
     {{-- Breadcrumb / back --}}
-    <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-[#E97C7F] transition mb-3">
+    <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-[#6B9080] transition mb-3">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         Back to Dashboard
     </a>
 
     {{-- Staff header card --}}
-    <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#E97C7F] mb-4">
-        <div class="h-1 bg-gradient-to-r from-[#9D5268] to-[#E97C7F]"></div>
+    <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080] mb-4">
+        <div class="h-1 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
         <div class="p-5 flex flex-wrap items-center gap-5">
             <div class="w-14 h-14 rounded-full overflow-hidden bg-slate-200 shrink-0">
                 <img src="https://ui-avatars.com/api/?name={{ urlencode($staff['short_name'] ?? $staff['full_name'] ?? 'U') }}&background=1a3d34&color=fff&size=56" class="w-full h-full"/>
@@ -96,7 +96,7 @@
 
     {{-- KPI list — grouped by category, then sub-category --}}
     @if(count($kpis) === 0)
-        <div class="bg-white rounded-2xl border border-[#E97C7F] soft-card p-10 text-center">
+        <div class="bg-white rounded-2xl border border-[#6B9080] soft-card p-10 text-center">
             <p class="text-sm font-black text-slate-400">No KPIs found for this staff in {{ $currentFinancialYear }}.</p>
         </div>
     @else
@@ -108,7 +108,7 @@
                 $subGroups = $catKpis->groupBy(fn($k) => $k['sub_category'] ?: 'General')->sortKeys();
             @endphp
 
-            <div class="rounded-2xl overflow-hidden soft-card border border-[#E97C7F]">
+            <div class="rounded-2xl overflow-hidden soft-card border border-[#6B9080]">
                 {{-- Category header --}}
                 <div class="px-4 py-2.5 bg-gradient-to-r {{ $ctheme['headerBg'] }} flex items-center justify-between">
                     <div class="flex items-center gap-2">

@@ -63,7 +63,7 @@
                 id="tg-connect-btn"
                 type="button"
                 onclick="connectTelegram()"
-                class="text-[11px] font-black px-3 py-2 rounded-xl bg-[#E97C7F] text-white hover:bg-[#5a7a6d] transition shrink-0"
+                class="text-[11px] font-black px-3 py-2 rounded-xl bg-[#6B9080] text-white hover:bg-[#5a7a6d] transition shrink-0"
             >
                 Connect Telegram
             </button>
@@ -72,7 +72,7 @@
 
     {{-- SECURITY --}}
     <div class="bg-white rounded-2xl soft-card border border-slate-200 overflow-hidden">
-        <div class="h-1 bg-gradient-to-r from-[#9D5268] to-[#E97C7F]"></div>
+        <div class="h-1 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
         <div class="p-5">
             <p class="text-[9px] uppercase tracking-widest font-black text-slate-400 mb-4">Account Security</p>
 
@@ -81,7 +81,7 @@
                 <form method="POST" action="{{ route('profile.email.update') }}" class="space-y-2.5">
                     @csrf
                     <p class="text-[12px] font-black text-slate-800 flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5 text-[#E97C7F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"/></svg>
+                        <svg class="w-3.5 h-3.5 text-[#6B9080]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"/></svg>
                         Change Email
                     </p>
                     <input
@@ -89,10 +89,10 @@
                         name="email"
                         placeholder="New email address"
                         required
-                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] focus:ring-2 focus:ring-[#E97C7F]/40 focus:border-[#E97C7F] focus:outline-none"
+                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] focus:ring-2 focus:ring-[#6B9080]/40 focus:border-[#6B9080] focus:outline-none"
                     >
                     @include('partials.password-input', ['id' => 'curPwdForEmail', 'name' => 'current_password', 'placeholder' => 'Current password (to confirm)'])
-                    <button type="submit" class="w-full text-[11px] font-black px-3 py-2.5 rounded-xl bg-[#9D5268] text-white hover:bg-[#B97891] transition">
+                    <button type="submit" class="w-full text-[11px] font-black px-3 py-2.5 rounded-xl bg-[#1a3d34] text-white hover:bg-[#2d5548] transition">
                         Update Email
                     </button>
                 </form>
@@ -101,27 +101,27 @@
                 <form method="POST" action="{{ route('profile.password.update') }}" class="space-y-2.5">
                     @csrf
                     <p class="text-[12px] font-black text-slate-800 flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5 text-[#E97C7F]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="9" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                        <svg class="w-3.5 h-3.5 text-[#6B9080]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="9" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
                         Change Password
                     </p>
                     @include('partials.password-input', ['id' => 'curPwdForChange', 'name' => 'current_password', 'placeholder' => 'Current password'])
                     @include('partials.password-input', ['id' => 'newPwd', 'name' => 'password', 'placeholder' => 'New password (min 8 characters)', 'minlength' => 8])
                     @include('partials.password-input', ['id' => 'newPwdConfirm', 'name' => 'password_confirmation', 'placeholder' => 'Confirm new password', 'minlength' => 8])
-                    <button type="submit" class="w-full text-[11px] font-black px-3 py-2.5 rounded-xl bg-[#9D5268] text-white hover:bg-[#B97891] transition">
+                    <button type="submit" class="w-full text-[11px] font-black px-3 py-2.5 rounded-xl bg-[#1a3d34] text-white hover:bg-[#2d5548] transition">
                         Update Password
                     </button>
                 </form>
             </div>
 
             <p class="text-[10px] text-slate-400 mt-4">
-                Forgot your current password instead? <a href="{{ route('password.forgot') }}" class="font-semibold text-[#9D5268] hover:text-[#B97891]">Reset it via email →</a>
+                Forgot your current password instead? <a href="{{ route('password.forgot') }}" class="font-semibold text-[#4a7c6b] hover:text-[#2d5548]">Reset it via email →</a>
             </p>
         </div>
     </div>
 
     @if(strtoupper(trim($user['department_code'] ?? '')) === 'BTS')
     {{-- BTS ADMIN --}}
-    <a href="{{ route('admin.view-as') }}" class="block bg-white rounded-2xl soft-card border border-slate-200 overflow-hidden hover:border-[#E97C7F] transition">
+    <a href="{{ route('admin.view-as') }}" class="block bg-white rounded-2xl soft-card border border-slate-200 overflow-hidden hover:border-[#6B9080] transition">
         <div class="p-5 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
                 <div class="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center shrink-0">

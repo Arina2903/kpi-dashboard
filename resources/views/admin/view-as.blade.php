@@ -40,14 +40,14 @@
             name="q"
             value="{{ $search }}"
             placeholder="Search by name or employee ID…"
-            class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] focus:ring-2 focus:ring-[#E97C7F]/40 focus:border-[#E97C7F] focus:outline-none"
+            class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] focus:ring-2 focus:ring-[#6B9080]/40 focus:border-[#6B9080] focus:outline-none"
         >
     </form>
 
     <div class="bg-white rounded-2xl soft-card border border-slate-200 overflow-hidden">
         <table class="w-full text-[12px]">
             <thead>
-                <tr class="bg-[#9D5268] text-white text-[10px] uppercase tracking-widest">
+                <tr class="bg-[#1a3d34] text-white text-[10px] uppercase tracking-widest">
                     <th class="text-left px-4 py-3 font-black">Employee</th>
                     <th class="text-left px-4 py-3 font-black">Position</th>
                     <th class="text-left px-4 py-3 font-black">Department</th>
@@ -68,7 +68,7 @@
                     <td class="px-4 py-3 text-center">
                         <form method="POST" action="{{ route('admin.view-as.start', $emp['id']) }}" onsubmit="return confirm('Open {{ addslashes($emp['full_name'] ?? $emp['short_name'] ?? 'this employee') }}\'s dashboard? This will be logged.');">
                             @csrf
-                            <button type="submit" class="text-[11px] font-black px-3 py-1.5 rounded-lg bg-[#9D5268] text-white hover:bg-[#B97891] transition">
+                            <button type="submit" class="text-[11px] font-black px-3 py-1.5 rounded-lg bg-[#1a3d34] text-white hover:bg-[#2d5548] transition">
                                 View As →
                             </button>
                         </form>

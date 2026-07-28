@@ -6,7 +6,7 @@
             <td align="center">
                 <table width="480" cellpadding="0" cellspacing="0" style="background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 8px 30px rgba(15,23,42,.08);">
                     <tr>
-                        <td style="background:linear-gradient(90deg,#9D5268,#E97C7F); padding:24px 32px;">
+                        <td style="background:linear-gradient(90deg,#1A0A0A,#7A0019); padding:24px 32px;">
                             <span style="color:#fff; font-weight:900; font-size:16px;">RichWorks KPI Dashboard</span>
                         </td>
                     </tr>
@@ -17,7 +17,7 @@
                                 We received a request to reset your KPI Dashboard password. Click the button below to choose a new one — this link expires in 30 minutes.
                             </p>
                             <p style="text-align:center; margin:0 0 24px;">
-                                <a href="{{ $resetUrl }}" style="display:inline-block; background:linear-gradient(135deg,#B97891,#9D5268); color:#fff; text-decoration:none; font-weight:700; font-size:14px; padding:12px 28px; border-radius:12px;">
+                                <a href="{{ $resetUrl }}" style="display:inline-block; background:linear-gradient(135deg,#2d5548,#4a7c6b); color:#fff; text-decoration:none; font-weight:700; font-size:14px; padding:12px 28px; border-radius:12px;">
                                     Reset Password
                                 </a>
                             </p>
