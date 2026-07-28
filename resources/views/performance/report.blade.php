@@ -447,7 +447,7 @@
                 && (!$isWindowOpen || ($status ?? 'draft') === 'submitted');
     $softLocked  = !($isAppraiserView ?? false) && ($status ?? 'draft') === 'appraised';
 @endphp
-<div id="form-body"@if($formLocked) inert style="pointer-events:none;opacity:.7;user-select:none;"@endif>
+<div id="form-body"@if($formLocked) inert style="pointer-events:none;user-select:none;"@endif>
 <table id="print-table">
 <thead id="print-thead">
 <tr><td>
@@ -1563,7 +1563,6 @@ function lockForm() {
     formBody.setAttribute('inert', '');
     formBody.style.pointerEvents = 'none';
     formBody.style.userSelect    = 'none';
-    formBody.style.opacity       = '0.7';
     // disabled covers radio/checkbox which readonly ignores
     formBody.querySelectorAll('input:not([type="hidden"]), textarea, select, button').forEach(function(el) {
         el.disabled = true;
@@ -1968,15 +1967,20 @@ document.querySelectorAll('.sig-pad-wrap').forEach(function(wrap) {
 if (_savedData) { restoreFormData(_savedData); restoreAllSigs(); updateS3(); }
 updateS6();
 if (_isAppraiserView) {
-    // Lock form body then unlock appraiser sections — keeps header buttons accessible
+    // Lock form body then unlock appraiser sections — keeps header buttons accessible.
+    // No opacity here: CSS opacity on this container would apply to every descendant
+    // as a group, so a child's own opacity:1 (set by unlockAppraiserSections()) can't
+    // un-fade it — the unlocked sections would stay visually washed out even though
+    // they're fully clickable. pointer-events doesn't have that problem: a child's
+    // pointer-events:auto correctly overrides this ancestor's pointer-events:none.
     var formBody = document.getElementById('form-body') || document.querySelector('main');
-    if (formBody) { formBody.style.pointerEvents = 'none'; formBody.style.opacity = '0.85'; }
+    if (formBody) { formBody.style.pointerEvents = 'none'; }
     unlockAppraiserSections();
     lockAppraiseeOwnFields();
 } else if (_softLocked) {
     // status = appraised: soft-lock the whole form, then unlock just the acknowledgment panel
     var formBody = document.getElementById('form-body') || document.querySelector('main');
-    if (formBody) { formBody.style.pointerEvents = 'none'; formBody.style.opacity = '0.85'; }
+    if (formBody) { formBody.style.pointerEvents = 'none'; }
     unlockAppraiseeAcknowledgment();
 } else if (!_isWindowOpen || _isSubmitted) {
     lockForm();
