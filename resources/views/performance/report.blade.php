@@ -1379,7 +1379,7 @@ function openQuarterDetail(btn) {
     progressText.textContent = detail.target !== null ? pct.toFixed(1) + '%' : '—';
     progressText.style.color = style.text;
 
-    document.getElementById('qdRemark').textContent = (detail.remark && detail.remark.trim() !== '') ? detail.remark : 'NON';
+    document.getElementById('qdRemark').textContent = (detail.remark && detail.remark.trim() !== '') ? detail.remark : 'NONE';
 
     var filesWrap = document.getElementById('qdFiles');
     filesWrap.innerHTML = '';
