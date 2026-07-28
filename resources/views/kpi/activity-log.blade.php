@@ -17,7 +17,7 @@
 <div class="p-4 space-y-4">
 
     {{-- HEADER --}}
-    <div class="rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-5 py-3.5 shadow-xl flex items-center justify-between gap-4">
+    <div class="rounded-[18px] bg-gradient-to-r from-[#9D5268] to-[#E97C7F] text-white px-5 py-3.5 shadow-xl flex items-center justify-between gap-4">
         <div>
             <a href="/dashboard" class="text-[10px] text-blue-100 hover:text-white">← Dashboard</a>
             <h1 class="text-xl font-bold mt-1">User Activity Log</h1>
@@ -32,7 +32,7 @@
             </div>
             {{-- View switcher — swaps Timeline/Report client-side, no page reload --}}
             <select id="viewModeSelect" onchange="switchViewMode(this.value)"
-                class="bg-[#D4AF37] hover:bg-[#c19c2f] text-[#1a1a1a] px-3 py-2 rounded-xl shadow font-black text-[11px] transition cursor-pointer border-none">
+                class="bg-[#E3B341] hover:bg-[#c19c2f] text-[#1a1a1a] px-3 py-2 rounded-xl shadow font-black text-[11px] transition cursor-pointer border-none">
                 <option value="timeline">🕒 Timeline View</option>
                 <option value="report">📄 Report View</option>
             </select>
@@ -216,7 +216,7 @@
                 ];
             @endphp
 
-            <div class="bg-white rounded-2xl border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] shadow-sm p-5">
+            <div class="bg-white rounded-2xl border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] shadow-sm p-5">
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Summary</p>
@@ -233,7 +233,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] shadow-sm overflow-hidden">
+            <div class="bg-white rounded-2xl border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] shadow-sm overflow-hidden">
                 <div class="px-5 py-3 border-b border-slate-100">
                     <p class="text-[11px] font-black text-slate-800">Full Activity Record</p>
                     <p class="text-[9px] text-slate-400 mt-0.5">Read-only — every action recorded under your name, newest first</p>

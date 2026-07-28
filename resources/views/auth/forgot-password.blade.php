@@ -66,7 +66,7 @@
         </form>
 
         <div class="mt-5 text-center">
-            <a href="{{ route('login') }}" class="text-xs font-semibold text-[#4a7c6b] hover:text-[#2d5548]">
+            <a href="{{ route('login') }}" class="text-xs font-semibold text-[#9D5268] hover:text-[#B97891]">
                 ← Back to login
             </a>
         </div>

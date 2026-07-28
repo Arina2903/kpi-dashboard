@@ -25,7 +25,7 @@
         .sec-bar {
             display: flex; align-items: center; gap: 12px;
             padding: 10px 24px;
-            background: linear-gradient(90deg, #1a3d34, #2d5548);
+            background: linear-gradient(90deg, #9D5268, #B97891);
         }
         .sec-num {
             width: 26px; height: 26px; border-radius: 50%;
@@ -39,37 +39,37 @@
             display: flex; align-items: center; gap: 8px;
             font-size: 10px; font-weight: 800;
             text-transform: uppercase; letter-spacing: .10em;
-            color: #6B9080; margin-bottom: 14px;
+            color: #E97C7F; margin-bottom: 14px;
         }
-        .part-label::after { content: ''; flex: 1; height: 1px; background: rgba(107,144,128,.25); }
+        .part-label::after { content: ''; flex: 1; height: 1px; background: rgba(233,124,127,.25); }
 
         .f-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #94a3b8; margin-bottom: 3px; }
         .f-val   { font-size: 13px; font-weight: 600; color: #1e293b; text-transform: uppercase; }
 
         /* Part D — optional date with calendar icon */
         .partd-wrap { position: relative; display: inline-flex; align-items: center; gap: 2px; vertical-align: middle; }
-        .partd-cal  { color: #6B9080; cursor: pointer; display: inline-flex; align-items: center; padding: 2px 4px; border-radius: 4px; transition: color .15s, background .15s; }
-        .partd-cal:hover { color: #4a7c6b; background: rgba(107,144,128,.15); }
-        .partd-val  { font-size: 11px; font-weight: 600; color: #1e293b; display: none; border-bottom: 1.5px solid rgba(107,144,128,.40); padding-bottom: 1px; }
+        .partd-cal  { color: #E97C7F; cursor: pointer; display: inline-flex; align-items: center; padding: 2px 4px; border-radius: 4px; transition: color .15s, background .15s; }
+        .partd-cal:hover { color: #9D5268; background: rgba(233,124,127,.15); }
+        .partd-val  { font-size: 11px; font-weight: 600; color: #1e293b; display: none; border-bottom: 1.5px solid rgba(233,124,127,.40); padding-bottom: 1px; }
         .partd-clr  { display: none; font-size: 14px; line-height: 1; color: #94a3b8; cursor: pointer; background: none; border: none; padding: 0 2px; vertical-align: middle; }
         .partd-clr:hover { color: #ef4444; }
 
         .f-input {
-            width: 100%; border: none; border-bottom: 1.5px solid rgba(107,144,128,.30);
+            width: 100%; border: none; border-bottom: 1.5px solid rgba(233,124,127,.30);
             padding: 5px 0; font-size: 13px; font-weight: 600; color: #1e293b;
             background: transparent; outline: none; transition: border-color .15s;
             text-transform: uppercase;
         }
-        .f-input:focus { border-bottom-color: #6B9080; }
+        .f-input:focus { border-bottom-color: #E97C7F; }
 
         .f-area {
             width: 100%; min-height: 90px;
-            border: 1.5px solid rgba(107,144,128,.30); border-radius: 10px;
+            border: 1.5px solid rgba(233,124,127,.30); border-radius: 10px;
             padding: 10px 14px; font-size: 12px; color: #334155;
             background: white; outline: none; resize: vertical; transition: border-color .15s;
             line-height: 1.6;
         }
-        .f-area:focus { border-color: #6B9080; }
+        .f-area:focus { border-color: #E97C7F; }
 
         /* Print-only stand-in for a textarea — see beforeprint handler below.
            A <textarea> can't grow to fit its content, so on-screen long text
@@ -79,56 +79,56 @@
 
         .n-input {
             width: 60px; text-align: center;
-            border: 1.5px solid rgba(107,144,128,.30); border-radius: 8px;
+            border: 1.5px solid rgba(233,124,127,.30); border-radius: 8px;
             padding: 4px; font-size: 11px; font-weight: 600; color: #334155;
             background: white; outline: none; transition: border-color .15s;
         }
-        .n-input:focus { border-color: #6B9080; }
+        .n-input:focus { border-color: #E97C7F; }
 
         .t-input {
-            width: 100%; border: none; border-bottom: 1px solid rgba(107,144,128,.25);
+            width: 100%; border: none; border-bottom: 1px solid rgba(233,124,127,.25);
             padding: 4px 0; font-size: 11px; color: #334155;
             background: transparent; outline: none; transition: border-color .15s;
         }
-        .t-input:focus { border-bottom-color: #6B9080; }
-        .t-input::placeholder { color: #cbd5e1; }
+        .t-input:focus { border-bottom-color: #E97C7F; }
+        .t-input::placeholder { color: #A6AEC0; }
 
         .doc-tbl { width: 100%; font-size: 11px; border-collapse: collapse; }
         .doc-tbl th {
-            background: #1a3d34; color: #fff; padding: 10px 12px;
+            background: #9D5268; color: #fff; padding: 10px 12px;
             font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .09em;
         }
         .doc-tbl th.l { text-align: left; }
         .doc-tbl th.c { text-align: center; }
-        .doc-tbl td { padding: 8px 12px; border-bottom: 1px solid rgba(107,144,128,.10); vertical-align: middle; }
+        .doc-tbl td { padding: 8px 12px; border-bottom: 1px solid rgba(233,124,127,.10); vertical-align: middle; }
         .doc-tbl tbody tr:last-child td { border-bottom: none; }
 
-        .cat-hdr td    { background: #1a3d34; color: #fff; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .14em; padding: 8px 16px; }
-        .subcat-hdr td { background: rgba(107,144,128,.08); color: #2d5548; font-size: 10px; font-weight: 700; padding: 7px 16px 7px 22px; border-bottom: 1px solid rgba(107,144,128,.18); letter-spacing: .03em; }
-        .q-tag { display:inline-block; font-size:8px; font-weight:900; color:#1a3d34; background:rgba(107,144,128,.15); border:1px solid rgba(107,144,128,.35); border-radius:4px; padding:1px 6px; letter-spacing:.06em; text-transform:uppercase; vertical-align:middle; flex-shrink:0; }
+        .cat-hdr td    { background: #9D5268; color: #fff; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .14em; padding: 8px 16px; }
+        .subcat-hdr td { background: rgba(233,124,127,.08); color: #B97891; font-size: 10px; font-weight: 700; padding: 7px 16px 7px 22px; border-bottom: 1px solid rgba(233,124,127,.18); letter-spacing: .03em; }
+        .q-tag { display:inline-block; font-size:8px; font-weight:900; color:#9D5268; background:rgba(233,124,127,.15); border:1px solid rgba(233,124,127,.35); border-radius:4px; padding:1px 6px; letter-spacing:.06em; text-transform:uppercase; vertical-align:middle; flex-shrink:0; }
 
-        .sc-great { color: #059669; }
-        .sc-good  { color: #6B9080; }
-        .sc-warn  { color: #d97706; }
-        .sc-poor  { color: #dc2626; }
-        .sc-none  { color: #cbd5e1; }
+        .sc-great { color: #4D9A69; }
+        .sc-good  { color: #4D9A69; }
+        .sc-warn  { color: #E6AA37; }
+        .sc-poor  { color: #D96368; }
+        .sc-none  { color: #A6AEC0; }
 
-        .sig-line { border-bottom: 1.5px dashed rgba(107,144,128,.40); height: 44px; margin-bottom: 6px; }
+        .sig-line { border-bottom: 1.5px dashed rgba(233,124,127,.40); height: 44px; margin-bottom: 6px; }
 
         /* Rating pills */
         .rating-group { display: flex; gap: 4px; }
         .rating-group input[type=radio] { display: none; }
         .rating-group label {
             width: 28px; height: 28px; border-radius: 50%;
-            border: 1.5px solid rgba(107,144,128,.3);
+            border: 1.5px solid rgba(233,124,127,.3);
             display: flex; align-items: center; justify-content: center;
             font-size: 11px; font-weight: 700; color: #64748b;
             cursor: pointer; transition: all .15s;
         }
         .rating-group input[type=radio]:checked + label {
-            background: #1a3d34; border-color: #1a3d34; color: #fff;
+            background: #9D5268; border-color: #9D5268; color: #fff;
         }
-        .rating-group label:hover { border-color: #6B9080; color: #6B9080; }
+        .rating-group label:hover { border-color: #E97C7F; color: #E97C7F; }
 
         /* ── Print table header (hidden on screen) ─────────── */
         #print-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
@@ -194,14 +194,14 @@
 
             /* Field/label text carrying the brand-green color — plain black,
                not blue (blue is reserved for header bars above). */
-            [class*="text-[#6B9080]"], [class*="text-[#1a3d34]"] { color: #1e293b !important; }
-            [class*="border-[#6B9080]"] { border-color: #94a3b8 !important; }
+            [class*="text-[#E97C7F]"], [class*="text-[#9D5268]"] { color: #1e293b !important; }
+            [class*="border-[#E97C7F]"] { border-color: #94a3b8 !important; }
             /* Divider lines / panel washes — recolor but keep visible */
-            [class~="bg-[#6B9080]/30"] { background-color: #94a3b8 !important; }
-            [class~="bg-[#6B9080]/8"], [class~="bg-[#6B9080]/5"] { background-color: #f1f5f9 !important; }
+            [class~="bg-[#E97C7F]/30"] { background-color: #94a3b8 !important; }
+            [class~="bg-[#E97C7F]/8"], [class~="bg-[#E97C7F]/5"] { background-color: #f1f5f9 !important; }
             /* Checkbox fill squares + bullet dots — solid accent, keep
                filled (so ticked boxes stay visible), just not green */
-            [class~="bg-[#6B9080]"] { background-color: #1e293b !important; }
+            [class~="bg-[#E97C7F]"] { background-color: #1e293b !important; }
 
             /* Red/amber/green status indicators (KPI achievement score,
                attendance stat cards, attendance score rows, Section 6
@@ -336,7 +336,7 @@
 
 {{-- Sticky header --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#f0f2f7] no-print">
-    <div class="rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-4 shadow-xl flex items-center justify-between gap-3">
+    <div class="rounded-[18px] bg-gradient-to-r from-[#9D5268] to-[#E97C7F] text-white px-6 py-4 shadow-xl flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
                 <span class="text-sm font-black">{{ $qLabel }}</span>
@@ -453,12 +453,12 @@
 <tr><td>
     <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
         @if($phLogo)<img src="{{ asset($phLogo) }}" alt="Logo" style="height:40px;object-fit:contain;display:block">
-        @else<span style="font-size:12px;font-weight:900;color:#1a3d34">{{ session('company_display_name') }}</span>@endif
+        @else<span style="font-size:12px;font-weight:900;color:#9D5268">{{ session('company_display_name') }}</span>@endif
         <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-            <div style="width:40px;height:40px;border-radius:9px;background:linear-gradient(135deg,#1a3d34,#6B9080);display:flex;align-items:center;justify-content:center">
+            <div style="width:40px;height:40px;border-radius:9px;background:linear-gradient(135deg,#9D5268,#E97C7F);display:flex;align-items:center;justify-content:center">
                 <span style="font-size:14px;font-weight:900;color:white;line-height:1">{{ $qLabel }}</span>
             </div>
-            <span style="font-size:7px;font-weight:700;color:#6B9080;letter-spacing:.12em;text-transform:uppercase">{{ $currentFinancialYear }}</span>
+            <span style="font-size:7px;font-weight:700;color:#E97C7F;letter-spacing:.12em;text-transform:uppercase">{{ $currentFinancialYear }}</span>
         </div>
     </div>
 </td></tr>
@@ -469,9 +469,9 @@
 <div class="px-4 pb-10 pt-3">
 <div class="max-w-5xl mx-auto">
 
-<div class="bg-white rounded-2xl overflow-hidden doc-card border border-[#6B9080]/25">
+<div class="bg-white rounded-2xl overflow-hidden doc-card border border-[#E97C7F]/25">
 
-    <div class="h-[3px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
+    <div class="h-[3px] bg-gradient-to-r from-[#9D5268] to-[#E97C7F]"></div>
 
     <div class="px-10 py-8">
 
@@ -479,36 +479,36 @@
         <div id="doc-hdr" class="flex items-center justify-between mb-7 pb-6 border-b border-slate-100">
             @php $logoMap=['RCG'=>'images/RCG-Logo-black.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $logo=$logoMap[session('company_code')]??null; @endphp
             @if($logo)<img src="{{ asset(ltrim($logo,'/')) }}" alt="Logo" class="h-12 object-contain">
-            @else<p class="text-xl font-black text-[#1a3d34]">{{ session('company_display_name') }}</p>@endif
+            @else<p class="text-xl font-black text-[#9D5268]">{{ session('company_display_name') }}</p>@endif
             <div class="flex flex-col items-center gap-0.5">
-                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1A0A0A] to-[#7A0019] flex items-center justify-center shadow-lg">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#9D5268] to-[#E97C7F] flex items-center justify-center shadow-lg">
                     <span class="text-xl font-black text-white">{{ $qLabel }}</span>
                 </div>
-                <span class="text-[9px] font-bold text-[#6B9080] uppercase tracking-widest">{{ $currentFinancialYear }}</span>
+                <span class="text-[9px] font-bold text-[#E97C7F] uppercase tracking-widest">{{ $currentFinancialYear }}</span>
             </div>
         </div>
 
         {{-- Title --}}
         <div class="text-center mb-7">
             <p class="text-[9px] font-semibold text-slate-400 uppercase tracking-[.22em] mb-3">— Private &amp; Confidential —</p>
-            <h2 class="text-lg font-black text-[#1a3d34] uppercase tracking-[.06em] mb-1">Executive / Non-Executive Performance Appraisal</h2>
+            <h2 class="text-lg font-black text-[#9D5268] uppercase tracking-[.06em] mb-1">Executive / Non-Executive Performance Appraisal</h2>
             <div class="flex items-center justify-center gap-2 mt-2">
-                <span class="h-px w-12 bg-[#6B9080]/30"></span>
-                <span class="text-[10px] font-semibold text-[#6B9080] uppercase tracking-widest">Complete Report · Quarter {{ $displayQuarter }} · {{ $currentFinancialYear }}</span>
-                <span class="h-px w-12 bg-[#6B9080]/30"></span>
+                <span class="h-px w-12 bg-[#E97C7F]/30"></span>
+                <span class="text-[10px] font-semibold text-[#E97C7F] uppercase tracking-widest">Complete Report · Quarter {{ $displayQuarter }} · {{ $currentFinancialYear }}</span>
+                <span class="h-px w-12 bg-[#E97C7F]/30"></span>
             </div>
         </div>
 
         {{-- Purpose of Review --}}
-        <div class="border border-[#6B9080]/25 rounded-xl mb-6 overflow-hidden">
-            <div class="bg-[#6B9080]/8 border-b border-[#6B9080]/20 px-5 py-2.5">
-                <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-[.14em]">Purpose of Review</p>
+        <div class="border border-[#E97C7F]/25 rounded-xl mb-6 overflow-hidden">
+            <div class="bg-[#E97C7F]/8 border-b border-[#E97C7F]/20 px-5 py-2.5">
+                <p class="text-[9px] font-black text-[#E97C7F] uppercase tracking-[.14em]">Purpose of Review</p>
             </div>
             <div class="px-5 py-4 flex flex-wrap items-center gap-6">
                 <div class="flex items-center gap-5">
                     @foreach([['id'=>'por_confirmation','label'=>'Confirmation'],['id'=>'por_quarterly','label'=>'Quarterly Review'],['id'=>'por_others','label'=>'Others']] as $opt)
                     <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <span class="w-4 h-4 rounded border-2 border-[#6B9080]/50 flex items-center justify-center"><input type="checkbox" id="{{ $opt['id'] }}" name="{{ $opt['id'] }}" {{ $opt['id']==='por_quarterly'?'checked':'' }} class="sr-only peer"><span class="w-2.5 h-2.5 rounded-sm bg-[#6B9080] hidden peer-checked:block"></span></span>
+                        <span class="w-4 h-4 rounded border-2 border-[#E97C7F]/50 flex items-center justify-center"><input type="checkbox" id="{{ $opt['id'] }}" name="{{ $opt['id'] }}" {{ $opt['id']==='por_quarterly'?'checked':'' }} class="sr-only peer"><span class="w-2.5 h-2.5 rounded-sm bg-[#E97C7F] hidden peer-checked:block"></span></span>
                         <span class="text-[11px] font-semibold text-slate-700">{{ $opt['label'] }}</span>
                     </label>
                     @endforeach
@@ -519,19 +519,19 @@
                 </div>
                 <div class="text-right">
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Year / Period</p>
-                    <p class="text-base font-black text-[#1a3d34]">{{ now()->year }} <span class="text-[#6B9080]">/</span> {{ $qLabel }}</p>
+                    <p class="text-base font-black text-[#9D5268]">{{ now()->year }} <span class="text-[#E97C7F]">/</span> {{ $qLabel }}</p>
                 </div>
             </div>
         </div>
 
         {{-- Employee strip --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-7">
+        <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden mb-7">
             <table class="w-full text-xs">
                 <tbody>
                 @php $fields=[['label'=>'Name','value'=>$currentUserName],['label'=>'Current Position','value'=>$userPosition],['label'=>'Reporting To (Appraiser)','value'=>$reportsToName],['label'=>'Department / Division','value'=>$departmentName],['label'=>'Year / Period Under Review','value'=>$currentFinancialYear.' / '.$qLabel]]; @endphp
                 @foreach($fields as $i => $f)
-                <tr class="{{ $i%2===0?'bg-white':'bg-slate-50/60' }} {{ $i<count($fields)-1?'border-b border-[#6B9080]/12':'' }}">
-                    <td class="px-5 py-3 w-52 border-r border-[#6B9080]/12"><span class="f-label">{{ $f['label'] }}</span></td>
+                <tr class="{{ $i%2===0?'bg-white':'bg-slate-50/60' }} {{ $i<count($fields)-1?'border-b border-[#E97C7F]/12':'' }}">
+                    <td class="px-5 py-3 w-52 border-r border-[#E97C7F]/12"><span class="f-label">{{ $f['label'] }}</span></td>
                     <td class="px-5 py-3"><span class="f-val">{{ $f['value'] }}</span></td>
                 </tr>
                 @endforeach
@@ -542,7 +542,7 @@
         {{-- ═══════════════════════════════════════════════════════
              SECTION 1 — EMPLOYEE PARTICULARS
         ═══════════════════════════════════════════════════════ --}}
-        <div id="sec1-particulars" class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
+        <div id="sec1-particulars" class="border border-[#E97C7F]/25 rounded-xl overflow-hidden mb-6 print-sec">
             <div class="sec-bar"><div class="sec-num">1</div><span class="sec-title">To Be Completed by Employee Under Review</span></div>
             <div class="px-6 py-6 space-y-7">
 
@@ -567,7 +567,7 @@
                     @endphp
                     <div class="mt-5">
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-                            <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;color:#6B9080;">Annual Attendance</span>
+                            <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;color:#E97C7F;">Annual Attendance</span>
                             <span style="font-size:9px;font-weight:700;color:#94a3b8;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:999px;padding:2px 8px;">Jan – {{ $ytdMonth }} {{ $ytdYear }}</span>
                         </div>
                         <div class="grid grid-cols-3 gap-6">
@@ -581,7 +581,7 @@
                     </div>
                 </div>
 
-                <div class="border-t border-dashed border-[#6B9080]/20"></div>
+                <div class="border-t border-dashed border-[#E97C7F]/20"></div>
 
                 <div>
                     <div class="part-label">Part B &nbsp;·&nbsp; Summary of Duties &amp; Achievements</div>
@@ -589,7 +589,7 @@
                     <textarea name="part_b" class="f-area" placeholder="Write your summary here…" rows="4"></textarea>
                 </div>
 
-                <div class="border-t border-dashed border-[#6B9080]/20"></div>
+                <div class="border-t border-dashed border-[#E97C7F]/20"></div>
 
                 <div>
                     <div class="part-label">Part C &nbsp;·&nbsp; Key Tasks for Forthcoming Period</div>
@@ -597,7 +597,7 @@
                     <textarea name="part_c" class="f-area" placeholder="List your key tasks…" rows="4"></textarea>
                 </div>
 
-                <div class="border-t border-dashed border-[#6B9080]/20"></div>
+                <div class="border-t border-dashed border-[#E97C7F]/20"></div>
 
                 <div>
                     <div class="part-label">Part D &nbsp;·&nbsp; Appraiser Confirmation</div>
@@ -626,7 +626,7 @@
         {{-- ═══════════════════════════════════════════════════════
              SECTION 2 — OKR / KPI
         ═══════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
+        <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden mb-6 print-sec">
             <div class="sec-bar"><div class="sec-num">2</div><span class="sec-title">OKR / KPI Quarterly Performance Review &nbsp;·&nbsp; {{ $qLabel }}</span></div>
 
             @if(empty($kpis))
@@ -722,11 +722,11 @@
                     ];
                 @endphp
                 <tr class="{{ $subItemNo%2===0?'':'bg-slate-50/40' }} sec2-row">
-                    <td class="text-center text-[10px] font-bold text-[#1a3d34]">{{ $subCatNo }}.{{ $subItemNo }}</td>
+                    <td class="text-center text-[10px] font-bold text-[#9D5268]">{{ $subCatNo }}.{{ $subItemNo }}</td>
                     <td style="padding:8px 12px;">
-                        <div style="font-size:10px;font-weight:700;color:#1a3d34;margin-bottom:3px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                        <div style="font-size:10px;font-weight:700;color:#9D5268;margin-bottom:3px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
                             <span>{{ $kpi['kpi_title'] }}</span>
-                            <span style="flex-shrink:0;font-size:8px;font-weight:900;color:#6B9080;background:#fff;border:1px solid rgba(107,144,128,.25);padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;">{{ $kpi['weightage']??'—' }}% weight</span>
+                            <span style="flex-shrink:0;font-size:8px;font-weight:900;color:#E97C7F;background:#fff;border:1px solid rgba(233,124,127,.25);padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;">{{ $kpi['weightage']??'—' }}% weight</span>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
                             <span class="q-tag">{{ $qLabel }}</span>
@@ -742,7 +742,7 @@
                     <td class="text-center"><input type="number" name="kpi_app_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" step="0.1" min="0" max="5" placeholder="—" class="n-input kpi-app-input" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;"></td>
                     @if($isAppraiserView ?? false)
                     <td class="text-center no-print">
-                        <button type="button" class="kpi-view-btn" data-detail="{{ json_encode($qDetail, JSON_UNESCAPED_UNICODE) }}" onclick="openQuarterDetail(this)" style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;color:#4a7c6b;background:#f0f9f6;border:1px solid #d1e7e0;border-radius:8px;padding:5px 9px;cursor:pointer;">👁 View</button>
+                        <button type="button" class="kpi-view-btn" data-detail="{{ json_encode($qDetail, JSON_UNESCAPED_UNICODE) }}" onclick="openQuarterDetail(this)" style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;color:#9D5268;background:#FCEBE8;border:1px solid rgba(157,82,104,.20);border-radius:8px;padding:5px 9px;cursor:pointer;">👁 View</button>
                     </td>
                     @endif
                 </tr>
@@ -751,13 +751,13 @@
                 @endforeach
                 </tbody>
                 <tfoot>
-                    <tr style="background:rgba(26,61,52,.06);">
-                        <td colspan="4" class="text-right font-black text-xs text-[#1a3d34] uppercase tracking-wide px-4 py-3">Total Score Section 2</td>
+                    <tr style="background:rgba(157,82,104,.06);">
+                        <td colspan="4" class="text-right font-black text-xs text-[#9D5268] uppercase tracking-wide px-4 py-3">Total Score Section 2</td>
                         <td class="text-center py-3"><span id="sec2Total" class="font-black text-base sc-none">—</span></td>
                         <td class="text-center"><span id="sec2AppPct" class="text-xs font-bold text-slate-400">—</span></td>
                         @if($isAppraiserView ?? false)<td class="no-print"></td>@endif
                     </tr>
-                    <tr style="background:rgba(26,61,52,.03);">
+                    <tr style="background:rgba(157,82,104,.03);">
                         <td colspan="4" class="text-right text-[9px] font-bold text-slate-400 uppercase tracking-wide px-4 py-2">% Total (Score ÷ 30 × 70)</td>
                         <td colspan="2" class="text-center"><span id="sec2Pct" class="text-sm font-black text-slate-400">—</span></td>
                         @if($isAppraiserView ?? false)<td class="no-print"></td>@endif
@@ -771,17 +771,17 @@
         {{-- ═══════════════════════════════════════════════════════
              SECTION 3 — ATTITUDE & COMPETENCY
         ═══════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
+        <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden mb-6 print-sec">
             <div class="sec-bar"><div class="sec-num">3</div><span class="sec-title">Attitude &amp; Competency Assessment</span></div>
 
             <div class="px-6 pt-5 pb-4 border-b border-slate-100 rating-scale-legend">
-                <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-widest mb-3">Rating Scale</p>
+                <p class="text-[9px] font-black text-[#E97C7F] uppercase tracking-widest mb-3">Rating Scale</p>
                 <div class="flex gap-2 flex-wrap">
                     @php $ratingLegend=[
                         ['score'=>1,'cat'=>'Unsatisfactory','def'=>'Inadequate; counselling or appropriate action required.',             'bg'=>'bg-red-50','border'=>'border-red-200','text'=>'text-red-700','num'=>'bg-red-500'],
                         ['score'=>2,'cat'=>'Below Average', 'def'=>'Below expectations, requires improvement and remedial steps.',        'bg'=>'bg-amber-50','border'=>'border-amber-200','text'=>'text-amber-700','num'=>'bg-amber-400'],
                         ['score'=>3,'cat'=>'Average',       'def'=>'Meets the normal requirements of the position.',                      'bg'=>'bg-slate-50','border'=>'border-slate-200','text'=>'text-slate-600','num'=>'bg-slate-400'],
-                        ['score'=>4,'cat'=>'Above Average', 'def'=>'Consistently meets all requirements, exceeds in major aspects.',      'bg'=>'bg-[#6B9080]/5','border'=>'border-[#6B9080]/25','text'=>'text-[#1a3d34]','num'=>'bg-[#6B9080]'],
+                        ['score'=>4,'cat'=>'Above Average', 'def'=>'Consistently meets all requirements, exceeds in major aspects.',      'bg'=>'bg-[#E97C7F]/5','border'=>'border-[#E97C7F]/25','text'=>'text-[#9D5268]','num'=>'bg-[#E97C7F]'],
                         ['score'=>5,'cat'=>'Outstanding',   'def'=>'Exceptional performance, high initiative, sound judgement.',          'bg'=>'bg-emerald-50','border'=>'border-emerald-200','text'=>'text-emerald-700','num'=>'bg-emerald-500'],
                     ]; @endphp
                     @foreach($ratingLegend as $r)
@@ -808,7 +808,7 @@
                 </thead>
                 <tbody>
                 @foreach($assessmentAreas as $i => $area)
-                <tr class="{{ $i%2===0?'bg-white':'bg-slate-50/50' }}" style="border-bottom:1px solid rgba(107,144,128,.10);">
+                <tr class="{{ $i%2===0?'bg-white':'bg-slate-50/50' }}" style="border-bottom:1px solid rgba(233,124,127,.10);">
                     <td style="padding:14px 16px;">
                         <p style="font-size:11px;font-weight:800;color:#1e293b;margin-bottom:3px;">{{ $area['no'] }}) {{ $area['title'] }}</p>
                         <p style="font-size:10px;color:#94a3b8;line-height:1.55;font-style:italic;">{{ $area['description'] }}</p>
@@ -819,21 +819,21 @@
                             @foreach([1,2,3,4,5] as $sc)<input type="radio" id="s_{{ $area['no'] }}_{{ $sc }}" name="self_{{ $area['no'] }}" value="{{ $sc }}"><label for="s_{{ $area['no'] }}_{{ $sc }}">{{ $sc }}</label>@endforeach
                         </div>
                     </td>
-                    <td style="padding:10px 8px;vertical-align:top;background:rgba(107,144,128,.03);" class="text-center">
+                    <td style="padding:10px 8px;vertical-align:top;background:rgba(233,124,127,.03);" class="text-center">
                         <p style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Superior</p>
                         <div class="rating-group justify-center sup-rating-group" style="pointer-events:none;opacity:0.5;">
                             @foreach([1,2,3,4,5] as $sc)<input type="radio" id="sup_{{ $area['no'] }}_{{ $sc }}" name="sup_{{ $area['no'] }}" value="{{ $sc }}"><label for="sup_{{ $area['no'] }}_{{ $sc }}">{{ $sc }}</label>@endforeach
                         </div>
                     </td>
-                    <td style="padding:10px 12px;vertical-align:top;background:rgba(107,144,128,.03);">
+                    <td style="padding:10px 12px;vertical-align:top;background:rgba(233,124,127,.03);">
                         <input type="text" name="att_comment_{{ $area['no'] }}" placeholder="Filled by appraiser…" class="t-input att-comment-input" style="margin-top:6px;pointer-events:none;opacity:0.5;" readonly>
                     </td>
                 </tr>
                 @endforeach
                 </tbody>
                 <tfoot>
-                    <tr style="background:rgba(26,61,52,.06);">
-                        <td style="padding:10px 16px;"><span style="font-size:9px;font-weight:800;color:#6B9080;text-transform:uppercase;letter-spacing:.08em;">No. of Areas Assessed: 12 &nbsp;·&nbsp; Formula: Total ÷ 60 × 25</span></td>
+                    <tr style="background:rgba(157,82,104,.06);">
+                        <td style="padding:10px 16px;"><span style="font-size:9px;font-weight:800;color:#E97C7F;text-transform:uppercase;letter-spacing:.08em;">No. of Areas Assessed: 12 &nbsp;·&nbsp; Formula: Total ÷ 60 × 25</span></td>
                         <td class="text-center py-3"><span id="s3Self" class="font-black text-base sc-none">—</span></td>
                         <td class="text-center"><span id="s3Sup" class="font-black text-base sc-none">—</span></td>
                         <td></td>
@@ -846,7 +846,7 @@
         {{-- ═══════════════════════════════════════════════════════
              SECTION 4 — ATTENDANCE
         ═══════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
+        <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden mb-6 print-sec">
             <div class="sec-bar"><div class="sec-num">4</div><span class="sec-title">Attendance Record</span></div>
             <div class="px-6 py-6">
                 @if($attendanceSummary['has_data'])
@@ -864,7 +864,7 @@
                             ['label' => 'Annual Leave',   'value' => $attendanceSummary['al_days'],             'color' => 'text-violet-600'],
                             ['label' => 'Other Leave',    'value' => $attendanceSummary['other_leave_days'],    'color' => 'text-slate-500'],
                         ] as $af)
-                        <div class="border border-[#6B9080]/20 rounded-xl px-4 py-3 bg-slate-50/60 text-center">
+                        <div class="border border-[#E97C7F]/20 rounded-xl px-4 py-3 bg-slate-50/60 text-center">
                             <p class="text-[10px] text-slate-500 uppercase tracking-wide mb-1">{{ $af['label'] }}</p>
                             <p class="text-2xl font-black {{ $af['color'] }}">{{ $af['value'] }}</p>
                         </div>
@@ -899,23 +899,23 @@
                     5 => ['label' => 'Disciplinary Matters', 'desc' => 'Issuance of Reminder, Warning, or Showcause Letters.'],
                 ];
                 @endphp
-                <div class="mt-5 overflow-hidden rounded-xl border border-[#6B9080]/25">
-                    <div style="background:rgba(26,61,52,.06);padding:10px 16px;border-bottom:1px solid rgba(107,144,128,.15);display:flex;align-items:center;justify-content:space-between;">
-                        <span style="font-size:10px;font-weight:900;color:#1a3d34;text-transform:uppercase;letter-spacing:.1em;">Attendance Score Assessment · {{ $qLabel }}</span>
-                        <span style="font-size:9px;font-weight:700;color:#6B9080;">Auto-scored · Max 5 pts → 5% of overall &nbsp;·&nbsp; 0=1pt · 1–5=0.7 · 6–10=0.3 · ≥11=0</span>
+                <div class="mt-5 overflow-hidden rounded-xl border border-[#E97C7F]/25">
+                    <div style="background:rgba(157,82,104,.06);padding:10px 16px;border-bottom:1px solid rgba(233,124,127,.15);display:flex;align-items:center;justify-content:space-between;">
+                        <span style="font-size:10px;font-weight:900;color:#9D5268;text-transform:uppercase;letter-spacing:.1em;">Attendance Score Assessment · {{ $qLabel }}</span>
+                        <span style="font-size:9px;font-weight:700;color:#E97C7F;">Auto-scored · Max 5 pts → 5% of overall &nbsp;·&nbsp; 0=1pt · 1–5=0.7 · 6–10=0.3 · ≥11=0</span>
                     </div>
                     <table style="width:100%;border-collapse:collapse;">
                         <thead>
-                            <tr style="background:rgba(107,144,128,.08);border-bottom:1px solid rgba(107,144,128,.15);">
-                                <th style="padding:8px 14px;text-align:left;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#6B9080;width:145px;">Category</th>
-                                <th style="padding:8px 14px;text-align:left;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#6B9080;">Description</th>
-                                <th style="padding:8px 14px;text-align:center;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#6B9080;width:90px;">Count</th>
-                                <th style="padding:8px 14px;text-align:center;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#6B9080;width:80px;">Score</th>
+                            <tr style="background:rgba(233,124,127,.08);border-bottom:1px solid rgba(233,124,127,.15);">
+                                <th style="padding:8px 14px;text-align:left;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#E97C7F;width:145px;">Category</th>
+                                <th style="padding:8px 14px;text-align:left;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#E97C7F;">Description</th>
+                                <th style="padding:8px 14px;text-align:center;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#E97C7F;width:90px;">Count</th>
+                                <th style="padding:8px 14px;text-align:center;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#E97C7F;width:80px;">Score</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($attCriteria as $ai => $ac)
-                            <tr style="border-bottom:1px solid rgba(107,144,128,.08);{{ $ai%2===0 ? 'background:#fff;' : 'background:rgba(107,144,128,.03);' }}">
+                            <tr style="border-bottom:1px solid rgba(233,124,127,.08);{{ $ai%2===0 ? 'background:#fff;' : 'background:rgba(233,124,127,.03);' }}">
                                 <td style="padding:10px 14px;font-size:11px;font-weight:700;color:#1e293b;white-space:nowrap;">{{ $ac['label'] }}</td>
                                 <td style="padding:10px 14px;font-size:11px;color:#64748b;">{{ $ac['desc'] }}</td>
                                 <td style="padding:8px 10px;text-align:center;">
@@ -925,16 +925,16 @@
                                         style="width:60px;padding:4px 6px;text-align:center;font-size:13px;font-weight:700;border:1px solid #d1d5db;border-radius:6px;pointer-events:none;opacity:0.7;cursor:not-allowed;background:#f8fafc;">
                                 </td>
                                 <td style="padding:10px 14px;text-align:center;">
-                                    <span id="att-row-score-{{ $ai }}" style="font-size:14px;font-weight:900;color:#cbd5e1;">—</span>
+                                    <span id="att-row-score-{{ $ai }}" style="font-size:14px;font-weight:900;color:#A6AEC0;">—</span>
                                 </td>
                             </tr>
                             @endforeach
                         </tbody>
                         <tfoot>
-                            <tr style="background:rgba(26,61,52,.06);border-top:1px solid rgba(107,144,128,.15);">
-                                <td colspan="3" style="padding:10px 14px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#1a3d34;text-align:right;">Score Total</td>
+                            <tr style="background:rgba(157,82,104,.06);border-top:1px solid rgba(233,124,127,.15);">
+                                <td colspan="3" style="padding:10px 14px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#9D5268;text-align:right;">Score Total</td>
                                 <td style="padding:10px 14px;text-align:center;">
-                                    <span id="att-score-total" style="font-size:15px;font-weight:900;color:#cbd5e1;">—</span>
+                                    <span id="att-score-total" style="font-size:15px;font-weight:900;color:#A6AEC0;">—</span>
                                     <span style="font-size:9px;font-weight:600;color:#94a3b8;margin-left:3px;">/ 5 pts</span>
                                 </td>
                             </tr>
@@ -953,7 +953,7 @@
              SECTION 5 — CULTURE & VALUES (Q4 only)
         ═══════════════════════════════════════════════════════ --}}
         @if($quarter === 'Q4')
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
+        <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden mb-6 print-sec">
             <div class="sec-bar"><div class="sec-num">5</div><span class="sec-title">Culture &amp; Values Assessment</span></div>
             <div class="px-6 py-6">
                 <p class="text-[11px] text-slate-400 italic mb-5">Rate how consistently the employee demonstrates the company's core values.</p>
@@ -969,7 +969,7 @@
                     <tbody>
                     @php $cultureValues=['Integrity & Honesty','Teamwork & Collaboration','Customer Focus','Innovation & Creativity','Accountability & Ownership','Continuous Learning']; @endphp
                     @foreach($cultureValues as $ci => $cv)
-                    <tr class="{{ $ci%2===0?'bg-white':'bg-slate-50/50' }}" style="border-bottom:1px solid rgba(107,144,128,.10);">
+                    <tr class="{{ $ci%2===0?'bg-white':'bg-slate-50/50' }}" style="border-bottom:1px solid rgba(233,124,127,.10);">
                         <td style="padding:12px 16px;font-size:12px;font-weight:700;color:#1e293b;">{{ $cv }}</td>
                         <td class="text-center" style="padding:10px 8px;">
                             <div class="rating-group justify-center">
@@ -997,7 +997,7 @@
         {{-- ═══════════════════════════════════════════════════════
              SECTION 6 — PERFORMANCE SUMMARY
         ═══════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6 print-sec">
+        <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden mb-6 print-sec">
             <div class="sec-bar"><div class="sec-num">6</div><span class="sec-title">Performance Summary &amp; Analysis</span></div>
             <div class="px-6 py-6 space-y-6">
 
@@ -1005,7 +1005,7 @@
                     <div class="part-label">A &nbsp;·&nbsp; Rating Summary</div>
                     <p class="text-[11px] text-slate-400 italic mb-5">Combined score from all sections of this appraisal review.</p>
                     <div class="grid grid-cols-2 gap-6 items-start">
-                        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden">
+                        <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden">
                             <table class="doc-tbl">
                                 <thead><tr><th class="l">Section</th><th class="c" style="width:100px;">Self Score</th><th class="c" style="width:100px;">Appraiser</th></tr></thead>
                                 @php
@@ -1015,32 +1015,32 @@
                                     }
                                 @endphp
                                 <tbody>
-                                    <tr class="bg-white" style="border-bottom:1px solid rgba(107,144,128,.10);">
+                                    <tr class="bg-white" style="border-bottom:1px solid rgba(233,124,127,.10);">
                                         <td style="padding:12px 14px;"><p style="font-size:11px;font-weight:700;color:#334155;">Section 2</p><p style="font-size:9px;color:#94a3b8;">KPI Performance (70%)</p></td>
-                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s2_self" style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s2_self" id="hid_s6_s2_self"></td>
-                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s2_app"  style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s2_app"  id="hid_s6_s2_app"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s2_self" style="font-size:18px;font-weight:900;color:#A6AEC0;">—</span><input type="hidden" name="s6_s2_self" id="hid_s6_s2_self"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s2_app"  style="font-size:18px;font-weight:900;color:#A6AEC0;">—</span><input type="hidden" name="s6_s2_app"  id="hid_s6_s2_app"></td>
                                     </tr>
-                                    <tr class="bg-slate-50/50" style="border-bottom:1px solid rgba(107,144,128,.10);">
+                                    <tr class="bg-slate-50/50" style="border-bottom:1px solid rgba(233,124,127,.10);">
                                         <td style="padding:12px 14px;"><p style="font-size:11px;font-weight:700;color:#334155;">Section 3</p><p style="font-size:9px;color:#94a3b8;">Attitude &amp; Competency (25%)</p></td>
-                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s3_self" style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s3_self" id="hid_s6_s3_self"></td>
-                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s3_app"  style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s3_app"  id="hid_s6_s3_app"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s3_self" style="font-size:18px;font-weight:900;color:#A6AEC0;">—</span><input type="hidden" name="s6_s3_self" id="hid_s6_s3_self"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s3_app"  style="font-size:18px;font-weight:900;color:#A6AEC0;">—</span><input type="hidden" name="s6_s3_app"  id="hid_s6_s3_app"></td>
                                     </tr>
-                                    <tr class="bg-white" style="border-bottom:1px solid rgba(107,144,128,.10);">
+                                    <tr class="bg-white" style="border-bottom:1px solid rgba(233,124,127,.10);">
                                         <td style="padding:12px 14px;"><p style="font-size:11px;font-weight:700;color:#334155;">Section 4</p><p style="font-size:9px;color:#94a3b8;">Attendance (5%)</p></td>
-                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s4_self" style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s4_self" id="hid_s6_s4_self"></td>
-                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s4_app"  style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s4_app"  id="hid_s6_s4_app"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s4_self" style="font-size:18px;font-weight:900;color:#A6AEC0;">—</span><input type="hidden" name="s6_s4_self" id="hid_s6_s4_self"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s4_app"  style="font-size:18px;font-weight:900;color:#A6AEC0;">—</span><input type="hidden" name="s6_s4_app"  id="hid_s6_s4_app"></td>
                                     </tr>
                                     @if($quarter === 'Q4')
-                                    <tr class="bg-slate-50/50" style="border-bottom:1px solid rgba(107,144,128,.10);">
+                                    <tr class="bg-slate-50/50" style="border-bottom:1px solid rgba(233,124,127,.10);">
                                         <td style="padding:12px 14px;"><p style="font-size:11px;font-weight:700;color:#334155;">Section 5</p><p style="font-size:9px;color:#94a3b8;">Culture &amp; Values (5%)</p></td>
-                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s5_self" style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s5_self" id="hid_s6_s5_self"></td>
-                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s5_app"  style="font-size:18px;font-weight:900;color:#cbd5e1;">—</span><input type="hidden" name="s6_s5_app"  id="hid_s6_s5_app"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s5_self" style="font-size:18px;font-weight:900;color:#A6AEC0;">—</span><input type="hidden" name="s6_s5_self" id="hid_s6_s5_self"></td>
+                                        <td class="text-center" style="padding:12px;"><span id="disp_s6_s5_app"  style="font-size:18px;font-weight:900;color:#A6AEC0;">—</span><input type="hidden" name="s6_s5_app"  id="hid_s6_s5_app"></td>
                                     </tr>
                                     @endif
-                                    <tr style="background:linear-gradient(90deg,rgba(26,61,52,.06),rgba(107,144,128,.04));">
-                                        <td style="padding:12px 14px;"><p style="font-size:12px;font-weight:900;color:#1a3d34;text-transform:uppercase;letter-spacing:.05em;">Total Rating</p><p style="font-size:9px;color:#94a3b8;">Combined score</p></td>
-                                        <td class="text-center" style="padding:12px;"><span id="s6SelfTotal" style="font-size:20px;font-weight:900;color:#cbd5e1;">—</span></td>
-                                        <td class="text-center" style="padding:12px;"><span id="s6AppTotal" style="font-size:20px;font-weight:900;color:#cbd5e1;">—</span></td>
+                                    <tr style="background:linear-gradient(90deg,rgba(157,82,104,.06),rgba(233,124,127,.04));">
+                                        <td style="padding:12px 14px;"><p style="font-size:12px;font-weight:900;color:#9D5268;text-transform:uppercase;letter-spacing:.05em;">Total Rating</p><p style="font-size:9px;color:#94a3b8;">Combined score</p></td>
+                                        <td class="text-center" style="padding:12px;"><span id="s6SelfTotal" style="font-size:20px;font-weight:900;color:#A6AEC0;">—</span></td>
+                                        <td class="text-center" style="padding:12px;"><span id="s6AppTotal" style="font-size:20px;font-weight:900;color:#A6AEC0;">—</span></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1049,7 +1049,7 @@
                         {{-- Bell curve: right column, side-by-side with rating table --}}
                         <div>
                             <p class="f-label mb-3">Performance Distribution</p>
-                            <div style="background:linear-gradient(180deg,#f7faf9 0%,#ffffff 100%);border-radius:16px;padding:20px 12px 12px;border:1px solid rgba(107,144,128,.15);">
+                            <div style="background:linear-gradient(180deg,#f7faf9 0%,#ffffff 100%);border-radius:16px;padding:20px 12px 12px;border:1px solid rgba(233,124,127,.15);">
                             <svg viewBox="0 0 1000 370" style="width:100%;display:block;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
                                 <defs>
                                     {{-- Gaussian bell: σ=150, 4 equal zones of 250px, peak at x=500 y=40, baseline y=300 --}}
@@ -1115,7 +1115,7 @@
                                     <circle id="bellDot" cx="500" cy="100" r="9" fill="#1e293b" stroke="white" stroke-width="3"/>
                                     <rect id="bellBg" x="440" y="-58" width="120" height="48" rx="10" ry="10" fill="white" stroke="#1e293b" stroke-width="1.5" filter="url(#bc_shadow)"/>
                                     <text id="bellScoreNum" x="500" y="-25" text-anchor="middle" fill="#1e293b" style="font-size:22px;font-weight:900;"></text>
-                                    <text id="bellGradeName" x="500" y="-11" text-anchor="middle" fill="#6B9080" style="font-size:10px;font-weight:700;"></text>
+                                    <text id="bellGradeName" x="500" y="-11" text-anchor="middle" fill="#E97C7F" style="font-size:10px;font-weight:700;"></text>
                                 </g>
                             </svg>
                             </div>
@@ -1123,7 +1123,7 @@
                     </div>
                 </div>
 
-                <div class="border-t border-dashed border-[#6B9080]/20"></div>
+                <div class="border-t border-dashed border-[#E97C7F]/20"></div>
 
                 <div id="sec6b">
                     <div class="flex items-center justify-between mb-1">
@@ -1134,14 +1134,14 @@
                     <div class="grid grid-cols-2 gap-5">
                         @foreach([['label'=>'Strengths','name'=>'s6_strengths'],['label'=>'Work Ethics / Attitude','name'=>'s6_ethics'],['label'=>'Areas Need Improvement','name'=>'s6_improvement'],['label'=>'Training Required','name'=>'s6_training']] as $pf)
                         <div>
-                            <div class="flex items-center gap-2 mb-2"><span class="w-1.5 h-1.5 rounded-full bg-[#6B9080] flex-shrink-0"></span><p class="f-label">{{ $pf['label'] }}</p></div>
+                            <div class="flex items-center gap-2 mb-2"><span class="w-1.5 h-1.5 rounded-full bg-[#E97C7F] flex-shrink-0"></span><p class="f-label">{{ $pf['label'] }}</p></div>
                             <input type="text" name="{{ $pf['name'] }}" placeholder="—" class="f-input" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;">
                         </div>
                         @endforeach
                     </div>
                 </div>
 
-                <div class="border-t border-dashed border-[#6B9080]/20"></div>
+                <div class="border-t border-dashed border-[#E97C7F]/20"></div>
 
                 <div id="sec6b_sig">
                     <p class="text-[11px] text-slate-500 italic leading-relaxed mb-6">I hereby confirm that the foregoing appraisal is a fair and objective evaluation of the appraisee's performance during the period under review.</p>
@@ -1149,9 +1149,9 @@
                         <div style="width:280px;">
                             {{-- Appraiser signature — locked for appraisee --}}
                             <div class="sig-pad-wrap" data-sig-id="sig_appraiser" style="pointer-events:none;opacity:0.55;">
-                                <div style="border:2px dashed rgba(107,144,128,.3);border-radius:10px;background:#f8fafc;position:relative;overflow:hidden;">
+                                <div style="border:2px dashed rgba(233,124,127,.3);border-radius:10px;background:#f8fafc;position:relative;overflow:hidden;">
                                     <canvas class="sig-canvas" width="560" height="110" style="width:100%;height:110px;display:block;"></canvas>
-                                    <div class="sig-hint" style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:11px;font-weight:600;">Appraiser signature</div>
+                                    <div class="sig-hint" style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#A6AEC0;font-size:11px;font-weight:600;">Appraiser signature</div>
                                 </div>
                                 <input type="hidden" name="sig_appraiser" class="sig-hidden">
                             </div>
@@ -1162,7 +1162,7 @@
                     </div>
                 </div>
 
-                <div class="border-t border-dashed border-[#6B9080]/20"></div>
+                <div class="border-t border-dashed border-[#E97C7F]/20"></div>
 
                 @php
                     // Appraisee can only sign after the appraiser has reviewed and signed (status = appraised).
@@ -1170,7 +1170,7 @@
                 @endphp
                 <div id="sec6_ack">
                     <div class="flex items-center justify-between mb-1">
-                        <p class="text-[11px] text-slate-500 italic leading-relaxed flex-1">I hereby confirm that I have read, understood and accept/disagree with the foregoing appraisal. <span class="text-[#6B9080] font-semibold not-italic">(If you disagree please specify below)</span></p>
+                        <p class="text-[11px] text-slate-500 italic leading-relaxed flex-1">I hereby confirm that I have read, understood and accept/disagree with the foregoing appraisal. <span class="text-[#E97C7F] font-semibold not-italic">(If you disagree please specify below)</span></p>
                         @if(!($isAppraiserView ?? false) && !$ackUnlocked)
                         <span style="font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:.08em;display:flex;align-items:center;gap:4px;white-space:nowrap;margin-left:12px;">🔒 AFTER APPRAISER SIGNS</span>
                         @endif
@@ -1180,9 +1180,9 @@
                         <div style="width:280px;">
                             {{-- Appraisee signature — unlocked only once the appraiser has signed --}}
                             <div class="sig-pad-wrap" data-sig-id="sig_appraisee"@if(!$ackUnlocked) style="pointer-events:none;opacity:0.55;"@endif>
-                                <div style="border:2px dashed rgba(107,144,128,.5);border-radius:10px;background:#f9fafb;position:relative;overflow:hidden;cursor:crosshair;">
+                                <div style="border:2px dashed rgba(233,124,127,.5);border-radius:10px;background:#f9fafb;position:relative;overflow:hidden;cursor:crosshair;">
                                     <canvas class="sig-canvas" width="560" height="110" style="width:100%;height:110px;display:block;touch-action:none;"></canvas>
-                                    <div class="sig-hint" style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:11px;font-weight:600;">{{ $ackUnlocked ? '✍ Draw signature here' : 'Available after appraiser signs' }}</div>
+                                    <div class="sig-hint" style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#A6AEC0;font-size:11px;font-weight:600;">{{ $ackUnlocked ? '✍ Draw signature here' : 'Available after appraiser signs' }}</div>
                                 </div>
                                 <div style="display:flex;gap:6px;margin-top:6px;justify-content:center;">
                                     <button type="button" onclick="sigClear(this)" style="font-size:10px;padding:3px 12px;border-radius:6px;border:1px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;font-weight:600;">Clear</button>
@@ -1199,7 +1199,7 @@
                     </div>
                     @if($ackUnlocked)
                     <div class="flex justify-end mt-4 no-print">
-                        <button id="ackBtn" type="button" onclick="confirmAcknowledge()" style="display:flex;align-items:center;gap:6px;padding:10px 22px;border-radius:12px;font-size:12px;font-weight:700;border:none;background:linear-gradient(135deg,#2d5548,#4a7c6b);color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(45,85,72,.30);">
+                        <button id="ackBtn" type="button" onclick="confirmAcknowledge()" style="display:flex;align-items:center;gap:6px;padding:10px 22px;border-radius:12px;font-size:12px;font-weight:700;border:none;background:linear-gradient(135deg,#B97891,#9D5268);color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(185,120,145,.30);">
                             ✍ Sign &amp; Acknowledge
                         </button>
                     </div>
@@ -1212,12 +1212,12 @@
         {{-- ═══════════════════════════════════════════════════════
              SECTION 7 — RECOMMENDATIONS & DECISIONS
         ═══════════════════════════════════════════════════════ --}}
-        <div id="sec7" class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-2 print-sec">
+        <div id="sec7" class="border border-[#E97C7F]/25 rounded-xl overflow-hidden mb-2 print-sec">
             <div class="sec-bar"><div class="sec-num">7</div><span class="sec-title">Recommendations &amp; Decisions</span><span style="margin-left:auto;font-size:10px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.08em;">🔒 APPRAISER ONLY</span></div>
             <div class="px-6 py-6 space-y-7">
                 @php $sec7=[['key'=>'manager','label'=>'A','title'=>'Promotability and Other Remarks and Recommendations by the Appraiser (Manager)'],['key'=>'vp','label'=>'B','title'=>'Remarks and/or Recommendations by VP'],['key'=>'slt','label'=>'C','title'=>'Remarks by SLT']]; @endphp
                 @foreach($sec7 as $idx => $blk)
-                @if($idx>0)<div class="border-t border-dashed border-[#6B9080]/20 pt-7"></div>@endif
+                @if($idx>0)<div class="border-t border-dashed border-[#E97C7F]/20 pt-7"></div>@endif
                 <div id="sec7_{{ $blk['key'] }}">
                     <div class="part-label">{{ $blk['label'] }} &nbsp;·&nbsp; {{ $blk['title'] }}</div>
                     <textarea name="s7_{{ $blk['key'] }}_remarks" rows="4" placeholder="—" class="f-area mb-5" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;resize:none;"></textarea>
@@ -1226,22 +1226,22 @@
                             @foreach(['confirmation','salary_review','promotion'] as $oi => $okey)
                             @php $olabel = ['Confirmation','Salary Review','Promotion'][$oi]; @endphp
                             <label class="flex items-center gap-2 select-none" style="pointer-events:none;opacity:0.55;cursor:not-allowed;">
-                                <span class="w-4 h-4 rounded border-2 border-[#6B9080]/40 flex items-center justify-center"><input type="checkbox" name="s7_{{ $blk['key'] }}_{{ $okey }}" id="s7_{{ $blk['key'] }}_{{ $okey }}" class="sr-only peer"><span class="w-2.5 h-2.5 rounded-sm bg-[#6B9080] hidden peer-checked:block"></span></span>
+                                <span class="w-4 h-4 rounded border-2 border-[#E97C7F]/40 flex items-center justify-center"><input type="checkbox" name="s7_{{ $blk['key'] }}_{{ $okey }}" id="s7_{{ $blk['key'] }}_{{ $okey }}" class="sr-only peer"><span class="w-2.5 h-2.5 rounded-sm bg-[#E97C7F] hidden peer-checked:block"></span></span>
                                 <span class="text-[11px] font-semibold text-slate-700">{{ $olabel }}</span>
                             </label>
                             @endforeach
                         </div>
                         <div style="min-width:224px;">
                             <div class="sig-pad-wrap" data-sig-id="s7_{{ $blk['key'] }}_sig" style="pointer-events:none;opacity:0.55;">
-                                <div style="border:2px dashed rgba(107,144,128,.3);border-radius:10px;background:#f8fafc;position:relative;overflow:hidden;">
+                                <div style="border:2px dashed rgba(233,124,127,.3);border-radius:10px;background:#f8fafc;position:relative;overflow:hidden;">
                                     <canvas class="sig-canvas" width="448" height="90" style="width:100%;height:90px;display:block;"></canvas>
-                                    <div class="sig-hint" style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:11px;font-weight:600;">Signature</div>
+                                    <div class="sig-hint" style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;color:#A6AEC0;font-size:11px;font-weight:600;">Signature</div>
                                 </div>
                                 <input type="hidden" name="s7_{{ $blk['key'] }}_sig" class="sig-hidden">
                             </div>
                             <div class="flex items-center gap-2 mt-2 justify-center">
                                 <span class="f-label">Date</span>
-                                <input type="date" name="s7_{{ $blk['key'] }}_date" class="border border-[#6B9080]/25 rounded-lg px-2 py-1 text-xs text-slate-600 bg-white outline-none" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;">
+                                <input type="date" name="s7_{{ $blk['key'] }}_date" class="border border-[#E97C7F]/25 rounded-lg px-2 py-1 text-xs text-slate-600 bg-white outline-none" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;">
                             </div>
                         </div>
                     </div>
@@ -1255,13 +1255,13 @@
 
 @if(!($isAppraiserView ?? false) && $isWindowOpen && ($status ?? 'draft') === 'draft')
 {{-- ── Fixed bottom action bar (hidden on print) ── --}}
-<div class="no-print" style="position:fixed;bottom:0;left:230px;right:0;z-index:50;background:#ffffff;border-top:1px solid rgba(107,144,128,.20);padding:14px 110px 14px 32px;display:flex;align-items:center;justify-content:flex-end;gap:10px;box-shadow:0 -4px 24px rgba(15,23,42,.08);pointer-events:none;">
+<div class="no-print" style="position:fixed;bottom:0;left:230px;right:0;z-index:50;background:#ffffff;border-top:1px solid rgba(233,124,127,.20);padding:14px 110px 14px 32px;display:flex;align-items:center;justify-content:flex-end;gap:10px;box-shadow:0 -4px 24px rgba(15,23,42,.08);pointer-events:none;">
     <span style="font-size:11px;font-weight:600;color:#94a3b8;margin-right:6px;">Evaluation window open until {{ $windowEnd }}</span>
     <button id="draftBtn" onclick="saveEvaluation('draft')" style="pointer-events:auto;display:flex;align-items:center;gap:6px;padding:10px 20px;border-radius:12px;font-size:12px;font-weight:700;border:1.5px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
         <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Save Draft
     </button>
-    <button id="submitBtn" onclick="confirmSubmit()" style="pointer-events:auto;display:flex;align-items:center;gap:6px;padding:10px 22px;border-radius:12px;font-size:12px;font-weight:700;border:none;background:linear-gradient(135deg,#2d5548,#4a7c6b);color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(45,85,72,.30);transition:opacity .15s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+    <button id="submitBtn" onclick="confirmSubmit()" style="pointer-events:auto;display:flex;align-items:center;gap:6px;padding:10px 22px;border-radius:12px;font-size:12px;font-weight:700;border:none;background:linear-gradient(135deg,#B97891,#9D5268);color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(185,120,145,.30);transition:opacity .15s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
         ↑ Submit to Appraiser
     </button>
 </div>
@@ -1271,13 +1271,13 @@
 
 @if(($isAppraiserView ?? false) && !($myLevelLocked ?? false))
 {{-- ── Appraiser's fixed bottom action bar (hidden on print) — sits last, mirrors the appraisee's own Save Draft / Submit bar ── --}}
-<div id="apprActionBar" class="no-print" style="position:fixed;bottom:0;left:230px;right:0;z-index:50;background:#ffffff;border-top:1px solid rgba(107,144,128,.20);padding:14px 110px 14px 32px;display:flex;align-items:center;justify-content:flex-end;gap:10px;box-shadow:0 -4px 24px rgba(15,23,42,.08);pointer-events:none;">
+<div id="apprActionBar" class="no-print" style="position:fixed;bottom:0;left:230px;right:0;z-index:50;background:#ffffff;border-top:1px solid rgba(233,124,127,.20);padding:14px 110px 14px 32px;display:flex;align-items:center;justify-content:flex-end;gap:10px;box-shadow:0 -4px 24px rgba(15,23,42,.08);pointer-events:none;">
     <span style="font-size:11px;font-weight:600;color:#94a3b8;margin-right:6px;">Appraiser view — {{ $currentUserName }}</span>
     <button id="apprDraftBtn" onclick="saveEvaluation('draft')" style="pointer-events:auto;display:flex;align-items:center;gap:6px;padding:10px 20px;border-radius:12px;font-size:12px;font-weight:700;border:1.5px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
         <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Save Draft
     </button>
-    <button id="apprSubmitBtn" onclick="confirmAppraiserSubmit()" style="pointer-events:auto;display:flex;align-items:center;gap:6px;padding:10px 22px;border-radius:12px;font-size:12px;font-weight:700;border:none;background:linear-gradient(135deg,#2d5548,#4a7c6b);color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(45,85,72,.30);transition:opacity .15s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+    <button id="apprSubmitBtn" onclick="confirmAppraiserSubmit()" style="pointer-events:auto;display:flex;align-items:center;gap:6px;padding:10px 22px;border-radius:12px;font-size:12px;font-weight:700;border:none;background:linear-gradient(135deg,#B97891,#9D5268);color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(185,120,145,.30);transition:opacity .15s;" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
         {{ ($appraiserLevel ?? '') === 'manager' ? '✓ Submit & Mark as Appraised' : '✓ Submit' }}
     </button>
 </div>
@@ -1301,10 +1301,10 @@
     <div style="background:#fff;border-radius:20px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(15,23,42,.35);">
         <div style="position:sticky;top:0;background:#fff;padding:16px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;z-index:1;">
             <div style="min-width:0;">
-                <p id="qdTitle" style="font-size:14px;font-weight:900;color:#1a3d34;line-height:1.35;margin:0 0 6px;"></p>
+                <p id="qdTitle" style="font-size:14px;font-weight:900;color:#9D5268;line-height:1.35;margin:0 0 6px;"></p>
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
                     <span id="qdQuarter" class="q-tag"></span>
-                    <span id="qdWeight" style="font-size:8px;font-weight:900;color:#6B9080;background:#fff;border:1px solid rgba(107,144,128,.25);padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;"></span>
+                    <span id="qdWeight" style="font-size:8px;font-weight:900;color:#E97C7F;background:#fff;border:1px solid rgba(233,124,127,.25);padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;"></span>
                 </div>
                 <p id="qdSubtitle" style="font-size:10px;color:#94a3b8;margin:2px 0 0;"></p>
             </div>
@@ -1335,7 +1335,7 @@
             </div>
             <div style="margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0;">
                 <button type="button" id="qdAniraToggle" onclick="toggleAniraScore()" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:0;cursor:pointer;">
-                    <span style="font-size:10px;font-weight:900;color:#1a3d34;text-transform:uppercase;letter-spacing:.06em;">🤖 ANIRA Score</span>
+                    <span style="font-size:10px;font-weight:900;color:#9D5268;text-transform:uppercase;letter-spacing:.06em;">🤖 ANIRA Score</span>
                     <span id="qdAniraChevron" style="font-size:11px;color:#94a3b8;">▾</span>
                 </button>
                 <div id="qdAniraBody" style="display:none;margin-top:10px;"></div>
@@ -1367,10 +1367,10 @@ function openQuarterDetail(btn) {
     document.getElementById('qdTarget').textContent = detail.target !== null ? detail.target : '—';
 
     var pct = detail.progress || 0;
-    var style = pct >= 90 ? {bg:'#ecfdf5', text:'#059669'}
-        : pct >= 70 ? {bg:'#f0f9f6', text:'#6B9080'}
-        : pct >= 50 ? {bg:'#fffbeb', text:'#d97706'}
-        : {bg:'#fef2f2', text:'#dc2626'};
+    var style = pct >= 90 ? {bg:'#EAF6EE', text:'#4D9A69'}
+        : pct >= 70 ? {bg:'#EAF6EE', text:'#4D9A69'}
+        : pct >= 50 ? {bg:'#FFF5DC', text:'#E6AA37'}
+        : {bg:'#FCEDEC', text:'#D96368'};
     var progressBox = document.getElementById('qdProgressBox');
     progressBox.style.background = style.bg;
     document.getElementById('qdProgressLabel').style.color = style.text;
@@ -1397,7 +1397,7 @@ function openQuarterDetail(btn) {
                 img.style.cssText = 'width:44px;height:44px;border-radius:10px;object-fit:cover;border:1px solid #e2e8f0;display:block;';
                 a.appendChild(img);
             } else {
-                a.style.cssText = 'display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:#1a3d34;background:rgba(107,144,128,.10);border:1px solid rgba(107,144,128,.30);border-radius:8px;padding:5px 8px;text-decoration:none;';
+                a.style.cssText = 'display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:#9D5268;background:rgba(233,124,127,.10);border:1px solid rgba(233,124,127,.30);border-radius:8px;padding:5px 8px;text-decoration:none;';
                 a.textContent = '📎 ' + (f.name || 'File');
             }
             filesWrap.appendChild(a);
@@ -1482,10 +1482,10 @@ function renderAniraScore(data) {
     body.innerHTML = '';
 
     var verdictStyles = {
-        'Excellent':       {bg:'#ecfdf5', text:'#059669'},
-        'Good':            {bg:'#f0f9f6', text:'#6B9080'},
-        'Needs Attention': {bg:'#fffbeb', text:'#d97706'},
-        'Critical':        {bg:'#fef2f2', text:'#dc2626'},
+        'Excellent':       {bg:'#EAF6EE', text:'#4D9A69'},
+        'Good':            {bg:'#EAF6EE', text:'#4D9A69'},
+        'Needs Attention': {bg:'#FFF5DC', text:'#E6AA37'},
+        'Critical':        {bg:'#FCEDEC', text:'#D96368'},
     };
     var vs = verdictStyles[data.verdict] || {bg:'#f1f5f9', text:'#64748b'};
 
@@ -1576,14 +1576,14 @@ function renderAniraScore(data) {
         }
         var selfEl = document.getElementById('s3Self');
         var supEl  = document.getElementById('s3Sup');
-        function scoreColor(v) { return v >= 50 ? '#059669' : v >= 40 ? '#6B9080' : v >= 30 ? '#d97706' : '#dc2626'; }
+        function scoreColor(v) { return v >= 50 ? '#4D9A69' : v >= 40 ? '#4D9A69' : v >= 30 ? '#E6AA37' : '#D96368'; }
         if (selfEl) {
             if (selfCount > 0) { var s = (selfTotal / 60 * 25).toFixed(1); selfEl.textContent = s; selfEl.style.color = scoreColor(parseFloat(s)); }
-            else { selfEl.textContent = '—'; selfEl.style.color = '#cbd5e1'; }
+            else { selfEl.textContent = '—'; selfEl.style.color = '#A6AEC0'; }
         }
         if (supEl) {
             if (supCount > 0) { var s2 = (supTotal / 60 * 25).toFixed(1); supEl.textContent = s2; supEl.style.color = scoreColor(parseFloat(s2)); }
-            else { supEl.textContent = '—'; supEl.style.color = '#cbd5e1'; }
+            else { supEl.textContent = '—'; supEl.style.color = '#A6AEC0'; }
         }
     }
     // This whole script block is wrapped in an IIFE, so plain function
@@ -1617,7 +1617,7 @@ function renderAniraScore(data) {
             var score = attScoreFromCount(cnt);
             var rowEl = document.getElementById('att-row-score-' + i);
             if (rowEl) {
-                var clr = score >= 1 ? '#059669' : score >= 0.7 ? '#6B9080' : score >= 0.3 ? '#d97706' : '#dc2626';
+                var clr = score >= 1 ? '#4D9A69' : score >= 0.7 ? '#4D9A69' : score >= 0.3 ? '#E6AA37' : '#D96368';
                 rowEl.textContent = score.toFixed(2);
                 rowEl.style.color = clr;
             }
@@ -1626,14 +1626,14 @@ function renderAniraScore(data) {
         if (!found) return null;
         var totalEl = document.getElementById('att-score-total');
         if (totalEl) {
-            var clr = total >= 4.5 ? '#059669' : total >= 3 ? '#6B9080' : total >= 2 ? '#d97706' : '#dc2626';
+            var clr = total >= 4.5 ? '#4D9A69' : total >= 3 ? '#4D9A69' : total >= 2 ? '#E6AA37' : '#D96368';
             totalEl.textContent = total.toFixed(2);
             totalEl.style.color = clr;
         }
         return total;
     }
 
-    function s6Clr(v){ return v>=90?'#15803d':v>=80?'#16a34a':v>=50?'#d97706':v>=35?'#ea6f00':'#e85d04'; }
+    function s6Clr(v){ return v>=90?'#4D9A69':v>=80?'#4D9A69':v>=50?'#E6AA37':v>=35?'#E6AA37':'#D96368'; }
 
     function scoreToX(s) {
         if (s <= 49)  return (s - 1)  / 48 * 250;
@@ -1679,10 +1679,10 @@ function renderAniraScore(data) {
         var num = (val !== null && !isNaN(parseFloat(val))) ? parseFloat(val) : null;
         var d = document.getElementById('disp_' + key);
         var h = document.getElementById('hid_'  + key);
-        if (d) { d.textContent = num !== null ? num.toFixed(1) : '—'; d.style.color = num !== null ? s6Clr(num) : '#cbd5e1'; }
+        if (d) { d.textContent = num !== null ? num.toFixed(1) : '—'; d.style.color = num !== null ? s6Clr(num) : '#A6AEC0'; }
         if (h) h.value = num !== null ? num : '';
     }
-    function s2Clr(v){ return v>=4.5?'#059669':v>=3.5?'#6B9080':v>=2.5?'#d97706':'#dc2626'; }
+    function s2Clr(v){ return v>=4.5?'#4D9A69':v>=3.5?'#4D9A69':v>=2.5?'#E6AA37':'#D96368'; }
     function updateS6() {
         // S2: weighted sum of kpi_self / kpi_app → scale to 70
         var s2Self = 0, s2App = 0, s2Wt = 0, s2AppWt = 0;
@@ -1703,9 +1703,9 @@ function renderAniraScore(data) {
         var totEl   = document.getElementById('sec2Total');
         var appEl   = document.getElementById('sec2AppPct');
         var pctEl   = document.getElementById('sec2Pct');
-        if (totEl) { if (selfAvg!==null){totEl.textContent=selfAvg.toFixed(2);totEl.style.color=s2Clr(selfAvg);} else {totEl.textContent='—';totEl.style.color='#cbd5e1';} }
-        if (appEl)  { if (appAvg!==null){appEl.textContent=appAvg.toFixed(2);appEl.style.color=s2Clr(appAvg);} else {appEl.textContent='—';appEl.style.color='#cbd5e1';} }
-        if (pctEl)  { var pct=selfAvg!==null?(selfAvg/5*70):null; if(pct!==null){pctEl.textContent=pct.toFixed(1)+'%';pctEl.style.color=s2Clr(pct/14);} else {pctEl.textContent='—';pctEl.style.color='#cbd5e1';} }
+        if (totEl) { if (selfAvg!==null){totEl.textContent=selfAvg.toFixed(2);totEl.style.color=s2Clr(selfAvg);} else {totEl.textContent='—';totEl.style.color='#A6AEC0';} }
+        if (appEl)  { if (appAvg!==null){appEl.textContent=appAvg.toFixed(2);appEl.style.color=s2Clr(appAvg);} else {appEl.textContent='—';appEl.style.color='#A6AEC0';} }
+        if (pctEl)  { var pct=selfAvg!==null?(selfAvg/5*70):null; if(pct!==null){pctEl.textContent=pct.toFixed(1)+'%';pctEl.style.color=s2Clr(pct/14);} else {pctEl.textContent='—';pctEl.style.color='#A6AEC0';} }
 
         // S3: from live s3Self / s3Sup spans
         var s3ST = document.getElementById('s3Self')?.textContent;
@@ -1739,8 +1739,8 @@ function renderAniraScore(data) {
         selfKeys.forEach(function(k){ var v=parseFloat(document.getElementById('hid_'+k)?.value); if(!isNaN(v)){sSum+=v;sCnt++;} });
         appKeys.forEach(function(k){  var v=parseFloat(document.getElementById('hid_'+k)?.value); if(!isNaN(v)){aSum+=v;aCnt++;} });
         var sEl=document.getElementById('s6SelfTotal'), aEl=document.getElementById('s6AppTotal');
-        if(sEl){sEl.textContent=sCnt>0?sSum.toFixed(1):'—';sEl.style.color=sCnt>0?s6Clr(sSum):'#cbd5e1';}
-        if(aEl){aEl.textContent=aCnt>0?aSum.toFixed(1):'—';aEl.style.color=aCnt>0?s6Clr(aSum):'#cbd5e1';}
+        if(sEl){sEl.textContent=sCnt>0?sSum.toFixed(1):'—';sEl.style.color=sCnt>0?s6Clr(sSum):'#A6AEC0';}
+        if(aEl){aEl.textContent=aCnt>0?aSum.toFixed(1):'—';aEl.style.color=aCnt>0?s6Clr(aSum):'#A6AEC0';}
         updateGauge(sCnt > 0 ? sSum : null);
     }
     window.updateS6 = updateS6;
@@ -1839,7 +1839,7 @@ function lockForm() {
 function showToast(msg, ok) {
     const t = document.getElementById('toast');
     t.textContent = msg;
-    t.style.background   = ok ? '#059669' : '#dc2626';
+    t.style.background   = ok ? '#4D9A69' : '#D96368';
     t.style.color        = '#fff';
     t.style.display      = 'block';
     t.style.opacity      = '1';

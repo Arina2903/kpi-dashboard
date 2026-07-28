@@ -255,7 +255,7 @@
                 ${card(`
                     <p class="text-[13px] font-black text-slate-900">${d.company_display_name}</p>
                     <p class="text-[11px] text-slate-500 mt-0.5">${d.short_name} · <span class="uppercase font-semibold">${d.role || ''}</span></p>
-                `, 'hover:border-[#6B9080]')}
+                `, 'hover:border-[#E97C7F]')}
             </button>
         `).join('');
         document.getElementById('app').innerHTML = `<div class="space-y-2">${rows}</div>`;
@@ -458,7 +458,7 @@
         const badge = achvBadge(pct);
         const extraKpis = (t.linked_kpis || []).filter(k => k.kpi_id !== primaryKpiId);
         const extraChips = extraKpis.length
-            ? `<div class="flex flex-wrap gap-1.5 mt-2">${extraKpis.map(k => `<span class="px-2 py-0.5 rounded-full bg-[#CCE3DE] text-[#1a3d34] text-[8px] font-black">🔗 ${k.kpi_title}</span>`).join('')}</div>`
+            ? `<div class="flex flex-wrap gap-1.5 mt-2">${extraKpis.map(k => `<span class="px-2 py-0.5 rounded-full bg-[#CCE3DE] text-[#9D5268] text-[8px] font-black">🔗 ${k.kpi_title}</span>`).join('')}</div>`
             : '';
 
         return card(`

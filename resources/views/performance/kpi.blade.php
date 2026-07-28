@@ -18,7 +18,7 @@
         .sec-bar {
             display: flex; align-items: center; gap: 12px;
             padding: 10px 24px;
-            background: linear-gradient(90deg, #1a3d34, #2d5548);
+            background: linear-gradient(90deg, #9D5268, #B97891);
         }
         .sec-num {
             width: 26px; height: 26px; border-radius: 50%;
@@ -33,82 +33,82 @@
             display: flex; align-items: center; gap: 8px;
             font-size: 10px; font-weight: 800;
             text-transform: uppercase; letter-spacing: .10em;
-            color: #6B9080; margin-bottom: 14px;
+            color: #E97C7F; margin-bottom: 14px;
         }
-        .part-label::after { content: ''; flex: 1; height: 1px; background: rgba(107,144,128,.25); }
+        .part-label::after { content: ''; flex: 1; height: 1px; background: rgba(233,124,127,.25); }
 
         /* ── Field ────────────────────────────────────────── */
         .f-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #94a3b8; margin-bottom: 3px; }
         .f-val   { font-size: 13px; font-weight: 600; color: #1e293b; }
 
         .f-input {
-            width: 100%; border: none; border-bottom: 1.5px solid rgba(107,144,128,.30);
+            width: 100%; border: none; border-bottom: 1.5px solid rgba(233,124,127,.30);
             padding: 5px 0; font-size: 13px; font-weight: 500; color: #334155;
             background: transparent; outline: none; transition: border-color .15s;
         }
-        .f-input:focus { border-bottom-color: #6B9080; }
+        .f-input:focus { border-bottom-color: #E97C7F; }
         .f-input.ro    { color: #475569; cursor: default; }
 
         .f-box {
             width: 100%;
-            border: 1.5px solid rgba(107,144,128,.30); border-radius: 10px;
+            border: 1.5px solid rgba(233,124,127,.30); border-radius: 10px;
             padding: 9px 14px; font-size: 13px; color: #334155;
             background: white; outline: none; transition: border-color .15s;
         }
-        .f-box:focus { border-color: #6B9080; }
+        .f-box:focus { border-color: #E97C7F; }
         .f-box.ro { background: #f8fafc; color: #475569; cursor: default; }
 
         /* ── Textarea ─────────────────────────────────────── */
         .f-area {
             width: 100%; min-height: 110px;
-            border: 1.5px solid rgba(107,144,128,.30); border-radius: 10px;
+            border: 1.5px solid rgba(233,124,127,.30); border-radius: 10px;
             padding: 10px 14px; font-size: 12px; color: #334155;
             background: white; outline: none; resize: vertical; transition: border-color .15s;
             line-height: 1.6;
         }
-        .f-area:focus { border-color: #6B9080; }
+        .f-area:focus { border-color: #E97C7F; }
 
         /* ── Number input (small, centered) ──────────────── */
         .n-input {
             width: 60px; text-align: center;
-            border: 1.5px solid rgba(107,144,128,.30); border-radius: 8px;
+            border: 1.5px solid rgba(233,124,127,.30); border-radius: 8px;
             padding: 4px 4px; font-size: 11px; font-weight: 600; color: #334155;
             background: white; outline: none; transition: border-color .15s;
         }
-        .n-input:focus { border-color: #6B9080; }
+        .n-input:focus { border-color: #E97C7F; }
 
         /* ── Inline text input (table) ────────────────────── */
         .t-input {
-            width: 100%; border: none; border-bottom: 1px solid rgba(107,144,128,.25);
+            width: 100%; border: none; border-bottom: 1px solid rgba(233,124,127,.25);
             padding: 4px 0; font-size: 11px; color: #334155;
             background: transparent; outline: none; transition: border-color .15s;
         }
-        .t-input:focus { border-bottom-color: #6B9080; }
-        .t-input::placeholder { color: #cbd5e1; }
+        .t-input:focus { border-bottom-color: #E97C7F; }
+        .t-input::placeholder { color: #A6AEC0; }
 
         /* ── Table ────────────────────────────────────────── */
         .doc-tbl { width: 100%; font-size: 11px; border-collapse: collapse; }
         .doc-tbl th {
-            background: #1a3d34; color: #fff; padding: 10px 12px;
+            background: #9D5268; color: #fff; padding: 10px 12px;
             font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .09em;
         }
         .doc-tbl th.l { text-align: left; }
         .doc-tbl th.c { text-align: center; }
-        .doc-tbl td { padding: 8px 12px; border-bottom: 1px solid rgba(107,144,128,.10); vertical-align: middle; }
+        .doc-tbl td { padding: 8px 12px; border-bottom: 1px solid rgba(233,124,127,.10); vertical-align: middle; }
         .doc-tbl tbody tr:last-child td { border-bottom: none; }
 
         /* ── OKR group header ─────────────────────────────── */
-        .okr-hdr td { background: rgba(107,144,128,.10); padding: 10px 12px; border-bottom: 1px solid rgba(107,144,128,.2); }
+        .okr-hdr td { background: rgba(233,124,127,.10); padding: 10px 12px; border-bottom: 1px solid rgba(233,124,127,.2); }
 
         /* ── Score color ──────────────────────────────────── */
-        .sc-great  { color: #059669; }
-        .sc-good   { color: #6B9080; }
-        .sc-warn   { color: #d97706; }
-        .sc-poor   { color: #dc2626; }
-        .sc-none   { color: #cbd5e1; }
+        .sc-great  { color: #4D9A69; }
+        .sc-good   { color: #4D9A69; }
+        .sc-warn   { color: #E6AA37; }
+        .sc-poor   { color: #D96368; }
+        .sc-none   { color: #A6AEC0; }
 
         /* ── Sig line ─────────────────────────────────────── */
-        .sig-line { border-bottom: 1.5px dashed rgba(107,144,128,.40); height: 44px; margin-bottom: 6px; }
+        .sig-line { border-bottom: 1.5px dashed rgba(233,124,127,.40); height: 44px; margin-bottom: 6px; }
 
         /* ── Print table header (hidden on screen) ─────────── */
         #print-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
@@ -150,31 +150,31 @@
             /* Document card full-width, keep shadow subtle */
             .doc-card {
                 box-shadow: none !important;
-                border: 1px solid #6B9080 !important;
+                border: 1px solid #E97C7F !important;
                 border-radius: 12px !important;
             }
 
             /* Keep section bars dark teal */
             .sec-bar {
-                background: linear-gradient(90deg, #1a3d34, #2d5548) !important;
+                background: linear-gradient(90deg, #9D5268, #B97891) !important;
                 -webkit-print-color-adjust: exact !important;
             }
 
             /* Keep table headers dark */
-            .doc-tbl th { background: #1a3d34 !important; color: #fff !important; }
-            .okr-hdr td { background: rgba(107,144,128,.15) !important; }
+            .doc-tbl th { background: #9D5268 !important; color: #fff !important; }
+            .okr-hdr td { background: rgba(233,124,127,.15) !important; }
 
             /* Keep part labels teal */
-            .part-label { color: #6B9080 !important; }
+            .part-label { color: #E97C7F !important; }
 
             /* Gradient accent strip at top */
-            .h-\[3px\] { background: linear-gradient(to right, #1a3d34, #6B9080, #A4C3B2) !important; }
+            .h-\[3px\] { background: linear-gradient(to right, #9D5268, #E97C7F, #A4C3B2) !important; }
 
             /* Signature pads — show canvas outline in print */
             canvas { border: 1px solid #ccc !important; border-radius: 8px; }
 
             /* Avoid page breaks inside sections and rows */
-            .border.border-\[#6B9080\]\/25.rounded-xl,
+            .border.border-\[#E97C7F\]\/25.rounded-xl,
             .sig-block { page-break-inside: avoid; }
             tr, p { page-break-inside: avoid; }
         }
@@ -188,7 +188,7 @@
 
 {{-- ── Sticky page header ─────────────────────────────────────────────── --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#f0f2f7] no-print">
-    <div class="rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-4 shadow-xl flex items-center justify-between gap-3">
+    <div class="rounded-[18px] bg-gradient-to-r from-[#9D5268] to-[#E97C7F] text-white px-6 py-4 shadow-xl flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
                 <span class="text-sm font-black">{{ $qLabel }}</span>
@@ -224,14 +224,14 @@
     <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
             @if($phLogo)<img src="{{ asset($phLogo) }}" alt="Logo" style="height:28px;object-fit:contain;display:block">
-            @else<span style="font-size:12px;font-weight:900;color:#1a3d34">{{ session('company_display_name') }}</span>@endif
+            @else<span style="font-size:12px;font-weight:900;color:#9D5268">{{ session('company_display_name') }}</span>@endif
             <p style="font-size:7px;color:#94a3b8;letter-spacing:.18em;text-transform:uppercase;margin-top:3px">Accelerating Your Business Success</p>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
-            <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#1a3d34,#6B9080);display:flex;align-items:center;justify-content:center">
+            <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#9D5268,#E97C7F);display:flex;align-items:center;justify-content:center">
                 <span style="font-size:14px;font-weight:900;color:white;line-height:1">{{ $qLabel }}</span>
             </div>
-            <span style="font-size:7px;font-weight:700;color:#6B9080;letter-spacing:.12em;text-transform:uppercase">{{ $currentFinancialYear }}</span>
+            <span style="font-size:7px;font-weight:700;color:#E97C7F;letter-spacing:.12em;text-transform:uppercase">{{ $currentFinancialYear }}</span>
         </div>
     </div>
 </td></tr>
@@ -243,10 +243,10 @@
 <div class="max-w-5xl mx-auto">
 
 {{-- ── Document card ───────────────────────────────────────────────────── --}}
-<div class="bg-white rounded-2xl overflow-hidden doc-card border border-[#6B9080]/25">
+<div class="bg-white rounded-2xl overflow-hidden doc-card border border-[#E97C7F]/25">
 
     {{-- Accent strip --}}
-    <div class="h-[3px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
+    <div class="h-[3px] bg-gradient-to-r from-[#9D5268] to-[#E97C7F]"></div>
 
     <div class="px-10 py-8">
 
@@ -257,35 +257,35 @@
                 @if($logo)
                 <img src="{{ asset(ltrim($logo,'/')) }}" alt="Logo" class="h-10 object-contain mb-2">
                 @else
-                <p class="text-xl font-black text-[#1a3d34]">{{ session('company_display_name') }}</p>
+                <p class="text-xl font-black text-[#9D5268]">{{ session('company_display_name') }}</p>
                 @endif
                 <p class="text-[9px] text-slate-400 uppercase tracking-[.18em]">Accelerating Your Business Success</p>
             </div>
             <div class="flex flex-col items-end gap-1">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1A0A0A] to-[#7A0019] flex items-center justify-center shadow-lg">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#9D5268] to-[#E97C7F] flex items-center justify-center shadow-lg">
                     <span class="text-2xl font-black text-white">{{ $qLabel }}</span>
                 </div>
-                <span class="text-[9px] font-bold text-[#6B9080] uppercase tracking-widest">{{ $currentFinancialYear }}</span>
+                <span class="text-[9px] font-bold text-[#E97C7F] uppercase tracking-widest">{{ $currentFinancialYear }}</span>
             </div>
         </div>
 
         {{-- ── Document title ───────────────────────────────────────────── --}}
         <div class="text-center mb-7">
             <p class="text-[9px] font-semibold text-slate-400 uppercase tracking-[.22em] mb-3">— Private &amp; Confidential —</p>
-            <h2 class="text-lg font-black text-[#1a3d34] uppercase tracking-[.06em] mb-1">
+            <h2 class="text-lg font-black text-[#9D5268] uppercase tracking-[.06em] mb-1">
                 Executive / Non-Executive Performance Appraisal
             </h2>
             <div class="flex items-center justify-center gap-2 mt-2">
-                <span class="h-px w-12 bg-[#6B9080]/30"></span>
-                <span class="text-[10px] font-semibold text-[#6B9080] uppercase tracking-widest">KPI · Quarter {{ $displayQuarter }} · {{ $currentFinancialYear }}</span>
-                <span class="h-px w-12 bg-[#6B9080]/30"></span>
+                <span class="h-px w-12 bg-[#E97C7F]/30"></span>
+                <span class="text-[10px] font-semibold text-[#E97C7F] uppercase tracking-widest">KPI · Quarter {{ $displayQuarter }} · {{ $currentFinancialYear }}</span>
+                <span class="h-px w-12 bg-[#E97C7F]/30"></span>
             </div>
         </div>
 
         {{-- ── Purpose of Review ────────────────────────────────────────── --}}
-        <div class="border border-[#6B9080]/25 rounded-xl mb-6 overflow-hidden">
-            <div class="bg-[#6B9080]/8 border-b border-[#6B9080]/20 px-5 py-2.5">
-                <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-[.14em]">Purpose of Review</p>
+        <div class="border border-[#E97C7F]/25 rounded-xl mb-6 overflow-hidden">
+            <div class="bg-[#E97C7F]/8 border-b border-[#E97C7F]/20 px-5 py-2.5">
+                <p class="text-[9px] font-black text-[#E97C7F] uppercase tracking-[.14em]">Purpose of Review</p>
             </div>
             <div class="px-5 py-4 flex flex-wrap items-center gap-6">
                 <div class="flex items-center gap-5">
@@ -295,30 +295,30 @@
                         ['id'=>'por_others',           'label'=>'Others'],
                     ] as $opt)
                     <label class="flex items-center gap-2 cursor-pointer group select-none">
-                        <span class="w-4 h-4 rounded border-2 border-[#6B9080]/50 flex items-center justify-center relative">
+                        <span class="w-4 h-4 rounded border-2 border-[#E97C7F]/50 flex items-center justify-center relative">
                             <input type="checkbox" id="{{ $opt['id'] }}" value="{{ $opt['label'] }}"
                                    {{ $opt['id'] === 'por_quarterly_review' ? 'checked' : '' }}
                                    class="sr-only peer">
-                            <span class="w-2.5 h-2.5 rounded-sm bg-[#6B9080] hidden peer-checked:block"></span>
+                            <span class="w-2.5 h-2.5 rounded-sm bg-[#E97C7F] hidden peer-checked:block"></span>
                         </span>
-                        <span class="text-[11px] font-semibold text-slate-700 group-hover:text-[#6B9080] transition">{{ $opt['label'] }}</span>
+                        <span class="text-[11px] font-semibold text-slate-700 group-hover:text-[#E97C7F] transition">{{ $opt['label'] }}</span>
                     </label>
                     @endforeach
                 </div>
                 <div class="h-px flex-1 bg-slate-100 hidden md:block"></div>
                 <div class="flex-1 min-w-48">
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Please specify (if Others)</p>
-                    <input type="text" placeholder="Describe purpose…" class="f-input" style="border-bottom-color: rgba(107,144,128,.3);">
+                    <input type="text" placeholder="Describe purpose…" class="f-input" style="border-bottom-color: rgba(233,124,127,.3);">
                 </div>
                 <div class="text-right">
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Year / Period</p>
-                    <p class="text-base font-black text-[#1a3d34]">{{ now()->year }} <span class="text-[#6B9080]">/</span> {{ $qLabel }}</p>
+                    <p class="text-base font-black text-[#9D5268]">{{ now()->year }} <span class="text-[#E97C7F]">/</span> {{ $qLabel }}</p>
                 </div>
             </div>
         </div>
 
         {{-- ── Employee particulars strip ───────────────────────────────── --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-7">
+        <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden mb-7">
             <table class="w-full text-xs">
                 <tbody>
                     @php $fields = [
@@ -329,8 +329,8 @@
                         ['label'=>'Year / Period Under Review','value'=>$currentFinancialYear . ' / ' . $qLabel],
                     ]; @endphp
                     @foreach($fields as $i => $f)
-                    <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-slate-50/60' }} {{ $i < count($fields)-1 ? 'border-b border-[#6B9080]/12' : '' }}">
-                        <td class="px-5 py-3 w-52 border-r border-[#6B9080]/12">
+                    <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-slate-50/60' }} {{ $i < count($fields)-1 ? 'border-b border-[#E97C7F]/12' : '' }}">
+                        <td class="px-5 py-3 w-52 border-r border-[#E97C7F]/12">
                             <span class="f-label">{{ $f['label'] }}</span>
                         </td>
                         <td class="px-5 py-3">
@@ -345,7 +345,7 @@
         {{-- ═══════════════════════════════════════════════════════════════
              SECTION 1
         ═══════════════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6">
+        <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden mb-6">
             <div class="sec-bar">
                 <div class="sec-num">1</div>
                 <span class="sec-title">To Be Completed by Employee Under Review</span>
@@ -412,7 +412,7 @@
                     </div>
                 </div>
 
-                <div class="border-t border-dashed border-[#6B9080]/20"></div>
+                <div class="border-t border-dashed border-[#E97C7F]/20"></div>
 
                 {{-- PART B --}}
                 <div>
@@ -421,7 +421,7 @@
                     <textarea class="f-area" placeholder="Write your summary here…" rows="5"></textarea>
                 </div>
 
-                <div class="border-t border-dashed border-[#6B9080]/20"></div>
+                <div class="border-t border-dashed border-[#E97C7F]/20"></div>
 
                 {{-- PART C --}}
                 <div>
@@ -430,7 +430,7 @@
                     <textarea class="f-area" placeholder="List your key tasks…" rows="5"></textarea>
                 </div>
 
-                <div class="border-t border-dashed border-[#6B9080]/20"></div>
+                <div class="border-t border-dashed border-[#E97C7F]/20"></div>
 
                 {{-- PART D --}}
                 <div>
@@ -438,7 +438,7 @@
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
                         <p class="text-[11px] text-slate-500 italic leading-relaxed mb-5">
                             I hereby confirm that the above information provided by the appraisee is correct and that the appraisee has been directly reporting to me since
-                            <input type="date" id="sinceDate" class="f-input inline-block" style="width:160px; display:inline; border-bottom-color: rgba(107,144,128,.4);" value="{{ now()->format('Y-m-d') }}">.
+                            <input type="date" id="sinceDate" class="f-input inline-block" style="width:160px; display:inline; border-bottom-color: rgba(233,124,127,.4);" value="{{ now()->format('Y-m-d') }}">.
                             <span class="text-[9px] text-slate-400 ml-1">(editable)</span>
                         </p>
                         <div class="grid grid-cols-2 gap-6">
@@ -460,7 +460,7 @@
         {{-- ═══════════════════════════════════════════════════════════════
              SECTION 2
         ═══════════════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-7">
+        <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden mb-7">
             <div class="sec-bar">
                 <div class="sec-num">2</div>
                 <span class="sec-title">OKR / KPI Quarterly Performance Review &nbsp;·&nbsp; {{ $qLabel }}</span>
@@ -496,14 +496,14 @@
                 @endphp
                 {{-- OKR group row --}}
                 <tr class="okr-hdr">
-                    <td class="text-center font-black text-[#1a3d34] text-xs">{{ $kpiNo }}</td>
+                    <td class="text-center font-black text-[#9D5268] text-xs">{{ $kpiNo }}</td>
                     <td colspan="2">
-                        <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-wider">OKR / KPI</p>
+                        <p class="text-[9px] font-black text-[#E97C7F] uppercase tracking-wider">OKR / KPI</p>
                         <p class="text-xs font-bold text-slate-800 leading-snug mt-0.5">{{ $kpi['kpi_title'] }}</p>
                         @if(!empty($kpi['sub_category']))<p class="text-[9px] text-slate-400 mt-0.5">{{ $kpi['sub_category'] }}</p>@endif
                     </td>
                     <td colspan="6" class="text-right">
-                        <span class="inline-block text-[9px] font-black text-[#6B9080] bg-white border border-[#6B9080]/30 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        <span class="inline-block text-[9px] font-black text-[#E97C7F] bg-white border border-[#E97C7F]/30 px-2.5 py-1 rounded-full uppercase tracking-wider">
                             {{ $kpi['weightage'] ?? '—' }}% weight &nbsp;·&nbsp; {{ $kpi['category'] ?? '' }}
                         </span>
                     </td>
@@ -525,7 +525,7 @@
                 @endforeach
 
                 {{-- Total row --}}
-                <tr style="background:linear-gradient(90deg,#1a3d34,#2d5548);">
+                <tr style="background:linear-gradient(90deg,#9D5268,#B97891);">
                     <td colspan="6" class="text-right py-3 px-4">
                         <span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.8);">Total Score Section 2</span>
                     </td>
@@ -534,9 +534,9 @@
                     <td class="text-center py-3"><span id="s2AppTotal" class="text-base font-black text-white">—</span></td>
                 </tr>
                 {{-- % row --}}
-                <tr style="background:rgba(107,144,128,.06);">
+                <tr style="background:rgba(233,124,127,.06);">
                     <td colspan="6" class="text-right py-3 px-4">
-                        <span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.10em;color:#6B9080;">% Total (Score ÷ {{ count($kpis)*5 }} × 70)</span>
+                        <span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.10em;color:#E97C7F;">% Total (Score ÷ {{ count($kpis)*5 }} × 70)</span>
                     </td>
                     <td class="text-center py-3"><span id="s2Pct" class="text-sm font-black sc-none">—</span></td>
                     <td colspan="2" class="py-2 px-3">
@@ -562,7 +562,7 @@
                 ] as $sig)
                 <div>
                     {{-- Canvas pad --}}
-                    <div class="relative border border-[#6B9080]/30 rounded-xl overflow-hidden bg-slate-50/60 mb-2" style="height:100px;">
+                    <div class="relative border border-[#E97C7F]/30 rounded-xl overflow-hidden bg-slate-50/60 mb-2" style="height:100px;">
                         <canvas id="{{ $sig['id'] }}_canvas"
                                 style="width:100%;height:100%;touch-action:none;cursor:crosshair;display:block;"></canvas>
                         {{-- Upload preview --}}
@@ -580,19 +580,19 @@
                     <div class="flex items-center justify-between mb-3 no-print">
                         <div class="flex gap-1.5">
                             <button type="button" onclick="clearSig('{{ $sig['id'] }}')"
-                                class="text-[9px] font-bold px-2 py-1 rounded-lg border border-slate-200 text-slate-500 hover:border-[#6B9080] hover:text-[#6B9080] transition bg-white">
+                                class="text-[9px] font-bold px-2 py-1 rounded-lg border border-slate-200 text-slate-500 hover:border-[#E97C7F] hover:text-[#E97C7F] transition bg-white">
                                 Clear
                             </button>
-                            <label class="text-[9px] font-bold px-2 py-1 rounded-lg border border-[#6B9080]/40 text-[#6B9080] hover:bg-[#6B9080]/8 transition bg-white cursor-pointer">
+                            <label class="text-[9px] font-bold px-2 py-1 rounded-lg border border-[#E97C7F]/40 text-[#E97C7F] hover:bg-[#E97C7F]/8 transition bg-white cursor-pointer">
                                 Upload
                                 <input type="file" accept="image/*" class="sr-only" onchange="uploadSig('{{ $sig['id'] }}', this)">
                             </label>
                         </div>
-                        <input type="date" class="text-[9px] border border-slate-200 rounded-lg px-2 py-1 text-slate-500 bg-white outline-none focus:border-[#6B9080] transition" value="{{ now()->format('Y-m-d') }}">
+                        <input type="date" class="text-[9px] border border-slate-200 rounded-lg px-2 py-1 text-slate-500 bg-white outline-none focus:border-[#E97C7F] transition" value="{{ now()->format('Y-m-d') }}">
                     </div>
 
                     <p class="text-xs font-bold text-slate-700 text-center">{{ $sig['name'] ?: '_______________' }}</p>
-                    <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-widest mt-1 text-center">{{ $sig['role'] }}</p>
+                    <p class="text-[9px] font-black text-[#E97C7F] uppercase tracking-widest mt-1 text-center">{{ $sig['role'] }}</p>
                 </div>
                 @endforeach
             </div>
@@ -681,7 +681,7 @@
             canvas.width  = rect.width  * dpr;
             canvas.height = rect.height * dpr;
             ctx.scale(dpr, dpr);
-            ctx.strokeStyle = '#1a3d34';
+            ctx.strokeStyle = '#9D5268';
             ctx.lineWidth   = 1.8;
             ctx.lineCap     = 'round';
             ctx.lineJoin    = 'round';

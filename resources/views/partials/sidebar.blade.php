@@ -14,6 +14,46 @@
 @endif
 
 <style>
+    /* Dashboard design tokens — included on every authenticated page via this
+       shared partial, so these are available site-wide even though most
+       existing styling still uses literal hex values rather than var(). */
+    :root {
+        --background-main: #FAF8F6;
+        --background-card: #FFFFFF;
+        --background-cream: #FFF8F2;
+        --background-blush: #FCEBE8;
+        --background-lavender: #F3F0F8;
+        --background-blue: #EEF4FC;
+        --background-sage: #EFF7F1;
+
+        --primary-coral: #E97C7F;
+        --primary-rose: #C9879A;
+        --primary-mauve: #B97891;
+        --primary-burgundy: #9D5268;
+        --primary-gold: #E3B341;
+        --primary-gold-deep: #C79426;
+
+        --success: #4D9A69;
+        --success-light: #EAF6EE;
+        --danger: #D96368;
+        --danger-light: #FCEDEC;
+        --warning: #E6AA37;
+        --warning-light: #FFF5DC;
+        --info: #5278B7;
+        --info-light: #EDF3FC;
+
+        --text-heading: #172238;
+        --text-primary: #293247;
+        --text-secondary: #7E879B;
+        --text-muted: #A6AEC0;
+        --text-white: #FFFFFF;
+
+        --border-light: #EDE8E5;
+        --border-cool: #E3E7EF;
+        --progress-bg: #EEF0F4;
+        --shadow-soft: rgba(52, 43, 42, 0.08);
+    }
+
     /* Remove text-selection cursor from all non-interactive elements */
     * { cursor: default; }
     a, button, [role="button"], label, select,
@@ -58,7 +98,7 @@
     px-3 py-4 flex flex-col overflow-visible shrink-0 transition-all duration-300"
 >
 
-    <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
+    <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#E3B341] via-[#E3B341] to-[#E3B341]/10"></div>
 
     <button
         id="sidebarCloseBtn"
@@ -80,7 +120,7 @@
         hover:bg-white/10 rounded-xl p-1.5 transition relative"
         aria-label="Open Sidebar"
     >
-        <div class="w-10 h-10 rounded-xl bg-[#C8102E] border-2 border-[#D4AF37] flex items-center justify-center shrink-0 overflow-hidden p-1">
+        <div class="w-10 h-10 rounded-xl bg-[#C8102E] border-2 border-[#E3B341] flex items-center justify-center shrink-0 overflow-hidden p-1">
             @php
                 $sidebarLogo = session('company_logo');
                 if (!$sidebarLogo) {
@@ -113,7 +153,7 @@
                 {!! nl2br(e(session('company_display_name') ?: 'RICHWORKS KPI')) !!}
             </h1>
 
-            <p class="text-[9px] text-[#D4AF37] uppercase tracking-[0.14em] mt-1 font-semibold">
+            <p class="text-[9px] text-[#E3B341] uppercase tracking-[0.14em] mt-1 font-semibold">
                 Performance System
             </p>
         </div>
@@ -126,7 +166,7 @@
         </div>
     </button>
 
-    <div class="h-px w-full shrink-0 mb-3 bg-gradient-to-r from-[#D4AF37] to-transparent"></div>
+    <div class="h-px w-full shrink-0 mb-3 bg-gradient-to-r from-[#E3B341] to-transparent"></div>
 
     @php
         $navSections = [
@@ -290,10 +330,10 @@
             @endif
             <div>
                 <div class="sidebar-text flex items-center gap-2 mb-1 px-2">
-                    <p class="text-[9px] text-[#D4AF37] font-semibold uppercase tracking-widest shrink-0">
+                    <p class="text-[9px] text-[#E3B341] font-semibold uppercase tracking-widest shrink-0">
                         {{ $section['title'] }}
                     </p>
-                    <div class="h-px flex-1 bg-gradient-to-r from-[#D4AF37] to-transparent"></div>
+                    <div class="h-px flex-1 bg-gradient-to-r from-[#E3B341] to-transparent"></div>
                 </div>
 
                 <div class="space-y-1">
@@ -335,7 +375,7 @@
                             href="{{ $item['href'] }}"
                             class="group relative flex items-center gap-3 px-3 py-2 rounded-xl transition
                             {{ $isActive
-                                ? 'bg-gradient-to-r from-[#C8102E] to-[#7A0019] border-l-[3px] border-[#D4AF37] text-white font-black shadow-md'
+                                ? 'bg-gradient-to-r from-[#C8102E] to-[#E97C7F] border-l-[3px] border-[#E3B341] text-white font-black shadow-md'
                                 : 'text-white/85 font-medium hover:bg-white/10 hover:text-white'
                             }}"
                         >
@@ -381,7 +421,7 @@
             href="{{ route('settings') }}"
             class="group relative flex items-center gap-2 px-3 py-1.5 rounded-lg transition mt-1
             {{ request()->is('settings*')
-                ? 'bg-gradient-to-r from-[#C8102E] to-[#7A0019] border-l-[3px] border-[#D4AF37] text-white font-bold shadow-md'
+                ? 'bg-gradient-to-r from-[#C8102E] to-[#E97C7F] border-l-[3px] border-[#E3B341] text-white font-bold shadow-md'
                 : 'text-white/60 font-medium hover:bg-white/10 hover:text-white'
             }}"
         >
@@ -406,7 +446,7 @@
             href="{{ route('help') }}"
             class="group relative flex items-center gap-2 px-3 py-1.5 rounded-lg transition mt-1
             {{ request()->is('help*')
-                ? 'bg-gradient-to-r from-[#C8102E] to-[#7A0019] border-l-[3px] border-[#D4AF37] text-white font-bold shadow-md'
+                ? 'bg-gradient-to-r from-[#C8102E] to-[#E97C7F] border-l-[3px] border-[#E3B341] text-white font-bold shadow-md'
                 : 'text-white/60 font-medium hover:bg-white/10 hover:text-white'
             }}"
         >
@@ -435,11 +475,11 @@
         <a
             href="{{ route('profile') }}"
             class="group relative w-full flex items-center gap-2 mb-2 shrink-0 pr-2 text-left
-            {{ request()->is('profile') ? 'bg-gradient-to-r from-[#C8102E] to-[#7A0019] border-l-[3px] border-[#D4AF37]' : 'hover:bg-white/10' }}
+            {{ request()->is('profile') ? 'bg-gradient-to-r from-[#C8102E] to-[#E97C7F] border-l-[3px] border-[#E3B341]' : 'hover:bg-white/10' }}
             rounded-lg p-1.5 transition"
             aria-label="My Profile"
         >
-            <div class="w-7 h-7 rounded-full overflow-hidden shrink-0 ring-2 ring-[#D4AF37]/60">
+            <div class="w-7 h-7 rounded-full overflow-hidden shrink-0 ring-2 ring-[#E3B341]/60">
                 <img
                     src="https://ui-avatars.com/api/?name={{ urlencode(session('short_name') ?: session('full_name') ?: session('employee_name') ?: 'User') }}&background=D4AF37&color=1a1a1a&size=36"
                     class="w-full h-full object-cover"

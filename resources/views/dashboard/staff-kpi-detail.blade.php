@@ -22,7 +22,7 @@
 <div class="px-4 pt-4 pb-10">
 
     {{-- Breadcrumb / back --}}
-    <a href="{{ $backUrl ?? route('dashboard.staff.kpis', $staff['id']) }}" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-[#6B9080] transition mb-3">
+    <a href="{{ $backUrl ?? route('dashboard.staff.kpis', $staff['id']) }}" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-[#E97C7F] transition mb-3">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         {{ $backLabel ?? ('Back to ' . ($staff['short_name'] ?? $staff['full_name'] ?? 'Staff') . "'s KPIs") }}
     </a>

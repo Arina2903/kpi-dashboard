@@ -13,55 +13,55 @@
         .doc-card  { box-shadow: 0 8px 40px rgba(15,23,42,.10); }
 
         /* Section bar */
-        .sec-bar { display:flex; align-items:center; gap:12px; padding:10px 24px; background:linear-gradient(90deg,#1a3d34,#2d5548); }
+        .sec-bar { display:flex; align-items:center; gap:12px; padding:10px 24px; background:linear-gradient(90deg,#9D5268,#B97891); }
         .sec-num { width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,.18); border:1.5px solid rgba(255,255,255,.35); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900; color:#fff; flex-shrink:0; }
         .sec-title { font-size:11px; font-weight:800; color:#fff; text-transform:uppercase; letter-spacing:.12em; }
 
         /* Part label */
-        .part-label { display:flex; align-items:center; gap:8px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.10em; color:#6B9080; margin-bottom:14px; }
-        .part-label::after { content:''; flex:1; height:1px; background:rgba(107,144,128,.25); }
+        .part-label { display:flex; align-items:center; gap:8px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.10em; color:#E97C7F; margin-bottom:14px; }
+        .part-label::after { content:''; flex:1; height:1px; background:rgba(233,124,127,.25); }
 
         /* Field */
         .f-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.09em; color:#94a3b8; margin-bottom:3px; }
         .f-val   { font-size:13px; font-weight:600; color:#1e293b; }
-        .f-input { width:100%; border:none; border-bottom:1.5px solid rgba(107,144,128,.30); padding:5px 0; font-size:13px; font-weight:500; color:#334155; background:transparent; outline:none; transition:border-color .15s; }
-        .f-input:focus { border-bottom-color:#6B9080; }
-        .f-box   { width:100%; border:1.5px solid rgba(107,144,128,.30); border-radius:10px; padding:9px 14px; font-size:13px; color:#334155; background:white; outline:none; transition:border-color .15s; }
-        .f-box:focus { border-color:#6B9080; }
-        .f-area  { width:100%; min-height:90px; border:1.5px solid rgba(107,144,128,.30); border-radius:10px; padding:10px 14px; font-size:12px; color:#334155; background:white; outline:none; resize:vertical; transition:border-color .15s; line-height:1.6; }
-        .f-area:focus { border-color:#6B9080; }
+        .f-input { width:100%; border:none; border-bottom:1.5px solid rgba(233,124,127,.30); padding:5px 0; font-size:13px; font-weight:500; color:#334155; background:transparent; outline:none; transition:border-color .15s; }
+        .f-input:focus { border-bottom-color:#E97C7F; }
+        .f-box   { width:100%; border:1.5px solid rgba(233,124,127,.30); border-radius:10px; padding:9px 14px; font-size:13px; color:#334155; background:white; outline:none; transition:border-color .15s; }
+        .f-box:focus { border-color:#E97C7F; }
+        .f-area  { width:100%; min-height:90px; border:1.5px solid rgba(233,124,127,.30); border-radius:10px; padding:10px 14px; font-size:12px; color:#334155; background:white; outline:none; resize:vertical; transition:border-color .15s; line-height:1.6; }
+        .f-area:focus { border-color:#E97C7F; }
 
         /* Rating pill selector */
         .rating-group { display:flex; gap:5px; justify-content:center; }
         .rating-group input[type=radio] { display:none; }
         .rating-group label {
-            width:32px; height:32px; border-radius:8px; border:1.5px solid rgba(107,144,128,.3);
+            width:32px; height:32px; border-radius:8px; border:1.5px solid rgba(233,124,127,.3);
             display:flex; align-items:center; justify-content:center;
             font-size:12px; font-weight:700; color:#94a3b8; cursor:pointer;
             transition:all .15s; background:white; user-select:none;
         }
-        .rating-group label:hover { border-color:#6B9080; color:#6B9080; background:rgba(107,144,128,.06); }
+        .rating-group label:hover { border-color:#E97C7F; color:#E97C7F; background:rgba(233,124,127,.06); }
         .rating-group input[type=radio]:checked + label {
-            background:#1a3d34; border-color:#1a3d34; color:#fff;
-            box-shadow: 0 2px 8px rgba(26,61,52,.25);
+            background:#9D5268; border-color:#9D5268; color:#fff;
+            box-shadow: 0 2px 8px rgba(157,82,104,.25);
         }
 
         /* Table */
         .doc-tbl { width:100%; font-size:11px; border-collapse:collapse; }
-        .doc-tbl th { background:#1a3d34; color:#fff; padding:10px 12px; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.09em; }
+        .doc-tbl th { background:#9D5268; color:#fff; padding:10px 12px; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.09em; }
         .doc-tbl th.l { text-align:left; } .doc-tbl th.c { text-align:center; }
-        .doc-tbl td { padding:8px 12px; border-bottom:1px solid rgba(107,144,128,.10); vertical-align:middle; }
+        .doc-tbl td { padding:8px 12px; border-bottom:1px solid rgba(233,124,127,.10); vertical-align:middle; }
         .doc-tbl tbody tr:last-child td { border-bottom:none; }
 
         /* Score colour */
-        .sc-great { color:#059669; } .sc-good { color:#6B9080; } .sc-warn { color:#d97706; } .sc-poor { color:#dc2626; } .sc-none { color:#cbd5e1; }
+        .sc-great { color:#4D9A69; } .sc-good { color:#4D9A69; } .sc-warn { color:#E6AA37; } .sc-poor { color:#D96368; } .sc-none { color:#A6AEC0; }
 
         /* Number input */
-        .n-input { width:60px; text-align:center; border:1.5px solid rgba(107,144,128,.3); border-radius:8px; padding:4px; font-size:11px; font-weight:600; color:#334155; background:white; outline:none; transition:border-color .15s; }
-        .n-input:focus { border-color:#6B9080; }
+        .n-input { width:60px; text-align:center; border:1.5px solid rgba(233,124,127,.3); border-radius:8px; padding:4px; font-size:11px; font-weight:600; color:#334155; background:white; outline:none; transition:border-color .15s; }
+        .n-input:focus { border-color:#E97C7F; }
 
         /* Sig line */
-        .sig-line { border-bottom:1.5px dashed rgba(107,144,128,.40); height:44px; margin-bottom:6px; }
+        .sig-line { border-bottom:1.5px dashed rgba(233,124,127,.40); height:44px; margin-bottom:6px; }
 
         /* ── Print table header (hidden on screen) ─────────── */
         #print-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
@@ -93,14 +93,14 @@
             .pt-3 { padding-top:0 !important; }
             .pb-10 { padding-bottom:0 !important; }
 
-            .doc-card { box-shadow:none !important; border:1px solid #6B9080 !important; border-radius:12px !important; }
-            .sec-bar { background:linear-gradient(90deg,#1a3d34,#2d5548) !important; }
-            .doc-tbl th { background:#1a3d34 !important; color:#fff !important; }
-            .part-label { color:#6B9080 !important; }
+            .doc-card { box-shadow:none !important; border:1px solid #E97C7F !important; border-radius:12px !important; }
+            .sec-bar { background:linear-gradient(90deg,#9D5268,#B97891) !important; }
+            .doc-tbl th { background:#9D5268 !important; color:#fff !important; }
+            .part-label { color:#E97C7F !important; }
 
             input[type=radio]:checked + label {
-                background:#1a3d34 !important;
-                border-color:#1a3d34 !important;
+                background:#9D5268 !important;
+                border-color:#9D5268 !important;
                 color:#fff !important;
             }
 
@@ -119,7 +119,7 @@
 
 {{-- Sticky header --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#f0f2f7] no-print">
-    <div class="rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-4 shadow-xl flex items-center justify-between gap-3">
+    <div class="rounded-[18px] bg-gradient-to-r from-[#9D5268] to-[#E97C7F] text-white px-6 py-4 shadow-xl flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
                 <span class="text-sm font-black">{{ $qLabel }}</span>
@@ -155,14 +155,14 @@
     <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
             @if($phLogo)<img src="{{ asset($phLogo) }}" alt="Logo" style="height:28px;object-fit:contain;display:block">
-            @else<span style="font-size:12px;font-weight:900;color:#1a3d34">{{ session('company_display_name') }}</span>@endif
+            @else<span style="font-size:12px;font-weight:900;color:#9D5268">{{ session('company_display_name') }}</span>@endif
             <p style="font-size:7px;color:#94a3b8;letter-spacing:.18em;text-transform:uppercase;margin-top:3px">Accelerating Your Business Success</p>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
-            <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#1a3d34,#6B9080);display:flex;align-items:center;justify-content:center">
+            <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#9D5268,#E97C7F);display:flex;align-items:center;justify-content:center">
                 <span style="font-size:14px;font-weight:900;color:white;line-height:1">{{ $qLabel }}</span>
             </div>
-            <span style="font-size:7px;font-weight:700;color:#6B9080;letter-spacing:.12em;text-transform:uppercase">{{ $currentFinancialYear }}</span>
+            <span style="font-size:7px;font-weight:700;color:#E97C7F;letter-spacing:.12em;text-transform:uppercase">{{ $currentFinancialYear }}</span>
         </div>
     </div>
 </td></tr>
@@ -173,8 +173,8 @@
 <div class="px-4 pb-10 pt-3">
 <div class="max-w-5xl mx-auto">
 
-<div class="bg-white rounded-2xl overflow-hidden doc-card border border-[#6B9080]/25">
-    <div class="h-[3px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
+<div class="bg-white rounded-2xl overflow-hidden doc-card border border-[#E97C7F]/25">
+    <div class="h-[3px] bg-gradient-to-r from-[#9D5268] to-[#E97C7F]"></div>
 
     <div class="px-10 py-8">
 
@@ -185,35 +185,35 @@
                 @if($logo)
                 <img src="{{ asset(ltrim($logo,'/')) }}" alt="Logo" class="h-10 object-contain mb-2">
                 @else
-                <p class="text-xl font-black text-[#1a3d34]">{{ session('company_display_name') }}</p>
+                <p class="text-xl font-black text-[#9D5268]">{{ session('company_display_name') }}</p>
                 @endif
                 <p class="text-[9px] text-slate-400 uppercase tracking-[.18em]">Accelerating Your Business Success</p>
             </div>
             <div class="flex flex-col items-end gap-1">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1A0A0A] to-[#7A0019] flex items-center justify-center shadow-lg">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#9D5268] to-[#E97C7F] flex items-center justify-center shadow-lg">
                     <span class="text-2xl font-black text-white">{{ $qLabel }}</span>
                 </div>
-                <span class="text-[9px] font-bold text-[#6B9080] uppercase tracking-widest">{{ $currentFinancialYear }}</span>
+                <span class="text-[9px] font-bold text-[#E97C7F] uppercase tracking-widest">{{ $currentFinancialYear }}</span>
             </div>
         </div>
 
         {{-- Title --}}
         <div class="text-center mb-7">
             <p class="text-[9px] font-semibold text-slate-400 uppercase tracking-[.22em] mb-3">— Private &amp; Confidential —</p>
-            <h2 class="text-lg font-black text-[#1a3d34] uppercase tracking-[.06em] mb-1">
+            <h2 class="text-lg font-black text-[#9D5268] uppercase tracking-[.06em] mb-1">
                 Executive / Non-Executive Performance Appraisal
             </h2>
             <div class="flex items-center justify-center gap-2 mt-2">
-                <span class="h-px w-12 bg-[#6B9080]/30"></span>
-                <span class="text-[10px] font-semibold text-[#6B9080] uppercase tracking-widest">Attitude &amp; Competency · Quarter {{ $displayQuarter }} · {{ $currentFinancialYear }}</span>
-                <span class="h-px w-12 bg-[#6B9080]/30"></span>
+                <span class="h-px w-12 bg-[#E97C7F]/30"></span>
+                <span class="text-[10px] font-semibold text-[#E97C7F] uppercase tracking-widest">Attitude &amp; Competency · Quarter {{ $displayQuarter }} · {{ $currentFinancialYear }}</span>
+                <span class="h-px w-12 bg-[#E97C7F]/30"></span>
             </div>
         </div>
 
         {{-- Purpose of Review --}}
-        <div class="border border-[#6B9080]/25 rounded-xl mb-6 overflow-hidden">
-            <div class="bg-[#6B9080]/8 border-b border-[#6B9080]/20 px-5 py-2.5">
-                <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-[.14em]">Purpose of Review</p>
+        <div class="border border-[#E97C7F]/25 rounded-xl mb-6 overflow-hidden">
+            <div class="bg-[#E97C7F]/8 border-b border-[#E97C7F]/20 px-5 py-2.5">
+                <p class="text-[9px] font-black text-[#E97C7F] uppercase tracking-[.14em]">Purpose of Review</p>
             </div>
             <div class="px-5 py-4 flex flex-wrap items-center gap-6">
                 <div class="flex items-center gap-5">
@@ -223,13 +223,13 @@
                         ['id'=>'por_others',           'label'=>'Others'],
                     ] as $opt)
                     <label class="flex items-center gap-2 cursor-pointer group select-none">
-                        <span class="w-4 h-4 rounded border-2 border-[#6B9080]/50 flex items-center justify-center relative">
+                        <span class="w-4 h-4 rounded border-2 border-[#E97C7F]/50 flex items-center justify-center relative">
                             <input type="checkbox" id="{{ $opt['id'] }}" value="{{ $opt['label'] }}"
                                    {{ $opt['id'] === 'por_quarterly_review' ? 'checked' : '' }}
                                    class="sr-only peer">
-                            <span class="w-2.5 h-2.5 rounded-sm bg-[#6B9080] hidden peer-checked:block"></span>
+                            <span class="w-2.5 h-2.5 rounded-sm bg-[#E97C7F] hidden peer-checked:block"></span>
                         </span>
-                        <span class="text-[11px] font-semibold text-slate-700 group-hover:text-[#6B9080] transition">{{ $opt['label'] }}</span>
+                        <span class="text-[11px] font-semibold text-slate-700 group-hover:text-[#E97C7F] transition">{{ $opt['label'] }}</span>
                     </label>
                     @endforeach
                 </div>
@@ -240,7 +240,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Year / Period</p>
-                    <p class="text-base font-black text-[#1a3d34]">{{ now()->year }} <span class="text-[#6B9080]">/</span> {{ $qLabel }}</p>
+                    <p class="text-base font-black text-[#9D5268]">{{ now()->year }} <span class="text-[#E97C7F]">/</span> {{ $qLabel }}</p>
                 </div>
             </div>
         </div>
@@ -253,7 +253,7 @@
                 ['label'=>'Department',  'value'=>$departmentName],
                 ['label'=>'Reporting To','value'=>$reportsToName],
             ] as $f)
-            <div class="border border-[#6B9080]/20 rounded-xl px-4 py-3 bg-slate-50/60">
+            <div class="border border-[#E97C7F]/20 rounded-xl px-4 py-3 bg-slate-50/60">
                 <p class="f-label mb-1">{{ $f['label'] }}</p>
                 <p class="text-xs font-semibold text-slate-800 leading-snug">{{ $f['value'] }}</p>
             </div>
@@ -263,7 +263,7 @@
         {{-- ═══════════════════════════════════════════════════════════════
              SECTION 3 — ATTITUDE & COMPETENCY ASSESSMENT
         ═══════════════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6">
+        <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden mb-6">
             <div class="sec-bar">
                 <div class="sec-num">3</div>
                 <span class="sec-title">Executive / Non-Executive : Performance Appraisal</span>
@@ -271,11 +271,11 @@
 
             {{-- Rating scale legend --}}
             <div class="px-6 pt-5 pb-4 border-b border-slate-100">
-                <p class="text-[9px] font-black text-[#6B9080] uppercase tracking-widest mb-3">Rating Scale</p>
+                <p class="text-[9px] font-black text-[#E97C7F] uppercase tracking-widest mb-3">Rating Scale</p>
                 <div class="flex gap-2 flex-wrap">
                     @php $ratingLegend = [
                         ['score'=>5,'cat'=>'Outstanding',    'def'=>'Exceptional performance, high initiative, sound judgement.',           'bg'=>'bg-emerald-50','border'=>'border-emerald-200','text'=>'text-emerald-700','num'=>'bg-emerald-500'],
-                        ['score'=>4,'cat'=>'Above Average',  'def'=>'Consistently meets all requirements, exceeds in major aspects.',       'bg'=>'bg-[#6B9080]/5','border'=>'border-[#6B9080]/25','text'=>'text-[#1a3d34]','num'=>'bg-[#6B9080]'],
+                        ['score'=>4,'cat'=>'Above Average',  'def'=>'Consistently meets all requirements, exceeds in major aspects.',       'bg'=>'bg-[#E97C7F]/5','border'=>'border-[#E97C7F]/25','text'=>'text-[#9D5268]','num'=>'bg-[#E97C7F]'],
                         ['score'=>3,'cat'=>'Average',        'def'=>'Meets the normal requirements of the position.',                       'bg'=>'bg-slate-50','border'=>'border-slate-200','text'=>'text-slate-600','num'=>'bg-slate-400'],
                         ['score'=>2,'cat'=>'Below Average',  'def'=>'Below expectations, requires improvement and remedial steps.',         'bg'=>'bg-amber-50','border'=>'border-amber-200','text'=>'text-amber-700','num'=>'bg-amber-400'],
                         ['score'=>1,'cat'=>'Unsatisfactory', 'def'=>'Inadequate; counselling or appropriate action required.',              'bg'=>'bg-red-50','border'=>'border-red-200','text'=>'text-red-700','num'=>'bg-red-500'],
@@ -311,7 +311,7 @@
                 </thead>
                 <tbody>
                 @foreach($assessmentAreas as $i => $area)
-                <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50' }}" style="border-bottom:1px solid rgba(107,144,128,.10);">
+                <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50' }}" style="border-bottom:1px solid rgba(233,124,127,.10);">
                     <td style="padding:14px 16px;">
                         <p style="font-size:11px;font-weight:800;color:#1e293b;margin-bottom:3px;">{{ $area['no'] }}) {{ $area['title'] }}</p>
                         <p style="font-size:10px;color:#94a3b8;line-height:1.55;font-style:italic;">{{ $area['description'] }}</p>
@@ -332,7 +332,7 @@
                         <div class="rating-group justify-center">
                             @foreach([1,2,3,4,5] as $sc)
                             <input type="radio" id="sup_{{ $area['no'] }}_{{ $sc }}" name="superior_area_{{ $area['no'] }}" value="{{ $sc }}" class="sup-radio">
-                            <label for="sup_{{ $area['no'] }}_{{ $sc }}" style="background:white; border-color:rgba(26,61,52,.25); color:#94a3b8;">{{ $sc }}</label>
+                            <label for="sup_{{ $area['no'] }}_{{ $sc }}" style="background:white; border-color:rgba(157,82,104,.25); color:#94a3b8;">{{ $sc }}</label>
                             @endforeach
                         </div>
                     </td>
@@ -344,22 +344,22 @@
                 @endforeach
 
                 {{-- Summary row --}}
-                <tr style="background:linear-gradient(90deg,rgba(107,144,128,.08),rgba(107,144,128,.04));">
+                <tr style="background:linear-gradient(90deg,rgba(233,124,127,.08),rgba(233,124,127,.04));">
                     <td style="padding:14px 16px;">
-                        <p style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.10em;color:#6B9080;">No. of Areas Assessed</p>
-                        <p style="font-size:24px;font-weight:900;color:#1a3d34;margin-top:2px;">{{ count($assessmentAreas) }}</p>
+                        <p style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.10em;color:#E97C7F;">No. of Areas Assessed</p>
+                        <p style="font-size:24px;font-weight:900;color:#9D5268;margin-top:2px;">{{ count($assessmentAreas) }}</p>
                         <p style="font-size:9px;color:#94a3b8;margin-top:4px;font-style:italic;">
                             Formula: Total ÷ {{ count($assessmentAreas) * 5 }} × 25
                         </p>
                     </td>
                     <td style="padding:14px 8px;" class="text-center">
                         <p style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:6px;">Self Score</p>
-                        <p id="selfTotal" style="font-size:22px;font-weight:900;color:#cbd5e1;">—</p>
+                        <p id="selfTotal" style="font-size:22px;font-weight:900;color:#A6AEC0;">—</p>
                         <p id="selfPct" style="font-size:9px;color:#94a3b8;margin-top:2px;"></p>
                     </td>
                     <td style="padding:14px 8px;" class="text-center">
                         <p style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:6px;">Superior Score</p>
-                        <p id="supTotal" style="font-size:22px;font-weight:900;color:#cbd5e1;">—</p>
+                        <p id="supTotal" style="font-size:22px;font-weight:900;color:#A6AEC0;">—</p>
                         <p id="supPct" style="font-size:9px;color:#94a3b8;margin-top:2px;"></p>
                     </td>
                     <td></td>
@@ -372,7 +372,7 @@
         {{-- ═══════════════════════════════════════════════════════════════
              SECTION 4 — PERFORMANCE ANALYSIS
         ═══════════════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-6">
+        <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden mb-6">
             <div class="sec-bar">
                 <div class="sec-num">4</div>
                 <span class="sec-title">Executive / Non-Executive : Performance Analysis</span>
@@ -387,7 +387,7 @@
 
                     <div class="grid grid-cols-2 gap-6">
                         {{-- Score table --}}
-                        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden" id="sec4Table">
+                        <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden" id="sec4Table">
                             <table class="doc-tbl">
                                 <thead>
                                     <tr>
@@ -397,7 +397,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr class="bg-white" style="border-bottom:1px solid rgba(107,144,128,.10);">
+                                    <tr class="bg-white" style="border-bottom:1px solid rgba(233,124,127,.10);">
                                         <td style="padding:12px 14px;">
                                             <p style="font-size:11px;font-weight:700;color:#334155;">Section 2</p>
                                             <p style="font-size:9px;color:#94a3b8;">KPI Performance</p>
@@ -405,7 +405,7 @@
                                         <td class="text-center"><input type="number" min="0" max="100" placeholder="—" class="n-input s4-input"></td>
                                         <td class="text-center"><input type="number" min="0" max="100" placeholder="—" class="n-input s4-input"></td>
                                     </tr>
-                                    <tr class="bg-slate-50/50" style="border-bottom:1px solid rgba(107,144,128,.10);">
+                                    <tr class="bg-slate-50/50" style="border-bottom:1px solid rgba(233,124,127,.10);">
                                         <td style="padding:12px 14px;">
                                             <p style="font-size:11px;font-weight:700;color:#334155;">Section 3</p>
                                             <p style="font-size:9px;color:#94a3b8;">Attitude &amp; Competency</p>
@@ -413,13 +413,13 @@
                                         <td class="text-center"><input type="number" min="0" max="100" placeholder="—" class="n-input s4-input"></td>
                                         <td class="text-center"><input type="number" min="0" max="100" placeholder="—" class="n-input s4-input"></td>
                                     </tr>
-                                    <tr style="background:linear-gradient(90deg,rgba(26,61,52,.06),rgba(107,144,128,.04));">
+                                    <tr style="background:linear-gradient(90deg,rgba(157,82,104,.06),rgba(233,124,127,.04));">
                                         <td style="padding:12px 14px;">
-                                            <p style="font-size:12px;font-weight:900;color:#1a3d34;text-transform:uppercase;letter-spacing:.05em;">Rating</p>
+                                            <p style="font-size:12px;font-weight:900;color:#9D5268;text-transform:uppercase;letter-spacing:.05em;">Rating</p>
                                             <p style="font-size:9px;color:#94a3b8;">Combined total</p>
                                         </td>
-                                        <td class="text-center" style="padding:12px;"><span id="s4SelfTotal" style="font-size:20px;font-weight:900;color:#cbd5e1;">—</span></td>
-                                        <td class="text-center" style="padding:12px;"><span id="s4AppTotal"  style="font-size:20px;font-weight:900;color:#cbd5e1;">—</span></td>
+                                        <td class="text-center" style="padding:12px;"><span id="s4SelfTotal" style="font-size:20px;font-weight:900;color:#A6AEC0;">—</span></td>
+                                        <td class="text-center" style="padding:12px;"><span id="s4AppTotal"  style="font-size:20px;font-weight:900;color:#A6AEC0;">—</span></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -428,13 +428,13 @@
                         {{-- Scoring matrix --}}
                         <div>
                             <p class="f-label mb-3">Scoring Matrix</p>
-                            <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden">
-                                <div class="bg-[#1a3d34] px-4 py-2 text-center">
+                            <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden">
+                                <div class="bg-[#9D5268] px-4 py-2 text-center">
                                     <span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.85);">Performance Grade</span>
                                 </div>
                                 @php $matrix = [
                                     ['range'=>'90 – 100','label'=>'Outstanding',       'bg'=>'bg-emerald-50','border'=>'border-emerald-100','text'=>'text-emerald-700','badge'=>'bg-emerald-100'],
-                                    ['range'=>'70 – 89', 'label'=>'Meets Expectations','bg'=>'bg-[#6B9080]/5','border'=>'border-[#6B9080]/15','text'=>'text-[#1a3d34]','badge'=>'bg-[#6B9080]/15'],
+                                    ['range'=>'70 – 89', 'label'=>'Meets Expectations','bg'=>'bg-[#E97C7F]/5','border'=>'border-[#E97C7F]/15','text'=>'text-[#9D5268]','badge'=>'bg-[#E97C7F]/15'],
                                     ['range'=>'50 – 69', 'label'=>'Below Average',     'bg'=>'bg-amber-50','border'=>'border-amber-100','text'=>'text-amber-700','badge'=>'bg-amber-100'],
                                     ['range'=>'1 – 49',  'label'=>'Unsatisfactory',    'bg'=>'bg-red-50','border'=>'border-red-100','text'=>'text-red-700','badge'=>'bg-red-100'],
                                 ]; @endphp
@@ -449,7 +449,7 @@
                     </div>
                 </div>
 
-                <div class="border-t border-dashed border-[#6B9080]/20"></div>
+                <div class="border-t border-dashed border-[#E97C7F]/20"></div>
 
                 {{-- B) Performance Analysis --}}
                 <div>
@@ -464,7 +464,7 @@
                         ] as $pf)
                         <div>
                             <div class="flex items-center gap-2 mb-2">
-                                <span class="w-1.5 h-1.5 rounded-full bg-[#6B9080] flex-shrink-0"></span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#E97C7F] flex-shrink-0"></span>
                                 <p class="f-label">{{ $pf['label'] }}</p>
                             </div>
                             <input type="text" placeholder="Enter here…" class="f-input">
@@ -473,7 +473,7 @@
                     </div>
                 </div>
 
-                <div class="border-t border-dashed border-[#6B9080]/20"></div>
+                <div class="border-t border-dashed border-[#E97C7F]/20"></div>
 
                 {{-- Appraiser signature --}}
                 <div>
@@ -490,13 +490,13 @@
                     </div>
                 </div>
 
-                <div class="border-t border-dashed border-[#6B9080]/20"></div>
+                <div class="border-t border-dashed border-[#E97C7F]/20"></div>
 
                 {{-- Appraisee acknowledgment --}}
                 <div>
                     <p class="text-[11px] text-slate-500 italic leading-relaxed mb-3">
                         I hereby confirm that I have read, understood and accept/disagree with the foregoing appraisal.
-                        <span class="text-[#6B9080] font-semibold not-italic">(If you disagree please specify below)</span>
+                        <span class="text-[#E97C7F] font-semibold not-italic">(If you disagree please specify below)</span>
                     </p>
                     <textarea rows="4" placeholder="Write your response here…" class="f-area mb-6"></textarea>
                     <div class="flex justify-end">
@@ -515,7 +515,7 @@
         {{-- ═══════════════════════════════════════════════════════════════
              SECTION 5 — RECOMMENDATIONS & DECISIONS
         ═══════════════════════════════════════════════════════════════ --}}
-        <div class="border border-[#6B9080]/25 rounded-xl overflow-hidden mb-2">
+        <div class="border border-[#E97C7F]/25 rounded-xl overflow-hidden mb-2">
             <div class="sec-bar">
                 <div class="sec-num">5</div>
                 <span class="sec-title">Recommendations &amp; Decisions</span>
@@ -530,7 +530,7 @@
                 ]; @endphp
 
                 @foreach($sec5 as $idx => $blk)
-                @if($idx > 0)<div class="border-t border-dashed border-[#6B9080]/20 pt-7"></div>@endif
+                @if($idx > 0)<div class="border-t border-dashed border-[#E97C7F]/20 pt-7"></div>@endif
 
                 <div>
                     <div class="part-label">{{ $blk['label'] }} &nbsp;·&nbsp; {{ $blk['title'] }}</div>
@@ -542,11 +542,11 @@
                         <div class="flex items-center gap-6">
                             @foreach(['Confirmation','Salary Review','Promotion'] as $opt)
                             <label class="flex items-center gap-2 cursor-pointer group select-none">
-                                <span class="w-4 h-4 rounded border-2 border-[#6B9080]/40 flex items-center justify-center">
+                                <span class="w-4 h-4 rounded border-2 border-[#E97C7F]/40 flex items-center justify-center">
                                     <input type="checkbox" name="{{ $blk['key'] }}_decision[]" value="{{ $opt }}" class="sr-only peer">
-                                    <span class="w-2.5 h-2.5 rounded-sm bg-[#6B9080] hidden peer-checked:block"></span>
+                                    <span class="w-2.5 h-2.5 rounded-sm bg-[#E97C7F] hidden peer-checked:block"></span>
                                 </span>
-                                <span class="text-[11px] font-semibold text-slate-700 group-hover:text-[#6B9080] transition">{{ $opt }}</span>
+                                <span class="text-[11px] font-semibold text-slate-700 group-hover:text-[#E97C7F] transition">{{ $opt }}</span>
                             </label>
                             @endforeach
                         </div>
@@ -556,7 +556,7 @@
                             <p class="f-label mt-1">Signature</p>
                             <div class="flex items-center gap-2 mt-2 justify-center">
                                 <span class="f-label">Date</span>
-                                <input type="date" class="border border-[#6B9080]/25 rounded-lg px-2 py-1 text-xs text-slate-600 bg-white outline-none focus:border-[#6B9080] transition">
+                                <input type="date" class="border border-[#E97C7F]/25 rounded-lg px-2 py-1 text-xs text-slate-600 bg-white outline-none focus:border-[#E97C7F] transition">
                             </div>
                         </div>
                     </div>
@@ -582,10 +582,10 @@
     const MAX     = AREAS * 5;
 
     function sc(v, base) {
-        if (!base) return 'color:#cbd5e1';
+        if (!base) return 'color:#A6AEC0';
         const p = v / base * 100;
         if (p >= 80) return 'color:#059669';
-        if (p >= 60) return 'color:#6B9080';
+        if (p >= 60) return 'color:#E97C7F';
         if (p >= 40) return 'color:#d97706';
         return 'color:#dc2626';
     }
@@ -606,13 +606,13 @@
             selfEl.textContent = selfSum;
             selfEl.style = sc(selfSum, MAX);
             spEl.textContent = (selfSum / MAX * 25).toFixed(1) + ' / 25 pts';
-        } else { selfEl.textContent = '—'; selfEl.style = 'color:#cbd5e1'; spEl.textContent = `(${selfChecked.length}/${AREAS})`; }
+        } else { selfEl.textContent = '—'; selfEl.style = 'color:#A6AEC0'; spEl.textContent = `(${selfChecked.length}/${AREAS})`; }
 
         if (supChecked.length) {
             supEl.textContent = supSum;
             supEl.style = sc(supSum, MAX);
             stEl.textContent = (supSum / MAX * 25).toFixed(1) + ' / 25 pts';
-        } else { supEl.textContent = '—'; supEl.style = 'color:#cbd5e1'; stEl.textContent = `(${supChecked.length}/${AREAS})`; }
+        } else { supEl.textContent = '—'; supEl.style = 'color:#A6AEC0'; stEl.textContent = `(${supChecked.length}/${AREAS})`; }
     }
 
     document.getElementById('attTable')?.addEventListener('change', recalcS3);
@@ -630,13 +630,13 @@
             const t = s2s + s3s;
             selfEl.textContent = t.toFixed(1);
             selfEl.style = sc(t, 200);
-        } else { selfEl.textContent = '—'; selfEl.style = 'color:#cbd5e1'; }
+        } else { selfEl.textContent = '—'; selfEl.style = 'color:#A6AEC0'; }
 
         if (!isNaN(s2a) && !isNaN(s3a)) {
             const t = s2a + s3a;
             appEl.textContent = t.toFixed(1);
             appEl.style = sc(t, 200);
-        } else { appEl.textContent = '—'; appEl.style = 'color:#cbd5e1'; }
+        } else { appEl.textContent = '—'; appEl.style = 'color:#A6AEC0'; }
     }
 
     document.getElementById('sec4Table')?.addEventListener('input', recalcS4);

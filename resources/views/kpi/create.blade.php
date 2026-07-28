@@ -36,7 +36,7 @@
             width:14px;
             height:14px;
             border-radius:999px;
-            background:#D4AF37;
+            background:#E3B341;
             color:#1a1a1a;
             display:flex;
             align-items:center;
@@ -46,13 +46,13 @@
         }
 
         .category-card:hover{
-            border-color:#D4AF37;
+            border-color:#E3B341;
         }
 
         .category-radio:checked + .category-card{
             background:#FBF5EF;
-            border-color:#D4AF37;
-            color:#7A0019;
+            border-color:#E3B341;
+            color:#E97C7F;
         }
 
         .category-title{
@@ -89,10 +89,10 @@
 
         .sub-radio:checked + .sub-card{
             background:#FBF5EF;
-            border-color:#7A0019;
-            color:#7A0019;
+            border-color:#E97C7F;
+            color:#E97C7F;
             box-shadow:
-                inset 0 0 0 1px #D4AF37;
+                inset 0 0 0 1px #E3B341;
         }
 
         .sub-radio:checked + .sub-card::after{
@@ -103,7 +103,7 @@
             width:14px;
             height:14px;
             border-radius:999px;
-            background:#D4AF37;
+            background:#E3B341;
             color:#1a1a1a;
             display:flex;
             align-items:center;
@@ -112,7 +112,7 @@
         }
 
         :root{
-            --navy:#7A0019;
+            --navy:#E97C7F;
             --navy-soft:#8B0020;
             --slate:#0f172a;
             --surface:#ffffff;
@@ -149,8 +149,8 @@
             background:
                 linear-gradient(
                     135deg,
-                    #1A0A0A 0%,
-                    #7A0019 100%
+                    #9D5268 0%,
+                    #E97C7F 100%
                 );
         }
 
@@ -159,13 +159,13 @@
             position:absolute;
             top:0; left:0; right:0;
             height:2px;
-            background: linear-gradient(90deg, #D4AF37, #D4AF37, rgba(212,175,55,.1));
+            background: linear-gradient(90deg, #E3B341, #E3B341, rgba(227,179,65,.1));
         }
 
         .soft-glow{
             box-shadow:
                 0 18px 40px rgba(15,23,42,.08),
-                0 8px 20px rgba(122,0,25,.10);
+                0 8px 20px rgba(233,124,127,.10);
         }
 
         .glass-card{
@@ -212,8 +212,8 @@
             background:
                 linear-gradient(
                     180deg,
-                    #7A0019 0%,
-                    #D4AF37 100%
+                    #E97C7F 0%,
+                    #E3B341 100%
                 );
 
             opacity:.9;
@@ -228,7 +228,7 @@
             align-items:center;
             justify-content:center;
 
-            background:#7A0019;
+            background:#E97C7F;
             color:white;
 
             font-size:13px;
@@ -253,15 +253,15 @@
         }
 
         .field:hover{
-            border-color:#D4AF37;
+            border-color:#E3B341;
             background:white;
         }
 
         .field:focus{
             outline:none;
-            border-color:#D4AF37;
+            border-color:#E3B341;
             box-shadow:
-                0 0 0 3px rgba(212,175,55,.18);
+                0 0 0 3px rgba(227,179,65,.18);
             background:white;
         }
 
@@ -294,7 +294,7 @@
             font-weight:900;
             font-size:13px;
 
-            color:#7A0019;
+            color:#E97C7F;
 
             background:
                 linear-gradient(
@@ -303,10 +303,10 @@
                     #ffffff 100%
                 );
 
-            border:1px solid #D4AF37;
+            border:1px solid #E3B341;
 
             box-shadow:
-                0 8px 20px rgba(212,175,55,.15);
+                0 8px 20px rgba(227,179,65,.15);
         }
 
         .summary-card{
@@ -415,27 +415,27 @@
             background:
                 linear-gradient(
                     135deg,
-                    #1A0A0A 0%,
-                    #7A0019 100%
+                    #9D5268 0%,
+                    #E97C7F 100%
                 );
 
             border:1px solid rgba(255,255,255,.08);
 
             box-shadow:
-                0 14px 30px rgba(122,0,25,.25);
+                0 14px 30px rgba(233,124,127,.25);
         }
 
         .primary-btn:hover{
             transform:translateY(-1px);
 
             box-shadow:
-                0 20px 35px rgba(122,0,25,.30);
+                0 20px 35px rgba(233,124,127,.30);
         }
 
         .outline-btn{
             background:white;
 
-            border:1px solid #D4AF37;
+            border:1px solid #E3B341;
 
             color:#B8860B;
 
@@ -444,8 +444,8 @@
 
         .outline-btn:hover{
             background:#FBF5EF;
-            border-color:#7A0019;
-            color:#7A0019;
+            border-color:#E97C7F;
+            color:#E97C7F;
         }
 
         .info-card{
@@ -537,7 +537,7 @@
             height:180px;
             top:-40px;
             right:-40px;
-            background:#D4AF37;
+            background:#E3B341;
         }
 
         .floating-cyan{
@@ -545,7 +545,7 @@
             height:140px;
             bottom:-40px;
             left:-40px;
-            background:#7A0019;
+            background:#E97C7F;
         }
 
         .divider-soft{
@@ -569,9 +569,9 @@
             font-weight:800;
 
             background:#FBF5EF;
-            color:#7A0019;
+            color:#E97C7F;
 
-            border:1px solid #D4AF37;
+            border:1px solid #E3B341;
         }
 
         .sidebar-shadow{
@@ -614,10 +614,10 @@
 
         @keyframes submitGlow{
             0%, 100% {
-                box-shadow: 0 4px 14px rgba(212,175,55,.35), 0 0 0 0 rgba(212,175,55,.45);
+                box-shadow: 0 4px 14px rgba(227,179,65,.35), 0 0 0 0 rgba(227,179,65,.45);
             }
             50% {
-                box-shadow: 0 4px 20px rgba(212,175,55,.55), 0 0 0 8px rgba(212,175,55,0);
+                box-shadow: 0 4px 20px rgba(227,179,65,.55), 0 0 0 8px rgba(227,179,65,0);
             }
         }
 
@@ -637,7 +637,7 @@
 <div class="sticky top-0 z-30 px-6 pt-4 pb-3 bg-[#F5F5F3]">
 <div class="max-w-7xl mx-auto">
     <div class="hero-gradient rounded-[1.5rem] text-white p-4 soft-glow overflow-hidden">
-        <a href="{{ route('kpi.index') }}" class="text-xs text-[#D4AF37] hover:text-white">
+        <a href="{{ route('kpi.index') }}" class="text-xs text-[#E3B341] hover:text-white">
             ← Back to KPI List
         </a>
 
@@ -680,14 +680,14 @@
 
                     <div class="relative flex gap-4">
 
-                        <div class="w-2 rounded-full bg-gradient-to-b from-[#7A0019] to-[#D4AF37]"></div>
+                        <div class="w-2 rounded-full bg-gradient-to-b from-[#E97C7F] to-[#E3B341]"></div>
 
                         <div class="flex-1">
 
                             <!-- HEADER -->
                             <div class="flex items-center gap-4">
 
-                                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#7A0019] to-[#D4AF37] text-white flex items-center justify-center font-black shadow-lg">
+                                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#E97C7F] to-[#E3B341] text-white flex items-center justify-center font-black shadow-lg">
                                     1
                                 </div>
 
@@ -836,14 +836,14 @@
 
                     <div class="relative flex gap-4">
 
-                        <div class="w-2 rounded-full bg-gradient-to-b from-[#7A0019] to-[#D4AF37]"></div>
+                        <div class="w-2 rounded-full bg-gradient-to-b from-[#E97C7F] to-[#E3B341]"></div>
 
                         <div class="flex-1">
 
                             <!-- HEADER -->
                             <div class="flex items-center gap-4">
 
-                                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#7A0019] to-[#D4AF37] text-white flex items-center justify-center font-black shadow-lg">
+                                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#E97C7F] to-[#E3B341] text-white flex items-center justify-center font-black shadow-lg">
                                     2
                                 </div>
 
@@ -1016,7 +1016,7 @@
 
                 <div class="relative flex gap-4">
 
-                    <div class="w-2 rounded-full bg-gradient-to-b from-[#7A0019] to-[#D4AF37]"></div>
+                    <div class="w-2 rounded-full bg-gradient-to-b from-[#E97C7F] to-[#E3B341]"></div>
 
                     <div class="flex-1">
 
@@ -1154,7 +1154,7 @@
 
                 <div class="relative flex gap-4">
 
-                    <div class="w-2 rounded-full bg-gradient-to-b from-[#7A0019] to-[#D4AF37]"></div>
+                    <div class="w-2 rounded-full bg-gradient-to-b from-[#E97C7F] to-[#E3B341]"></div>
 
                     <div class="flex-1">
 
@@ -1496,7 +1496,7 @@
 
                     <div class="relative flex gap-4">
 
-                        <div class="w-2 rounded-full bg-gradient-to-b from-[#7A0019] to-[#D4AF37]"></div>
+                        <div class="w-2 rounded-full bg-gradient-to-b from-[#E97C7F] to-[#E3B341]"></div>
 
                         <div class="flex-1">
 
@@ -1505,7 +1505,7 @@
 
                                 <div class="flex items-center gap-4">
 
-                                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#7A0019] to-[#D4AF37] text-white flex items-center justify-center font-black shadow-lg">
+                                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#E97C7F] to-[#E3B341] text-white flex items-center justify-center font-black shadow-lg">
                                         6
                                     </div>
 
@@ -1787,7 +1787,7 @@
 
                                     <p
                                         id="summaryQuarterTargetTotal"
-                                        class="text-2xl font-black text-[#7A0019] mt-2"
+                                        class="text-2xl font-black text-[#E97C7F] mt-2"
                                     >
                                         0.00
                                     </p>
@@ -1826,7 +1826,7 @@
                         <div
                             class="w-9 h-9
                                 rounded-xl
-                                bg-gradient-to-br from-[#1A0A0A] to-[#7A0019]
+                                bg-gradient-to-br from-[#9D5268] to-[#E97C7F]
                                 text-white
                                 flex
                                 items-center
@@ -1864,7 +1864,7 @@
                             Owner
                         </p>
 
-                        <p class="font-black text-sm text-[#7A0019] mt-0.5">
+                        <p class="font-black text-sm text-[#E97C7F] mt-0.5">
                             {{ $user['short_name'] ?? '-' }}
                         </p>
 
@@ -1901,7 +1901,7 @@
 
                             <p
                                 id="summaryCategory"
-                                class="font-bold text-sm text-[#7A0019] mt-0.5">
+                                class="font-bold text-sm text-[#E97C7F] mt-0.5">
                                 -
                             </p>
 
@@ -1920,7 +1920,7 @@
 
                             <p
                                 id="summarySubCategory"
-                                class="font-bold text-sm text-[#7A0019] mt-0.5">
+                                class="font-bold text-sm text-[#E97C7F] mt-0.5">
                                 -
                             </p>
 
@@ -1944,7 +1944,7 @@
 
                             <p
                                 id="summaryBase"
-                                class="font-black text-base text-[#7A0019] mt-0.5">
+                                class="font-black text-base text-[#E97C7F] mt-0.5">
                                 0.00
                             </p>
 
@@ -1963,7 +1963,7 @@
 
                             <p
                                 id="summaryStretch"
-                                class="font-black text-base text-[#7A0019] mt-0.5">
+                                class="font-black text-base text-[#E97C7F] mt-0.5">
                                 0.00
                             </p>
 
@@ -2008,7 +2008,7 @@
 
                         <p
                             id="sidebarQuarterTargetTotal"
-                            class="text-base font-black text-[#7A0019] mt-0.5">
+                            class="text-base font-black text-[#E97C7F] mt-0.5">
                             0.00
                         </p>
 
@@ -2069,7 +2069,7 @@
                             type="submit"
                             id="createKpiSubmitBtn"
                             class="w-full
-                                bg-[#D4AF37]
+                                bg-[#E3B341]
                                 hover:bg-[#c19c2f]
                                 text-[#1a1a1a]
                                 font-black
@@ -2399,7 +2399,7 @@
             summaryEl.textContent = totalText;
             summaryEl.className = matched
                 ? 'text-2xl font-black mt-2 text-emerald-600'
-                : (displayValue > 0 ? 'text-2xl font-black mt-2 text-red-500' : 'text-2xl font-black mt-2 text-[#7A0019]');
+                : (displayValue > 0 ? 'text-2xl font-black mt-2 text-red-500' : 'text-2xl font-black mt-2 text-[#E97C7F]');
         }
 
         if(sidebarEl){
@@ -3036,7 +3036,7 @@ function bindAssignmentCards(){
                                         <div class="grid grid-cols-3 gap-2">
                                             <div class="rounded-xl bg-white border border-purple-100 p-2">
                                                 <p class="text-[9px] text-purple-400 uppercase font-black tracking-wider">Target</p>
-                                                <p class="text-sm font-black text-[#7A0019] mt-0.5">${Number(q.quarter_target ?? 0).toLocaleString()}</p>
+                                                <p class="text-sm font-black text-[#E97C7F] mt-0.5">${Number(q.quarter_target ?? 0).toLocaleString()}</p>
                                             </div>
                                             <div class="rounded-xl bg-white border border-purple-100 p-2">
                                                 <p class="text-[9px] text-purple-400 uppercase font-black tracking-wider">Start</p>
@@ -3060,11 +3060,11 @@ function bindAssignmentCards(){
                         <!-- KPI INFORMATION -->
                         <div>
                             <div class="flex items-center gap-2 mb-3">
-                                <div class="w-1 h-5 rounded-full bg-gradient-to-b from-[#7A0019] to-[#D4AF37]"></div>
+                                <div class="w-1 h-5 rounded-full bg-gradient-to-b from-[#E97C7F] to-[#E3B341]"></div>
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">KPI Information</p>
                             </div>
                             <div class="space-y-2">
-                                <div class="rounded-[20px] bg-gradient-to-br from-[#1A0A0A] to-[#7A0019] p-4">
+                                <div class="rounded-[20px] bg-gradient-to-br from-[#9D5268] to-[#E97C7F] p-4">
                                     <p class="text-[9px] uppercase tracking-widest text-white/50 font-black">KPI Name</p>
                                     <p class="font-black text-white text-base mt-1 leading-snug">${data.kpi_title ?? '-'}</p>
                                 </div>
@@ -3118,17 +3118,17 @@ function bindAssignmentCards(){
                             <div class="grid grid-cols-3 gap-2">
                                 <div class="rounded-2xl bg-[#FBF5EF] border border-[#6B3F2A]/20 p-4">
                                     <p class="text-[9px] uppercase tracking-widest text-[#8B5E4A] font-black">Base Target</p>
-                                    <p class="text-xl font-black text-[#7A0019] mt-1">${Number(data.base_target ?? 0).toLocaleString()}</p>
+                                    <p class="text-xl font-black text-[#E97C7F] mt-1">${Number(data.base_target ?? 0).toLocaleString()}</p>
                                     <p class="text-[9px] text-white/50 mt-1 uppercase font-bold">Annual</p>
                                 </div>
                                 <div class="rounded-2xl bg-purple-50 border border-purple-100 p-4">
                                     <p class="text-[9px] uppercase tracking-widest text-purple-500 font-black">Stretch Target</p>
-                                    <p class="text-xl font-black text-[#7A0019] mt-1">${Number(data.stretch_target ?? 0).toLocaleString()}</p>
+                                    <p class="text-xl font-black text-[#E97C7F] mt-1">${Number(data.stretch_target ?? 0).toLocaleString()}</p>
                                     <p class="text-[9px] text-purple-300 mt-1 uppercase font-bold">Annual</p>
                                 </div>
                                 <div class="rounded-2xl bg-amber-50 border border-amber-100 p-4">
                                     <p class="text-[9px] uppercase tracking-widest text-amber-600 font-black">Weightage</p>
-                                    <p class="text-xl font-black text-[#7A0019] mt-1">${data.weightage ?? 0}%</p>
+                                    <p class="text-xl font-black text-[#E97C7F] mt-1">${data.weightage ?? 0}%</p>
                                     <p class="text-[9px] text-amber-300 mt-1 uppercase font-bold">Weight</p>
                                 </div>
                             </div>

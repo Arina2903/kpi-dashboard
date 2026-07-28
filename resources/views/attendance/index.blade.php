@@ -9,14 +9,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         *, body { font-family: 'Inter', sans-serif; }
-        .tbl th { background:#1a3d34;color:#fff;padding:9px 11px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;white-space:nowrap; }
-        .tbl td { padding:7px 10px;border-bottom:1px solid rgba(107,144,128,.12);font-size:11px;vertical-align:middle; }
-        .tbl tbody tr:hover { background:rgba(107,144,128,.04); }
+        .tbl th { background:#9D5268;color:#fff;padding:9px 11px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;white-space:nowrap; }
+        .tbl td { padding:7px 10px;border-bottom:1px solid rgba(233,124,127,.12);font-size:11px;vertical-align:middle; }
+        .tbl tbody tr:hover { background:rgba(233,124,127,.04); }
         .badge { display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:6px;font-size:10px;font-weight:800;padding:0 5px; }
-        .leaf-input { width:48px;border:1.5px solid rgba(107,144,128,.3);border-radius:7px;padding:3px 5px;font-size:10px;font-weight:600;color:#334155;text-align:center;background:#fff;outline:none; }
-        .leaf-input:focus { border-color:#6B9080; }
+        .leaf-input { width:48px;border:1.5px solid rgba(233,124,127,.3);border-radius:7px;padding:3px 5px;font-size:10px;font-weight:600;color:#334155;text-align:center;background:#fff;outline:none; }
+        .leaf-input:focus { border-color:#E97C7F; }
         .m-card { border-radius:10px;padding:9px 11px;border:1.5px solid;display:flex;flex-direction:column;gap:3px; }
-        .m-card.done   { background:#edf7f1;border-color:#6B9080; }
+        .m-card.done   { background:#edf7f1;border-color:#E97C7F; }
         .m-card.empty  { background:#f8f9fa;border-color:#e2e8f0; }
         .m-card.future { background:#f1f5f9;border-color:#e2e8f0;opacity:.4; }
         @media print { .no-print{display:none!important;} body{background:#fff!important;} }
@@ -30,7 +30,7 @@
 
 {{-- Header --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#f0f2f7] no-print">
-    <div class="rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-4 shadow-xl flex items-center justify-between">
+    <div class="rounded-[18px] bg-gradient-to-r from-[#9D5268] to-[#E97C7F] text-white px-6 py-4 shadow-xl flex items-center justify-between">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
@@ -61,10 +61,10 @@
 @endphp
 
 {{-- ══ IMPORT STATUS GRID ════════════════════════════════════════════════ --}}
-<div class="bg-white rounded-2xl border border-[#6B9080]/25 shadow-sm p-5 mb-5 no-print">
+<div class="bg-white rounded-2xl border border-[#E97C7F]/25 shadow-sm p-5 mb-5 no-print">
     <div class="flex items-center gap-2 mb-3">
-        <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest">Import Status</p>
-        <span class="text-[9px] bg-[#1a3d34]/10 text-[#1a3d34] font-bold px-2 py-0.5 rounded-full">{{ $sYear }}</span>
+        <p class="text-[10px] font-black text-[#E97C7F] uppercase tracking-widest">Import Status</p>
+        <span class="text-[9px] bg-[#9D5268]/10 text-[#9D5268] font-bold px-2 py-0.5 rounded-full">{{ $sYear }}</span>
     </div>
     <div class="grid grid-cols-6 gap-2">
         @for($mi = 1; $mi <= 12; $mi++)
@@ -76,12 +76,12 @@
         @endphp
         <div class="m-card {{ $cls }}" id="mc-{{ $mi }}">
             <div class="flex items-center justify-between">
-                <span class="text-[10px] font-black {{ $done ? 'text-[#1a3d34]' : ($future ? 'text-slate-300' : 'text-slate-400') }}">
+                <span class="text-[10px] font-black {{ $done ? 'text-[#9D5268]' : ($future ? 'text-slate-300' : 'text-slate-400') }}">
                     {{ substr($mNames[$mi-1], 0, 3) }}
                 </span>
                 <span id="mc-chk-{{ $mi }}" class="text-[9px]">{{ $done ? '✓' : ($future ? '' : '—') }}</span>
             </div>
-            <div id="mc-ts-{{ $mi }}" class="text-[8px] font-medium {{ $done ? 'text-[#6B9080]' : 'text-slate-300' }}">
+            <div id="mc-ts-{{ $mi }}" class="text-[8px] font-medium {{ $done ? 'text-[#E97C7F]' : 'text-slate-300' }}">
                 {{ $done ? $lastTs : ($future ? 'Future' : 'Not imported') }}
             </div>
         </div>
@@ -90,8 +90,8 @@
 </div>
 
 {{-- ══ IMPORT FORM ═══════════════════════════════════════════════════════ --}}
-<div class="bg-white rounded-2xl border border-[#6B9080]/25 shadow-sm p-6 mb-5 no-print">
-    <p class="text-[10px] font-black text-[#6B9080] uppercase tracking-widest mb-4">Import Attendance</p>
+<div class="bg-white rounded-2xl border border-[#E97C7F]/25 shadow-sm p-6 mb-5 no-print">
+    <p class="text-[10px] font-black text-[#E97C7F] uppercase tracking-widest mb-4">Import Attendance</p>
 
     @if(session('error'))
     <div class="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">{{ session('error') }}</div>
@@ -102,7 +102,7 @@
         <div class="grid grid-cols-3 gap-4 mb-4">
             <div>
                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Company</p>
-                <select name="company" class="w-full border border-[#6B9080]/30 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 bg-white outline-none focus:border-[#6B9080]">
+                <select name="company" class="w-full border border-[#E97C7F]/30 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 bg-white outline-none focus:border-[#E97C7F]">
                     @foreach(['RCG','RGHB','RCT'] as $co)
                     <option value="{{ $co }}" {{ (isset($company) ? $company : $defCompany) === $co ? 'selected' : '' }}>{{ $co }}</option>
                     @endforeach
@@ -110,7 +110,7 @@
             </div>
             <div>
                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Month</p>
-                <select name="month" class="w-full border border-[#6B9080]/30 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 bg-white outline-none focus:border-[#6B9080]">
+                <select name="month" class="w-full border border-[#E97C7F]/30 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 bg-white outline-none focus:border-[#E97C7F]">
                     @foreach(range(1,12) as $m)
                     <option value="{{ $m }}" {{ ($defaultMonth ?? date('n')) == $m ? 'selected' : '' }}>
                         {{ \Carbon\Carbon::create(null,$m)->format('F') }}
@@ -120,7 +120,7 @@
             </div>
             <div>
                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Year</p>
-                <select name="year" class="w-full border border-[#6B9080]/30 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 bg-white outline-none focus:border-[#6B9080]">
+                <select name="year" class="w-full border border-[#E97C7F]/30 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 bg-white outline-none focus:border-[#E97C7F]">
                     @foreach([2025,2026,2027] as $y)
                     <option value="{{ $y }}" {{ ($defaultYear ?? date('Y')) == $y ? 'selected' : '' }}>{{ $y }}</option>
                     @endforeach
@@ -132,9 +132,9 @@
             <div class="flex gap-2">
                 <input type="url" name="sheet_url" required placeholder="https://docs.google.com/spreadsheets/d/…"
                     value="{{ $defUrl }}"
-                    class="flex-1 border border-[#6B9080]/30 rounded-xl px-4 py-2.5 text-sm text-slate-700 bg-white outline-none focus:border-[#6B9080]">
+                    class="flex-1 border border-[#E97C7F]/30 rounded-xl px-4 py-2.5 text-sm text-slate-700 bg-white outline-none focus:border-[#E97C7F]">
                 <button type="submit" id="importBtn"
-                    class="bg-[#1a3d34] hover:bg-[#2d5548] text-white px-6 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2">
+                    class="bg-[#9D5268] hover:bg-[#B97891] text-white px-6 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                     Import & Preview
                 </button>
@@ -162,13 +162,13 @@
 {{-- Summary cards --}}
 <div class="grid grid-cols-5 gap-3 mb-4 no-print">
     @foreach([
-        ['Staff in Sheet','👤',$totalEmp,'#1a3d34'],
-        ['Working Days','📅',$totalWorkingDays,'#6B9080'],
+        ['Staff in Sheet','👤',$totalEmp,'#9D5268'],
+        ['Working Days','📅',$totalWorkingDays,'#E97C7F'],
         ['Late Incidents','⏰',$totalLate,'#d97706'],
         ['Absent Days','❌',$totalAbsent,'#dc2626'],
         ['Insufficient','⚠️',$totalInsufficient,'#7c3aed'],
     ] as [$lbl,$ico,$val,$clr])
-    <div class="bg-white rounded-2xl border border-[#6B9080]/20 px-5 py-4 flex items-center gap-3">
+    <div class="bg-white rounded-2xl border border-[#E97C7F]/20 px-5 py-4 flex items-center gap-3">
         <span class="text-2xl">{{ $ico }}</span>
         <div>
             <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ $lbl }}</p>
@@ -181,7 +181,7 @@
 {{-- Period & legend --}}
 <div class="flex items-center justify-between flex-wrap gap-2 mb-3 no-print">
     <div class="flex items-center gap-2 flex-wrap">
-        <span class="text-xs font-black text-[#1a3d34]">{{ $monthLabel }}</span>
+        <span class="text-xs font-black text-[#9D5268]">{{ $monthLabel }}</span>
         @if(!empty($hasSavedData))
         <span class="text-[9px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">Re-import — existing MC / AL / Other values loaded. Edit if needed, then Save to update.</span>
         @else
@@ -202,12 +202,12 @@
 </div>
 
 {{-- Attendance table --}}
-<div class="bg-white rounded-2xl border border-[#6B9080]/25 shadow-sm overflow-hidden mb-4">
+<div class="bg-white rounded-2xl border border-[#E97C7F]/25 shadow-sm overflow-hidden mb-4">
 <div class="overflow-x-auto">
 <table class="tbl w-full">
     <thead>
         <tr>
-            <th class="text-left sticky left-0 bg-[#1a3d34]" style="min-width:160px;">Name</th>
+            <th class="text-left sticky left-0 bg-[#9D5268]" style="min-width:160px;">Name</th>
             <th class="text-left" style="min-width:80px;">Dept</th>
             <th class="text-center">Work</th>
             <th class="text-center">Present</th>
@@ -233,7 +233,7 @@
     @php $prevDept = $emp['department']; @endphp
     <tr>
         <td colspan="{{ 12 + count($workingDays) }}" class="bg-[#e4f0eb] py-2 px-4">
-            <span class="text-[9px] font-black text-[#1a3d34] uppercase tracking-widest">▸ {{ $emp['department'] ?: 'No Department' }}</span>
+            <span class="text-[9px] font-black text-[#9D5268] uppercase tracking-widest">▸ {{ $emp['department'] ?: 'No Department' }}</span>
         </td>
     </tr>
     @endif
@@ -243,7 +243,7 @@
             <div class="text-[9px] text-slate-400 font-normal">{{ $emp['internal_id'] }}</div>
         </td>
         <td class="text-[10px] text-slate-500">{{ $emp['department'] ?: '—' }}</td>
-        <td class="text-center font-bold text-[#1a3d34]">{{ $emp['working_days'] }}</td>
+        <td class="text-center font-bold text-[#9D5268]">{{ $emp['working_days'] }}</td>
         <td class="text-center">
             <span class="badge bg-emerald-100 text-emerald-700">{{ $emp['present_days'] }}</span>
         </td>
@@ -302,9 +302,9 @@
 <div class="flex justify-between items-center mb-8 no-print">
     <p class="text-[11px] text-slate-400">
         Enter MC / AL / Other Leave days above, then save.<br>
-        <span class="text-[10px] text-[#6B9080] font-semibold">{{ $totalEmp }} staff found in the <strong>{{ $monthLabel }}</strong> sheet tab.</span>
+        <span class="text-[10px] text-[#E97C7F] font-semibold">{{ $totalEmp }} staff found in the <strong>{{ $monthLabel }}</strong> sheet tab.</span>
     </p>
-    <button id="saveBtn" onclick="saveMonth()" class="bg-[#1a3d34] hover:bg-[#2d5548] text-white px-8 py-3 rounded-xl font-black text-sm transition shadow-lg flex items-center gap-2">
+    <button id="saveBtn" onclick="saveMonth()" class="bg-[#9D5268] hover:bg-[#B97891] text-white px-8 py-3 rounded-xl font-black text-sm transition shadow-lg flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Save {{ \Carbon\Carbon::create(null,$month)->format('F') }} {{ $year }}
     </button>
@@ -338,7 +338,7 @@ function showToast(msg, isError) {
     if (!t) return;
     t.textContent = msg;
     t.className = 'fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl font-bold text-sm shadow-xl transition-all ' +
-        (isError ? 'bg-red-600 text-white' : 'bg-[#1a3d34] text-white');
+        (isError ? 'bg-red-600 text-white' : 'bg-[#9D5268] text-white');
     t.style.display = 'block';
     t.style.opacity = '1';
     setTimeout(function() {
@@ -401,7 +401,7 @@ function saveMonth() {
                 var now = new Date();
                 var mn  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                 ts.textContent = now.getDate().toString().padStart(2,'0') + ' ' + mn[now.getMonth()] + ' · ' + now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
-                ts.className = 'text-[8px] font-medium text-[#6B9080]';
+                ts.className = 'text-[8px] font-medium text-[#E97C7F]';
             }
         } else {
             showToast('Error: ' + (d.error || 'Save failed. Try again.'), true);

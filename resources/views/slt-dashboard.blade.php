@@ -53,11 +53,11 @@
 
 {{-- ═══════ HEADER (sticky) ═══════ --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#F5F5F3]">
-    <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-5 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
+    <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#9D5268] to-[#E97C7F] text-white px-6 py-5 shadow-[0_10px_35px_rgba(233,124,127,0.45)] flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#E3B341] via-[#E3B341] to-[#E3B341]/10"></div>
         <div class="relative">
             <h1 class="text-xl font-black tracking-tight leading-tight">
-                SLT Dashboard <span class="text-[#D4AF37]">| {{ $quarter }} {{ $currentFinancialYear }}</span>
+                SLT Dashboard <span class="text-[#E3B341]">| {{ $quarter }} {{ $currentFinancialYear }}</span>
             </h1>
             <p class="text-[11px] text-white/60 mt-1">{{ now()->timezone('Asia/Kuala_Lumpur')->format('d M Y') }} · Who has completed their quarterly appraisal, and how the team scored</p>
         </div>
@@ -97,9 +97,9 @@
     @endphp
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
 
-        <div class="bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] p-4">
+        <div class="bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] p-4">
             <div class="flex items-center gap-2 mb-3">
-                <span class="w-7 h-7 rounded-lg bg-[#D4AF37]/10 flex items-center justify-center shrink-0">
+                <span class="w-7 h-7 rounded-lg bg-[#E3B341]/10 flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4 text-[#B8860B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.768-.231-1.48-.634-2.072M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.768.231-1.48.634-2.072m9.732 0A6.001 6.001 0 0012 6a6 6 0 00-4.366 9.928"/></svg>
                 </span>
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Staff Engagement</p>
@@ -116,7 +116,7 @@
         </div>
 
         {{-- APPRAISAL PROGRESS FUNNEL — shows exactly what stage every staff member is at --}}
-        <div class="md:col-span-2 bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] p-4">
+        <div class="md:col-span-2 bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] p-4">
             <div class="flex items-center gap-2 mb-3">
                 <span class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -153,10 +153,10 @@
             <p class="text-[9px] text-slate-400 mt-2.5">Click a stage to filter the staff list · a name only counts as "Completed" once staff has signed the appraiser's review back</p>
         </div>
 
-        <div class="bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] p-4 flex items-center justify-between">
+        <div class="bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] p-4 flex items-center justify-between">
             <div>
                 <div class="flex items-center gap-2 mb-3">
-                    <span class="w-7 h-7 rounded-lg bg-[#D4AF37]/10 flex items-center justify-center shrink-0">
+                    <span class="w-7 h-7 rounded-lg bg-[#E3B341]/10 flex items-center justify-center shrink-0">
                         <svg class="w-4 h-4 text-[#B8860B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                     </span>
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Average Score</p>
@@ -175,7 +175,7 @@
     <div class="grid grid-cols-1 xl:grid-cols-5 gap-3">
 
         {{-- Distribution chart --}}
-        <div class="xl:col-span-2 bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] p-4">
+        <div class="xl:col-span-2 bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] p-4">
             <p class="text-[11px] font-black text-slate-800 mb-1">Performance Score Distribution</p>
             <p class="text-[9px] text-slate-400 mb-3">How many staff landed in each rating band this quarter</p>
             <div style="height:180px;position:relative;">
@@ -194,7 +194,7 @@
         </div>
 
         {{-- Staff list --}}
-        <div class="xl:col-span-3 bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] overflow-hidden flex flex-col">
+        <div class="xl:col-span-3 bg-white rounded-2xl soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#E3B341] overflow-hidden flex flex-col">
             <div class="p-4 pb-2 flex items-center justify-between flex-wrap gap-2">
                 <div>
                     <p class="text-[11px] font-black text-slate-800">Staff List</p>

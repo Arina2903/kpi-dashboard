@@ -1,11 +1,11 @@
 @php
     $scoreStyle = function($s) {
         $s = (float)$s;
-        if ($s <= 25)  return ['bar'=>'bg-red-600',                                     'text'=>'text-red-700',     'badge'=>'bg-red-50 text-red-700 border-red-100',        'label'=>'Critical'];
-        if ($s <= 50)  return ['bar'=>'bg-gradient-to-r from-red-600 to-orange-500',    'text'=>'text-orange-700',  'badge'=>'bg-orange-50 text-orange-700 border-orange-100','label'=>'Risk'];
-        if ($s <= 75)  return ['bar'=>'bg-gradient-to-r from-orange-500 to-yellow-400', 'text'=>'text-amber-700',   'badge'=>'bg-amber-50 text-amber-700 border-amber-100',  'label'=>'Watch'];
-        if ($s <= 100) return ['bar'=>'bg-gradient-to-r from-yellow-400 to-emerald-600','text'=>'text-emerald-700', 'badge'=>'bg-emerald-50 text-emerald-700 border-emerald-100','label'=>'Good'];
-        return                 ['bar'=>'bg-emerald-700',                                'text'=>'text-emerald-800', 'badge'=>'bg-emerald-50 text-emerald-800 border-emerald-100','label'=>'Exceeded'];
+        if ($s <= 25)  return ['bar'=>'bg-[#D96368]',                                'text'=>'text-[#D96368]', 'badge'=>'bg-[#FCEDEC] text-[#D96368] border-[#D96368]/20', 'label'=>'Critical'];
+        if ($s <= 50)  return ['bar'=>'bg-gradient-to-r from-[#D96368] to-[#E6AA37]', 'text'=>'text-[#E6AA37]', 'badge'=>'bg-[#FFF5DC] text-[#E6AA37] border-[#E6AA37]/20', 'label'=>'Risk'];
+        if ($s <= 75)  return ['bar'=>'bg-gradient-to-r from-[#E6AA37] to-[#4D9A69]', 'text'=>'text-[#E6AA37]', 'badge'=>'bg-[#FFF5DC] text-[#E6AA37] border-[#E6AA37]/20', 'label'=>'Watch'];
+        if ($s <= 100) return ['bar'=>'bg-[#4D9A69]',                                'text'=>'text-[#4D9A69]', 'badge'=>'bg-[#EAF6EE] text-[#4D9A69] border-[#4D9A69]/20', 'label'=>'Good'];
+        return                 ['bar'=>'bg-[#4D9A69]',                                'text'=>'text-[#4D9A69]', 'badge'=>'bg-[#4D9A69] text-white border-[#4D9A69]',        'label'=>'Exceeded'];
     };
     $avgStyle = $scoreStyle($average);
     $quartersByLabel = collect($quarters)->keyBy('quarter');
@@ -23,8 +23,8 @@
 @endphp
 
 {{-- KPI header card --}}
-<div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#6B9080] mb-4">
-    <div class="h-1 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
+<div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#E97C7F] mb-4">
+    <div class="h-1 bg-gradient-to-r from-[#9D5268] to-[#E97C7F]"></div>
     <div class="p-5 flex flex-wrap items-center gap-5">
         <div class="flex-1 min-w-[240px]">
             <h1 class="text-base font-black text-slate-900 leading-snug">{{ $kpi['kpi_title'] ?? 'Untitled KPI' }}</h1>
@@ -55,7 +55,7 @@
             $qstyle = $scoreStyle($pct);
             $hasData = $row !== null && ((float)($actual ?? 0) > 0 || (float)($target ?? 0) > 0);
         @endphp
-        <div class="bg-white rounded-2xl border border-[#6B9080] soft-card p-4">
+        <div class="bg-white rounded-2xl border border-[#E97C7F] soft-card p-4">
             <div class="flex items-center justify-between mb-1">
                 <h3 class="text-xs font-black text-slate-900">{{ $ql }}</h3>
                 @if($row)
@@ -122,7 +122,7 @@
                                         <img src="{{ $file['url'] ?? '' }}" alt="{{ $file['name'] ?? 'attachment' }}" class="w-10 h-10 rounded-lg object-cover border border-slate-200">
                                     </a>
                                 @else
-                                    <a href="{{ $file['url'] ?? '#' }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[9px] font-bold text-[#1a3d34] bg-[#6B9080]/10 border border-[#6B9080]/30 rounded-lg px-2 py-1">
+                                    <a href="{{ $file['url'] ?? '#' }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[9px] font-bold text-[#9D5268] bg-[#E97C7F]/10 border border-[#E97C7F]/30 rounded-lg px-2 py-1">
                                         📎 {{ $file['name'] ?? 'File' }}
                                     </a>
                                 @endif

@@ -24,8 +24,8 @@
 @php
     // category drives the accent color; type drives the icon/label within it
     $categoryMeta = [
-        'approval'  => ['label' => 'Approval Needed',  'bg' => '#D4AF37', 'soft' => '#D4AF37'],
-        'appraisal' => ['label' => 'Appraisal',         'bg' => '#7A0019', 'soft' => '#7A0019'],
+        'approval'  => ['label' => 'Approval Needed',  'bg' => '#E3B341', 'soft' => '#E3B341'],
+        'appraisal' => ['label' => 'Appraisal',         'bg' => '#E97C7F', 'soft' => '#E97C7F'],
         'update'    => ['label' => 'Team Update',       'bg' => '#475569', 'soft' => '#475569'],
     ];
     $typeMeta = [
@@ -60,13 +60,13 @@
 
 {{-- ═══════ HEADER (sticky) ═══════ --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#F5F5F3]">
-    <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-5 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
+    <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#9D5268] to-[#E97C7F] text-white px-6 py-5 shadow-[0_10px_35px_rgba(233,124,127,0.45)] flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#E3B341] via-[#E3B341] to-[#E3B341]/10"></div>
         <div class="relative">
             <h1 class="text-xl font-black tracking-tight leading-tight">
                 Notifications
                 @if($unreadCount > 0)
-                    <span class="align-middle ml-1.5 text-[11px] font-black bg-[#D4AF37] text-[#1a1a1a] px-2 py-0.5 rounded-full">{{ $unreadCount }} new</span>
+                    <span class="align-middle ml-1.5 text-[11px] font-black bg-[#E3B341] text-[#1a1a1a] px-2 py-0.5 rounded-full">{{ $unreadCount }} new</span>
                 @endif
             </h1>
             <p class="text-[11px] text-white/60 mt-1">Approvals, appraisals, and job descriptions from everyone who reports to you — all in one place</p>
@@ -135,7 +135,7 @@
                                     <p class="text-[11px] text-slate-500 mt-0.5">{{ $n['message'] }}</p>
                                 @endif
                                 <div class="flex items-center gap-1.5 mt-2 flex-wrap">
-                                    <span class="text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full" style="background:{{ $cat['bg'] }}18;color:{{ $cat['bg'] === '#D4AF37' ? '#8a6d00' : $cat['bg'] }};">{{ $type['label'] }}</span>
+                                    <span class="text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full" style="background:{{ $cat['bg'] }}18;color:{{ $cat['bg'] === '#E3B341' ? '#8a6d00' : $cat['bg'] }};">{{ $type['label'] }}</span>
                                     @if(!empty($n['quarter']))
                                         <span class="text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{{ $n['quarter'] }} {{ $n['financial_year'] }}</span>
                                     @endif
@@ -145,7 +145,7 @@
                                 </div>
                             </div>
                             @if(!empty($n['link']))
-                                <span class="shrink-0 self-center text-[10px] font-black px-2.5 py-1.5 rounded-lg" style="background:{{ $cat['bg'] }}18;color:{{ $cat['bg'] === '#D4AF37' ? '#8a6d00' : $cat['bg'] }};">Open →</span>
+                                <span class="shrink-0 self-center text-[10px] font-black px-2.5 py-1.5 rounded-lg" style="background:{{ $cat['bg'] }}18;color:{{ $cat['bg'] === '#E3B341' ? '#8a6d00' : $cat['bg'] }};">Open →</span>
                             @endif
                         </div>
                     @endforeach

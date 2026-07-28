@@ -4,8 +4,8 @@
     $inputClass (full input class string), $iconHoverClass (hover color for the eye button).
 --}}
 @php
-    $inputClass = $inputClass ?? 'w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] focus:ring-2 focus:ring-[#6B9080]/40 focus:border-[#6B9080] focus:outline-none';
-    $iconHoverClass = $iconHoverClass ?? 'hover:text-[#1a3d34]';
+    $inputClass = $inputClass ?? 'w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] focus:ring-2 focus:ring-[#E97C7F]/40 focus:border-[#E97C7F] focus:outline-none';
+    $iconHoverClass = $iconHoverClass ?? 'hover:text-[#9D5268]';
     $isRequired = $required ?? true;
 @endphp
 <div class="relative">
