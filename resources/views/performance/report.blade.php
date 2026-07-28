@@ -1294,11 +1294,11 @@
     <div style="background:#fff;border-radius:20px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(15,23,42,.35);">
         <div style="position:sticky;top:0;background:#fff;padding:16px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;z-index:1;">
             <div style="min-width:0;">
+                <p id="qdTitle" style="font-size:14px;font-weight:900;color:#1a3d34;line-height:1.35;margin:0 0 6px;"></p>
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
                     <span id="qdQuarter" class="q-tag"></span>
                     <span id="qdWeight" style="font-size:8px;font-weight:900;color:#6B9080;background:#fff;border:1px solid rgba(107,144,128,.25);padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;"></span>
                 </div>
-                <p id="qdTitle" style="font-size:13px;font-weight:800;color:#1a3d34;line-height:1.35;margin:0;"></p>
                 <p id="qdSubtitle" style="font-size:10px;color:#94a3b8;margin:2px 0 0;"></p>
             </div>
             <button type="button" onclick="closeQuarterDetail()" style="background:#f1f5f9;border:1px solid #e2e8f0;width:28px;height:28px;border-radius:50%;font-size:14px;color:#64748b;cursor:pointer;flex-shrink:0;">✕</button>
@@ -1326,14 +1326,30 @@
                 <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px;">Attachment / Proof</p>
                 <div id="qdFiles" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
             </div>
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0;">
+                <button type="button" id="qdAniraToggle" onclick="toggleAniraScore()" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:0;cursor:pointer;">
+                    <span style="font-size:10px;font-weight:900;color:#1a3d34;text-transform:uppercase;letter-spacing:.06em;">🤖 ANIRA Score</span>
+                    <span id="qdAniraChevron" style="font-size:11px;color:#94a3b8;">▾</span>
+                </button>
+                <div id="qdAniraBody" style="display:none;margin-top:10px;"></div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
+var _aniraScoreCache = {};
+
 function openQuarterDetail(btn) {
     var detail;
     try { detail = JSON.parse(btn.dataset.detail); } catch (e) { console.error('openQuarterDetail: bad data', e); return; }
+
+    window._currentQuarterDetail = detail;
+    var aniraBody = document.getElementById('qdAniraBody');
+    aniraBody.style.display = 'none';
+    aniraBody.dataset.loaded = '';
+    aniraBody.innerHTML = '';
+    document.getElementById('qdAniraChevron').textContent = '▾';
 
     document.getElementById('qdQuarter').textContent = detail.quarter || '';
     document.getElementById('qdWeight').textContent = (detail.weight ?? '—') + '% weight';
@@ -1390,6 +1406,100 @@ function openQuarterDetail(btn) {
 function closeQuarterDetail() {
     document.getElementById('quarterDetailModal').style.display = 'none';
     document.body.style.overflow = '';
+}
+
+function toggleAniraScore() {
+    var body = document.getElementById('qdAniraBody');
+    var chevron = document.getElementById('qdAniraChevron');
+    var opening = body.style.display === 'none';
+    body.style.display = opening ? 'block' : 'none';
+    chevron.textContent = opening ? '▴' : '▾';
+    if (opening && body.dataset.loaded !== '1') loadAniraScore();
+}
+
+function loadAniraScore() {
+    var detail = window._currentQuarterDetail;
+    var body = document.getElementById('qdAniraBody');
+    if (!detail) return;
+
+    var key = [detail.title, detail.quarter, detail.actual, detail.target, detail.remark].join('|');
+    if (_aniraScoreCache[key]) {
+        renderAniraScore(_aniraScoreCache[key]);
+        body.dataset.loaded = '1';
+        return;
+    }
+
+    body.innerHTML = '';
+    var loading = document.createElement('p');
+    loading.style.cssText = 'font-size:10px;color:#94a3b8;margin:0;';
+    loading.textContent = 'Thinking…';
+    body.appendChild(loading);
+
+    fetch('{{ route('ai.score-quarter') }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            kpi_title:      detail.title,
+            subtitle:       detail.subtitle,
+            quarter:        detail.quarter,
+            actual:         detail.actual,
+            target:         detail.target,
+            progress:       detail.progress,
+            remark:         detail.remark,
+            has_attachment: !!(detail.files && detail.files.length),
+        }),
+    })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (!data.success) throw new Error(data.message || 'Failed');
+            _aniraScoreCache[key] = data;
+            renderAniraScore(data);
+            body.dataset.loaded = '1';
+        })
+        .catch(function (err) {
+            console.error('loadAniraScore failed:', err);
+            body.innerHTML = '';
+            var errEl = document.createElement('p');
+            errEl.style.cssText = 'font-size:10px;color:#dc2626;margin:0;';
+            errEl.textContent = "Couldn't load ANIRA score. Try again.";
+            body.appendChild(errEl);
+        });
+}
+
+function renderAniraScore(data) {
+    var body = document.getElementById('qdAniraBody');
+    body.innerHTML = '';
+
+    var verdictStyles = {
+        'Excellent':       {bg:'#ecfdf5', text:'#059669'},
+        'Good':            {bg:'#f0f9f6', text:'#6B9080'},
+        'Needs Attention': {bg:'#fffbeb', text:'#d97706'},
+        'Critical':        {bg:'#fef2f2', text:'#dc2626'},
+    };
+    var vs = verdictStyles[data.verdict] || {bg:'#f1f5f9', text:'#64748b'};
+
+    if (data.verdict) {
+        var badge = document.createElement('span');
+        badge.style.cssText = 'display:inline-block;font-size:9px;font-weight:900;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;background:' + vs.bg + ';color:' + vs.text + ';';
+        badge.textContent = data.verdict;
+        body.appendChild(badge);
+    }
+
+    if (data.points && data.points.length) {
+        var ul = document.createElement('ul');
+        ul.style.cssText = 'margin:8px 0 0;padding-left:16px;';
+        data.points.forEach(function (pt) {
+            var li = document.createElement('li');
+            li.style.cssText = 'font-size:10.5px;color:#334155;line-height:1.6;margin-bottom:3px;';
+            li.textContent = pt;
+            ul.appendChild(li);
+        });
+        body.appendChild(ul);
+    }
 }
 </script>
 @endif

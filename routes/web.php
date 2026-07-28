@@ -446,6 +446,9 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::post('/ai/suggest-targets', [AiController::class, 'suggestTargets'])
         ->name('ai.suggest-targets');
 
+    Route::post('/ai/score-quarter', [AiController::class, 'scoreQuarter'])
+        ->name('ai.score-quarter');
+
     Route::post('/ai/suggest-kpi', [AiController::class, 'suggestKpi'])
         ->name('ai.suggest-kpi');
 

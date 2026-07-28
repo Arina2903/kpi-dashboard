@@ -166,6 +166,53 @@ class AiController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | SCORE QUARTER PERFORMANCE (Section 2 "View" popup, appraiser side)
+    |--------------------------------------------------------------------------
+    */
+
+    public function scoreQuarter(Request $request)
+    {
+        $request->validate([
+            'kpi_title'      => 'required|string|max:255',
+            'quarter'        => 'required|string|max:10',
+            'subtitle'       => 'nullable|string|max:255',
+            'actual'         => 'nullable|numeric',
+            'target'         => 'nullable|numeric',
+            'progress'       => 'nullable|numeric',
+            'remark'         => 'nullable|string|max:2000',
+            'has_attachment' => 'nullable|boolean',
+        ]);
+
+        try {
+
+            $result = $this->ai->scoreQuarterPerformance(
+                $request->kpi_title,
+                $request->subtitle ?? '',
+                $request->quarter,
+                $request->actual,
+                $request->target,
+                (float) ($request->progress ?? 0),
+                $request->remark ?? '',
+                (bool) $request->boolean('has_attachment'),
+            );
+
+            return response()->json([
+                'success' => true,
+                'verdict' => $result['verdict'] ?? '',
+                'points'  => $result['points']  ?? [],
+            ]);
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ANIRA scoring failed. Please try again.',
+            ], 500);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | SUGGEST QUARTERLY TARGETS
     |--------------------------------------------------------------------------
     */

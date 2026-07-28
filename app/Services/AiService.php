@@ -312,6 +312,62 @@ PROMPT;
 
     /*
     |--------------------------------------------------------------------------
+    | SCORE QUARTER PERFORMANCE (Section 2 "View" popup, appraiser side)
+    |--------------------------------------------------------------------------
+    */
+
+    public function scoreQuarterPerformance(
+        string $kpiTitle,
+        string $quarterSubtitle,
+        string $quarter,
+        mixed  $actual,
+        mixed  $target,
+        float  $progressPct,
+        string $remark = '',
+        bool   $hasAttachment = false
+    ): array {
+        $systemPrompt = 'You are ANIRA, a KPI performance coach reviewing one quarter of one KPI for an appraiser. '
+            . 'Be direct and specific, not generic encouragement. Respond ONLY with valid JSON — no markdown, no explanation.';
+
+        $details = "KPI: \"$kpiTitle\"";
+        if ($quarterSubtitle !== '') $details .= "\nQuarter plan/description: \"$quarterSubtitle\"";
+        $details .= "\nQuarter: $quarter";
+        $details .= "\nActual: " . ($actual ?? '—');
+        $details .= "\nTarget: " . ($target ?? '—');
+        $details .= "\nProgress: {$progressPct}%";
+        $details .= "\nRemark: " . ($remark !== '' ? $remark : 'None provided');
+        $details .= "\nAttachment/proof: " . ($hasAttachment ? 'Provided' : 'Not provided');
+
+        $userPrompt = "Assess this quarter's KPI performance.\n\n$details\n\n"
+            . "Pick ONE verdict label based on progress — \"Excellent\" (>=90%), \"Good\" (>=70%), \"Needs Attention\" (>=50%), or \"Critical\" (<50%). "
+            . "Downgrade one level from what progress alone suggests if progress is below 100% and there is no remark or no attachment to explain the gap.\n\n"
+            . "Then give up to 3 short bullet points (max ~15 words each) on what specifically needs improvement — or, only if the verdict is Excellent, what is working well instead. "
+            . "Be concrete: reference the actual numbers, the remark, or the missing evidence, not generic advice.\n\n"
+            . "Respond with JSON only: {\"verdict\": \"Excellent|Good|Needs Attention|Critical\", \"points\": [\"...\"]}";
+
+        $response = $this->request()->post('https://api.openai.com/v1/chat/completions', [
+            'model'                 => $this->model,
+            'max_completion_tokens' => 220,
+            'temperature'           => 0.3,
+            'messages'              => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user',   'content' => $userPrompt],
+            ],
+        ]);
+
+        if (!$response->successful()) {
+            throw new \RuntimeException('OpenAI request failed: ' . $response->body());
+        }
+
+        $text = trim($response->json('choices.0.message.content', '{}'));
+        $text = preg_replace('/^```(?:json)?\s*/i', '', $text);
+        $text = preg_replace('/\s*```$/', '', $text);
+
+        return json_decode(trim($text), true) ?? ['verdict' => '', 'points' => []];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | SUGGEST QUARTERLY TARGETS
     |--------------------------------------------------------------------------
     */
