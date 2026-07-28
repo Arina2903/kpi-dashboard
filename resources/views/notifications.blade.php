@@ -44,17 +44,6 @@
         $n['_type']  = $type;
         $n['_cat']   = $categoryMeta[$type['category']];
         $n['_when']  = \Carbon\Carbon::parse($n['created_at']);
-
-        // Appraiser-facing appraisal links ("X submitted their appraisal" /
-        // "X's appraisal is ready for your remarks") can preview in a popup
-        // right here — the recipient is the appraiser and subject_employee_id
-        // is the report owner. The self-facing "your appraisal is ready to
-        // sign" notification links to the appraisee's own report instead
-        // (no employeeId in that URL), so it keeps navigating normally.
-        $n['_previewUrl'] = (!empty($n['subject_employee_id']) && !empty($n['quarter']) && str_contains($n['link'] ?? '', '/performance/appraise/'))
-            ? route('performance.appraise.preview', [$n['subject_employee_id'], strtolower($n['quarter'])])
-            : null;
-
         return $n;
     });
 
@@ -131,7 +120,7 @@
                         @endphp
                         <div class="notif-row bg-white rounded-2xl soft-card border border-[#E5E7EB] {{ $unread ? 'border-l-[4px]' : '' }} p-4 flex items-start gap-3 cursor-pointer"
                              style="{{ $unread ? 'border-left-color:'.$cat['bg'].';' : '' }}"
-                             data-id="{{ $n['id'] }}" data-link="{{ $n['link'] ?? '' }}" data-preview-url="{{ $n['_previewUrl'] ?? '' }}" data-cat="{{ $type['category'] }}">
+                             data-id="{{ $n['id'] }}" data-link="{{ $n['link'] ?? '' }}" data-cat="{{ $type['category'] }}">
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0" style="background:{{ $unread ? $cat['bg'].'18' : '#F8FAFC' }};">
                                 {{ $type['icon'] }}
                             </div>
@@ -156,7 +145,7 @@
                                 </div>
                             </div>
                             @if(!empty($n['link']))
-                                <span class="shrink-0 self-center text-[10px] font-black px-2.5 py-1.5 rounded-lg" style="background:{{ $cat['bg'] }}18;color:{{ $cat['bg'] === '#D4AF37' ? '#8a6d00' : $cat['bg'] }};">{{ !empty($n['_previewUrl']) ? '👁 Preview' : 'Open →' }}</span>
+                                <span class="shrink-0 self-center text-[10px] font-black px-2.5 py-1.5 rounded-lg" style="background:{{ $cat['bg'] }}18;color:{{ $cat['bg'] === '#D4AF37' ? '#8a6d00' : $cat['bg'] }};">Open →</span>
                             @endif
                         </div>
                     @endforeach
@@ -169,18 +158,6 @@
 
 </div>
 </main>
-
-{{-- Appraisal preview popup — content is fetched from PerformanceController::previewReport,
-     the same auth/data path the notification's "Open" link would land on, so the popup can
-     never show something the full report page wouldn't. --}}
-<div id="reportPreviewModal" class="no-print" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.55);align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this) closeReportPreviewModal()">
-    <div style="background:#f0f2f7;border-radius:20px;max-width:760px;width:100%;max-height:85vh;overflow-y:auto;">
-        <div style="display:flex;justify-content:flex-end;padding:14px 20px 0;">
-            <button type="button" onclick="closeReportPreviewModal()" style="background:#fff;border:1px solid #e2e8f0;width:28px;height:28px;border-radius:50%;font-size:14px;color:#64748b;cursor:pointer;flex-shrink:0;">✕</button>
-        </div>
-        <div id="reportPreviewModalBody" style="padding:0 20px 24px;"></div>
-    </div>
-</div>
 
 <script>
 function filterCat(cat) {
@@ -210,7 +187,6 @@ document.querySelectorAll('.notif-row').forEach(function (row) {
     row.addEventListener('click', function () {
         var id = row.dataset.id;
         var link = row.dataset.link;
-        var previewUrl = row.dataset.previewUrl;
 
         fetch('/notifications/' + id + '/read', {
             method: 'POST',
@@ -219,51 +195,10 @@ document.querySelectorAll('.notif-row').forEach(function (row) {
                 'Accept': 'application/json',
             },
         }).finally(function () {
-            if (previewUrl) {
-                openReportPreview(previewUrl, link);
-            } else if (link) {
-                window.location.href = link;
-            }
+            if (link) window.location.href = link;
         });
     });
 });
-
-async function openReportPreview(previewUrl, fallbackLink) {
-    var modal = document.getElementById('reportPreviewModal');
-    var body = document.getElementById('reportPreviewModalBody');
-    if (!modal || !body) { window.location.href = fallbackLink; return; }
-
-    body.innerHTML = '<p style="padding:24px;text-align:center;color:#94a3b8;font-size:12px;">Loading…</p>';
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-
-    try {
-        var res = await fetch(previewUrl, {
-            headers: { 'Accept': 'application/json, text/html', 'X-Requested-With': 'XMLHttpRequest' },
-        });
-
-        if (!res.ok) {
-            var message = 'Request failed (' + res.status + ').';
-            try {
-                var data = await res.clone().json();
-                if (data && data.error) message = data.error;
-            } catch (_) { /* not JSON — keep the generic message */ }
-            throw new Error(message);
-        }
-
-        body.innerHTML = await res.text();
-    } catch (err) {
-        console.error('openReportPreview failed:', err);
-        closeReportPreviewModal();
-        alert("Couldn't load this preview: " + err.message + '\n\nOpening the full report instead.');
-        window.location.href = fallbackLink;
-    }
-}
-
-function closeReportPreviewModal() {
-    document.getElementById('reportPreviewModal').style.display = 'none';
-    document.body.style.overflow = '';
-}
 </script>
 
 </body>
