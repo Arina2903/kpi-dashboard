@@ -360,7 +360,7 @@ class PerformanceController extends Controller
         foreach ($kpis as $kpi) {
             $qRows = $supabase->get('kpi_quarters', [
                 'kpi_id' => 'eq.' . $kpi['id'],
-                'select' => 'quarter,quarter_title,quarter_target,quarter_actual,status',
+                'select' => 'quarter,quarter_title,quarter_target,quarter_actual,status,remark,completion_review,completion_proof_urls',
             ]);
             foreach ($qRows as $row) {
                 $allQuarters[$kpi['id']][$row['quarter']] = $row;
@@ -829,7 +829,7 @@ class PerformanceController extends Controller
         foreach ($kpis as $kpi) {
             $qRows = $supabase->get('kpi_quarters', [
                 'kpi_id' => 'eq.' . $kpi['id'],
-                'select' => 'quarter,quarter_title,quarter_target,quarter_actual,status',
+                'select' => 'quarter,quarter_title,quarter_target,quarter_actual,status,remark,completion_review,completion_proof_urls',
             ]);
             foreach ($qRows as $row) {
                 $allQuarters[$kpi['id']][$row['quarter']] = $row;

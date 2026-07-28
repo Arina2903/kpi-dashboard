@@ -642,11 +642,16 @@
                         <th class="c" style="width:68px;">B<br><span style="font-weight:500;text-transform:none;font-size:8px;">Target</span></th>
                         <th class="c" style="width:72px;">C · Score<br><span style="font-weight:400;text-transform:none;font-size:8px;">(A÷B)×5</span></th>
                         <th class="c" style="width:72px;">Appraiser<br><span style="font-weight:400;text-transform:none;font-size:8px;">Score</span></th>
+                        @if($isAppraiserView ?? false)
+                        <th class="c no-print" style="width:56px;">View</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
                 @php
-                    $sec2Colspan = 6;
+                    $sec2Colspan = ($isAppraiserView ?? false) ? 7 : 6;
+                    $sec2StatusEchoes = ['not started', 'on track', 'at risk', 'in trouble', 'completed'];
+                    $sec2IsRealRemark = fn ($text) => $text !== '' && !in_array(strtolower($text), $sec2StatusEchoes, true);
                     $categoryOrder = ['Financial', 'Growth & Customer', 'Initiatives', 'People'];
                     $sec2Raw = [];
                     foreach ($kpis as $kpi) {
@@ -680,6 +685,34 @@
                     $qTitle = $qData['quarter_title'] ?? '';
                     $qAct   = isset($qData['quarter_actual']) ? (float)$qData['quarter_actual'] : '';
                     $qTgt   = isset($qData['quarter_target']) ? (float)$qData['quarter_target'] : (float)($kpi['base_target'] ?? '');
+
+                    $qRemarkRaw = trim($qData['remark'] ?? '');
+                    $qReviewRaw = trim($qData['completion_review'] ?? '');
+                    $qRemarkText = $sec2IsRealRemark($qRemarkRaw)
+                        ? $qRemarkRaw
+                        : ($sec2IsRealRemark($qReviewRaw) ? $qReviewRaw : '');
+
+                    $qProofFiles = [];
+                    if (!empty($qData['completion_proof_urls'])) {
+                        $qDecoded = json_decode($qData['completion_proof_urls'], true);
+                        if (is_array($qDecoded)) $qProofFiles = $qDecoded;
+                    }
+
+                    $qProgressPct = ($qTgt !== '' && (float)$qTgt > 0)
+                        ? round(((float)$qAct) / ((float)$qTgt) * 100, 1)
+                        : 0;
+
+                    $qDetail = [
+                        'title'    => $kpi['kpi_title'] ?? '',
+                        'weight'   => $kpi['weightage'] ?? null,
+                        'quarter'  => $qLabel,
+                        'subtitle' => $qTitle,
+                        'actual'   => $qAct !== '' ? $qAct : null,
+                        'target'   => $qTgt !== '' ? $qTgt : null,
+                        'progress' => $qProgressPct,
+                        'remark'   => $qRemarkText,
+                        'files'    => $qProofFiles,
+                    ];
                 @endphp
                 <tr class="{{ $subItemNo%2===0?'':'bg-slate-50/40' }} sec2-row">
                     <td class="text-center text-[10px] font-bold text-[#1a3d34]">{{ $subCatNo }}.{{ $subItemNo }}</td>
@@ -700,6 +733,11 @@
                         <input type="hidden" name="kpi_self_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" class="kpi-self-hidden">
                     </td>
                     <td class="text-center"><input type="number" name="kpi_app_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" step="0.1" min="0" max="5" placeholder="—" class="n-input kpi-app-input" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;"></td>
+                    @if($isAppraiserView ?? false)
+                    <td class="text-center no-print">
+                        <button type="button" class="kpi-view-btn" data-detail="{{ json_encode($qDetail, JSON_UNESCAPED_UNICODE) }}" onclick="openQuarterDetail(this)" style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;color:#4a7c6b;background:#f0f9f6;border:1px solid #d1e7e0;border-radius:8px;padding:5px 9px;cursor:pointer;">👁 View</button>
+                    </td>
+                    @endif
                 </tr>
                 @endforeach
                 @endforeach
@@ -710,10 +748,12 @@
                         <td colspan="4" class="text-right font-black text-xs text-[#1a3d34] uppercase tracking-wide px-4 py-3">Total Score Section 2</td>
                         <td class="text-center py-3"><span id="sec2Total" class="font-black text-base sc-none">—</span></td>
                         <td class="text-center"><span id="sec2AppPct" class="text-xs font-bold text-slate-400">—</span></td>
+                        @if($isAppraiserView ?? false)<td class="no-print"></td>@endif
                     </tr>
                     <tr style="background:rgba(26,61,52,.03);">
                         <td colspan="4" class="text-right text-[9px] font-bold text-slate-400 uppercase tracking-wide px-4 py-2">% Total (Score ÷ 30 × 70)</td>
                         <td colspan="2" class="text-center"><span id="sec2Pct" class="text-sm font-black text-slate-400">—</span></td>
+                        @if($isAppraiserView ?? false)<td class="no-print"></td>@endif
                     </tr>
                 </tfoot>
             </table>
@@ -1245,6 +1285,114 @@
 </table>
 </div>{{-- /form-body --}}
 </main>
+
+@if($isAppraiserView ?? false)
+{{-- Section 2 "View" popup — the detail shown here is embedded server-side
+     as JSON on each row's button (data-detail), so opening it never
+     depends on a network round-trip that could silently fail. --}}
+<div id="quarterDetailModal" class="no-print" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.55);align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this) closeQuarterDetail()">
+    <div style="background:#fff;border-radius:20px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(15,23,42,.35);">
+        <div style="position:sticky;top:0;background:#fff;padding:16px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;z-index:1;">
+            <div style="min-width:0;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                    <span id="qdQuarter" class="q-tag"></span>
+                    <span id="qdWeight" style="font-size:8px;font-weight:900;color:#6B9080;background:#fff;border:1px solid rgba(107,144,128,.25);padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;"></span>
+                </div>
+                <p id="qdTitle" style="font-size:13px;font-weight:800;color:#1a3d34;line-height:1.35;margin:0;"></p>
+                <p id="qdSubtitle" style="font-size:10px;color:#94a3b8;margin:2px 0 0;"></p>
+            </div>
+            <button type="button" onclick="closeQuarterDetail()" style="background:#f1f5f9;border:1px solid #e2e8f0;width:28px;height:28px;border-radius:50%;font-size:14px;color:#64748b;cursor:pointer;flex-shrink:0;">✕</button>
+        </div>
+        <div style="padding:16px 20px 22px;">
+            <div style="display:flex;gap:10px;margin-bottom:14px;">
+                <div style="flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;text-align:center;">
+                    <p style="font-size:8px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin:0 0 3px;">Actual</p>
+                    <p id="qdActual" style="font-size:16px;font-weight:900;color:#1e293b;margin:0;"></p>
+                </div>
+                <div style="flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;text-align:center;">
+                    <p style="font-size:8px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin:0 0 3px;">Target</p>
+                    <p id="qdTarget" style="font-size:16px;font-weight:900;color:#1e293b;margin:0;"></p>
+                </div>
+                <div id="qdProgressBox" style="flex:1;border-radius:12px;padding:10px 12px;text-align:center;">
+                    <p id="qdProgressLabel" style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:0 0 3px;">Progress</p>
+                    <p id="qdProgress" style="font-size:16px;font-weight:900;margin:0;"></p>
+                </div>
+            </div>
+            <div style="margin-bottom:14px;">
+                <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin:0 0 5px;">Remark</p>
+                <p id="qdRemark" style="font-size:11px;color:#334155;line-height:1.6;margin:0;"></p>
+            </div>
+            <div>
+                <p style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px;">Attachment / Proof</p>
+                <div id="qdFiles" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openQuarterDetail(btn) {
+    var detail;
+    try { detail = JSON.parse(btn.dataset.detail); } catch (e) { console.error('openQuarterDetail: bad data', e); return; }
+
+    document.getElementById('qdQuarter').textContent = detail.quarter || '';
+    document.getElementById('qdWeight').textContent = (detail.weight ?? '—') + '% weight';
+    document.getElementById('qdTitle').textContent = detail.title || 'Untitled KPI';
+    document.getElementById('qdSubtitle').textContent = detail.subtitle || '';
+
+    document.getElementById('qdActual').textContent = detail.actual !== null ? detail.actual : '—';
+    document.getElementById('qdTarget').textContent = detail.target !== null ? detail.target : '—';
+
+    var pct = detail.progress || 0;
+    var style = pct >= 90 ? {bg:'#ecfdf5', text:'#059669'}
+        : pct >= 70 ? {bg:'#f0f9f6', text:'#6B9080'}
+        : pct >= 50 ? {bg:'#fffbeb', text:'#d97706'}
+        : {bg:'#fef2f2', text:'#dc2626'};
+    var progressBox = document.getElementById('qdProgressBox');
+    progressBox.style.background = style.bg;
+    document.getElementById('qdProgressLabel').style.color = style.text;
+    document.getElementById('qdProgressLabel').style.opacity = '.75';
+    var progressText = document.getElementById('qdProgress');
+    progressText.textContent = detail.target !== null ? pct.toFixed(1) + '%' : '—';
+    progressText.style.color = style.text;
+
+    document.getElementById('qdRemark').textContent = (detail.remark && detail.remark.trim() !== '') ? detail.remark : 'NON';
+
+    var filesWrap = document.getElementById('qdFiles');
+    filesWrap.innerHTML = '';
+    if (detail.files && detail.files.length) {
+        detail.files.forEach(function (f) {
+            var isImg = (f.type || '').indexOf('image/') === 0;
+            var a = document.createElement('a');
+            a.href = f.url || '#';
+            a.target = '_blank';
+            a.rel = 'noopener';
+            if (isImg) {
+                var img = document.createElement('img');
+                img.src = f.url || '';
+                img.alt = f.name || 'attachment';
+                img.style.cssText = 'width:44px;height:44px;border-radius:10px;object-fit:cover;border:1px solid #e2e8f0;display:block;';
+                a.appendChild(img);
+            } else {
+                a.style.cssText = 'display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:#1a3d34;background:rgba(107,144,128,.10);border:1px solid rgba(107,144,128,.30);border-radius:8px;padding:5px 8px;text-decoration:none;';
+                a.textContent = '📎 ' + (f.name || 'File');
+            }
+            filesWrap.appendChild(a);
+        });
+    } else {
+        filesWrap.innerHTML = '<p style="font-size:10px;color:#94a3b8;margin:0;">NON</p>';
+    }
+
+    document.getElementById('quarterDetailModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeQuarterDetail() {
+    document.getElementById('quarterDetailModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+</script>
+@endif
 
 <script>
 (function(){
