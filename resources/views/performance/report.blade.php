@@ -688,9 +688,16 @@
 
                     $qRemarkRaw = trim($qData['remark'] ?? '');
                     $qReviewRaw = trim($qData['completion_review'] ?? '');
-                    $qRemarkText = $sec2IsRealRemark($qRemarkRaw)
-                        ? $qRemarkRaw
-                        : ($sec2IsRealRemark($qReviewRaw) ? $qReviewRaw : '');
+                    $qStatus    = strtolower(trim($qData['status'] ?? ''));
+                    // Once a quarter is marked "completed" it carries a completion
+                    // review (written when the appraisee submitted proof) — show
+                    // that instead of the plain remark, since it's the more
+                    // complete, purpose-written account of what was delivered.
+                    $qRemarkText = ($qStatus === 'completed' && $qReviewRaw !== '')
+                        ? $qReviewRaw
+                        : ($sec2IsRealRemark($qRemarkRaw)
+                            ? $qRemarkRaw
+                            : ($sec2IsRealRemark($qReviewRaw) ? $qReviewRaw : ''));
 
                     $qProofFiles = [];
                     if (!empty($qData['completion_proof_urls'])) {
