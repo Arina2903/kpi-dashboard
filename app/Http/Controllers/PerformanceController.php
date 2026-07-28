@@ -737,6 +737,107 @@ class PerformanceController extends Controller
         ]);
     }
 
+    /**
+     * Lightweight, read-only snapshot of one quarter's KPI scores for an
+     * appraisal notification's popup preview — same auth as appraiserReport()
+     * but a fraction of the data, since the popup only needs to answer
+     * "what did they submit", not render the full editable form.
+     */
+    public function previewReport(string $employeeId, string $quarter, SupabaseService $supabase)
+    {
+        if (!session()->has('employee_uuid')) {
+            return response()->json(['error' => 'Not logged in.'], 401);
+        }
+
+        $q = strtoupper($quarter);
+        if (!in_array($q, ['Q1', 'Q2', 'Q3', 'Q4'], true)) {
+            return response()->json(['error' => 'Invalid quarter.'], 404);
+        }
+
+        $viewerId = session('employee_uuid');
+        $staff = $supabase->first('employees', [
+            'id'        => 'eq.' . $employeeId,
+            'is_active' => 'eq.true',
+            'select'    => '*',
+        ]);
+        if (!$staff) {
+            return response()->json(['error' => 'Employee not found.'], 404);
+        }
+
+        $appraiserLevel = $this->resolveAppraiserLevel(
+            $staff,
+            $viewerId,
+            fn ($id) => $supabase->first('employees', ['id' => 'eq.' . $id, 'select' => '*'])
+        );
+        if (!$appraiserLevel && $this->isBtsSession()) {
+            $appraiserLevel = 'manager';
+        }
+        if (!$appraiserLevel) {
+            return response()->json(['error' => "You aren't in {$staff['short_name']}'s approver chain, so you can't preview their appraisal."], 403);
+        }
+
+        $department = null;
+        if (!empty($staff['department_code'])) {
+            $department = $supabase->first('departments', [
+                'code'   => 'eq.' . $staff['department_code'],
+                'select' => 'name',
+            ]);
+        }
+
+        $kpis = $supabase->get('kpis', [
+            'employee_id'    => 'eq.' . $employeeId,
+            'financial_year' => 'eq.' . $this->currentFinancialYear,
+            'select'         => 'id,kpi_title,category,weightage',
+        ]) ?? [];
+
+        $quarterByKpi = [];
+        if (!empty($kpis)) {
+            $kpiIds = array_column($kpis, 'id');
+            $qRows = $supabase->get('kpi_quarters', [
+                'kpi_id'  => 'in.(' . implode(',', $kpiIds) . ')',
+                'quarter' => 'eq.' . $q,
+                'select'  => 'kpi_id,quarter_target,quarter_actual',
+            ]) ?? [];
+            foreach ($qRows as $row) {
+                $quarterByKpi[$row['kpi_id']] = $row;
+            }
+        }
+
+        $rows = collect($kpis)->map(function ($kpi) use ($quarterByKpi) {
+            $qRow   = $quarterByKpi[$kpi['id']] ?? null;
+            $target = max(0, (float) ($qRow['quarter_target'] ?? 0));
+            $actual = max(0, (float) ($qRow['quarter_actual'] ?? 0));
+            $kpi['target']       = $target;
+            $kpi['actual']       = $actual;
+            $kpi['has_data']     = $qRow !== null;
+            $kpi['progress_pct'] = $target > 0 ? round(($actual / $target) * 100, 1) : 0;
+            return $kpi;
+        })->values()->all();
+
+        $scored  = collect($rows)->filter(fn ($r) => $r['has_data'] && (float) $r['target'] > 0);
+        $overall = $scored->count() > 0
+            ? round($scored->avg('progress_pct'), 1)
+            : 0;
+
+        $reportRow = $supabase->first('performance_reports', [
+            'employee_id'    => 'eq.' . $employeeId,
+            'financial_year' => 'eq.' . $this->currentFinancialYear,
+            'quarter'        => 'eq.' . $q,
+            'select'         => 'status,updated_at',
+        ]);
+
+        return response(view('dashboard.partials.report-preview-content', [
+            'staff'                => $staff,
+            'department'           => $department,
+            'quarter'              => $q,
+            'currentFinancialYear' => $this->currentFinancialYear,
+            'rows'                 => $rows,
+            'overall'              => $overall,
+            'status'               => $reportRow['status'] ?? 'draft',
+            'fullReportUrl'        => route('performance.appraise.report', [$employeeId, strtolower($q)]),
+        ])->render())->header('Content-Type', 'text/html');
+    }
+
     public function appraiserReport(string $employeeId, string $quarter, SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid')) {
