@@ -2123,6 +2123,11 @@ if (_isAppraiserView) {
     // pointer-events:auto correctly overrides this ancestor's pointer-events:none.
     var formBody = document.getElementById('form-body') || document.querySelector('main');
     if (formBody) { formBody.style.pointerEvents = 'none'; }
+    // Section 2's "View" buttons are read-only (no edit permission implied),
+    // so every appraiser level can use them regardless of _myLevelLocked —
+    // unlock unconditionally rather than inside unlockAppraiserSections(),
+    // which early-returns once this level's section is locked.
+    document.querySelectorAll('.kpi-view-btn').forEach(function(btn) { btn.style.pointerEvents = 'auto'; });
     unlockAppraiserSections();
     lockAppraiseeOwnFields();
 } else if (_softLocked) {
