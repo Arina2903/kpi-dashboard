@@ -642,14 +642,11 @@
                         <th class="c" style="width:68px;">B<br><span style="font-weight:500;text-transform:none;font-size:8px;">Target</span></th>
                         <th class="c" style="width:72px;">C · Score<br><span style="font-weight:400;text-transform:none;font-size:8px;">(A÷B)×5</span></th>
                         <th class="c" style="width:72px;">Appraiser<br><span style="font-weight:400;text-transform:none;font-size:8px;">Score</span></th>
-                        @if($isAppraiserView ?? false)
-                        <th class="c no-print" style="width:56px;">View</th>
-                        @endif
                     </tr>
                 </thead>
                 <tbody>
                 @php
-                    $sec2Colspan = ($isAppraiserView ?? false) ? 7 : 6;
+                    $sec2Colspan = 6;
                     $categoryOrder = ['Financial', 'Growth & Customer', 'Initiatives', 'People'];
                     $sec2Raw = [];
                     foreach ($kpis as $kpi) {
@@ -703,12 +700,6 @@
                         <input type="hidden" name="kpi_self_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" class="kpi-self-hidden">
                     </td>
                     <td class="text-center"><input type="number" name="kpi_app_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" step="0.1" min="0" max="5" placeholder="—" class="n-input kpi-app-input" readonly style="pointer-events:none;opacity:0.55;background:#f8fafc;cursor:not-allowed;"></td>
-                    @if($isAppraiserView ?? false)
-                    <td class="text-center no-print">
-                        <a href="{{ route('performance.appraise.kpi', [$user['id'], $kpi['id']]) }}?quarter={{ strtolower($qLabel) }}"
-                           style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:800;color:#4a7c6b;background:#f0f9f6;border:1px solid #d1e7e0;border-radius:8px;padding:5px 9px;text-decoration:none;">👁 View</a>
-                    </td>
-                    @endif
                 </tr>
                 @endforeach
                 @endforeach
@@ -719,16 +710,10 @@
                         <td colspan="4" class="text-right font-black text-xs text-[#1a3d34] uppercase tracking-wide px-4 py-3">Total Score Section 2</td>
                         <td class="text-center py-3"><span id="sec2Total" class="font-black text-base sc-none">—</span></td>
                         <td class="text-center"><span id="sec2AppPct" class="text-xs font-bold text-slate-400">—</span></td>
-                        @if($isAppraiserView ?? false)
-                        <td class="no-print"></td>
-                        @endif
                     </tr>
                     <tr style="background:rgba(26,61,52,.03);">
                         <td colspan="4" class="text-right text-[9px] font-bold text-slate-400 uppercase tracking-wide px-4 py-2">% Total (Score ÷ 30 × 70)</td>
                         <td colspan="2" class="text-center"><span id="sec2Pct" class="text-sm font-black text-slate-400">—</span></td>
-                        @if($isAppraiserView ?? false)
-                        <td class="no-print"></td>
-                        @endif
                     </tr>
                 </tfoot>
             </table>
