@@ -78,6 +78,42 @@ class ProfileController extends Controller
         ], $this->sidebarData($supabase, $user)));
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | APPEARANCE THEME (Account Settings)
+    |--------------------------------------------------------------------------
+    */
+
+    public function updateTheme(Request $request, SupabaseService $supabase)
+    {
+        $validated = $request->validate([
+            'theme_bg'     => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
+            'theme_card'   => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
+            'theme_accent' => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
+            'theme_border' => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
+        ]);
+
+        $payload = [
+            'theme_bg'     => $validated['theme_bg']     ?? null,
+            'theme_card'   => $validated['theme_card']   ?? null,
+            'theme_accent' => $validated['theme_accent'] ?? null,
+            'theme_border' => $validated['theme_border'] ?? null,
+        ];
+
+        $ok = $supabase->safePatch('employees', ['id' => 'eq.' . session('employee_uuid')], $payload);
+
+        if (!$ok) {
+            return response()->json(['success' => false, 'message' => 'Could not save theme. Please try again.'], 500);
+        }
+
+        // Reflect immediately — every page reads these same flat session keys
+        // via partials/sidebar.blade.php, so the new theme applies on the very
+        // next page load without needing to log out and back in.
+        session($payload);
+
+        return response()->json(['success' => true]);
+    }
+
     public function connectTelegram(Request $request, SupabaseService $supabase)
     {
         $code = Str::upper(Str::random(8));

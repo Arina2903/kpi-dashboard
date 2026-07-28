@@ -315,6 +315,7 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::get('/profile/telegram/status', [\App\Http\Controllers\ProfileController::class, 'telegramStatus'])->name('profile.telegram.status');
     Route::post('/profile/email', [\App\Http\Controllers\ProfileController::class, 'updateEmail'])->name('profile.email.update');
     Route::post('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    Route::post('/profile/theme', [\App\Http\Controllers\ProfileController::class, 'updateTheme'])->name('profile.theme.update');
 
     /*
     |--------------------------------------------------------------------------

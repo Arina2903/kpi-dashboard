@@ -119,6 +119,98 @@
         </div>
     </div>
 
+    {{-- APPEARANCE --}}
+    @php
+        $themeBg     = $user['theme_bg']     ?? '#F5F5F3';
+        $themeCard   = $user['theme_card']   ?? '#FFFFFF';
+        $themeAccent = $user['theme_accent'] ?? '#D4AF37';
+        $themeBorder = $user['theme_border'] ?? '#6B9080';
+        $hasCustomTheme = !empty($user['theme_bg']) || !empty($user['theme_card']) || !empty($user['theme_accent']) || !empty($user['theme_border']);
+    @endphp
+    <div class="bg-white rounded-2xl soft-card border border-slate-200 p-5">
+        <div class="flex items-start justify-between gap-3 mb-1">
+            <div>
+                <p class="text-[9px] uppercase tracking-widest font-black text-slate-400 mb-1">Appearance</p>
+                <h2 class="text-[13px] font-black text-slate-900">Pick your own dashboard colours</h2>
+                <p class="text-[11px] text-slate-500 mt-0.5 max-w-md">
+                    Choose a background, card, accent, and border colour below — it applies across every page once you save. This never changes the red/amber/green status colours used for scores and progress.
+                </p>
+            </div>
+            @if($hasCustomTheme)
+                <span class="text-[9px] font-black uppercase tracking-wide px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 shrink-0">Custom theme active</span>
+            @else
+                <span class="text-[9px] font-black uppercase tracking-wide px-2 py-1 rounded-full bg-slate-100 text-slate-500 shrink-0">Default theme</span>
+            @endif
+        </div>
+
+        {{-- 4 colour pickers --}}
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+            @foreach([
+                ['key' => 'bg',     'label' => 'Background', 'sub' => 'Page background',      'value' => $themeBg],
+                ['key' => 'card',   'label' => 'Card',        'sub' => 'Card background',       'value' => $themeCard],
+                ['key' => 'accent', 'label' => 'Accent',      'sub' => 'Sidebar highlights',     'value' => $themeAccent],
+                ['key' => 'border', 'label' => 'Border',      'sub' => 'Card borders',           'value' => $themeBorder],
+            ] as $slot)
+            <label class="flex flex-col items-center gap-2 border border-slate-200 rounded-xl p-3 cursor-pointer hover:border-[#6B9080] transition">
+                <span class="text-[10px] font-black text-slate-700">{{ $slot['label'] }}</span>
+                <span class="relative w-12 h-12 rounded-full border-2 border-slate-200 overflow-hidden shadow-inner" style="background:{{ $slot['value'] }};">
+                    <input type="color" id="theme-{{ $slot['key'] }}" value="{{ $slot['value'] }}" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" oninput="onThemeColorChange('{{ $slot['key'] }}', this.value)">
+                </span>
+                <span id="theme-{{ $slot['key'] }}-hex" class="text-[9px] font-mono text-slate-400 uppercase">{{ $slot['value'] }}</span>
+                <span class="text-[9px] text-slate-400 text-center leading-tight">{{ $slot['sub'] }}</span>
+            </label>
+            @endforeach
+        </div>
+
+        {{-- Live visualize preview --}}
+        <div class="mt-5">
+            <p class="text-[9px] uppercase tracking-widest font-black text-slate-400 mb-2">Visualize — how it'll look</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {{-- Mini dashboard card mockup --}}
+                <div id="preview-page" class="rounded-xl p-3 border border-slate-200" style="background:{{ $themeBg }};">
+                    <p class="text-[8px] font-black text-slate-400 uppercase mb-2">Dashboard card</p>
+                    <div id="preview-card" class="rounded-lg p-2.5" style="background:{{ $themeCard }};border:1.5px solid {{ $themeBorder }};">
+                        <p class="text-[9px] font-black text-slate-800">Overall Score</p>
+                        <p class="text-lg font-black text-slate-900 mt-1">82.4%</p>
+                        <div class="h-1.5 rounded-full bg-slate-100 mt-2 overflow-hidden">
+                            <div class="h-1.5 rounded-full bg-emerald-500" style="width:82%"></div>
+                        </div>
+                    </div>
+                </div>
+                {{-- Mini notification mockup --}}
+                <div class="rounded-xl p-3 border border-slate-200" style="background:{{ $themeBg }};">
+                    <p class="text-[8px] font-black text-slate-400 uppercase mb-2">Notification</p>
+                    <div id="preview-notif" class="rounded-lg p-2.5 flex items-center gap-2" style="background:{{ $themeCard }};border:1.5px solid {{ $themeBorder }};">
+                        <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] shrink-0">🔔</div>
+                        <div class="min-w-0">
+                            <p class="text-[9px] font-black text-slate-800 truncate">New appraisal submitted</p>
+                            <p class="text-[8px] text-slate-400">Ready for your review</p>
+                        </div>
+                    </div>
+                </div>
+                {{-- Mini sidebar mockup --}}
+                <div class="rounded-xl p-3 bg-[#111111] flex flex-col gap-2">
+                    <p class="text-[8px] font-black text-white/40 uppercase mb-1">Sidebar</p>
+                    <div id="preview-sidebar-bar" class="h-[2px] w-full rounded-full" style="background:{{ $themeAccent }};"></div>
+                    <p id="preview-sidebar-text" class="text-[8px] font-black uppercase tracking-widest" style="color:{{ $themeAccent }};">Performance System</p>
+                    <div id="preview-sidebar-line" class="h-px w-full" style="background:linear-gradient(90deg, {{ $themeAccent }}, transparent);"></div>
+                    <p class="text-[9px] text-white/70 font-semibold">Main Dashboard</p>
+                    <p class="text-[9px] text-white/70 font-semibold">Notifications</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 mt-5">
+            <button type="button" onclick="saveTheme()" id="theme-save-btn" class="text-[11px] font-black px-4 py-2.5 rounded-xl bg-[#1a3d34] text-white hover:bg-[#2d5548] transition">
+                Save Theme
+            </button>
+            <button type="button" onclick="resetTheme()" class="text-[11px] font-black px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                Reset to Default
+            </button>
+            <span id="theme-save-msg" class="text-[11px] font-semibold ml-1"></span>
+        </div>
+    </div>
+
     @if(strtoupper(trim($user['department_code'] ?? '')) === 'BTS')
     {{-- BTS ADMIN --}}
     <a href="{{ route('admin.view-as') }}" class="block bg-white rounded-2xl soft-card border border-slate-200 overflow-hidden hover:border-[#6B9080] transition">
@@ -141,6 +233,95 @@
 </main>
 
 <script>
+    // ── Appearance theme ─────────────────────────────────────────────────────
+    const DEFAULT_THEME = { bg: '#F5F5F3', card: '#FFFFFF', accent: '#D4AF37', border: '#6B9080' };
+    let _theme = {
+        bg:     '{{ $themeBg }}',
+        card:   '{{ $themeCard }}',
+        accent: '{{ $themeAccent }}',
+        border: '{{ $themeBorder }}',
+    };
+
+    function onThemeColorChange(key, value) {
+        _theme[key] = value;
+        document.getElementById('theme-' + key + '-hex').textContent = value.toUpperCase();
+        applyPreview();
+    }
+
+    function applyPreview() {
+        document.getElementById('preview-page').style.background = _theme.bg;
+        document.getElementById('preview-card').style.background = _theme.card;
+        document.getElementById('preview-card').style.borderColor = _theme.border;
+        document.getElementById('preview-notif').style.background = _theme.card;
+        document.getElementById('preview-notif').style.borderColor = _theme.border;
+        document.getElementById('preview-sidebar-bar').style.background = _theme.accent;
+        document.getElementById('preview-sidebar-text').style.color = _theme.accent;
+        document.getElementById('preview-sidebar-line').style.background = 'linear-gradient(90deg, ' + _theme.accent + ', transparent)';
+    }
+
+    async function saveTheme() {
+        const btn = document.getElementById('theme-save-btn');
+        const msg = document.getElementById('theme-save-msg');
+        btn.disabled = true;
+        try {
+            const res = await fetch('{{ route("profile.theme.update") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': TG_CSRF },
+                body: JSON.stringify({
+                    theme_bg: _theme.bg, theme_card: _theme.card,
+                    theme_accent: _theme.accent, theme_border: _theme.border,
+                }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                msg.textContent = 'Saved ✓ Applying…';
+                msg.className = 'text-[11px] font-semibold ml-1 text-emerald-600';
+                setTimeout(() => location.reload(), 800);
+            } else {
+                msg.textContent = data.message || 'Could not save.';
+                msg.className = 'text-[11px] font-semibold ml-1 text-red-600';
+            }
+        } catch (e) {
+            msg.textContent = 'Network error.';
+            msg.className = 'text-[11px] font-semibold ml-1 text-red-600';
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function resetTheme() {
+        _theme = { ...DEFAULT_THEME };
+        Object.keys(_theme).forEach(key => {
+            document.getElementById('theme-' + key).value = _theme[key];
+            document.getElementById('theme-' + key + '-hex').textContent = _theme[key];
+        });
+        applyPreview();
+        await saveThemeValues({ theme_bg: null, theme_card: null, theme_accent: null, theme_border: null });
+    }
+
+    async function saveThemeValues(payload) {
+        const msg = document.getElementById('theme-save-msg');
+        try {
+            const res = await fetch('{{ route("profile.theme.update") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': TG_CSRF },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (data.success) {
+                msg.textContent = 'Reset ✓';
+                msg.className = 'text-[11px] font-semibold ml-1 text-emerald-600';
+                setTimeout(() => location.reload(), 600);
+            } else {
+                msg.textContent = data.message || 'Could not reset.';
+                msg.className = 'text-[11px] font-semibold ml-1 text-red-600';
+            }
+        } catch (e) {
+            msg.textContent = 'Network error.';
+            msg.className = 'text-[11px] font-semibold ml-1 text-red-600';
+        }
+    }
+
     const TG_CSRF = '{{ csrf_token() }}';
     let tgPollTimer = null;
 

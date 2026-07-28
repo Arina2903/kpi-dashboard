@@ -50,6 +50,32 @@
     }
 </style>
 
+@if(session('theme_bg') || session('theme_card') || session('theme_accent') || session('theme_border'))
+{{-- Account Settings > Appearance — only rendered once the user has actually
+     saved a custom theme, so nobody who hasn't touched this feature sees any
+     visual change. Scoped to the page background, the app's shared card style
+     (.soft-card / .doc-card), and the sidebar's gold accent dividers/labels —
+     not every single hardcoded colour on every page (that's a much larger,
+     riskier sweep — see the chrome-colour rebrand this replaced). Never
+     touches score/status colours (scoreStyle, sc-*, etc). --}}
+<style>
+    :root {
+        --user-theme-bg:     {{ session('theme_bg')     ?: '#F5F5F3' }};
+        --user-theme-card:   {{ session('theme_card')   ?: '#FFFFFF' }};
+        --user-theme-accent: {{ session('theme_accent') ?: '#D4AF37' }};
+        --user-theme-border: {{ session('theme_border') ?: '#6B9080' }};
+    }
+    body { background-color: var(--user-theme-bg) !important; }
+    .soft-card, .doc-card {
+        background-color: var(--user-theme-card) !important;
+        border-color: var(--user-theme-border) !important;
+    }
+    .theme-accent-text { color: var(--user-theme-accent) !important; }
+    .theme-accent-bar  { background: linear-gradient(90deg, var(--user-theme-accent), var(--user-theme-accent), transparent) !important; }
+    .theme-accent-line { background: linear-gradient(90deg, var(--user-theme-accent), transparent) !important; }
+</style>
+@endif
+
 <aside
     id="sidebar"
     class="fixed left-0 top-0 z-40 h-screen bg-[#111111] text-white
@@ -58,7 +84,7 @@
     px-3 py-4 flex flex-col overflow-visible shrink-0 transition-all duration-300"
 >
 
-    <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
+    <div class="theme-accent-bar absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
 
     <button
         id="sidebarCloseBtn"
@@ -113,7 +139,7 @@
                 {!! nl2br(e(session('company_display_name') ?: 'RICHWORKS KPI')) !!}
             </h1>
 
-            <p class="text-[9px] text-[#D4AF37] uppercase tracking-[0.14em] mt-1 font-semibold">
+            <p class="theme-accent-text text-[9px] text-[#D4AF37] uppercase tracking-[0.14em] mt-1 font-semibold">
                 Performance System
             </p>
         </div>
@@ -126,7 +152,7 @@
         </div>
     </button>
 
-    <div class="h-px w-full shrink-0 mb-3 bg-gradient-to-r from-[#D4AF37] to-transparent"></div>
+    <div class="theme-accent-line h-px w-full shrink-0 mb-3 bg-gradient-to-r from-[#D4AF37] to-transparent"></div>
 
     @php
         $navSections = [
@@ -290,10 +316,10 @@
             @endif
             <div>
                 <div class="sidebar-text flex items-center gap-2 mb-1 px-2">
-                    <p class="text-[9px] text-[#D4AF37] font-semibold uppercase tracking-widest shrink-0">
+                    <p class="theme-accent-text text-[9px] text-[#D4AF37] font-semibold uppercase tracking-widest shrink-0">
                         {{ $section['title'] }}
                     </p>
-                    <div class="h-px flex-1 bg-gradient-to-r from-[#D4AF37] to-transparent"></div>
+                    <div class="theme-accent-line h-px flex-1 bg-gradient-to-r from-[#D4AF37] to-transparent"></div>
                 </div>
 
                 <div class="space-y-1">
