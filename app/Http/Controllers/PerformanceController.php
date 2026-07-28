@@ -546,7 +546,12 @@ class PerformanceController extends Controller
             'updated_at'     => now()->toISOString(),
         ], 'employee_id,financial_year,quarter');
 
-        if ($action === 'submit') {
+        // Only notify on the transition INTO "submitted" — not on every call with
+        // action=submit. Without this guard, a duplicate request (double-tab,
+        // a retried fetch, a resubmit after reload) fires this a second time
+        // and sends the manager a duplicate "submitted their appraisal" notification
+        // even though nothing new was actually submitted.
+        if ($action === 'submit' && !in_array($currentStatus, ['submitted', 'appraised', 'completed'], true)) {
             $employee = $supabase->first('employees', [
                 'id'     => 'eq.' . session('employee_uuid'),
                 'select' => 'id,full_name,short_name',
