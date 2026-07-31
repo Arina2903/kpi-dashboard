@@ -99,12 +99,12 @@
     const CATEGORY_ORDER = ['Financial', 'Growth & Customer', 'Initiatives', 'People'];
 
     const CATEGORY_COLORS = {
-        'Financial':         { catPill: 'bg-emerald-700 text-white', subPill: 'bg-emerald-100 text-emerald-700', icon: '💰' },
-        'Growth & Customer': { catPill: 'bg-indigo-700 text-white',  subPill: 'bg-indigo-100 text-indigo-700',   icon: '📈' },
-        'Initiatives':       { catPill: 'bg-amber-600 text-white',   subPill: 'bg-amber-100 text-amber-700',     icon: '🚀' },
-        'People':            { catPill: 'bg-pink-700 text-white',    subPill: 'bg-pink-100 text-pink-700',       icon: '👥' },
+        'Financial':         { catPill: 'bg-emerald-700 text-white', subPill: 'bg-emerald-100 text-emerald-700' },
+        'Growth & Customer': { catPill: 'bg-indigo-700 text-white',  subPill: 'bg-indigo-100 text-indigo-700' },
+        'Initiatives':       { catPill: 'bg-amber-600 text-white',   subPill: 'bg-amber-100 text-amber-700' },
+        'People':            { catPill: 'bg-pink-700 text-white',    subPill: 'bg-pink-100 text-pink-700' },
     };
-    const DEFAULT_CATEGORY_COLOR = { catPill: 'bg-slate-600 text-white', subPill: 'bg-slate-100 text-slate-600', icon: '📌' };
+    const DEFAULT_CATEGORY_COLOR = { catPill: 'bg-slate-600 text-white', subPill: 'bg-slate-100 text-slate-600' };
 
     // Shared ordering for every screen that lists KPIs, so every screen
     // groups the same way "My KPIs" does: category order first, then
@@ -211,7 +211,41 @@
     }
 
     function routeToScreen() {
+        applyTheme();
         renderThingsToDo();
+    }
+
+    // Mirrors the employee's Account Settings > Appearance colours here too —
+    // this WebView has no Laravel session, so it can't just read the same CSS
+    // vars the main site sets; it fetches them once over the Telegram-verified
+    // API instead. Falls back silently to the Mini App's existing brown/cream
+    // look if the fetch fails or nothing was ever customised.
+    let _themeApplied = false;
+    async function applyTheme() {
+        if (_themeApplied) return;
+        _themeApplied = true;
+        try {
+            const t = await api('/theme?employee_id=' + encodeURIComponent(state.employeeId) + '&company_code=' + encodeURIComponent(state.companyCode));
+            if (!t.theme_bg && !t.theme_accent) return;
+            const bg = t.theme_bg || '#F5EEDC';
+            const accent = t.theme_accent || '#6B3F2A';
+            const style = document.createElement('style');
+            style.id = 'tg-theme-override';
+            style.textContent = `
+                body { background-color: ${bg} !important; }
+                #topbar { background: linear-gradient(135deg, ${accent}, color-mix(in srgb, ${accent} 65%, black)) !important; }
+                [class*="bg-[#6B3F2A]"] { background-color: ${accent} !important; }
+                [class*="text-[#6B3F2A]"] { color: color-mix(in srgb, ${accent} 85%, black) !important; }
+                [class*="border-[#6B3F2A]"] { border-color: ${accent} !important; }
+                [class*="bg-[#F5EAE0]"], [class*="bg-[#F5EAE0]"] { background-color: color-mix(in srgb, ${accent} 12%, white) !important; }
+                [class*="from-[#8B5E4A]"] { --tw-gradient-from: ${accent} !important; }
+                [class*="to-[#6B3F2A]"] { --tw-gradient-to: color-mix(in srgb, ${accent} 70%, black) !important; }
+            `;
+            document.head.appendChild(style);
+        } catch (e) {
+            // Telegram account not linked to this endpoint's context, or a
+            // transient error — keep the Mini App's default look, no toast.
+        }
     }
 
     /* ---------------------------------------------------------------- */
@@ -351,7 +385,6 @@
                 const cat = CATEGORY_COLORS[k.category] || DEFAULT_CATEGORY_COLOR;
                 html += `
                     <div class="flex items-center gap-2 mt-4 mb-1 px-1">
-                        <span class="text-[15px]">${cat.icon}</span>
                         <p class="text-[11px] font-black uppercase tracking-wide text-[#6B3F2A]">${k.category || 'Other'}</p>
                     </div>
                 `;
@@ -369,7 +402,7 @@
                 <div class="flex items-start gap-3">
                     <div class="min-w-0 flex-1">
                         <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                            <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${cat.icon} ${k.category || '-'}</span>
+                            <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${k.category || '-'}</span>
                             ${k.sub_category ? `<span class="px-2 py-0.5 rounded-full ${cat.subPill} text-[8px] font-black">${k.sub_category}</span>` : ''}
                             <span class="flex items-center gap-1 px-2 py-0.5 rounded-full ${sDef.color} text-[8px] font-black">
                                 <span class="w-1.5 h-1.5 rounded-full ${sDef.dot}"></span>${sDef.label}
@@ -431,7 +464,7 @@
                 body: JSON.stringify({ employee_id: state.employeeId, company_code: state.companyCode, delta }),
             });
             if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            if (tg?.showPopup) tg.showPopup({ message: 'Updated! Your KPI actual has been refreshed. ✅' });
+            if (tg?.showPopup) tg.showPopup({ message: 'Updated! Your KPI actual has been refreshed.' });
             renderMyKpis();
         } catch (e) {
             feedback.textContent = e.data?.message || "Couldn't update — please try again.";
@@ -458,14 +491,14 @@
         const badge = achvBadge(pct);
         const extraKpis = (t.linked_kpis || []).filter(k => k.kpi_id !== primaryKpiId);
         const extraChips = extraKpis.length
-            ? `<div class="flex flex-wrap gap-1.5 mt-2">${extraKpis.map(k => `<span class="px-2 py-0.5 rounded-full bg-[#CCE3DE] text-[#1a3d34] text-[8px] font-black">🔗 ${k.kpi_title}</span>`).join('')}</div>`
+            ? `<div class="flex flex-wrap gap-1.5 mt-2">${extraKpis.map(k => `<span class="px-2 py-0.5 rounded-full bg-[#CCE3DE] text-[#1a3d34] text-[8px] font-black">${k.kpi_title}</span>`).join('')}</div>`
             : '';
 
         return card(`
             <div class="flex items-center justify-between gap-2">
                 <p class="text-[13px] font-black text-slate-900 leading-snug min-w-0">${t.title}</p>
                 <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${t.status === 'done' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                    ${t.status === 'done' ? '✓ Done' : 'In Progress'}
+                    ${t.status === 'done' ? 'Done' : 'In Progress'}
                 </span>
             </div>
             <p class="text-[9px] text-slate-400">📁 ${t.project_name}</p>
@@ -480,10 +513,10 @@
             ${extraChips}
             <div class="flex items-center gap-2 mt-3">
                 <button onclick="renderTaskProgress('${t.id}')" class="flex-1 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[11px] font-black">
-                    📝 Daily Update
+                    Daily Update
                 </button>
                 <button onclick="renderLinkTaskKpis('${t.id}')" class="flex-1 py-2 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[11px] font-black">
-                    🔗 Edit KPIs
+                    Edit KPIs
                 </button>
             </div>
         `);
@@ -507,7 +540,7 @@
         const header = `
             <div class="flex items-center gap-2">
                 <button onclick="renderMyKpis()" class="flex-1 py-3 rounded-2xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[12px] font-black">
-                    📊 My KPIs
+                    My KPIs
                 </button>
                 <button onclick="renderPerformanceReview('weekly')" class="flex-1 py-3 rounded-2xl bg-white border-2 border-slate-300 text-slate-700 text-[12px] font-black">
                     Performance Review
@@ -569,7 +602,6 @@
                 const cat = CATEGORY_COLORS[group.category] || DEFAULT_CATEGORY_COLOR;
                 html += `
                     <div class="flex items-center gap-2 mt-4 mb-1 px-1">
-                        <span class="text-[15px]">${cat.icon}</span>
                         <p class="text-[11px] font-black uppercase tracking-wide text-[#6B3F2A]">${group.category || 'Other'}</p>
                     </div>
                 `;
@@ -578,7 +610,7 @@
 
             html += `
                 <button onclick='renderKpiTaskHistory(${JSON.stringify(group.kpi_id)}, ${JSON.stringify(group.kpi_title)})' class="w-full text-left px-1 mb-1.5">
-                    <p class="text-[12px] font-black text-slate-700">📌 ${group.kpi_title} <span class="text-slate-300 font-bold">›</span></p>
+                    <p class="text-[12px] font-black text-slate-700">${group.kpi_title} <span class="text-slate-300 font-bold">›</span></p>
                 </button>
             `;
 
@@ -737,7 +769,7 @@
                         <div class="flex items-center gap-3">
                             <input type="checkbox" value="${k.kpi_id}" class="kpi-link-checkbox w-5 h-5 accent-[#16A34A] shrink-0">
                             <div class="min-w-0">
-                                <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${cat.icon} ${k.category || '-'}</span>
+                                <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${k.category || '-'}</span>
                                 <p class="text-[13px] font-black text-slate-900 mt-1">${k.kpi_title}</p>
                             </div>
                         </div>
@@ -776,7 +808,7 @@
                     project_id: projectId, title, unit, target: Number(target), kpi_ids: kpiIds,
                 }),
             });
-            if (tg?.showPopup) tg.showPopup({ message: 'Task saved! ✅' });
+            if (tg?.showPopup) tg.showPopup({ message: 'Task saved!' });
             renderThingsToDo();
         } catch (e) {
             feedback.textContent = e.data?.message || "Couldn't save — please try again.";
@@ -848,7 +880,7 @@
                 body: JSON.stringify({ employee_id: state.employeeId, company_code: state.companyCode, delta }),
             });
             if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            if (tg?.showPopup) tg.showPopup({ message: 'Task updated! ✅' });
+            if (tg?.showPopup) tg.showPopup({ message: 'Task updated!' });
             renderThingsToDo();
         } catch (e) {
             feedback.textContent = e.data?.message || "Couldn't update — please try again.";
@@ -890,7 +922,7 @@
                         <div class="flex items-center gap-3">
                             <input type="checkbox" value="${k.kpi_id}" class="kpi-link-checkbox w-5 h-5 accent-[#16A34A] shrink-0" ${checked}>
                             <div class="min-w-0">
-                                <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${cat.icon} ${k.category || '-'}</span>
+                                <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${k.category || '-'}</span>
                                 <p class="text-[13px] font-black text-slate-900 mt-1">${k.kpi_title}</p>
                             </div>
                         </div>
@@ -924,7 +956,7 @@
                 method: 'POST',
                 body: JSON.stringify({ employee_id: state.employeeId, company_code: state.companyCode, kpi_ids: kpiIds }),
             });
-            if (tg?.showPopup) tg.showPopup({ message: 'Linked! ✅' });
+            if (tg?.showPopup) tg.showPopup({ message: 'Linked!' });
             renderThingsToDo();
         } catch (e) {
             feedback.textContent = e.data?.message || "Couldn't save — please try again.";
@@ -968,7 +1000,7 @@
                 <div class="flex items-center justify-between gap-2">
                     <p class="text-[13px] font-black text-slate-900 leading-snug min-w-0">${t.title}</p>
                     <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${t.status === 'done' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                        ${t.status === 'done' ? '✓ Done' : 'In Progress'}
+                        ${t.status === 'done' ? 'Done' : 'In Progress'}
                     </span>
                 </div>
                 <p class="text-[10px] text-slate-400">📁 ${t.project_name}</p>

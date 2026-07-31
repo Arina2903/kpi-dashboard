@@ -22,7 +22,7 @@
 <div class="p-6 space-y-5">
 
     {{-- ── HEADER ─────────────────────────────────────────────────────── --}}
-    <div class="rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-8 py-7 shadow-xl">
+    <div class="rounded-[18px] theme-header-banner theme-page-banner bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-8 py-7 shadow-xl">
         <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
             <div>
                 <a href="{{ route('kpi.my-department-kpi') }}" class="text-xs text-[#A4C3B2] hover:text-white font-semibold">← My Department KPI</a>
@@ -111,7 +111,7 @@
          data-emp="{{ $emp['id'] }}">
 
         {{-- Employee header (click to toggle) --}}
-        <div class="px-6 py-4 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] flex items-center justify-between cursor-pointer select-none"
+        <div class="px-6 py-4 theme-header-banner theme-page-banner bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] flex items-center justify-between cursor-pointer select-none"
              onclick="toggleCard('{{ $emp['id'] }}')">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center text-white font-black text-sm shrink-0">
@@ -146,7 +146,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-[12px]">
                 <thead>
-                    <tr class="bg-[#1a3d34] text-white">
+                    <tr class="bg-emerald-700 text-white">
                         <th class="px-4 py-2.5 text-left font-black text-[10px] uppercase tracking-wider w-16">Category</th>
                         <th class="px-3 py-2.5 text-left font-black text-[10px] uppercase tracking-wider w-10">#</th>
                         <th class="px-4 py-2.5 text-left font-black text-[10px] uppercase tracking-wider">KPI / Month</th>
@@ -159,17 +159,20 @@
                 </thead>
                 <tbody>
 
-                    {{-- Category header row: Financial (60%) --}}
-                    <tr class="bg-[#1a3d34]/5 border-b border-slate-200">
+                    {{-- Category header row: Financial (60%) — coloured by the same
+                         category scheme used everywhere else (Financial = emerald),
+                         not the accent theme, so it stays readable whatever accent
+                         colour is picked. --}}
+                    <tr class="bg-emerald-50/60 border-b border-slate-200">
                         <td rowspan="{{ count($kpiDefs) * count($months) + count($kpiDefs) + 1 }}"
-                            class="px-4 py-3 align-middle text-center border-r border-[#6B9080]/20 bg-[#CCE3DE]/40">
-                            <div class="writing-vertical font-black text-[11px] text-[#1a3d34] uppercase tracking-wide"
+                            class="px-4 py-3 align-middle text-center border-r border-emerald-200 bg-emerald-100">
+                            <div class="writing-vertical font-black text-[11px] text-emerald-800 uppercase tracking-wide"
                                  style="writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap">
                                 Financial (60%)
                             </div>
                         </td>
-                        <td colspan="7" class="px-4 py-2 bg-[#CCE3DE]/30">
-                            <span class="text-[10px] text-[#6B9080] font-semibold italic">Category: Financial</span>
+                        <td colspan="7" class="px-4 py-2 bg-emerald-50/80">
+                            <span class="text-[10px] text-emerald-700 font-semibold italic">Category: Financial</span>
                         </td>
                     </tr>
 
@@ -205,7 +208,7 @@
                                 <span class="w-1.5 h-1.5 rounded-full {{ $hasData ? 'bg-emerald-500' : ($isFuture ? 'bg-slate-200' : 'bg-amber-400') }} shrink-0"></span>
                                 <span class="font-semibold text-slate-700">{{ $monthName }}</span>
                                 @if($monthNum === $currentMonth)
-                                <span class="text-[9px] bg-[#CCE3DE] text-[#1a3d34] font-black px-1.5 py-0.5 rounded-full">Current</span>
+                                <span class="text-[9px] bg-emerald-100 text-emerald-800 font-black px-1.5 py-0.5 rounded-full">Current</span>
                                 @endif
                             </div>
                         </td>
@@ -253,7 +256,7 @@
                     @endforeach
 
                     {{-- YTD total row --}}
-                    <tr class="bg-[#1a3d34] text-white border-t-2 border-[#1a3d34]">
+                    <tr class="bg-emerald-800 text-white border-t-2 border-emerald-800">
                         <td colspan="2" class="px-4 py-3 font-black text-[11px] uppercase tracking-wider text-[#A4C3B2]">YTD Total</td>
                         <td class="px-4 py-3 text-right font-black">RM {{ number_format($ytdRevActual) }}</td>
                         <td class="px-4 py-3 text-right font-black text-[#A4C3B2]">RM {{ number_format($ytdRevTarget) }}</td>

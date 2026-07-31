@@ -151,42 +151,34 @@
 
 {{-- ═══════ HEADER (sticky, with live score ring) ═════════════════════════ --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#F5F5F3]">
-    <div class="relative overflow-hidden rounded-[20px] bg-gradient-to-r from-[#1A0A0A] via-[#3d0511] to-[#7A0019] text-white px-7 py-6 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex flex-row items-center justify-between gap-6">
-        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
+    <div class="relative overflow-hidden rounded-[20px] theme-header-banner theme-page-banner bg-gradient-to-r from-[#1A0A0A] via-[#3d0511] to-[#7A0019] text-white px-7 py-6 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex flex-row items-center gap-4">
+        <div class="absolute top-0 left-0 right-0 h-[2px] theme-header-hairline bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
         <div class="pointer-events-none absolute -top-14 -right-14 w-64 h-64 rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
-        <div class="pointer-events-none absolute -bottom-20 left-1/3 w-64 h-64 rounded-full bg-[#C8102E]/20 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-20 left-1/3 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
         <div class="pointer-events-none absolute inset-0 opacity-[0.05]" style="background-image:radial-gradient(circle,#fff 1px,transparent 1px);background-size:20px 20px;"></div>
 
-        <div class="relative flex items-center gap-5 min-w-0">
-            <!-- LIVE SCORE RING -->
-            <div class="w-[68px] h-[68px] rounded-full shrink-0 p-[3px]" style="background: conic-gradient(#D4AF37 {{ $individualPerformanceWidth * 3.6 }}deg, rgba(255,255,255,.18) 0deg);">
-                <div class="w-full h-full rounded-full bg-[#2A0910] flex flex-col items-center justify-center">
-                    <span class="text-base font-black leading-none">{{ number_format($individualPerformanceDisplay,0) }}%</span>
-                    <span class="text-[7px] text-[#D4AF37] font-black uppercase tracking-wider mt-0.5">Score</span>
-                </div>
-            </div>
-
-            <div class="min-w-0">
-                <a href="/dashboard" class="text-[11px] text-[#D4AF37] hover:text-white transition">← Dashboard</a>
-                <h1 class="text-2xl font-black tracking-tight mt-1">KPI List</h1>
-                <p class="text-white/70 text-xs mt-1 truncate">
-                    {{ $user['short_name'] }} · {{ $user['role'] }} · {{ $user['department_code'] }} · {{ $fy }}
-                </p>
+        <!-- LIVE SCORE RING -->
+        <div class="relative w-[52px] h-[52px] rounded-full shrink-0 p-[3px]" style="background: conic-gradient(var(--user-theme-accent, #D4AF37) {{ $individualPerformanceWidth * 3.6 }}deg, rgba(255,255,255,.18) 0deg);">
+            <div class="w-full h-full rounded-full bg-[#2A0910] flex flex-col items-center justify-center">
+                <span class="text-xs font-black leading-none">{{ number_format($individualPerformanceDisplay,0) }}%</span>
+                <span class="text-[6px] text-[#D4AF37] font-black uppercase tracking-wider mt-0.5">Score</span>
             </div>
         </div>
 
-        <div class="relative flex items-center gap-2.5 shrink-0">
-            <span class="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-black px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white/90">
-                {{ $individualPerformanceLabel }} Performance
-            </span>
+        <a href="/dashboard" class="relative text-[11px] text-[#D4AF37] hover:text-white transition shrink-0">← Dashboard</a>
 
-            @if($permission['can_create'])
-                <a href="{{ route('kpi.create') }}"
-                   class="bg-[#D4AF37] hover:bg-[#c19c2f] text-[#1a1a1a] px-4 py-2.5 rounded-xl shadow font-black text-xs transition hover:-translate-y-0.5 shrink-0">
-                    + Create KPI
-                </a>
-            @endif
-        </div>
+        <span class="relative hidden sm:inline-flex items-center gap-1.5 text-[10px] font-black px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white/90 shrink-0">
+            {{ $individualPerformanceLabel }} Performance
+        </span>
+
+        <div class="relative flex-1"></div>
+
+        @if($permission['can_create'])
+            <a href="{{ route('kpi.create') }}"
+               class="relative bg-[#D4AF37] hover:bg-[#c19c2f] text-[#1a1a1a] px-4 py-2.5 rounded-xl shadow font-black text-xs transition hover:-translate-y-0.5 shrink-0">
+                + Create KPI
+            </a>
+        @endif
     </div>
 </div>
 
@@ -305,6 +297,12 @@
 
     <!-- FILTER -->
     <div class="bg-white rounded-[20px] shadow-sm border border-[#E5E7EB] border-l-[4px] border-l-[#D4AF37] p-5">
+        <div class="flex items-center justify-between gap-3 mb-4">
+            <p class="text-xs font-bold text-slate-500">
+                <span id="visibleCount">{{ $individualKpiCount }}</span> of {{ $individualKpiCount }} My KPI shown
+            </p>
+            <button type="button" id="clearFiltersBtn" class="text-[11px] font-black text-slate-400 hover:text-slate-700 transition hidden">✕ Clear Filters</button>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
                 <label class="text-xs font-bold text-slate-500 uppercase">Search</label>
@@ -336,6 +334,22 @@
                     <option value="in_trouble">In Trouble</option>
                     <option value="completed">Completed</option>
                 </select>
+            </div>
+        </div>
+
+        {{-- COLOUR LEGEND --}}
+        <div class="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-4">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0">Colour Guide</p>
+            <div class="flex flex-wrap gap-1.5">
+                <span class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[9px] font-black"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>Financial</span>
+                <span class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-800 text-[9px] font-black"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>Growth</span>
+                <span class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[9px] font-black"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>Initiatives</span>
+                <span class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-pink-50 border border-pink-200 text-pink-800 text-[9px] font-black"><span class="w-1.5 h-1.5 rounded-full bg-pink-500 shrink-0"></span>People</span>
+            </div>
+            <div class="w-px bg-slate-100 self-stretch hidden md:block"></div>
+            <div class="flex items-center gap-1.5">
+                <span class="w-3 h-3 rounded bg-yellow-100 border border-yellow-300 shrink-0"></span>
+                <p class="text-[9px] text-slate-500 font-bold">📩 Assigned to Me</p>
             </div>
         </div>
     </div>
@@ -377,22 +391,6 @@
         ];
         $assignedThemeDefault = ['border'=>'border-l-slate-300','cardBg'=>'bg-slate-50/60','cardBorder'=>'border-slate-100','catPill'=>'bg-slate-600 text-white','subPill'=>'bg-slate-100 text-slate-700','infoBg'=>'bg-slate-50 border-slate-100','infoText'=>'text-slate-600','labelText'=>'text-slate-700','labelDot'=>'bg-slate-400','avatarBg'=>'bg-slate-400','personPill'=>'bg-slate-100 text-slate-800','qDefault'=>'bg-slate-100 text-slate-600'];
     @endphp
-
-    {{-- COLOUR LEGEND --}}
-    <div class="rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-2.5 flex flex-wrap items-center gap-4">
-        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0">Colour Guide</p>
-        <div class="flex flex-wrap gap-1.5">
-            <span class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[9px] font-black"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>Financial</span>
-            <span class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-800 text-[9px] font-black"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>Growth</span>
-            <span class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[9px] font-black"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>Initiatives</span>
-            <span class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-pink-50 border border-pink-200 text-pink-800 text-[9px] font-black"><span class="w-1.5 h-1.5 rounded-full bg-pink-500 shrink-0"></span>People</span>
-        </div>
-        <div class="w-px bg-slate-100 self-stretch hidden md:block"></div>
-        <div class="flex items-center gap-1.5">
-            <span class="w-3 h-3 rounded bg-yellow-100 border border-yellow-300 shrink-0"></span>
-            <p class="text-[9px] text-slate-500 font-bold">📩 Assigned to Me</p>
-        </div>
-    </div>
 
     {{-- ── LINKAGE WARNINGS ─────────────────────────────────────────────── --}}
     @php
@@ -455,6 +453,12 @@
         <div class="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center">
             <h3 class="text-xl font-black text-slate-900">No KPI Created Yet</h3>
             <p class="text-sm text-slate-500 mt-2">Start creating KPI for your yearly execution tracking.</p>
+            @if($permission['can_create'])
+            <a href="{{ route('kpi.create') }}"
+               class="theme-header-accent-btn inline-flex items-center gap-1.5 mt-4 bg-[#D4AF37] hover:bg-[#c19c2f] text-[#1a1a1a] px-5 py-2.5 rounded-xl shadow font-black text-xs transition hover:-translate-y-0.5">
+                + Create KPI
+            </a>
+            @endif
         </div>
     @endif
 
@@ -472,23 +476,18 @@
     <div class="category-group">
 
         {{-- UNIFIED CATEGORY HEADER --}}
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r {{ $ot['headerBg'] }} text-white px-4 py-3 mb-2 shadow-[0_8px_20px_rgba(15,23,42,0.12)] flex items-center justify-between">
-            <div class="pointer-events-none absolute inset-0 opacity-[0.06]" style="background-image:radial-gradient(circle,#fff 1px,transparent 1px);background-size:16px 16px;"></div>
-            <div class="pointer-events-none absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10 blur-2xl"></div>
-
-            <div class="relative flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-base shrink-0 shadow-inner">{{ $ot['icon'] }}</div>
-                <div>
-                    <h2 class="text-base font-black tracking-wide">{{ strtoupper($category) }}</h2>
-                    <p class="text-white/70 text-[10px]">{{ $ownCount + $assignedCount }} KPI Total</p>
-                </div>
+        <div class="flex items-center justify-between gap-3 bg-white rounded-xl border border-slate-200 border-l-4 {{ $ot['border'] }} px-4 py-2.5 mb-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-7 h-7 rounded-lg {{ $ot['infoBg'] }} border flex items-center justify-center text-sm shrink-0">{{ $ot['icon'] }}</div>
+                <h2 class="text-xs font-black tracking-wide {{ $ot['labelText'] }} uppercase truncate">{{ strtoupper($category) }}</h2>
+                <span class="text-[10px] text-slate-400 font-semibold shrink-0">{{ $ownCount + $assignedCount }} KPI</span>
             </div>
-            <div class="relative flex flex-wrap items-center gap-1.5">
+            <div class="flex flex-wrap items-center gap-1.5 shrink-0">
                 @if($ownCount > 0)
-                <span class="px-2.5 py-1 rounded-xl bg-white/20 text-white font-black text-[10px]">✍️ {{ $ownCount }} My KPI</span>
+                <span class="px-2 py-0.5 rounded-full {{ $ot['catPill'] }} font-black text-[9px]">✍️ {{ $ownCount }} My KPI</span>
                 @endif
                 @if($assignedCount > 0)
-                <span class="px-2.5 py-1 rounded-xl bg-black/20 text-white/90 font-black text-[10px]">📩 {{ $assignedCount }} Assigned</span>
+                <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 font-black text-[9px]">📩 {{ $assignedCount }} Assigned</span>
                 @endif
             </div>
         </div>
@@ -548,70 +547,61 @@
                     default    => 'bg-slate-200 text-slate-500',
                 };
             }
-            $assignerName     = $akpi['employee_name'] ?? '-';
-            $nameParts        = array_filter(explode(' ', strtoupper($assignerName)));
-            $assignerInitials = implode('', array_map(fn($p) => $p[0], array_slice($nameParts, 0, 2)));
+            $assignerName = $akpi['employee_name'] ?? '-';
         @endphp
 
         <div
             onclick="openAssignedKpiDetail(this)"
-            class="assigned-kpi-card cursor-pointer bg-yellow-50 border-l-4 {{ $ot['border'] }} border border-yellow-200 rounded-[24px] p-6 shadow-sm hover:shadow-xl hover:scale-[1.01] hover:-translate-y-1 transition-all duration-300 mb-3"
+            class="assigned-kpi-card cursor-pointer bg-white border-l-4 {{ $ot['border'] }} border border-yellow-200 rounded-2xl p-4 shadow-sm hover:shadow-xl hover:scale-[1.005] hover:-translate-y-0.5 transition-all duration-200 mb-2"
             data-kpi='@json($akpi)'
         >
-
-            <!-- TOP ROW -->
-            <div class="flex items-start justify-between gap-5">
-                <div class="flex-1 min-w-0">
-                    <div class="flex flex-wrap items-center gap-2 mb-3">
-                        <span class="px-3 py-1 rounded-full {{ $ot['catPill'] }} text-[10px] font-black">{{ $akpi['category'] ?? '-' }}</span>
-                        <span class="px-3 py-1 rounded-full {{ $ot['subPill'] }} text-[10px] font-black">{{ $akpi['sub_category'] ?? '-' }}</span>
-                        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-black">{{ $akpi['financial_year'] ?? '-' }}</span>
-                        <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold flex items-center gap-1">📩 Assigned to Me</span>
-                    </div>
-                    <h3 class="text-xl font-black text-slate-900">{{ $akpi['kpi_title'] ?? 'Untitled' }}</h3>
-                    <p class="text-xs text-slate-500 mt-2 leading-relaxed">{{ $akpi['kpi_description'] ?? 'No description.' }}</p>
-
-                    <!-- ASSIGNER CHIP -->
-                    <div class="flex items-center gap-2 mt-3">
-                        <div class="w-7 h-7 rounded-xl {{ $ot['avatarBg'] }} text-white flex items-center justify-center text-[10px] font-black shrink-0">{{ $assignerInitials ?: '?' }}</div>
-                        <span class="px-2.5 py-1 rounded-xl {{ $ot['personPill'] }} text-[11px] font-black">From: {{ $assignerName }}</span>
-                        @if(!empty($akpi['employee_role']))
-                        <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-500 text-[10px] font-bold">{{ $akpi['employee_role'] }}</span>
-                        @endif
-                    </div>
+            <!-- ROW 1: Tags + KPI Score -->
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="px-2.5 py-0.5 rounded-full {{ $ot['catPill'] }} text-[10px] font-black">{{ $akpi['category'] ?? '-' }}</span>
+                    <span class="px-2.5 py-0.5 rounded-full {{ $ot['subPill'] }} text-[10px] font-black">{{ $akpi['sub_category'] ?? '-' }}</span>
+                    <span class="px-2 py-0.5 rounded-full bg-white border border-yellow-200 text-yellow-700 text-[10px] font-black">👁 View Only</span>
                 </div>
                 <div class="text-right shrink-0">
-                    <p class="text-[10px] uppercase text-slate-400 font-black">KPI Score</p>
-                    <h2 class="text-2xl font-black {{ $aProgressText }} mt-1">{{ number_format($aAchv, 1) }}%</h2>
-                    <p class="text-[10px] {{ $ot['infoText'] }} font-black mt-2 uppercase tracking-wider">Tap to view →</p>
+                    <p class="text-[9px] uppercase text-slate-400 font-black leading-none">KPI Score</p>
+                    <span class="text-xl font-black {{ $aProgressText }}">{{ number_format($aAchv, 1) }}%</span>
                 </div>
             </div>
 
-            <!-- PROGRESS -->
-            <div class="mt-4 h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div class="h-2 rounded-full bg-gradient-to-r {{ $aProgressBar }}" style="width: {{ max(3, min(100, $aAchv)) }}%"></div>
+            <!-- ROW 2: Progress bar -->
+            <div class="my-2">
+                <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-1.5 rounded-full bg-gradient-to-r {{ $aProgressBar }}" style="width: {{ max(3, min(100, $aAchv)) }}%"></div>
+                </div>
             </div>
 
-            <!-- QUARTER DOTS -->
-            <div class="flex gap-2 mt-3">
-                @foreach(['Q1','Q2','Q3','Q4'] as $aq)
-                <span class="w-8 h-8 rounded-lg text-[10px] font-black flex items-center justify-center {{ $aQColors[$aq] }}">{{ $aq }}</span>
-                @endforeach
-            </div>
+            <!-- ROW 3: Title + description + assigner -->
+            <h3 class="text-base font-black text-slate-900 leading-snug">{{ $akpi['kpi_title'] ?? 'Untitled' }}</h3>
+            @if(!empty($akpi['kpi_description']))
+            <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed line-clamp-1">{{ $akpi['kpi_description'] }}</p>
+            @endif
+            <p class="text-[10px] text-slate-400 mt-1">From: <span class="font-bold text-slate-600">{{ $assignerName }}</span>@if(!empty($akpi['employee_role'])) &middot; {{ $akpi['employee_role'] }}@endif</p>
 
-            <!-- INFO STRIP -->
-            <div class="grid grid-cols-3 gap-3 mt-4">
-                <div class="rounded-2xl {{ $ot['infoBg'] }} border px-4 py-3">
-                    <p class="text-[10px] uppercase {{ $ot['infoText'] }} font-black">Weightage</p>
-                    <p class="text-sm font-black text-slate-900 mt-1">{{ number_format($akpi['weightage'] ?? 0, 0) }}%</p>
+            <!-- ROW 4: Quarter badges + meta -->
+            <div class="flex items-center gap-3 mt-2.5">
+                <div class="flex gap-1.5">
+                    @foreach(['Q1','Q2','Q3','Q4'] as $aq)
+                    <span class="w-7 h-7 rounded-lg text-[9px] font-black flex items-center justify-center {{ $aQColors[$aq] }}">{{ $aq }}</span>
+                    @endforeach
                 </div>
-                <div class="rounded-2xl {{ $ot['infoBg'] }} border px-4 py-3">
-                    <p class="text-[10px] uppercase {{ $ot['infoText'] }} font-black">Base Target</p>
-                    <p class="text-sm font-black text-slate-900 mt-1">{{ number_format($aBase, 0) }}</p>
-                </div>
-                <div class="rounded-2xl {{ $ot['infoBg'] }} border px-4 py-3">
-                    <p class="text-[10px] uppercase {{ $ot['infoText'] }} font-black">Actual</p>
-                    <p class="text-sm font-black text-slate-900 mt-1">{{ number_format($aActual, 0) }}</p>
+                <div class="flex-1 grid grid-cols-3 gap-2">
+                    <div class="rounded-xl {{ $ot['infoBg'] }} border px-3 py-1.5">
+                        <p class="text-[9px] uppercase {{ $ot['infoText'] }} font-black">Weightage</p>
+                        <p class="text-xs font-black text-slate-900">{{ number_format($akpi['weightage'] ?? 0, 0) }}%</p>
+                    </div>
+                    <div class="rounded-xl {{ $ot['infoBg'] }} border px-3 py-1.5">
+                        <p class="text-[9px] uppercase {{ $ot['infoText'] }} font-black">Target</p>
+                        <p class="text-xs font-black text-slate-900">{{ number_format($aBase, 0) }}</p>
+                    </div>
+                    <div class="rounded-xl {{ $ot['infoBg'] }} border px-3 py-1.5">
+                        <p class="text-[9px] uppercase {{ $ot['infoText'] }} font-black">Actual</p>
+                        <p class="text-xs font-black text-slate-900">{{ number_format($aActual, 0) }}</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -779,6 +769,7 @@
     const categoryFilter = document.getElementById('categoryFilter');
     const statusFilter = document.getElementById('statusFilter');
     const visibleCount = document.getElementById('visibleCount');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
     const cards = document.querySelectorAll('.kpi-card');
     const noFilterResult = document.getElementById('noFilterResult');
 
@@ -786,6 +777,8 @@
         const searchValue = searchInput.value.toLowerCase().trim();
         const categoryValue = categoryFilter.value;
         const statusValue = statusFilter.value;
+
+        clearFiltersBtn.classList.toggle('hidden', !searchValue && !categoryValue && !statusValue);
 
         let count = 0;
 
@@ -830,11 +823,31 @@
         } else {
             noFilterResult.classList.add('hidden');
         }
+
+        visibleCount.textContent = count;
     }
 
     searchInput.addEventListener('input', filterRows);
     categoryFilter.addEventListener('change', filterRows);
     statusFilter.addEventListener('change', filterRows);
+
+    clearFiltersBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        categoryFilter.value = '';
+        statusFilter.value = '';
+        filterRows();
+    });
+
+    // Prefill from the top bar's global search box (?q=...) when arriving
+    // here from another page via Enter, so that search feels continuous
+    // instead of landing on an unfiltered list.
+    (function prefillSearchFromQuery() {
+        const q = new URLSearchParams(window.location.search).get('q');
+        if (q) {
+            searchInput.value = q;
+            filterRows();
+        }
+    })();
 
     function closeQuarterModal(id) {
 

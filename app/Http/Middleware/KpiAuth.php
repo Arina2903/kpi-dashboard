@@ -67,15 +67,22 @@ class KpiAuth
             try {
                 $employee = app(SupabaseService::class)->first('employees', [
                     'id'     => 'eq.' . session('employee_uuid'),
-                    'select' => 'theme_bg,theme_card,theme_accent,theme_border',
+                    'select' => 'theme_bg,theme_card,theme_accent,theme_accent2,theme_border,theme_text,theme_sidebar_bg,theme_sidebar_accent,theme_sidebar_text,theme_font_family,theme_font_size',
                 ]);
 
                 session([
-                    'theme_loaded' => true,
-                    'theme_bg'     => $employee['theme_bg']     ?? null,
-                    'theme_card'   => $employee['theme_card']   ?? null,
-                    'theme_accent' => $employee['theme_accent'] ?? null,
-                    'theme_border' => $employee['theme_border'] ?? null,
+                    'theme_loaded'          => true,
+                    'theme_bg'              => $employee['theme_bg']              ?? null,
+                    'theme_card'            => $employee['theme_card']            ?? null,
+                    'theme_accent'          => $employee['theme_accent']          ?? null,
+                    'theme_accent2'         => $employee['theme_accent2']         ?? null,
+                    'theme_border'          => $employee['theme_border']          ?? null,
+                    'theme_text'            => $employee['theme_text']            ?? null,
+                    'theme_sidebar_bg'      => $employee['theme_sidebar_bg']      ?? null,
+                    'theme_sidebar_accent'  => $employee['theme_sidebar_accent']  ?? null,
+                    'theme_sidebar_text'    => $employee['theme_sidebar_text']    ?? null,
+                    'theme_font_family'     => $employee['theme_font_family']     ?? null,
+                    'theme_font_size'       => $employee['theme_font_size']       ?? null,
                 ]);
             } catch (\Throwable) {
                 session(['theme_loaded' => true]);

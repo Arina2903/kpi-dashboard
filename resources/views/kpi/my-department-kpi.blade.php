@@ -22,7 +22,7 @@
 <div class="p-6 space-y-5">
 
     {{-- HEADER --}}
-    <div class="rounded-[20px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white p-7 shadow-xl">
+    <div class="rounded-[20px] theme-header-banner theme-page-banner bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white p-7 shadow-xl">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
             <div>
                 <a href="/dashboard" class="text-xs text-blue-200 hover:text-white font-semibold">← Dashboard</a>
@@ -133,11 +133,13 @@
             return ($score * ((float)($item['weightage'] ?? 0))) / 100;
         });
 
+        // Performance Achievement Guide scale (also documented in Help & Guide):
+        // 90-100 Outstanding, 70-89 Meets Expectations, 50-69 Below Average, 1-49 Unsatisfactory.
         $deptPerfColor = match(true) {
-            $departmentPerformance >= 90 => ['bar' => 'from-emerald-400 to-green-500', 'text' => 'text-emerald-400', 'label' => 'Excellent', 'badge' => 'bg-emerald-100 text-emerald-700'],
-            $departmentPerformance >= 75 => ['bar' => 'from-[#8B5E4A] to-[#6B3F2A]',  'text' => 'text-white/50',    'label' => 'Good',      'badge' => 'bg-[#F5EAE0] text-[#6B3F2A]'],
-            $departmentPerformance >= 50 => ['bar' => 'from-yellow-400 to-amber-500', 'text' => 'text-yellow-300', 'label' => 'Watch',     'badge' => 'bg-yellow-100 text-yellow-700'],
-            default                      => ['bar' => 'from-red-400 to-rose-500',     'text' => 'text-red-300',    'label' => 'Critical',  'badge' => 'bg-red-100 text-red-700'],
+            $departmentPerformance >= 90 => ['bar' => 'from-emerald-400 to-green-500',  'text' => 'text-emerald-600', 'label' => 'Outstanding',        'badge' => 'bg-emerald-100 text-emerald-700'],
+            $departmentPerformance >= 70 => ['bar' => 'from-yellow-400 to-amber-500',   'text' => 'text-amber-600',   'label' => 'Meets Expectations', 'badge' => 'bg-yellow-100 text-yellow-700'],
+            $departmentPerformance >= 50 => ['bar' => 'from-orange-400 to-orange-600',  'text' => 'text-orange-600', 'label' => 'Below Average',      'badge' => 'bg-orange-100 text-orange-700'],
+            default                      => ['bar' => 'from-red-400 to-rose-500',       'text' => 'text-red-600',    'label' => 'Unsatisfactory',     'badge' => 'bg-red-100 text-red-700'],
         };
 
         $statusCounts = collect($kpis ?? [])->countBy(fn($k) => $k['status'] ?? 'not_started');
@@ -166,13 +168,13 @@
     @endphp
 
     {{-- DEPT PERFORMANCE + LEGEND --}}
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
 
         {{-- DEPT SCORE --}}
-        <div class="glass rounded-[20px] border border-white/70 p-6 shadow-sm flex flex-col justify-between">
+        <div class="glass rounded-[20px] border border-white/70 p-6 shadow-sm">
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Department Performance</p>
             <div class="flex items-end justify-between mt-3 gap-3">
-                <h2 class="text-5xl font-black text-slate-900">{{ number_format($departmentPerformance, 1) }}<span class="text-2xl text-slate-400">%</span></h2>
+                <h2 class="text-5xl font-black {{ $deptPerfColor['text'] }}">{{ number_format($departmentPerformance, 1) }}<span class="text-2xl text-slate-300">%</span></h2>
                 <span class="text-xs font-black px-3 py-1.5 rounded-xl {{ $deptPerfColor['badge'] }}">{{ $deptPerfColor['label'] }}</span>
             </div>
             <div class="mt-4 h-3 bg-slate-100 rounded-full overflow-hidden">
@@ -194,34 +196,6 @@
                     <span class="ml-auto text-sm font-black">{{ $statusCounts[$key] ?? 0 }}</span>
                 </div>
                 @endforeach
-            </div>
-        </div>
-
-        {{-- PERFORMANCE GUIDE --}}
-        <div class="glass rounded-[20px] border border-white/70 p-6 shadow-sm">
-            <div class="flex items-center gap-2 mb-4">
-                <div class="w-6 h-6 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
-                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <p class="text-[10px] font-black text-slate-700 uppercase tracking-widest">Performance Achievement Guide</p>
-            </div>
-            <div class="space-y-2">
-                <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-100">
-                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span class="text-[11px] font-black text-emerald-700">Excellent</span></div>
-                    <span class="text-[11px] font-black text-emerald-600">≥ 90%</span>
-                </div>
-                <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-[#FBF5EF] border border-[#6B3F2A]/20">
-                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#6B3F2A]"></span><span class="text-[11px] font-black text-[#6B3F2A]">Good</span></div>
-                    <span class="text-[11px] font-black text-[#6B3F2A]">75 – 89%</span>
-                </div>
-                <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-yellow-50 border border-yellow-100">
-                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-yellow-500"></span><span class="text-[11px] font-black text-yellow-700">Watch</span></div>
-                    <span class="text-[11px] font-black text-yellow-600">50 – 74%</span>
-                </div>
-                <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-red-50 border border-red-100">
-                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-500"></span><span class="text-[11px] font-black text-red-700">Critical</span></div>
-                    <span class="text-[11px] font-black text-red-600">< 50%</span>
-                </div>
             </div>
         </div>
 
@@ -326,7 +300,7 @@
 
                     {{-- AVATAR + INFO --}}
                     <div class="flex items-center gap-4 flex-1 min-w-0">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1A0A0A] to-[#7A0019] flex items-center justify-center text-white font-black text-lg shrink-0 group-hover:scale-105 transition">
+                        <div class="w-12 h-12 rounded-2xl theme-header-banner bg-gradient-to-br from-[#1A0A0A] to-[#7A0019] flex items-center justify-center text-white font-black text-lg shrink-0 group-hover:scale-105 transition">
                             {{ $initials ?: '?' }}
                         </div>
                         <div class="min-w-0 flex-1">

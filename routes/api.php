@@ -17,6 +17,7 @@ Route::middleware('telegram.cron.secret')->prefix('telegram/cron')->group(functi
 });
 
 Route::middleware('telegram.webapp.auth')->prefix('telegram')->group(function () {
+    Route::get('/theme', [TelegramMiniAppController::class, 'theme']);
     Route::get('/kpis/open', [TelegramMiniAppController::class, 'openKpis']);
     Route::get('/kpis/summary', [TelegramMiniAppController::class, 'summary']);
     Route::post('/tasks', [TelegramMiniAppController::class, 'storeTasks']);

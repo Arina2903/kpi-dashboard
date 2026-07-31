@@ -13,10 +13,10 @@
 
 {{-- ═══════ HEADER (sticky) ════════════════════════════════════════════════ --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#F5F5F3]">
-    <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-5 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex flex-row items-center justify-between gap-4">
-        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
+    <div class="relative overflow-hidden rounded-[18px] theme-header-banner theme-page-banner bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-5 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex flex-row items-center justify-between gap-4">
+        <div class="absolute top-0 left-0 right-0 h-[2px] theme-header-hairline bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
         <div class="pointer-events-none absolute -top-10 -right-10 w-48 h-48 rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
-        <div class="pointer-events-none absolute -bottom-16 left-1/3 w-56 h-56 rounded-full bg-[#C8102E]/20 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-16 left-1/3 w-56 h-56 rounded-full bg-white/10 blur-3xl"></div>
 
         <div class="relative flex items-center gap-4">
             <div class="w-11 h-11 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
@@ -39,34 +39,34 @@
             <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
             </div>
-            <h2 class="text-sm font-black text-slate-800 uppercase tracking-wider">Score Bands</h2>
+            <h2 class="text-sm font-black text-slate-800 uppercase tracking-wider">Score Bands · Performance Achievement Guide</h2>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
             <div class="flex items-start gap-3 p-3 rounded-2xl bg-emerald-50 border border-emerald-100">
                 <div class="mt-1 w-10 h-2 rounded-full bg-gradient-to-r from-emerald-400 to-green-500 shrink-0"></div>
                 <div class="min-w-0">
-                    <p class="text-xs font-black text-emerald-700">Excellent &nbsp;·&nbsp; ≥ 90%</p>
+                    <p class="text-xs font-black text-emerald-700">Outstanding &nbsp;·&nbsp; 90% – 100%</p>
                     <p class="text-[10px] text-slate-500 mt-0.5 leading-relaxed">On or above target. Outstanding performance.</p>
                 </div>
             </div>
-            <div class="flex items-start gap-3 p-3 rounded-2xl bg-[#FBF5EF] border border-[#6B3F2A]/20">
-                <div class="mt-1 w-10 h-2 rounded-full bg-gradient-to-r from-[#8B5E4A] to-[#6B3F2A] shrink-0"></div>
+            <div class="flex items-start gap-3 p-3 rounded-2xl bg-yellow-50 border border-yellow-100">
+                <div class="mt-1 w-10 h-2 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 shrink-0"></div>
                 <div class="min-w-0">
-                    <p class="text-xs font-black text-[#6B3F2A]">Good &nbsp;·&nbsp; 75% – 89%</p>
+                    <p class="text-xs font-black text-yellow-700">Meets Expectations &nbsp;·&nbsp; 70% – 89%</p>
                     <p class="text-[10px] text-slate-500 mt-0.5 leading-relaxed">Solid progress. Small gaps to close.</p>
                 </div>
             </div>
-            <div class="flex items-start gap-3 p-3 rounded-2xl bg-yellow-50 border border-yellow-100">
-                <div class="mt-1 w-10 h-2 rounded-full bg-gradient-to-r from-orange-400 to-yellow-400 shrink-0"></div>
+            <div class="flex items-start gap-3 p-3 rounded-2xl bg-orange-50 border border-orange-100">
+                <div class="mt-1 w-10 h-2 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 shrink-0"></div>
                 <div class="min-w-0">
-                    <p class="text-xs font-black text-yellow-700">Watch &nbsp;·&nbsp; 50% – 74%</p>
+                    <p class="text-xs font-black text-orange-700">Below Average &nbsp;·&nbsp; 50% – 69%</p>
                     <p class="text-[10px] text-slate-500 mt-0.5 leading-relaxed">Below expectation. Needs focused attention.</p>
                 </div>
             </div>
             <div class="flex items-start gap-3 p-3 rounded-2xl bg-red-50 border border-red-100">
                 <div class="mt-1 w-10 h-2 rounded-full bg-gradient-to-r from-red-500 to-red-600 shrink-0"></div>
                 <div class="min-w-0">
-                    <p class="text-xs font-black text-red-700">Critical &nbsp;·&nbsp; &lt; 50%</p>
+                    <p class="text-xs font-black text-red-700">Unsatisfactory &nbsp;·&nbsp; 1% – 49%</p>
                     <p class="text-[10px] text-slate-500 mt-0.5 leading-relaxed">Significantly off target. Urgent action required.</p>
                 </div>
             </div>

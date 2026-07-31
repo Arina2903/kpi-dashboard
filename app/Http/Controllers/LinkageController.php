@@ -37,6 +37,190 @@ class LinkageController extends Controller
         return 'FY' . now()->year;
     }
 
+    private function sidebarData(array $user): array
+    {
+        $departmentFilters = [
+            'select' => '*',
+            'order' => 'name.asc',
+        ];
+
+        if (!empty($user['company_code'])) {
+            $departmentFilters['company_code'] = 'eq.' . $user['company_code'];
+        }
+
+        $departments = $this->supabase->get('departments', $departmentFilters) ?? [];
+
+        $role = strtoupper(trim($user['role'] ?? ''));
+
+        // BTS has cross-department admin/support access, same level as SLT.
+        $canSwitchDepartment = $role === 'SLT' || ($user['department_code'] ?? '') === 'BTS';
+
+        $selectedDepartmentCode = session('selected_department_code')
+            ?? $user['department_code']
+            ?? null;
+
+        $department = null;
+
+        if ($selectedDepartmentCode) {
+            $departmentResult = $this->supabase->get('departments', [
+                'code' => 'eq.' . $selectedDepartmentCode,
+                'select' => '*',
+            ]);
+
+            $department = $departmentResult[0] ?? null;
+        }
+
+        return [
+            'departments' => $departments,
+            'department' => $department,
+            'canSwitchDepartment' => $canSwitchDepartment,
+            'selectedDepartmentCode' => $selectedDepartmentCode,
+        ];
+    }
+
+    public function index()
+    {
+        $user        = $this->currentUser();
+        $companyCode = $user['company_code'];
+        $role        = strtoupper(trim($user['role'] ?? ''));
+        $userId      = $user['id'];
+        $fy          = $this->currentFY();
+
+        // Same batch pattern as DashboardController: incoming/outgoing
+        // linkages and direct reports are independent of one another, so
+        // they're fetched concurrently rather than one after another.
+        $batch = [
+            'incoming' => ['table' => 'kpi_linkages', 'query' => [
+                'assignee_id'    => 'eq.' . $userId,
+                'financial_year' => 'eq.' . $fy,
+                'company_code'   => 'eq.' . $companyCode,
+                'select'         => '*',
+            ]],
+            'outgoing' => ['table' => 'kpi_linkages', 'query' => [
+                'assigner_id'    => 'eq.' . $userId,
+                'financial_year' => 'eq.' . $fy,
+                'company_code'   => 'eq.' . $companyCode,
+                'select'         => '*',
+            ]],
+        ];
+
+        if ($role === 'SLT') {
+            $batch['directReports'] = ['table' => 'employees', 'query' => [
+                'company_code' => 'eq.' . $companyCode,
+                'role'         => 'eq.VP',
+                'is_active'    => 'eq.true',
+                'select'       => 'id,short_name,role',
+                'order'        => 'short_name.asc',
+            ]];
+        } elseif ($role === 'VP') {
+            $batch['byVpId'] = ['table' => 'employees', 'query' => [
+                'company_code' => 'eq.' . $companyCode,
+                'vp_id'        => 'eq.' . $userId,
+                'is_active'    => 'eq.true',
+                'select'       => 'id,short_name,role',
+            ]];
+            $batch['byReportsTo'] = ['table' => 'employees', 'query' => [
+                'company_code'  => 'eq.' . $companyCode,
+                'reports_to_id' => 'eq.' . $userId,
+                'is_active'     => 'eq.true',
+                'select'        => 'id,short_name,role',
+            ]];
+        } elseif ($role === 'MANAGER') {
+            $batch['directReports'] = ['table' => 'employees', 'query' => [
+                'company_code' => 'eq.' . $companyCode,
+                'manager_id'   => 'eq.' . $userId,
+                'is_active'    => 'eq.true',
+                'select'       => 'id,short_name,role',
+                'order'        => 'short_name.asc',
+            ]];
+        }
+
+        $batchResults     = $this->supabase->getMany($batch);
+        $incomingLinkages = $batchResults['incoming'] ?? [];
+        $outgoingLinkages = $batchResults['outgoing'] ?? [];
+
+        $directReports = [];
+        if ($role === 'SLT' || $role === 'MANAGER') {
+            $directReports = $batchResults['directReports'] ?? [];
+        } elseif ($role === 'VP') {
+            $byVpId      = $batchResults['byVpId'] ?? [];
+            $byReportsTo = $batchResults['byReportsTo'] ?? [];
+            $drIds       = collect($byVpId)->pluck('id')->toArray();
+            foreach ($byReportsTo as $r) {
+                if (!in_array($r['id'], $drIds)) { $byVpId[] = $r; $drIds[] = $r['id']; }
+            }
+            $directReports = $byVpId;
+        }
+
+        // Coverage only needs MY OWN KPIs (for targets assigned to me) and
+        // each DIRECT REPORT's own KPIs (for targets I assigned to them) —
+        // a much narrower scope than the dashboard's full department/company
+        // visibility, so this stays a small, independent query.
+        $employeeIds = array_values(array_unique(array_merge(
+            [$userId],
+            collect($directReports)->pluck('id')->toArray()
+        )));
+
+        $kpis = $this->supabase->get('kpis', [
+            'company_code'   => 'eq.' . $companyCode,
+            'employee_id'    => 'in.(' . implode(',', $employeeIds) . ')',
+            'financial_year' => 'eq.' . $fy,
+            'select'         => 'id,employee_id,sub_category,unit,base_target',
+        ]) ?? [];
+
+        $kpiRows        = collect($kpis);
+        $individualKpis = $kpiRows->filter(fn($k) => (string)($k['employee_id'] ?? '') === (string)$userId);
+
+        $fmtLinkageVal = function ($val, $unit) {
+            $n = (float)$val;
+            if ($unit === 'currency')   return 'RM ' . number_format($n, 0);
+            if ($unit === 'percentage') return number_format($n, 1) . '%';
+            return number_format($n, 0);
+        };
+
+        // Key: "sub_category|unit" so RM totals never mix with % or number totals
+        $mySubCatSums = $individualKpis
+            ->groupBy(fn($k) => ($k['sub_category'] ?? '') . '|' . ($k['unit'] ?? 'number'))
+            ->map(fn($g) => $g->sum(fn($k) => (float)($k['base_target'] ?? 0)));
+
+        $myLinkageMap = collect($incomingLinkages)->map(function ($lnk) use ($mySubCatSums) {
+            $target  = (float)($lnk['assigned_target'] ?? 0);
+            $key     = ($lnk['sub_category'] ?? '') . '|' . ($lnk['unit'] ?? 'number');
+            $covered = (float)($mySubCatSums->get($key, 0));
+            $gap     = max(0, $target - $covered);
+            $pct     = $target > 0 ? min(100, round($covered / $target * 100)) : 100;
+            return array_merge($lnk, ['covered' => $covered, 'gap' => $gap, 'pct' => $pct, 'met' => $covered >= $target]);
+        });
+
+        $allKpisByEmployee = $kpiRows->groupBy('employee_id');
+        $outgoingWithCoverage = collect($outgoingLinkages)->map(function ($lnk) use ($allKpisByEmployee) {
+            $assigneeKpis = $allKpisByEmployee->get($lnk['assignee_id'], collect());
+            $lnkUnit = $lnk['unit'] ?? 'number';
+            $target  = (float)($lnk['assigned_target'] ?? 0);
+            $covered = $assigneeKpis
+                ->where('sub_category', $lnk['sub_category'])
+                ->filter(fn($k) => ($k['unit'] ?? 'number') === $lnkUnit)
+                ->sum(fn($k) => (float)($k['base_target'] ?? 0));
+            $gap = max(0, $target - $covered);
+            $pct = $target > 0 ? min(100, round($covered / $target * 100)) : 100;
+            return array_merge($lnk, ['covered' => $covered, 'gap' => $gap, 'pct' => $pct, 'met' => $covered >= $target]);
+        });
+
+        $hasAnyLinkage   = $myLinkageMap->isNotEmpty() || $outgoingWithCoverage->isNotEmpty();
+        $canAssignTarget = $role !== 'EXECUTIVE' && !empty($directReports);
+
+        return view('kpi.linkages', array_merge([
+            'user'                 => $user,
+            'fy'                   => $fy,
+            'directReports'        => $directReports,
+            'myLinkageMap'         => $myLinkageMap,
+            'outgoingWithCoverage' => $outgoingWithCoverage,
+            'hasAnyLinkage'        => $hasAnyLinkage,
+            'canAssignTarget'      => $canAssignTarget,
+            'fmtLinkageVal'        => $fmtLinkageVal,
+        ], $this->sidebarData($user)));
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

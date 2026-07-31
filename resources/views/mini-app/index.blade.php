@@ -32,8 +32,8 @@
 {{-- can reach the employee on Telegram, so the app itself is withheld until --}}
 {{-- they link it (same connect/status endpoints as Account Settings).       --}}
 <div class="w-full max-w-md bg-[#F5EEDC] rounded-[26px] overflow-hidden shadow-2xl flex flex-col" style="min-height: calc(100vh - 32px);">
-    <div class="bg-[#6B3F2A] text-white px-4 py-3.5 shrink-0">
-        <h1 class="text-[15px] font-black">📱 Mini App</h1>
+    <div id="topbar" class="bg-[#6B3F2A] text-white px-4 py-3.5 shrink-0">
+        <h1 class="text-[15px] font-black">Mini App</h1>
     </div>
     <div class="flex-1 p-6 flex flex-col items-center justify-center text-center gap-4">
         <div class="w-14 h-14 rounded-full bg-[#229ED9]/10 flex items-center justify-center">
@@ -54,7 +54,7 @@
     let tgGatePollTimer = null;
 
     async function refreshTelegramGateStatus() {
-        const res = await fetch('{{ route("profile.telegram.status") }}', {
+        const res = await fetch('{{ route("settings.telegram.status") }}', {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
         });
         const data = await res.json();
@@ -66,7 +66,7 @@
     }
 
     async function connectTelegramGate() {
-        const res = await fetch('{{ route("profile.telegram.connect") }}', {
+        const res = await fetch('{{ route("settings.telegram.connect") }}', {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': TG_CSRF, 'X-Requested-With': 'XMLHttpRequest' },
         });
@@ -91,14 +91,14 @@
 <div class="w-full max-w-md bg-[#F5EEDC] rounded-[26px] overflow-hidden shadow-2xl flex flex-col" style="min-height: calc(100vh - 32px);">
 
     <div id="topbar" class="bg-[#6B3F2A] text-white px-4 py-3.5 shrink-0">
-        <h1 class="text-[15px] font-black mb-2.5">📱 Mini App</h1>
+        <h1 class="text-[15px] font-black mb-2.5">Mini App</h1>
         <div class="flex items-center gap-1.5">
             <button id="tab-kpis" onclick="switchTab('kpis')" class="nav-btn active flex-1 py-2 rounded-xl text-[11px] font-black relative">
-                📊 My KPIs
+                My KPIs
                 <span id="kpi-alert-badge" class="hidden absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center px-1 shadow-lg shadow-red-500/30"></span>
             </button>
-            <button id="tab-todo" onclick="switchTab('todo')" class="nav-btn flex-1 py-2 rounded-xl text-[11px] font-black">✅ To-Do</button>
-            <button id="tab-score" onclick="switchTab('score')" class="nav-btn flex-1 py-2 rounded-xl text-[11px] font-black">📈 Score</button>
+            <button id="tab-todo" onclick="switchTab('todo')" class="nav-btn flex-1 py-2 rounded-xl text-[11px] font-black">To-Do</button>
+            <button id="tab-score" onclick="switchTab('score')" class="nav-btn flex-1 py-2 rounded-xl text-[11px] font-black">Score</button>
         </div>
     </div>
 
@@ -151,12 +151,12 @@ function formatUnit(value, unit) {
 // everywhere in the system, not a mini-app-only interpretation.
 const CATEGORY_ORDER = ['Financial', 'Growth & Customer', 'Initiatives', 'People'];
 const CATEGORY_COLORS = {
-    'Financial':         { catPill: 'bg-emerald-700 text-white', subPill: 'bg-emerald-100 text-emerald-700', icon: '💰' },
-    'Growth & Customer': { catPill: 'bg-indigo-700 text-white',  subPill: 'bg-indigo-100 text-indigo-700',   icon: '📈' },
-    'Initiatives':       { catPill: 'bg-amber-600 text-white',   subPill: 'bg-amber-100 text-amber-700',     icon: '🚀' },
-    'People':            { catPill: 'bg-pink-700 text-white',    subPill: 'bg-pink-100 text-pink-700',       icon: '👥' },
+    'Financial':         { catPill: 'bg-emerald-700 text-white', subPill: 'bg-emerald-100 text-emerald-700' },
+    'Growth & Customer': { catPill: 'bg-indigo-700 text-white',  subPill: 'bg-indigo-100 text-indigo-700' },
+    'Initiatives':       { catPill: 'bg-amber-600 text-white',   subPill: 'bg-amber-100 text-amber-700' },
+    'People':            { catPill: 'bg-pink-700 text-white',    subPill: 'bg-pink-100 text-pink-700' },
 };
-const DEFAULT_CATEGORY_COLOR = { catPill: 'bg-slate-600 text-white', subPill: 'bg-slate-100 text-slate-600', icon: '📌' };
+const DEFAULT_CATEGORY_COLOR = { catPill: 'bg-slate-600 text-white', subPill: 'bg-slate-100 text-slate-600' };
 
 function sortByCategoryAndSub(items) {
     return [...items].sort((a, b) => {
@@ -261,7 +261,7 @@ async function renderMyKpis() {
         </div>
     ` : `
         <div class="rounded-2xl bg-emerald-50 border-2 border-emerald-300 px-4 py-3">
-            <p class="text-[12px] font-black text-emerald-700">✅ All caught up — every open KPI updated today.</p>
+            <p class="text-[12px] font-black text-emerald-700">All caught up — every open KPI updated today.</p>
         </div>
     `;
 
@@ -282,7 +282,6 @@ async function renderMyKpis() {
             const cat = CATEGORY_COLORS[k.category] || DEFAULT_CATEGORY_COLOR;
             html += `
                 <div class="flex items-center gap-2 mt-4 mb-1 px-1">
-                    <span class="text-[15px]">${cat.icon}</span>
                     <p class="text-[11px] font-black uppercase tracking-wide text-[#6B3F2A]">${k.category || 'Other'}</p>
                 </div>
             `;
@@ -300,7 +299,7 @@ async function renderMyKpis() {
             <div class="flex items-start gap-3">
                 <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                        <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${cat.icon} ${k.category || '-'}</span>
+                        <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${k.category || '-'}</span>
                         ${k.sub_category ? `<span class="px-2 py-0.5 rounded-full ${cat.subPill} text-[8px] font-black">${k.sub_category}</span>` : ''}
                         <span class="px-2 py-0.5 rounded-full ${sDef.color} text-[8px] font-black">${sDef.label}</span>
                     </div>
@@ -394,7 +393,7 @@ async function submitDelta(kpiId, quarterId) {
 
     try {
         await api(`/kpis/${kpiId}/quarters/${quarterId}/adjust`, { method: 'POST', body: JSON.stringify({ delta }) });
-        showToast('Updated! Your KPI actual has been refreshed. ✅');
+        showToast('Updated! Your KPI actual has been refreshed.');
         renderMyKpis();
     } catch (e) {
         feedback.textContent = e.data?.message || "Couldn't update — please try again.";
@@ -444,14 +443,14 @@ function taskCard(t) {
     const pct = t.target > 0 ? Math.max(0, Math.min(100, (t.actual / t.target) * 100)) : 0;
     const badge = achvBadge(pct);
     const kpiChips = (t.linked_kpis || []).length
-        ? `<div class="flex flex-wrap gap-1.5 mt-2">${t.linked_kpis.map(k => `<span class="px-2 py-0.5 rounded-full bg-[#CCE3DE] text-[#1a3d34] text-[8px] font-black">🔗 ${k.kpi_title}</span>`).join('')}</div>`
+        ? `<div class="flex flex-wrap gap-1.5 mt-2">${t.linked_kpis.map(k => `<span class="px-2 py-0.5 rounded-full bg-[#CCE3DE] text-[#1a3d34] text-[8px] font-black">${k.kpi_title}</span>`).join('')}</div>`
         : '';
 
     return card(`
         <div class="flex items-center justify-between gap-2">
             <p class="text-[13px] font-black text-slate-900 leading-snug min-w-0">${t.title}</p>
             <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${t.status === 'done' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                ${t.status === 'done' ? '✓ Done' : 'In Progress'}
+                ${t.status === 'done' ? 'Done' : 'In Progress'}
             </span>
         </div>
         <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-2 overflow-hidden">
@@ -464,7 +463,7 @@ function taskCard(t) {
         </div>
         ${kpiChips}
         <div class="flex items-center gap-2 mt-3">
-            <button onclick="renderTaskProgress('${t.id}')" class="flex-1 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[11px] font-black">📝 Update</button>
+            <button onclick="renderTaskProgress('${t.id}')" class="flex-1 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[11px] font-black">Update</button>
             <button onclick="renderEditTask('${t.id}')" class="flex-1 py-2 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[11px] font-black">✏️ Edit</button>
             <button onclick="confirmDeleteTask('${t.id}')" class="px-3 py-2 rounded-xl bg-white border-2 border-red-300 text-red-600 text-[11px] font-black">🗑️</button>
         </div>
@@ -517,7 +516,7 @@ async function saveNewTask() {
 
     try {
         await api('/tasks', { method: 'POST', body: JSON.stringify({ title, unit, target: Number(target) }) });
-        showToast('Task saved! ✅');
+        showToast('Task saved!');
         renderTodo();
     } catch (e) {
         feedback.textContent = e.data?.message || "Couldn't save — please try again.";
@@ -554,7 +553,7 @@ async function saveEditTask(taskId) {
 
     try {
         await api(`/tasks/${taskId}`, { method: 'PATCH', body: JSON.stringify({ title, unit, target: Number(target) }) });
-        showToast('Task updated! ✅');
+        showToast('Task updated!');
         renderTodo();
     } catch (e) {
         feedback.textContent = e.data?.message || "Couldn't save — please try again.";
@@ -614,7 +613,7 @@ async function submitTaskProgress(taskId) {
 
     try {
         await api(`/tasks/${taskId}/progress`, { method: 'POST', body: JSON.stringify({ delta }) });
-        showToast('Task updated! ✅');
+        showToast('Task updated!');
         renderTodo();
     } catch (e) {
         feedback.textContent = e.data?.message || "Couldn't update — please try again.";

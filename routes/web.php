@@ -311,11 +311,12 @@ Route::middleware(['kpi.auth'])->group(function () {
 
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
     Route::get('/settings', [\App\Http\Controllers\ProfileController::class, 'settings'])->name('settings');
-    Route::post('/profile/telegram/connect', [\App\Http\Controllers\ProfileController::class, 'connectTelegram'])->name('profile.telegram.connect');
-    Route::get('/profile/telegram/status', [\App\Http\Controllers\ProfileController::class, 'telegramStatus'])->name('profile.telegram.status');
-    Route::post('/profile/email', [\App\Http\Controllers\ProfileController::class, 'updateEmail'])->name('profile.email.update');
-    Route::post('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password.update');
-    Route::post('/profile/theme', [\App\Http\Controllers\ProfileController::class, 'updateTheme'])->name('profile.theme.update');
+    Route::post('/settings/telegram/connect', [\App\Http\Controllers\ProfileController::class, 'connectTelegram'])->name('settings.telegram.connect');
+    Route::get('/settings/telegram/status', [\App\Http\Controllers\ProfileController::class, 'telegramStatus'])->name('settings.telegram.status');
+    Route::post('/settings/email', [\App\Http\Controllers\ProfileController::class, 'updateEmail'])->name('settings.email.update');
+    Route::post('/settings/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('settings.password.update');
+    Route::post('/settings/theme', [\App\Http\Controllers\ProfileController::class, 'updateTheme'])->name('settings.theme.update');
+    Route::post('/settings/salutation', [\App\Http\Controllers\ProfileController::class, 'updateSalutation'])->name('settings.salutation.update');
 
     /*
     |--------------------------------------------------------------------------
@@ -426,6 +427,7 @@ Route::middleware(['kpi.auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
+    Route::get('/linkages', [\App\Http\Controllers\LinkageController::class, 'index'])->name('linkages');
     Route::post('/linkages', [\App\Http\Controllers\LinkageController::class, 'store'])->name('linkage.store');
     Route::delete('/linkages/{id}', [\App\Http\Controllers\LinkageController::class, 'destroy'])->name('linkage.destroy');
 

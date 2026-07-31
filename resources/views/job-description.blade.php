@@ -20,10 +20,33 @@
             font-weight: 800;
             letter-spacing: .08em;
             text-transform: uppercase;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
         }
         .jd-editor .ck-editor__editable_inline { min-height: 120px; font-size: 12.5px; }
         .jd-editor .ck-content table { width: 100%; border-collapse: collapse; }
         .jd-editor .ck-content table td, .jd-editor .ck-content table th { border: 1px solid #94a3b8; padding: 6px 8px; }
+
+        /* Print: just the document — no sidebar, no top bar, no editing
+           chrome (toolbars, Save/Submit, back link). */
+        @media print {
+            #sidebar, #sidebarCloseBtn, #topBar, .no-print,
+            .ck-toolbar, #jdForm .p-3.flex.justify-end { display: none !important; }
+            #mainContent { margin-left: 0 !important; padding-top: 0 !important; }
+            html, body { background: #fff !important; }
+            .jd-editor .ck-editor__editable_inline { border: none !important; padding: 0 !important; }
+
+            /* Keep each section's title bar glued to its own content (identity
+               table, each CKEditor block, the acknowledgement + signatures)
+               instead of letting the page break land between them or through
+               the middle of one. */
+            .doc-bar { break-after: avoid !important; page-break-after: avoid !important; }
+            .doc-bar + div, .doc-bar + table {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-[#f0f2f7] min-h-screen text-slate-900">
@@ -33,7 +56,7 @@
 <main id="mainContent" class="ml-[230px] min-h-screen transition-all duration-300">
 <div class="p-4 max-w-4xl mx-auto space-y-3">
 
-    <a href="/dashboard" class="text-[10px] text-slate-500 hover:text-slate-800">← Dashboard</a>
+    <a href="/dashboard" class="no-print text-[10px] text-slate-500 hover:text-slate-800">← Dashboard</a>
 
     @if(session('success'))
     <div class="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-[12px] font-semibold text-emerald-700">
@@ -56,7 +79,7 @@
         $departmentNm = $department['name'] ?? $user['department_code'] ?? '-';
         $reportingTo  = $jobDescription['reporting_line'] ?? null;
         if (!$reportingTo) {
-            $reportingTo = $manager['short_name'] ?? $manager['full_name'] ?? '-';
+            $reportingTo = $manager['full_name'] ?? $manager['short_name'] ?? '-';
         }
         $effectiveDate = !empty($jobDescription['effective_date'])
             ? \Carbon\Carbon::parse($jobDescription['effective_date'])->format('d M Y')

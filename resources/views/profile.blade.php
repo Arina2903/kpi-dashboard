@@ -24,8 +24,8 @@
 
 {{-- ═══════ HEADER (sticky) ═══════ --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#F5F5F3]">
-    <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-5 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex items-center justify-between gap-4">
-        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
+    <div class="relative overflow-hidden rounded-[18px] theme-header-banner theme-page-banner bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-5 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex items-center justify-between gap-4">
+        <div class="absolute top-0 left-0 right-0 h-[2px] theme-header-hairline bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
         <div class="pointer-events-none absolute -top-10 -right-10 w-48 h-48 rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
 
         <div class="relative">
@@ -66,7 +66,7 @@
             </div>
             <div class="min-w-0">
                 <h2 class="text-xl font-black text-slate-900 leading-tight truncate">
-                    {{ $user['full_name'] ?? $user['short_name'] ?? '-' }}
+                    {{ $user['salutation'] ? $user['salutation'] . ' ' : '' }}{{ $user['full_name'] ?? $user['short_name'] ?? '-' }}
                 </h2>
                 <p class="text-sm text-slate-500 mt-0.5">{{ $user['position'] ?? '-' }}</p>
                 <div class="flex flex-wrap gap-1.5 mt-3">

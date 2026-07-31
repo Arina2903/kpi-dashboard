@@ -15,7 +15,7 @@
             align-items:center;
             justify-content:center;
 
-            border:1px solid #e5e7eb;
+            border:1px solid var(--user-theme-accent, #D4AF37);
             border-radius:14px;
 
             background:#ffffff;
@@ -46,12 +46,12 @@
         }
 
         .category-card:hover{
-            border-color:#D4AF37;
+            border-color:var(--user-theme-accent, #D4AF37);
         }
 
         .category-radio:checked + .category-card{
             background:#FBF5EF;
-            border-color:#D4AF37;
+            border-color:var(--user-theme-accent, #D4AF37);
             color:#7A0019;
         }
 
@@ -72,7 +72,7 @@
             display:flex;
             align-items:center;
             justify-content:center;
-            border:1px solid #e5e7eb;
+            border:1px solid var(--user-theme-accent, #D4AF37);
             border-radius:999px;
             background:white;
             font-size:13px;
@@ -89,10 +89,10 @@
 
         .sub-radio:checked + .sub-card{
             background:#FBF5EF;
-            border-color:#7A0019;
+            border-color:var(--user-theme-accent, #D4AF37);
             color:#7A0019;
             box-shadow:
-                inset 0 0 0 1px #D4AF37;
+                inset 0 0 0 1px var(--user-theme-accent, #D4AF37);
         }
 
         .sub-radio:checked + .sub-card::after{
@@ -144,30 +144,6 @@
             background: #F5F5F3;
         }
 
-        .hero-gradient{
-            position: relative;
-            background:
-                linear-gradient(
-                    135deg,
-                    #1A0A0A 0%,
-                    #7A0019 100%
-                );
-        }
-
-        .hero-gradient::before{
-            content:'';
-            position:absolute;
-            top:0; left:0; right:0;
-            height:2px;
-            background: linear-gradient(90deg, #D4AF37, #D4AF37, rgba(212,175,55,.1));
-        }
-
-        .soft-glow{
-            box-shadow:
-                0 18px 40px rgba(15,23,42,.08),
-                0 8px 20px rgba(122,0,25,.10);
-        }
-
         .glass-card{
             background:rgba(255,255,255,.86);
             backdrop-filter:blur(18px);
@@ -181,7 +157,7 @@
         .section-card{
             position:relative;
             background:#ffffff;
-            border:1px solid #e5e7eb;
+            border:1px solid var(--user-theme-accent, #D4AF37);
             border-radius:16px;
             box-shadow:0 1px 3px rgba(15,23,42,.05);
             overflow:hidden;
@@ -240,7 +216,7 @@
         .field{
             width:100%;
             min-height:48px;
-            border:1px solid #d1d5db;
+            border:1px solid var(--user-theme-accent, #D4AF37);
             background:white;
             color:#111827;
             transition:.15s ease;
@@ -253,32 +229,28 @@
         }
 
         .field:hover{
-            border-color:#D4AF37;
+            border-color:var(--user-theme-accent, #D4AF37);
             background:white;
         }
 
         .field:focus{
             outline:none;
-            border-color:#D4AF37;
+            border-color:var(--user-theme-accent, #D4AF37);
             box-shadow:
-                0 0 0 3px rgba(212,175,55,.18);
+                0 0 0 3px color-mix(in srgb, var(--user-theme-accent, #D4AF37) 18%, transparent);
             background:white;
         }
 
         .quarter-card{
             background:#ffffff;
-            border:1px solid #e9d5ff;
+            border:1px solid var(--user-theme-accent, #D4AF37);
             border-radius:24px;
             transition:.15s ease;
         }
 
         .quarter-card:hover{
-            border-color:#a855f7;
+            border-color:var(--user-theme-accent, #D4AF37);
             box-shadow:0 10px 25px rgba(124,58,237,.08);
-        }
-
-        .quarter-card:hover{
-            border-color:#cbd5e1;
         }
 
         .quarter-dot{
@@ -303,7 +275,7 @@
                     #ffffff 100%
                 );
 
-            border:1px solid #D4AF37;
+            border:1px solid var(--user-theme-accent, #D4AF37);
 
             box-shadow:
                 0 8px 20px rgba(212,175,55,.15);
@@ -317,7 +289,7 @@
                     rgba(248,250,252,.98)
                 );
 
-            border:1px solid #e2e8f0;
+            border:1px solid var(--user-theme-accent, #D4AF37);
 
             border-radius:28px;
 
@@ -330,7 +302,7 @@
 
             background:white;
 
-            border:1px solid #e2e8f0;
+            border:1px solid var(--user-theme-accent, #D4AF37);
 
             box-shadow:
                 0 6px 18px rgba(15,23,42,.04);
@@ -435,7 +407,7 @@
         .outline-btn{
             background:white;
 
-            border:1px solid #D4AF37;
+            border:1px solid var(--user-theme-accent, #D4AF37);
 
             color:#B8860B;
 
@@ -444,14 +416,14 @@
 
         .outline-btn:hover{
             background:#FBF5EF;
-            border-color:#7A0019;
+            border-color:var(--user-theme-accent, #D4AF37);
             color:#7A0019;
         }
 
         .info-card{
             border-radius:24px;
 
-            border:1px solid #e2e8f0;
+            border:1px solid var(--user-theme-accent, #D4AF37);
 
             background:
                 linear-gradient(
@@ -571,7 +543,7 @@
             background:#FBF5EF;
             color:#7A0019;
 
-            border:1px solid #D4AF37;
+            border:1px solid var(--user-theme-accent, #D4AF37);
         }
 
         .sidebar-shadow{
@@ -614,15 +586,34 @@
 
         @keyframes submitGlow{
             0%, 100% {
-                box-shadow: 0 4px 14px rgba(212,175,55,.35), 0 0 0 0 rgba(212,175,55,.45);
+                box-shadow: 0 4px 14px rgba(16,185,129,.35), 0 0 0 0 rgba(16,185,129,.45);
             }
             50% {
-                box-shadow: 0 4px 20px rgba(212,175,55,.55), 0 0 0 8px rgba(212,175,55,0);
+                box-shadow: 0 4px 20px rgba(16,185,129,.55), 0 0 0 8px rgba(16,185,129,0);
             }
         }
 
-        .submit-ready{
+        /* Not ready yet (required fields still missing) — plain grey, still
+           clickable so the browser's own "please fill this field" validation
+           still fires, just doesn't look like an inviting call-to-action. */
+        .submit-btn{
+            background:#cbd5e1;
+            color:#64748b;
+        }
+        .submit-btn:hover{
+            background:#cbd5e1;
+        }
+
+        /* Ready to submit — every required field filled, form.checkValidity()
+           passed. Green instead of the plain Accent gold so "ready" reads as
+           a distinct, unmistakable state rather than just the default look. */
+        .submit-btn.submit-ready{
+            background:#10b981;
+            color:#ffffff;
             animation: submitGlow 1.8s ease-in-out infinite;
+        }
+        .submit-btn.submit-ready:hover{
+            background:#059669;
         }
     </style>
 </head>
@@ -636,17 +627,11 @@
 <!-- HEADER (sticky) -->
 <div class="sticky top-0 z-30 px-6 pt-4 pb-3 bg-[#F5F5F3]">
 <div class="max-w-7xl mx-auto">
-    <div class="hero-gradient rounded-[1.5rem] text-white p-4 soft-glow overflow-hidden">
-        <a href="{{ route('kpi.index') }}" class="text-xs text-[#D4AF37] hover:text-white">
+    <div class="relative theme-header-banner theme-page-banner rounded-[1.5rem] text-white p-4 overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-[2px] theme-header-hairline bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
+        <a href="{{ route('kpi.index') }}" class="relative text-xs text-[#D4AF37] hover:text-white">
             ← Back to KPI List
         </a>
-
-        <div class="mt-2">
-            <h1 class="text-2xl font-black tracking-tight">Create My KPI</h1>
-            <p class="text-xs text-white/70 mt-1">
-                {{ $fy ?? 'FY' . now()->year }} · KPI ini akan direkod atas nama anda sendiri.
-            </p>
-        </div>
     </div>
 </div>
 </div>
@@ -680,14 +665,14 @@
 
                     <div class="relative flex gap-4">
 
-                        <div class="w-2 rounded-full bg-gradient-to-b from-[#7A0019] to-[#D4AF37]"></div>
+                        <div class="w-2 rounded-full step-accent-grad"></div>
 
                         <div class="flex-1">
 
                             <!-- HEADER -->
                             <div class="flex items-center gap-4">
 
-                                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#7A0019] to-[#D4AF37] text-white flex items-center justify-center font-black shadow-lg">
+                                <div class="w-10 h-10 rounded-2xl step-accent-grad text-white flex items-center justify-center font-black shadow-lg">
                                     1
                                 </div>
 
@@ -704,18 +689,18 @@
                             </div>
 
                             <!-- CONTENT -->
-                            <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 mt-5">
+                            <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 mt-5 items-start">
 
                                 <!-- ASSIGNMENT -->
                                 <div class="xl:col-span-4">
 
-                                    <div class="rounded-[24px] border border-[#6B3F2A]/20 bg-[#f8fbff] p-5 h-full">
+                                    <div class="rounded-[24px] step-panel-box p-5 h-full">
 
                                         <div class="flex items-center gap-4">
 
                                             <div>
 
-                                                <p class="text-[11px] uppercase tracking-wider text-[#8B5E4A] font-black">
+                                                <p class="text-[11px] uppercase tracking-wider eyebrow-accent-text font-black">
                                                     EXECUTION OWNER
                                                 </p>
 
@@ -740,7 +725,7 @@
                                             <select
                                                 name="assigned_employee_id"
                                                 id="assignedEmployee"
-                                                class="w-full mt-2 rounded-2xl border border-[#6B3F2A]/30 bg-white px-4 py-4 font-semibold text-slate-800 focus:border-[#6B3F2A] focus:ring-4 focus:ring-[#6B3F2A]/20">
+                                                class="w-full mt-2 rounded-2xl assign-select-accent bg-white px-4 py-4 font-semibold text-slate-800 focus:ring-4">
 
                                                 <option value="">
                                                     No Assignment
@@ -768,16 +753,16 @@
                                 </div>
 
                                 <div class="xl:col-span-8">
-                                    <div class="rounded-[24px] border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-5 h-full flex flex-col">
+                                    <div class="rounded-[24px] step-panel-box p-5 h-full flex flex-col">
 
                                         <!-- header -->
                                         <div class="flex items-start justify-between gap-3 mb-4">
                                             <div>
-                                                <p class="text-[11px] uppercase tracking-wider text-indigo-600 font-black">MY ASSIGNED KPI</p>
+                                                <p class="text-[11px] uppercase tracking-wider assign-accent-text font-black">MY ASSIGNED KPI</p>
                                                 <h3 class="font-black text-slate-900 text-xl mt-0.5">KPI Assigned To Me</h3>
                                             </div>
                                             @php $totalAssign = $pendingAssignments + $acceptedAssignments + $rejectedAssignments; @endphp
-                                            <span class="px-3 py-1.5 rounded-xl bg-indigo-100 text-indigo-700 font-black text-xs shrink-0">
+                                            <span class="px-3 py-1.5 rounded-xl assign-accent-badge font-black text-xs shrink-0">
                                                 {{ $totalAssign }} KPI
                                             </span>
                                         </div>
@@ -795,7 +780,7 @@
 
                                             @foreach($assignmentGroups as $group)
                                                 @foreach($group['kpis'] as $row)
-                                                <div class="assignment-card border-l-4 border-l-indigo-300 bg-white hover:bg-indigo-50/50 rounded-2xl p-3 cursor-pointer border border-indigo-100 transition-all hover:shadow-sm select-none"
+                                                <div class="assignment-card assign-accent-card border-l-4 bg-white rounded-2xl p-3 cursor-pointer border transition-all hover:shadow-sm select-none"
                                                     data-status="{{ $row['status'] ?? 'pending' }}"
                                                     data-kpi='@json($row)'>
                                                     <div class="flex items-start justify-between gap-2">
@@ -804,7 +789,7 @@
                                                             <p class="text-[11px] text-slate-500 mt-0.5">{{ $row['category'] }} · {{ $row['sub_category'] }}</p>
                                                             <p class="text-[11px] text-slate-400 mt-1">From: <span class="font-bold text-slate-600">{{ $row['owner_name'] }}</span></p>
                                                         </div>
-                                                        <span class="text-[9px] text-indigo-500 font-bold uppercase tracking-wider shrink-0 mt-0.5">View detail →</span>
+                                                        <span class="text-[9px] assign-accent-text font-bold uppercase tracking-wider shrink-0 mt-0.5">View detail →</span>
                                                     </div>
                                                 </div>
                                                 @endforeach
@@ -836,14 +821,14 @@
 
                     <div class="relative flex gap-4">
 
-                        <div class="w-2 rounded-full bg-gradient-to-b from-[#7A0019] to-[#D4AF37]"></div>
+                        <div class="w-2 rounded-full step-accent-grad"></div>
 
                         <div class="flex-1">
 
                             <!-- HEADER -->
                             <div class="flex items-center gap-4">
 
-                                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#7A0019] to-[#D4AF37] text-white flex items-center justify-center font-black shadow-lg">
+                                <div class="w-10 h-10 rounded-2xl step-accent-grad text-white flex items-center justify-center font-black shadow-lg">
                                     2
                                 </div>
 
@@ -862,18 +847,18 @@
                             </div>
 
                             <!-- CONTENT -->
-                            <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mt-5">
+                            <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mt-5 items-start">
 
                                 <!-- CATEGORY -->
                                 <div class="xl:col-span-2">
 
-                                    <div class="rounded-[24px] border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-5 h-full">
+                                    <div class="rounded-[24px] step-panel-box p-5 h-full">
 
                                         <div class="flex items-center gap-4">
 
                                             <div>
 
-                                                <p class="text-[11px] uppercase tracking-wider text-emerald-600 font-black">
+                                                <p class="text-[11px] uppercase tracking-wider eyebrow-accent-text font-black">
                                                     KPI CATEGORY
                                                 </p>
 
@@ -960,13 +945,13 @@
                                 <!-- SUB CATEGORY -->
                                 <div class="xl:col-span-3">
 
-                                    <div class="rounded-[24px] border border-cyan-100 bg-[#f8fbff] p-5 h-full">
+                                    <div class="rounded-[24px] step-panel-box p-5 h-full">
 
                                         <div class="flex items-center gap-4">
 
                                             <div>
 
-                                                <p class="text-[11px] uppercase tracking-wider text-cyan-600 font-black">
+                                                <p class="text-[11px] uppercase tracking-wider eyebrow-accent-text font-black">
                                                     KPI SUB CATEGORY
                                                 </p>
 
@@ -1016,14 +1001,14 @@
 
                 <div class="relative flex gap-4">
 
-                    <div class="w-2 rounded-full bg-gradient-to-b from-[#7A0019] to-[#D4AF37]"></div>
+                    <div class="w-2 rounded-full step-accent-grad"></div>
 
                     <div class="flex-1">
 
                         <!-- HEADER -->
                         <div class="flex items-center gap-4">
 
-                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#6B3F2A] to-[#5a3323] text-white flex items-center justify-center font-black shadow-lg">
+                            <div class="w-10 h-10 rounded-2xl step-accent-grad text-white flex items-center justify-center font-black shadow-lg">
                                 3
                             </div>
 
@@ -1042,18 +1027,18 @@
                         </div>
 
                         <!-- CONTENT -->
-                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mt-5">
+                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mt-5 items-start">
 
                             <!-- KPI TITLE -->
                             <div class="xl:col-span-2">
 
-                                <div class="rounded-[24px] border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-5 h-full">
+                                <div class="rounded-[24px] step-panel-box p-5 h-full">
 
                                     <div class="flex items-center gap-4">
 
                                         <div>
 
-                                            <p class="text-[11px] uppercase tracking-wider text-indigo-600 font-black">
+                                            <p class="text-[11px] uppercase tracking-wider eyebrow-accent-text font-black">
                                                 KPI TITLE
                                             </p>
 
@@ -1092,13 +1077,13 @@
                             <!-- KPI DESCRIPTION -->
                             <div class="xl:col-span-3">
 
-                                <div class="rounded-[24px] border border-[#6B3F2A]/20 bg-[#f8fbff] p-5 h-full">
+                                <div class="rounded-[24px] step-panel-box p-5 h-full">
 
                                     <div class="flex items-center gap-4">
 
                                         <div>
 
-                                            <p class="text-[11px] uppercase tracking-wider text-[#8B5E4A] font-black">
+                                            <p class="text-[11px] uppercase tracking-wider eyebrow-accent-text font-black">
                                                 KPI DESCRIPTION
                                             </p>
 
@@ -1154,14 +1139,14 @@
 
                 <div class="relative flex gap-4">
 
-                    <div class="w-2 rounded-full bg-gradient-to-b from-[#7A0019] to-[#D4AF37]"></div>
+                    <div class="w-2 rounded-full step-accent-grad"></div>
 
                     <div class="flex-1">
 
                         <!-- HEADER -->
                         <div class="flex items-center gap-4">
 
-                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#8B5E4A] to-[#6B3F2A] text-white flex items-center justify-center font-black shadow-lg">
+                            <div class="w-10 h-10 rounded-2xl step-accent-grad text-white flex items-center justify-center font-black shadow-lg">
                                 4
                             </div>
 
@@ -1180,18 +1165,18 @@
                         </div>
 
                         <!-- CONTENT -->
-                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mt-5">
+                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mt-5 items-start">
 
                             <!-- UNIT -->
                             <div class="xl:col-span-2">
 
-                                <div class="rounded-[24px] border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-5 h-full">
+                                <div class="rounded-[24px] step-panel-box p-5 h-full">
 
                                     <div class="flex items-center gap-4">
 
                                         <div>
 
-                                            <p class="text-[11px] uppercase tracking-wider text-sky-600 font-black">
+                                            <p class="text-[11px] uppercase tracking-wider eyebrow-accent-text font-black">
                                                 KPI UNIT
                                             </p>
 
@@ -1245,13 +1230,13 @@
                             <!-- TARGET -->
                             <div class="xl:col-span-3">
 
-                                <div class="rounded-[24px] border border-[#6B3F2A]/20 bg-[#f8fbff] p-5 h-full">
+                                <div class="rounded-[24px] step-panel-box p-5 h-full">
 
                                     <div class="flex items-center gap-4">
 
                                         <div>
 
-                                            <p class="text-[11px] uppercase tracking-wider text-[#8B5E4A] font-black">
+                                            <p class="text-[11px] uppercase tracking-wider eyebrow-accent-text font-black">
                                                 TARGET SETTING
                                             </p>
 
@@ -1335,14 +1320,14 @@
 
                 <div class="relative flex gap-4">
 
-                    <div class="w-2 rounded-full bg-gradient-to-b from-amber-500 to-red-500"></div>
+                    <div class="w-2 rounded-full step-accent-grad"></div>
 
                     <div class="flex-1">
 
                         <!-- HEADER -->
                         <div class="flex items-center gap-4">
 
-                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-red-500 text-white flex items-center justify-center font-black shadow-lg">
+                            <div class="w-10 h-10 rounded-2xl step-accent-grad text-white flex items-center justify-center font-black shadow-lg">
                                 5
                             </div>
 
@@ -1361,18 +1346,18 @@
                         </div>
 
                         <!-- CONTENT -->
-                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mt-5">
+                        <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mt-5 items-start">
 
                             <!-- STATUS -->
                             <div class="xl:col-span-2">
 
-                                <div class="rounded-[24px] border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-5 h-full">
+                                <div class="rounded-[24px] step-panel-box p-5 h-full">
 
                                     <div class="flex items-center gap-4">
 
                                         <div>
 
-                                            <p class="text-[11px] uppercase tracking-wider text-amber-600 font-black">
+                                            <p class="text-[11px] uppercase tracking-wider eyebrow-accent-text font-black">
                                                 KPI STATUS
                                             </p>
 
@@ -1436,13 +1421,13 @@
                             <!-- REMARK -->
                             <div class="xl:col-span-3">
 
-                                <div class="rounded-[24px] border border-red-100 bg-[#fffaf8] p-5 h-full">
+                                <div class="rounded-[24px] step-panel-box p-5 h-full">
 
                                     <div class="flex items-center gap-4">
 
                                         <div>
 
-                                            <p class="text-[11px] uppercase tracking-wider text-red-500 font-black">
+                                            <p class="text-[11px] uppercase tracking-wider eyebrow-accent-text font-black">
                                                 KPI REMARK
                                             </p>
 
@@ -1496,7 +1481,7 @@
 
                     <div class="relative flex gap-4">
 
-                        <div class="w-2 rounded-full bg-gradient-to-b from-[#7A0019] to-[#D4AF37]"></div>
+                        <div class="w-2 rounded-full step-accent-grad"></div>
 
                         <div class="flex-1">
 
@@ -1505,7 +1490,7 @@
 
                                 <div class="flex items-center gap-4">
 
-                                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#7A0019] to-[#D4AF37] text-white flex items-center justify-center font-black shadow-lg">
+                                    <div class="w-10 h-10 rounded-2xl step-accent-grad text-white flex items-center justify-center font-black shadow-lg">
                                         6
                                     </div>
 
@@ -1534,7 +1519,7 @@
 
                                 @foreach(['Q1','Q2','Q3','Q4'] as $quarter)
 
-                                    <div class="rounded-[24px] border border-purple-100 bg-gradient-to-br from-purple-50 to-white p-5">
+                                    <div class="rounded-[24px] step-panel-box p-5">
 
                                         <div class="flex items-center justify-between gap-4 mb-5">
 
@@ -1815,7 +1800,7 @@
                         max-h-[calc(100vh-176px)]
                         overflow-y-auto
                         rounded-[28px]
-                        border border-slate-200
+                        border accent-border
                         bg-white
                         p-4
                         shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
@@ -1826,7 +1811,7 @@
                         <div
                             class="w-9 h-9
                                 rounded-xl
-                                bg-gradient-to-br from-[#1A0A0A] to-[#7A0019]
+                                accent2-fill
                                 text-white
                                 flex
                                 items-center
@@ -1857,14 +1842,14 @@
                         class="rounded-xl
                             bg-slate-50
                             border
-                            border-slate-200
+                            accent-border
                             px-3 py-2">
 
                         <p class="text-[10px] text-slate-400">
                             Owner
                         </p>
 
-                        <p class="font-black text-sm text-[#7A0019] mt-0.5">
+                        <p class="font-black text-sm accent-value-text mt-0.5">
                             {{ $user['short_name'] ?? '-' }}
                         </p>
 
@@ -1879,7 +1864,7 @@
 
                         <p
                             id="summaryTitle"
-                            class="font-black text-sm text-slate-900 mt-0.5 line-clamp-2">
+                            class="font-black text-sm accent-value-text mt-0.5 line-clamp-2">
                             Not entered yet
                         </p>
 
@@ -1890,9 +1875,8 @@
 
                         <div
                             class="rounded-xl
-                                bg-[#FBF5EF]
                                 border
-                                border-[#6B3F2A]/20
+                                accent-border
                                 px-2.5 py-2">
 
                             <p class="text-[10px] text-[#8B5E4A]">
@@ -1901,7 +1885,7 @@
 
                             <p
                                 id="summaryCategory"
-                                class="font-bold text-sm text-[#7A0019] mt-0.5">
+                                class="font-bold text-sm accent-value-text mt-0.5">
                                 -
                             </p>
 
@@ -1909,9 +1893,8 @@
 
                         <div
                             class="rounded-xl
-                                bg-[#FBF5EF]
                                 border
-                                border-[#6B3F2A]/20
+                                accent-border
                                 px-2.5 py-2">
 
                             <p class="text-[10px] text-[#8B5E4A]">
@@ -1920,7 +1903,7 @@
 
                             <p
                                 id="summarySubCategory"
-                                class="font-bold text-sm text-[#7A0019] mt-0.5">
+                                class="font-bold text-sm accent-value-text mt-0.5">
                                 -
                             </p>
 
@@ -1934,7 +1917,7 @@
                         <div
                             class="rounded-xl
                                 border
-                                border-[#6B3F2A]/20
+                                accent-border
                                 bg-white
                                 px-3 py-2">
 
@@ -1944,7 +1927,7 @@
 
                             <p
                                 id="summaryBase"
-                                class="font-black text-base text-[#7A0019] mt-0.5">
+                                class="font-black text-base accent-value-text mt-0.5">
                                 0.00
                             </p>
 
@@ -1953,7 +1936,7 @@
                         <div
                             class="rounded-xl
                                 border
-                                border-purple-100
+                                accent-border
                                 bg-white
                                 px-3 py-2">
 
@@ -1963,7 +1946,7 @@
 
                             <p
                                 id="summaryStretch"
-                                class="font-black text-base text-[#7A0019] mt-0.5">
+                                class="font-black text-base accent-value-text mt-0.5">
                                 0.00
                             </p>
 
@@ -1972,7 +1955,7 @@
                     </div>
 
                     <!-- STATUS -->
-                    <div class="rounded-xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white px-3 py-2 mt-2.5">
+                    <div class="rounded-xl border accent-border px-3 py-2 mt-2.5">
 
                         <p class="text-[10px] uppercase tracking-wider text-amber-600 font-black">
                             CURRENT STATUS
@@ -1997,9 +1980,8 @@
                     <div
                         class="mt-2.5
                             rounded-xl
-                            bg-[#FBF5EF]
                             border
-                            border-[#6B3F2A]/20
+                            accent-border
                             px-3 py-2">
 
                         <p class="quarter-total-label text-[10px] text-[#8B5E4A]">
@@ -2008,7 +1990,7 @@
 
                         <p
                             id="sidebarQuarterTargetTotal"
-                            class="text-base font-black text-[#7A0019] mt-0.5">
+                            class="text-base font-black accent-value-text mt-0.5">
                             0.00
                         </p>
 
@@ -2069,9 +2051,7 @@
                             type="submit"
                             id="createKpiSubmitBtn"
                             class="w-full
-                                bg-[#D4AF37]
-                                hover:bg-[#c19c2f]
-                                text-[#1a1a1a]
+                                submit-btn
                                 font-black
                                 py-3
                                 rounded-xl
@@ -2610,9 +2590,6 @@
                 'Creating KPI...';
 
         }
-
-        submitButton.innerHTML =
-            'Creating KPI...';
 
     });
 
@@ -3562,7 +3539,7 @@ window.aniraFillKpiForm = function (data) {
     <div class="bg-white w-full max-w-xl rounded-[2rem] overflow-hidden shadow-2xl flex flex-col max-h-[88vh]">
 
         <!-- modal header -->
-        <div class="hero-gradient px-6 py-5 flex items-center justify-between flex-shrink-0">
+        <div class="theme-header-banner px-6 py-5 flex items-center justify-between flex-shrink-0">
             <div>
                 <p class="text-white/60 text-[10px] font-black uppercase tracking-widest">KPI Assignment</p>
                 <h2 class="font-black text-white text-lg mt-0.5">KPI Detail</h2>

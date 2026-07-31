@@ -188,7 +188,7 @@
 
 {{-- ── Sticky page header ─────────────────────────────────────────────── --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#f0f2f7] no-print">
-    <div class="rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-4 shadow-xl flex items-center justify-between gap-3">
+    <div class="rounded-[18px] theme-header-banner theme-page-banner bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-4 shadow-xl flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
                 <span class="text-sm font-black">{{ $qLabel }}</span>
@@ -246,7 +246,7 @@
 <div class="bg-white rounded-2xl overflow-hidden doc-card border border-[#6B9080]/25">
 
     {{-- Accent strip --}}
-    <div class="h-[3px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
+    <div class="h-[3px] theme-header-banner bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]"></div>
 
     <div class="px-10 py-8">
 

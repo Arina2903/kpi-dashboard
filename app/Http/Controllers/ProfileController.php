@@ -87,17 +87,31 @@ class ProfileController extends Controller
     public function updateTheme(Request $request, SupabaseService $supabase)
     {
         $validated = $request->validate([
-            'theme_bg'     => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
-            'theme_card'   => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
-            'theme_accent' => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
-            'theme_border' => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
+            'theme_bg'             => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
+            'theme_card'           => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
+            'theme_accent'         => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
+            'theme_accent2'        => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
+            'theme_border'         => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
+            'theme_text'           => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
+            'theme_sidebar_bg'     => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
+            'theme_sidebar_accent' => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
+            'theme_sidebar_text'   => 'nullable|regex:/^#[0-9A-Fa-f]{6}$/',
+            'theme_font_family'    => 'nullable|in:Inter,Poppins,Roboto,Nunito,Merriweather,Fira Code',
+            'theme_font_size'      => 'nullable|in:sm,md,lg',
         ]);
 
         $payload = [
-            'theme_bg'     => $validated['theme_bg']     ?? null,
-            'theme_card'   => $validated['theme_card']   ?? null,
-            'theme_accent' => $validated['theme_accent'] ?? null,
-            'theme_border' => $validated['theme_border'] ?? null,
+            'theme_bg'             => $validated['theme_bg']             ?? null,
+            'theme_card'           => $validated['theme_card']           ?? null,
+            'theme_accent'         => $validated['theme_accent']         ?? null,
+            'theme_accent2'        => $validated['theme_accent2']        ?? null,
+            'theme_border'         => $validated['theme_border']         ?? null,
+            'theme_text'           => $validated['theme_text']           ?? null,
+            'theme_sidebar_bg'     => $validated['theme_sidebar_bg']     ?? null,
+            'theme_sidebar_accent' => $validated['theme_sidebar_accent'] ?? null,
+            'theme_sidebar_text'   => $validated['theme_sidebar_text']   ?? null,
+            'theme_font_family'    => $validated['theme_font_family']    ?? null,
+            'theme_font_size'      => $validated['theme_font_size']      ?? null,
         ];
 
         $ok = $supabase->safePatch('employees', ['id' => 'eq.' . session('employee_uuid')], $payload);
@@ -112,6 +126,25 @@ class ProfileController extends Controller
         session($payload);
 
         return response()->json(['success' => true]);
+    }
+
+    public function updateSalutation(Request $request, SupabaseService $supabase)
+    {
+        $validated = $request->validate([
+            'salutation' => 'nullable|in:Mr.,Mrs.,Ms.,Dr.',
+        ]);
+
+        $salutation = $validated['salutation'] ?? null;
+
+        $supabase->safePatch('employees', ['id' => 'eq.' . session('employee_uuid')], [
+            'salutation' => $salutation,
+        ]);
+
+        // Reflect immediately, same as updateTheme() — every page reads this
+        // straight from the session, so no re-login needed to see it change.
+        session(['salutation' => $salutation]);
+
+        return back()->with('success', 'Display title updated.');
     }
 
     public function connectTelegram(Request $request, SupabaseService $supabase)

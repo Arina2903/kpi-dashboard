@@ -24,6 +24,41 @@ class TelegramMiniAppController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | GET /api/telegram/theme
+    |--------------------------------------------------------------------------
+    | The Mini App runs inside Telegram's WebView with no Laravel session, so it
+    | can't read the Account Settings > Appearance colours the normal way (via
+    | session, populated by KpiAuth). This mirrors that same data over the
+    | already-established Telegram auth/link path instead, so the colours the
+    | employee picked on the main site look identical here.
+    */
+    public function theme(Request $request, SupabaseService $supabase)
+    {
+        $validated = $request->validate([
+            'employee_id' => 'required|string',
+            'company_code' => 'required|string',
+        ]);
+
+        $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
+
+        $employee = $supabase->first('employees', [
+            'id' => 'eq.' . $validated['employee_id'],
+            'select' => 'theme_bg,theme_card,theme_accent,theme_border,theme_text,theme_font_family,theme_font_size',
+        ]) ?? [];
+
+        return response()->json([
+            'theme_bg'          => $employee['theme_bg']          ?? null,
+            'theme_card'        => $employee['theme_card']        ?? null,
+            'theme_accent'      => $employee['theme_accent']      ?? null,
+            'theme_border'      => $employee['theme_border']      ?? null,
+            'theme_text'        => $employee['theme_text']        ?? null,
+            'theme_font_family' => $employee['theme_font_family'] ?? null,
+            'theme_font_size'   => $employee['theme_font_size']   ?? null,
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | GET /api/telegram/kpis/open
     |--------------------------------------------------------------------------
     */

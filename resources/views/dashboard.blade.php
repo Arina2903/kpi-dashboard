@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RCG KPI Dashboard</title>
+    <title>Main Dashboard</title>
 
     {{-- Preconnect to external hosts so DNS+TLS is resolved before requests fire --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,7 +37,7 @@
     // ── CORE ────────────────────────────────────────────────────────────────
     $role              = strtoupper(trim($user['role'] ?? ''));
     $currentUserId     = (string)($user['id'] ?? $user['employee_id'] ?? '');
-    $currentUserName   = $user['short_name'] ?? $user['full_name'] ?? $user['name'] ?? 'User';
+    $currentUserName   = ($user['salutation'] ? $user['salutation'] . ' ' : '') . ($user['short_name'] ?? $user['full_name'] ?? $user['name'] ?? 'User');
     $currentDepartment = $user['department_code'] ?? '-';
     $currentFinancialYear = $currentFinancialYear ?? ('FY'.now()->year);
     $userPosition      = $user['position'] ?? $user['role'] ?? '-';
@@ -371,24 +371,20 @@
 
 {{-- ═══════ HEADER (sticky) ════════════════════════════════════════════════ --}}
 <div class="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#F5F5F3]">
-    <div class="relative overflow-hidden rounded-[18px] bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-6 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
+    <div class="relative overflow-hidden rounded-[18px] theme-header-banner theme-page-banner bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white px-6 py-6 shadow-[0_10px_35px_rgba(122,0,25,0.45)] flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div class="absolute top-0 left-0 right-0 h-[2px] theme-header-hairline bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-[#D4AF37]/10"></div>
         <div class="pointer-events-none absolute -top-10 -right-10 w-48 h-48 rounded-full bg-[#D4AF37]/10 blur-3xl"></div>
-        <div class="pointer-events-none absolute -bottom-16 left-1/3 w-56 h-56 rounded-full bg-[#C8102E]/20 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-16 left-1/3 w-56 h-56 rounded-full bg-white/10 blur-3xl"></div>
         @php
             $greetHour = now()->timezone('Asia/Kuala_Lumpur')->hour;
             $greeting  = $greetHour < 12 ? 'Good Morning' : ($greetHour < 18 ? 'Good Afternoon' : 'Good Evening');
         @endphp
         <div class="relative">
             <h1 class="text-2xl font-black tracking-tight leading-tight">
-                <span class="text-white/90">Hi, {{ $greeting }}</span>
-                <span class="text-[#D4AF37]">{{ $currentUserName }}</span>
+                <span class="theme-header-text text-white/90">Hi, {{ $greeting }}</span>
+                <span class="theme-header-text text-white/90">{{ $currentUserName }}</span>
                 👋
             </h1>
-        </div>
-        <div class="relative flex flex-wrap items-center gap-2">
-            <a href="{{ route('kpi.create') }}"  class="bg-white text-[#7A0019] hover:bg-[#fff5f5] px-4 py-2 rounded-xl shadow font-bold text-xs transition hover:-translate-y-0.5">+ Create KPI</a>
-            <a href="{{ route('kpi.index') }}"   class="bg-[#D4AF37] hover:bg-[#c19c2f] text-[#1a1a1a] px-4 py-2 rounded-xl font-bold text-xs transition border border-[#D4AF37]/40 hover:-translate-y-0.5">My KPIs</a>
         </div>
     </div>
 </div>
@@ -401,31 +397,48 @@
 
 {{-- ═══════ MY PERFORMANCE ══════════════════════════════════════════════════ --}}
 <div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37]">
+@if($individualKpiCount === 0)
+    {{-- Nothing to measure yet — one clear message + the same two actions,
+         instead of a grid of stat boxes that would all just read "0" and
+         four quarter cards that would all falsely read as "Critical" (red)
+         for having no target rather than for missing one. --}}
+    <div class="p-6 sm:p-7 flex flex-col sm:flex-row items-center gap-5">
+        <div class="w-14 h-14 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center shrink-0">
+            <svg class="w-7 h-7 text-[#B8860B]" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h4m-7 5h10a2 2 0 002-2V7.828a2 2 0 00-.586-1.414l-3.828-3.828A2 2 0 0011.172 2H6a2 2 0 00-2 2v14a2 2 0 002 2Z"/>
+            </svg>
+        </div>
+        <div class="flex-1 text-center sm:text-left">
+            <p class="text-[9px] uppercase tracking-widest font-black text-slate-400 mb-1">My Performance · {{ $currentFinancialYear }}</p>
+            <h2 class="text-base font-black text-slate-800">No KPIs set for {{ $currentFinancialYear }} yet</h2>
+            <p class="text-xs text-slate-500 mt-1">Your score, quarterly progress and at-risk alerts will appear here as soon as your KPIs are created.</p>
+        </div>
+        <div class="flex gap-2 shrink-0">
+            <a href="{{ route('kpi.index') }}" class="bg-[#D4AF37] hover:bg-[#c19c2f] text-[#1a1a1a] px-4 py-2.5 rounded-xl text-xs font-black transition">My KPIs</a>
+            <a href="{{ route('weightage') }}" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-black transition">Weightage</a>
+        </div>
+    </div>
+@else
     <div class="flex flex-col lg:flex-row">
 
         {{-- Left: score panel --}}
-        <div class="bg-gradient-to-br from-[#1A0A0A] to-[#7A0019] p-5 lg:min-w-[240px] xl:min-w-[260px] flex flex-col justify-between text-white">
+        <div class="theme-perf-card p-5 lg:min-w-[240px] xl:min-w-[260px] flex flex-col justify-between">
             <div>
-                <p class="text-[9px] uppercase tracking-widest font-black text-[#D4AF37] mb-3">My Performance · {{ $currentFinancialYear }}</p>
+                <p class="theme-perf-accent-text text-[9px] uppercase tracking-widest font-black mb-3">My Performance · {{ $currentFinancialYear }}</p>
                 <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-[#D4AF37]/60">
+                    <div class="theme-header-accent-ring w-10 h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-[#D4AF37]/60">
                         <img src="https://ui-avatars.com/api/?name={{ urlencode($currentUserName) }}&background=D4AF37&color=1a1a1a&size=40" class="w-full h-full object-cover"/>
                     </div>
                     <div>
-                        <h2 class="text-sm font-black text-white leading-tight">{{ $currentUserName }}</h2>
-                        <p class="text-[9px] text-white/60 mt-0.5">{{ $userPosition }} · {{ $currentDepartment }}</p>
+                        <h2 class="text-sm font-black text-slate-800 leading-tight">{{ $currentUserName }}</h2>
+                        <p class="text-[9px] text-slate-500 mt-0.5">{{ $userPosition }} · {{ $currentDepartment }}</p>
                     </div>
                 </div>
-                @if($individualKpiCount === 0)
-                    <div class="bg-white rounded-xl p-3">
-                        <p class="text-3xl font-black text-slate-300 mb-1">—</p>
-                        <p class="text-xs text-slate-400">No KPIs for {{ $currentFinancialYear }}</p>
-                    </div>
-                @elseif($individualWeightage <= 0)
+                @if($individualWeightage <= 0)
                     <div class="bg-white rounded-xl p-3">
                         <p class="text-3xl font-black text-slate-300 mb-1">—</p>
                         <p class="text-xs text-slate-400">{{ $individualKpiCount }} KPIs · weightage not set</p>
-                        <a href="{{ route('weightage') }}" class="inline-block mt-2 text-xs font-black text-[#7A0019] underline">Set weightage →</a>
+                        <a href="{{ route('weightage') }}" class="theme-header-dark-text inline-block mt-2 text-xs font-black text-[#7A0019] underline">Set weightage →</a>
                     </div>
                 @else
                     <div class="bg-white rounded-xl p-3">
@@ -441,15 +454,11 @@
                     </div>
                 @endif
             </div>
-            <div class="flex gap-2 mt-5 pt-4 border-t border-white/10">
-                <a href="{{ route('kpi.index') }}" class="flex-1 text-center bg-[#D4AF37] hover:bg-[#c19c2f] text-[#1a1a1a] px-3 py-2 rounded-xl text-xs font-black transition">My KPIs</a>
-                <a href="{{ route('weightage') }}" class="flex-1 text-center bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-xs font-black transition border border-white/20">Weightage</a>
-            </div>
         </div>
 
         {{-- Right: Stats + quarterly completion --}}
-        <div class="flex-1 p-5 flex flex-col justify-between">
-            <div class="grid grid-cols-3 gap-3 mb-5">
+        <div class="flex-1 p-5 flex flex-col gap-5">
+            <div class="grid grid-cols-3 gap-3">
                 <div class="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
                     <p class="text-3xl font-black text-slate-900">{{ $individualKpiCount }}</p>
                     <p class="text-[9px] text-slate-400 uppercase tracking-wide mt-1.5">Total KPIs</p>
@@ -472,7 +481,7 @@
             </div>
 
             @if($myAtRiskKpis->isNotEmpty())
-            <div class="bg-red-50 border border-red-100 rounded-2xl p-3 mb-5">
+            <div class="bg-red-50 border border-red-100 rounded-2xl p-3">
                 <p class="text-[9px] font-black text-red-500 uppercase tracking-widest mb-1.5">⚠ Needs Attention</p>
                 <ul class="space-y-0.5">
                     @foreach($myAtRiskKpis as $title)
@@ -492,18 +501,24 @@
                     @php
                         $qc  = $myCompletedByQ[$qi]; $qt = $myTotalByQ[$qi];
                         $ppct = $myProgressByQ[$qi];
-                        $pstyle = $scoreStyle($ppct);
+                        // Colour only reflects a REPORTED result. A quarter with no KPI
+                        // target (qt=0), or one where nothing has been signed off yet
+                        // (qc=0 — likely not started/evaluated), isn't a "Critical" 0% —
+                        // it's simply pending, so it gets neutral grey. Red/amber/green
+                        // only kick in once at least one KPI has actually been signed off.
+                        $qPending = $qc === 0;
+                        $pstyle = $qPending ? ['bar' => 'bg-slate-200', 'text' => 'text-slate-400'] : $scoreStyle($ppct);
                     @endphp
                     <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-[10px] font-black text-slate-700">{{ $qi }}</span>
-                            <span class="text-[10px] font-black {{ $pstyle['text'] }}">{{ $ppct }}%</span>
+                            <span class="text-[10px] font-black {{ $pstyle['text'] }}">{{ $qPending ? '—' : $ppct.'%' }}</span>
                         </div>
                         <div class="h-1.5 bg-slate-200 rounded-full overflow-hidden mb-1.5">
-                            <div class="h-1.5 rounded-full {{ $pstyle['bar'] }}" style="width:{{ min($ppct,100) }}%"></div>
+                            <div class="h-1.5 rounded-full {{ $pstyle['bar'] }}" style="width:{{ $qPending ? 100 : min($ppct,100) }}%"></div>
                         </div>
                         <p class="text-[8px] text-slate-400">
-                            {{ $qt > 0 ? number_format($ppct,0).'% of target' : 'No KPIs' }}
+                            {{ $qt === 0 ? 'No KPIs' : ($qPending ? 'Pending' : number_format($ppct,0).'% of target') }}
                             @if($qt > 0)
                                 · {{ $qc == $qt ? '✓ Signed off' : $qc.'/'.$qt.' signed off' }}
                             @endif
@@ -514,6 +529,7 @@
             </div>
         </div>
     </div>
+@endif
 </div>
 
 {{-- ═══════ COMPANY OVERVIEW TOGGLE ════════════════════════════════════════ --}}
@@ -646,7 +662,7 @@
                     <span class="text-[10px] font-black {{ $annualPct > 0 ? 'text-[#B8860B]' : 'text-slate-300' }}">{{ $annualPct }}%</span>
                 </div>
                 <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div class="h-2.5 rounded-full {{ $totalCompletedAnnual > 0 ? 'bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]' : 'bg-slate-200' }}" style="width:{{ $annualPct }}%"></div>
+                    <div class="h-2.5 rounded-full {{ $totalCompletedAnnual > 0 ? 'theme-header-banner bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]' : 'bg-slate-200' }}" style="width:{{ $annualPct }}%"></div>
                 </div>
                 <p class="text-[8px] text-slate-400 mt-1 text-right">{{ $totalCompletedAnnual }}/{{ $totalKpisVisible }} KPIs done</p>
             </div>
@@ -812,173 +828,35 @@
 </div>{{-- /companySection --}}
 @endif
 
-{{-- ═══════ KPI TARGET LINKAGES ══════════════════════════════════════════ --}}
+{{-- ═══════ KPI TARGET LINKAGES (compact summary — full tool lives on its own page) ═══ --}}
 @if($hasAnyLinkage || $canAssignTarget)
-<div class="bg-white rounded-2xl border border-[#E5E7EB] border-l-[4px] border-l-[#D4AF37] soft-card overflow-hidden">
-    <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#1A0A0A] to-[#7A0019]">
-        <div>
-            <h2 class="text-sm font-black text-white">KPI Target Linkages</h2>
-            <p class="text-[10px] text-white/70 mt-0.5">Cascading targets · {{ $currentFinancialYear }}</p>
+@php
+    $lnkTotalCount = $myLinkageMap->count() + $outgoingWithCoverage->count();
+    $lnkGapCount   = $myLinkageMap->where('met', false)->count() + $outgoingWithCoverage->where('met', false)->count();
+@endphp
+<a href="{{ route('linkages') }}" class="flex items-center justify-between gap-3 bg-white rounded-2xl px-5 py-4 border border-[#E5E7EB] border-l-[4px] border-l-[#D4AF37] soft-card hover:bg-slate-50/60 transition">
+    <div class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5 text-[#B8860B]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17H7A5 5 0 017 7h2M15 7h2a5 5 0 010 10h-2M8 12h8"/>
+            </svg>
         </div>
-        @if($canAssignTarget)
-        <button onclick="document.getElementById('assignLinkageForm').classList.toggle('hidden')"
-                class="px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-xl text-xs font-black transition border border-white/20">
-            + Assign Target
-        </button>
-        @endif
-    </div>
-
-    {{-- Assign form (hidden by default) --}}
-    @if($canAssignTarget)
-    <div id="assignLinkageForm" class="hidden border-b border-[#E5E7EB] bg-slate-50 px-4 py-3">
-        <form action="{{ route('linkage.store') }}" method="POST">
-            @csrf
-            <p class="text-[9px] font-black text-[#B8860B] uppercase mb-2">New Cascading Target</p>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 items-end">
-                <div>
-                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Person</label>
-                    <select name="assignee_id" required class="w-full rounded-xl border border-[#E5E7EB] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#D4AF37] focus:outline-none">
-                        <option value="">Select...</option>
-                        @foreach($directReports as $dr)
-                        <option value="{{ $dr['id'] }}">{{ $dr['short_name'] }} ({{ $dr['role'] }})</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Category</label>
-                    <select id="lnkCategory" name="category" required onchange="updateLnkSubCat()"
-                            class="w-full rounded-xl border border-[#E5E7EB] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#D4AF37] focus:outline-none">
-                        <option value="Financial">Financial</option>
-                        <option value="Growth &amp; Customer">Growth &amp; Customer</option>
-                        <option value="Initiatives">Initiatives</option>
-                        <option value="People">People</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Sub Category</label>
-                    <select id="lnkSubCat" name="sub_category" required
-                            class="w-full rounded-xl border border-[#E5E7EB] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#D4AF37] focus:outline-none">
-                        <option value="Revenue">Revenue</option>
-                        <option value="Operating Cost Optimisation">Operating Cost Optimisation</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Unit</label>
-                    <select name="unit" required class="w-full rounded-xl border border-[#E5E7EB] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#D4AF37] focus:outline-none">
-                        <option value="number">Number</option>
-                        <option value="currency">Currency (RM)</option>
-                        <option value="percentage">Percentage (%)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Annual Target</label>
-                    <input name="assigned_target" type="number" step="0.01" min="0" required placeholder="0"
-                           class="w-full rounded-xl border border-[#E5E7EB] bg-white px-2 py-2 text-xs font-bold text-slate-700 focus:border-[#D4AF37] focus:outline-none">
-                </div>
-                <div class="flex gap-1.5">
-                    <button type="submit" class="flex-1 px-3 py-2 bg-gradient-to-r from-[#C8102E] to-[#7A0019] hover:opacity-90 text-white rounded-xl text-xs font-black transition">Save</button>
-                    <button type="button" onclick="document.getElementById('assignLinkageForm').classList.add('hidden')" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl text-xs font-black transition">✕</button>
-                </div>
-            </div>
-        </form>
-    </div>
-    @endif
-
-    <div class="p-4 bg-white">
-        @if(!$hasAnyLinkage)
-        <p class="text-xs text-slate-400 text-center py-2">No linkage targets yet. Use "+ Assign Target" to assign a cascading target to your team.</p>
-        @else
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-
-            {{-- Targets Assigned to Me --}}
-            @if($myLinkageMap->isNotEmpty())
-            <div>
-                <p class="text-[9px] font-black text-[#B8860B] uppercase tracking-wider mb-2">Targets Assigned to Me</p>
-                <div class="space-y-2">
-                    @foreach($myLinkageMap as $lnk)
-                    @php $lnkMet = $lnk['met']; @endphp
-                    <div class="p-2.5 rounded-xl border {{ $lnkMet ? 'border-emerald-200 bg-emerald-50' : 'border-[#E5E7EB] bg-[#D4AF37]/5' }}">
-                        <div class="flex items-center justify-between mb-1.5">
-                            <div class="min-w-0">
-                                <span class="text-xs font-black text-slate-800">{{ $lnk['sub_category'] }}</span>
-                                <span class="ml-1.5 text-[9px] text-slate-400">{{ $lnk['category'] }} · from {{ $lnk['assigner_name'] ?? '-' }}</span>
-                            </div>
-                            @if(!$lnkMet)
-                            <span class="shrink-0 ml-2 text-[9px] font-black px-1.5 py-0.5 rounded-full border bg-[#D4AF37]/10 text-[#B8860B] border-[#E5E7EB]">Gap</span>
-                            @else
-                            <span class="shrink-0 ml-2 text-[9px] font-black px-1.5 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200">Met ✓</span>
-                            @endif
-                        </div>
-                        <div class="flex items-center gap-2 mb-1.5">
-                            <div class="flex-1 h-1.5 rounded-full overflow-hidden bg-slate-100">
-                                <div class="h-1.5 rounded-full {{ $lnkMet ? 'bg-emerald-400' : 'bg-[#D4AF37]' }}" style="width:{{ $lnk['pct'] }}%"></div>
-                            </div>
-                            <span class="text-[9px] font-black text-slate-600 w-7 text-right shrink-0">{{ $lnk['pct'] }}%</span>
-                        </div>
-                        <div class="flex justify-between text-[9px] text-slate-400">
-                            <span>Target: <span class="font-black text-slate-700">{{ $fmtLinkageVal($lnk['assigned_target'], $lnk['unit']) }}</span></span>
-                            <span>Covered: <span class="font-black text-slate-700">{{ $fmtLinkageVal($lnk['covered'], $lnk['unit']) }}</span></span>
-                            @if(!$lnkMet)
-                            <span class="text-[#B8860B] font-black">Gap: {{ $fmtLinkageVal($lnk['gap'], $lnk['unit']) }}</span>
-                            @endif
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-
-            {{-- Targets I Assigned --}}
-            @if($outgoingWithCoverage->isNotEmpty())
-            <div>
-                <p class="text-[9px] font-black text-[#B8860B] uppercase tracking-wider mb-2">Targets I Assigned</p>
-                <div class="space-y-2">
-                    @foreach($outgoingWithCoverage as $lnk)
-                    @php $lnkMet = $lnk['met']; @endphp
-                    <div class="p-2.5 rounded-xl border border-[#E5E7EB] bg-[#D4AF37]/5 group">
-                        <div class="flex items-center justify-between mb-1.5">
-                            <div class="min-w-0">
-                                <span class="text-xs font-black text-slate-800">{{ $lnk['assignee_name'] ?? '-' }}</span>
-                                <span class="ml-1.5 text-[9px] text-slate-400">{{ $lnk['sub_category'] }} · {{ $lnk['category'] }}</span>
-                            </div>
-                            <div class="shrink-0 ml-2 flex items-center gap-1.5">
-                                @if(!$lnkMet)
-                                <span class="text-[9px] font-black bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded border border-amber-200">Gap</span>
-                                @else
-                                <span class="text-[9px] font-black bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded border border-emerald-200">Met ✓</span>
-                                @endif
-                                <form action="{{ route('linkage.destroy', $lnk['id']) }}" method="POST" onsubmit="return confirm('Remove this linkage?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="text-[9px] text-red-400 hover:text-red-600 font-black opacity-0 group-hover:opacity-100 transition">✕</button>
-                                </form>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2 mb-1.5">
-                            <div class="flex-1 h-1.5 rounded-full overflow-hidden bg-slate-100">
-                                <div class="h-1.5 rounded-full {{ $lnkMet ? 'bg-emerald-400' : 'bg-[#D4AF37]' }}" style="width:{{ $lnk['pct'] }}%"></div>
-                            </div>
-                            <span class="text-[9px] font-black text-slate-600 w-7 text-right shrink-0">{{ $lnk['pct'] }}%</span>
-                        </div>
-                        <div class="flex justify-between text-[9px] text-slate-400">
-                            <span>Target: <span class="font-black text-slate-700">{{ $fmtLinkageVal($lnk['assigned_target'], $lnk['unit']) }}</span></span>
-                            <span>Covered: <span class="font-black text-slate-700">{{ $fmtLinkageVal($lnk['covered'], $lnk['unit']) }}</span></span>
-                            @if(!$lnkMet)
-                            <span class="text-[#B8860B] font-black">Gap: {{ $fmtLinkageVal($lnk['gap'], $lnk['unit']) }}</span>
-                            @endif
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-
+        <div class="text-left min-w-0">
+            <p class="text-sm font-black text-slate-800">Target Linkages</p>
+            <p class="text-[9px] text-slate-400 mt-0.5">
+                @if($hasAnyLinkage)
+                    {{ $lnkTotalCount }} cascading target{{ $lnkTotalCount === 1 ? '' : 's' }}@if($lnkGapCount > 0) · {{ $lnkGapCount }} gap{{ $lnkGapCount === 1 ? '' : 's' }}@endif
+                @else
+                    No cascading targets yet — assign one to your team
+                @endif
+            </p>
         </div>
-        @endif
     </div>
-</div>
+    <span class="text-[9px] font-black text-[#B8860B] bg-[#D4AF37]/10 px-2.5 py-1 rounded-full shrink-0">View →</span>
+</a>
 @endif
 
-{{-- ═══════ MY KPI CARDS ════════════════════════════════════════════════════ --}}
+{{-- ═══════ MY KPIs (compact preview — full grid, search & filter live on KPI List) ═══ --}}
 <div>
     <div class="flex items-center justify-between mb-3">
         <div>
@@ -987,168 +865,28 @@
             <p class="text-[9px] text-slate-400 mt-0.5">{{ $individualKpiCount }} KPIs · {{ number_format($individualWeightage,0) }}% total weightage</p>
             @endif
         </div>
-        <a href="{{ route('kpi.create') }}" class="px-3 py-1.5 bg-gradient-to-r from-[#C8102E] to-[#7A0019] text-white rounded-xl text-xs font-black hover:opacity-90 transition">+ Add KPI</a>
+        <a href="{{ route('kpi.create') }}" class="px-3 py-1.5 theme-soft-btn rounded-xl text-xs font-black transition">+ Add KPI</a>
     </div>
 
     @if($individualKpiCount === 0)
         <div class="bg-white rounded-2xl border border-dashed border-[#E5E7EB] p-10 soft-card text-center">
             <p class="text-slate-400 text-sm font-bold">No KPIs yet for {{ $currentFinancialYear }}</p>
             <p class="text-slate-300 text-xs mt-1">Create your first KPI to start tracking performance</p>
-            <a href="{{ route('kpi.create') }}" class="inline-block mt-4 px-4 py-2 bg-gradient-to-r from-[#C8102E] to-[#7A0019] text-white rounded-xl text-xs font-black hover:opacity-90 transition">+ Create KPI</a>
+            <a href="{{ route('kpi.create') }}" class="inline-block mt-4 px-4 py-2 theme-soft-btn rounded-xl text-xs font-black transition">+ Create KPI</a>
         </div>
     @else
-    <div class="">
-        @if($orderedCategoryGroups->isEmpty())
-            <div class="bg-white rounded-2xl border border-dashed border-[#E5E7EB] p-8 text-center">
-                <p class="text-slate-400 text-sm">No KPIs created yet.</p>
-                <a href="{{ route('kpi.create') }}" class="mt-3 inline-block px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-black hover:bg-indigo-700">Create First KPI</a>
-            </div>
-        @else
-            <div class="space-y-4">
-                @foreach($orderedCategoryGroups as $category => $categoryKpis)
-                    @php $catStyle = $categoryStyles[$category] ?? $categoryStyles['Default']; @endphp
-                    <div>
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="px-2.5 py-0.5 rounded-lg text-xs font-black shadow-sm {{ $catStyle['bg'] }}">{{ $category ?: 'General' }}</span>
-                            <span class="text-xs text-slate-400 shrink-0">{{ $categoryKpis->count() }} KPI</span>
-                            <div class="relative flex-1 h-[3px] rounded-full overflow-hidden" style="background:linear-gradient(90deg,{{ $catStyle['line'] }} 0%,{{ $catStyle['line'] }}55 45%,transparent 100%);box-shadow:0 1px 2px rgba(15,23,42,.18);">
-                                <div class="absolute inset-x-0 top-0 h-[1px]" style="background:linear-gradient(90deg,rgba(255,255,255,.65),transparent 70%);"></div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 xl:grid-cols-3 gap-2">
-                            @foreach($categoryKpis as $kpi)
-                                @php
-                                    $kpiScore     = $kpi['_score'] ?? 0;
-                                    $kpiWeightage = $kpi['_weightage'] ?? 0;
-                                    $kpiStatus    = $kpi['status'] ?? 'not_started';
-                                    $scoreSt      = $scoreStyle($kpiScore);
-                                    $badgeSt      = $statusBadge($kpiStatus);
-                                    $lb           = $cardBorder($kpiStatus);
-                                    $quarters     = collect($kpi['quarters'] ?? []);
-                                @endphp
-                                <div onclick="openKpiDetail('{{ $kpi['id'] }}')"
-                                     class="bg-white rounded-xl border border-l-4 border-t-[3px] border-t-[#D4AF37] border-[#E5E7EB] {{ $lb }} p-3 cursor-pointer hover:shadow-md transition-shadow soft-card group">
-                                    <div class="flex items-start justify-between gap-2 mb-2">
-                                        <div class="flex flex-wrap gap-1 min-w-0">
-                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-black {{ $catStyle['sub'] }}">{{ $kpi['sub_category'] ?? '-' }}</span>
-                                            @if($kpiWeightage > 0)
-                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-slate-100 text-slate-600">{{ number_format($kpiWeightage,0) }}%</span>
-                                            @else
-                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-50 text-amber-600 border border-amber-200">No wt</span>
-                                            @endif
-                                        </div>
-                                        <span class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-black {{ $badgeSt['class'] }}">{{ $badgeSt['label'] }}</span>
-                                    </div>
-                                    <h3 class="text-xs font-black text-slate-900 leading-snug mb-1 line-clamp-2">{{ $kpi['kpi_title'] }}</h3>
-                                    <p class="text-[10px] text-slate-400 line-clamp-1 mb-2">{{ $kpi['kpi_description'] ?? 'No description.' }}</p>
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <div class="flex-1">
-                                            <div class="flex justify-between text-[9px] mb-0.5">
-                                                <span class="text-slate-400">Achievement</span>
-                                                <span class="font-black {{ $scoreSt['text'] }}">{{ number_format($kpiScore,1) }}%</span>
-                                            </div>
-                                            <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                <div class="h-1.5 rounded-full {{ $scoreSt['bar'] }}" style="width:{{ min($kpiScore,100) }}%"></div>
-                                            </div>
-                                        </div>
-                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black border {{ $scoreSt['badge'] }} shrink-0">{{ $scoreSt['label'] }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        @foreach(['Q1','Q2','Q3','Q4'] as $qLabel)
-                                            @php
-                                                $qRow    = $quarters->firstWhere('quarter',$qLabel);
-                                                $qStatus = $qRow ? ($qRow['status'] ?? 'not_started') : null;
-                                            @endphp
-                                            <div class="flex items-center gap-1 text-[9px]">
-                                                <div class="w-2 h-2 rounded-full {{ $qRow ? $qDotColor($qStatus) : 'bg-slate-200' }}"></div>
-                                                <span class="font-bold {{ $qRow ? 'text-slate-700' : 'text-slate-400' }}">{{ $qLabel }}</span>
-                                            </div>
-                                        @endforeach
-                                        <span class="ml-auto text-[9px] text-slate-300 group-hover:text-indigo-500 transition font-black">View →</span>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        @endif
-    </div>
+        <a href="{{ route('kpi.index') }}" class="flex flex-wrap items-center gap-2 bg-white rounded-2xl border border-[#E5E7EB] soft-card p-4 hover:bg-slate-50/60 transition">
+            @foreach($orderedCategoryGroups as $category => $categoryKpis)
+                @php $catStyle = $categoryStyles[$category] ?? $categoryStyles['Default']; @endphp
+                <span class="px-2.5 py-1 rounded-lg text-xs font-black shadow-sm {{ $catStyle['bg'] }}">{{ $category ?: 'General' }} · {{ $categoryKpis->count() }}</span>
+            @endforeach
+            <span class="ml-auto text-xs font-black text-[#B8860B] shrink-0">View All KPIs →</span>
+        </a>
     @endif
 </div>
 
 </div>{{-- /.p-4 --}}
 </main>
-
-{{-- ═══════ KPI DETAIL MODALS ════════════════════════════════════════════ --}}
-@foreach($kpis ?? [] as $kpi)
-    @php
-        $modalStatus = $kpi['status'] ?? 'not_started';
-        $modalStatusLabel = match($modalStatus) { 'not_started'=>'Not Started','on_track'=>'On Track','monitoring'=>'Monitoring','at_risk'=>'At Risk','risk'=>'Risk','in_trouble'=>'In Trouble','critical'=>'Critical','completed'=>'Completed',default=>'Not Started' };
-        $modalStatusClass = match($modalStatus) { 'on_track','monitoring'=>'bg-[#F5EAE0] text-[#6B3F2A]','at_risk','risk'=>'bg-amber-100 text-amber-700','in_trouble','critical'=>'bg-red-100 text-red-700','completed'=>'bg-emerald-100 text-emerald-700',default=>'bg-slate-100 text-slate-700' };
-        $mc = ['Financial'=>['bg-emerald-700 text-white',['bg-emerald-50 text-emerald-800 border border-emerald-200']],'Growth & Customer'=>['bg-indigo-700 text-white',['bg-indigo-50 text-indigo-800 border border-indigo-200']],'Initiatives'=>['bg-amber-600 text-white',['bg-amber-50 text-amber-800 border border-amber-200']],'People'=>['bg-pink-700 text-white',['bg-pink-50 text-pink-800 border border-pink-200']],'Default'=>['bg-slate-700 text-white',['bg-slate-50 text-slate-800 border border-[#E5E7EB]']]];
-        $mset = $mc[$kpi['category']??'Default'] ?? $mc['Default'];
-        $mCatClass = $mset[0]; $mSubClass = $mset[1][0];
-        $mBase = max(0,(float)($kpi['base_target']??0));
-        $mActual = max(0,(float)($kpi['actual_value']??0));
-        $mAch = $mBase > 0 ? max(0,round(($mActual/$mBase)*100,2)) : 0;
-        $mUnit = strtolower($kpi['unit'] ?? '');
-        $mUnitLabel = match($mUnit) { 'currency'=>'Currency', 'percentage','percent'=>'Percentage', default=>'Number' };
-        $mFmt = fn($v) => match($mUnit) { 'currency'=>'RM '.number_format($v,2), 'percentage','percent'=>number_format($v,2).'%', default=>number_format($v,2) };
-        if      ($mAch <= 25)  $mBarColor = 'bg-red-600';
-        elseif  ($mAch <= 50)  $mBarColor = 'bg-gradient-to-r from-red-600 to-orange-500';
-        elseif  ($mAch <= 75)  $mBarColor = 'bg-gradient-to-r from-orange-500 to-yellow-400';
-        elseif  ($mAch <= 100) $mBarColor = 'bg-gradient-to-r from-yellow-400 to-green-500';
-        else                   $mBarColor = 'bg-emerald-700';
-    @endphp
-    <div id="kpi-modal-{{ $kpi['id'] }}" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/50 px-4" onclick="closeKpiDetail('{{ $kpi['id'] }}')">
-        <div class="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-[#E5E7EB] overflow-hidden" onclick="event.stopPropagation()">
-            <div class="px-4 py-3 brand-panel text-white flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                    <p class="text-[10px] uppercase tracking-wide text-slate-400">KPI Detail</p>
-                    <h3 class="text-sm font-black mt-1 leading-snug line-clamp-2">{{ $kpi['kpi_title'] ?? '-' }}</h3>
-                </div>
-                <button type="button" onclick="closeKpiDetail('{{ $kpi['id'] }}')" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-xs shrink-0 font-bold">✕</button>
-            </div>
-            <div class="p-4 space-y-4 max-h-[70vh] overflow-y-auto thin-scroll">
-                <div class="grid grid-cols-3 gap-2">
-                    <div class="rounded-xl bg-slate-50 border border-[#E5E7EB] p-2"><p class="text-[9px] text-slate-400 uppercase">Base Target</p><p class="text-xs font-black text-slate-900">{{ $mFmt($mBase) }}</p></div>
-                    <div class="rounded-xl bg-slate-50 border border-[#E5E7EB] p-2"><p class="text-[9px] text-slate-400 uppercase">Stretch</p><p class="text-xs font-black text-slate-900">{{ $mFmt(max(0,(float)($kpi['stretch_target']??0))) }}</p></div>
-                    <div class="rounded-xl bg-[#FBF5EF] border border-[#E5E7EB] p-2"><p class="text-[9px] text-[#A07060] uppercase">Actual</p><p class="text-xs font-black text-[#4a2a1a]">{{ $mFmt($mActual) }}</p></div>
-                </div>
-                <div class="rounded-xl border border-[#E5E7EB] p-3">
-                    <div class="flex items-center justify-between mb-2">
-                        <div><p class="text-[10px] text-slate-400 uppercase">Progress</p><p class="text-sm font-black text-slate-900">{{ number_format($mAch,2) }}%</p></div>
-                        <span class="text-[10px] font-bold px-2 py-1 rounded-lg {{ $modalStatusClass }}">{{ $modalStatusLabel }}</span>
-                    </div>
-                    <div class="h-2 bg-slate-100 rounded-full overflow-hidden"><div class="{{ $mBarColor }} h-2 rounded-full" style="width:{{ min($mAch,100) }}%"></div></div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="rounded-xl border border-[#E5E7EB] p-3"><p class="text-[10px] text-slate-400 uppercase mb-1">Category</p><span class="inline-block px-2 py-1 rounded-lg text-[10px] font-bold {{ $mCatClass }}">{{ $kpi['category']??'-' }}</span></div>
-                    <div class="rounded-xl border border-[#E5E7EB] p-3"><p class="text-[10px] text-slate-400 uppercase mb-1">Sub Category</p><span class="inline-block px-2 py-1 rounded-lg text-[10px] font-semibold {{ $mSubClass }}">{{ $kpi['sub_category']??'-' }}</span></div>
-                </div>
-                <div class="rounded-xl bg-slate-50 border border-[#E5E7EB] p-3"><p class="text-[10px] text-slate-400 uppercase mb-1">Description</p><p class="text-xs text-slate-700 leading-relaxed">{{ $kpi['kpi_description']??'No description.' }}</p></div>
-                <div class="rounded-xl bg-amber-50 border border-amber-100 p-3"><p class="text-[10px] text-amber-500 uppercase mb-1">Remark</p><p class="text-xs text-amber-800 leading-relaxed">{{ $kpi['remark']??'No remark.' }}</p></div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="rounded-xl bg-white border border-[#E5E7EB] p-3"><p class="text-[10px] text-slate-400 uppercase">Unit</p><p class="font-bold text-slate-800 mt-1 text-xs">{{ $mUnitLabel }}</p></div>
-                    @php
-                        $ciRaw = (!empty($kpi['updated_at']) && $kpi['updated_at'] !== ($kpi['created_at'] ?? null))
-                            ? $kpi['updated_at']
-                            : ($kpi['created_at'] ?? null);
-                        $ciDate = $ciRaw
-                            ? \Carbon\Carbon::parse($ciRaw)->timezone('Asia/Kuala_Lumpur')->format('d M Y, h:i A')
-                            : '-';
-                    @endphp
-                    <div class="rounded-xl bg-slate-50 border border-[#E5E7EB] p-3"><p class="text-[10px] text-slate-400 uppercase">Last Check-In</p><p class="font-bold text-slate-800 mt-1 text-[11px]">{{ $ciDate }}</p></div>
-                </div>
-            </div>
-            <div class="px-4 py-3 bg-slate-50 border-t border-[#E5E7EB] flex justify-end gap-2">
-                <button type="button" onclick="closeKpiDetail('{{ $kpi['id'] }}')" class="px-3 py-2 rounded-lg bg-white border border-[#E5E7EB] text-slate-700 text-xs font-bold hover:bg-slate-100">Close</button>
-                <a href="{{ route('kpi.edit',$kpi['id']) }}" class="px-3 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800">Edit KPI</a>
-            </div>
-        </div>
-    </div>
-@endforeach
 
 {{-- Chart.js loaded here (end of body) so it never blocks first paint --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -1170,6 +908,12 @@ function scoreHex(v) {
 const palette = ['#3b82f6','#8b5cf6','#f59e0b','#10b981','#ef4444','#06b6d4','#f97316','#ec4899','#14b8a6','#a855f7'];
 const bandColors = ['#059669','#D4AF37','#F97316','#EF4444'];
 
+// Appearance > Chart accent — a single colour for achievement/progress bars,
+// kept deliberately separate from the main dashboard Accent (banners,
+// buttons) so picking one doesn't force the other, and user-choosable via
+// its own swatch in Settings rather than hardcoded.
+const THEME_ACCENT2 = '{{ session('theme_accent2') ?: '#6B9080' }}';
+
 // ── CHART: DEPT RANKING (horizontal bar — all company depts) ────────────────
 (function() {
     const ctx = document.getElementById('chartDeptRanking');
@@ -1177,6 +921,11 @@ const bandColors = ['#059669','#D4AF37','#F97316','#EF4444'];
     const src = companyRankingData.length ? companyRankingData : deptData.map(d=>({code:d.code,score:d.annual,staff:d.staff}));
     if (!src.length) return;
     const sorted = [...src].sort((a,b) => b.score - a.score);
+    // Axis scales to the actual top score (+15% headroom, rounded to a clean
+    // multiple of 10) instead of always to 100 — a fixed 0-100 axis left most
+    // of the chart empty whenever every department scored well under that.
+    const maxScore = Math.max(0, ...sorted.map(d => d.score));
+    const axisMax  = Math.max(10, Math.ceil((maxScore * 1.15) / 10) * 10);
     new Chart(ctx, {
         type: 'bar',
         data: {
@@ -1184,8 +933,8 @@ const bandColors = ['#059669','#D4AF37','#F97316','#EF4444'];
             datasets: [{
                 label: 'Annual Score (%)',
                 data: sorted.map(d => d.score),
-                backgroundColor: '#D4AF37cc',
-                borderColor:     '#D4AF37',
+                backgroundColor: THEME_ACCENT2 + 'cc',
+                borderColor:     THEME_ACCENT2,
                 borderWidth: 1.5,
                 borderRadius: 6,
             }]
@@ -1203,7 +952,7 @@ const bandColors = ['#059669','#D4AF37','#F97316','#EF4444'];
                 }
             },
             scales: {
-                x: { min: 0, max: 100, ticks: { callback: v => v+'%', font: { size: 10 } }, grid: { color: '#f1f5f9' } },
+                x: { min: 0, max: axisMax, ticks: { callback: v => v+'%', font: { size: 10 } }, grid: { color: '#f1f5f9' } },
                 y: { ticks: { font: { size: 11, weight: 'bold' } }, grid: { display: false } }
             }
         }
@@ -1307,22 +1056,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ── LINKAGE FORM: SUB CATEGORY DROPDOWN ─────────────────────────────────────
-const lnkSubCatMap = {
-    'Financial':         ['Revenue', 'Operating Cost Optimisation'],
-    'Growth & Customer': ['New Customer Acquisition', 'Growth'],
-    'Initiatives':       ['Continuous Improvement & New Business'],
-    'People':            ['Certification of Competence (COC)', 'Staff Development'],
-};
-
-function updateLnkSubCat() {
-    const cat    = document.getElementById('lnkCategory')?.value || 'Financial';
-    const sel    = document.getElementById('lnkSubCat');
-    if (!sel) return;
-    const opts   = lnkSubCatMap[cat] || [];
-    sel.innerHTML = opts.map(o => `<option value="${o}">${o}</option>`).join('');
-}
-
 // ── ACCORDION TOGGLE ────────────────────────────────────────────────────────
 let allOpen = false;
 
@@ -1350,18 +1083,6 @@ function toggleAllDepts() {
 }
 
 // ── MODAL HELPERS ───────────────────────────────────────────────────────────
-function openKpiDetail(id) {
-    const m = document.getElementById('kpi-modal-' + id);
-    if (!m) return;
-    m.classList.remove('hidden'); m.classList.add('flex');
-    document.body.classList.add('overflow-hidden');
-}
-function closeKpiDetail(id) {
-    const m = document.getElementById('kpi-modal-' + id);
-    if (!m) return;
-    m.classList.add('hidden'); m.classList.remove('flex');
-    document.body.classList.remove('overflow-hidden');
-}
 function openQuarterModal(id)  { const m = document.getElementById('quarter-modal-'+id); if(m){ m.classList.remove('hidden'); m.classList.add('flex'); document.body.classList.add('overflow-hidden'); } }
 function closeQuarterModal(id) { const m = document.getElementById('quarter-modal-'+id); if(m){ m.classList.add('hidden');    m.classList.remove('flex'); document.body.classList.remove('overflow-hidden'); } }
 function openHistoryModal(id)  { const m = document.getElementById('history-modal-'+id); if(m){ m.classList.remove('hidden'); m.classList.add('flex'); document.body.classList.add('overflow-hidden'); } }
