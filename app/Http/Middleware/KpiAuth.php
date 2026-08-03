@@ -66,7 +66,7 @@ class KpiAuth
         | they refresh here, since login is the only other place it's loaded.
         */
 
-        if (!session()->has('theme_loaded')) {
+        if (!session()->has('settings_synced_v2')) {
             try {
                 $employee = app(SupabaseService::class)->first('employees', [
                     'id'     => 'eq.' . session('employee_uuid'),
@@ -74,7 +74,7 @@ class KpiAuth
                 ]);
 
                 session([
-                    'theme_loaded'          => true,
+                    'settings_synced_v2'          => true,
                     'salutation'            => $employee['salutation']            ?? null,
                     'theme_bg'              => $employee['theme_bg']              ?? null,
                     'theme_card'            => $employee['theme_card']            ?? null,
@@ -89,7 +89,7 @@ class KpiAuth
                     'theme_font_size'       => $employee['theme_font_size']       ?? null,
                 ]);
             } catch (\Throwable) {
-                session(['theme_loaded' => true]);
+                session(['settings_synced_v2' => true]);
             }
         }
 
