@@ -532,6 +532,95 @@
 @endif
 </div>
 
+{{-- ═══════ PERFORMIX TASKS ════════════════════════════════════════════════ --}}
+@php
+    $taskScoreBand = match(true) {
+        $myTaskScoreStatus === 'on_track' => ['text' => 'text-emerald-600', 'badge' => 'bg-emerald-50 text-emerald-600 border-emerald-100', 'label' => 'On Track'],
+        $myTaskScoreStatus === 'at_risk' => ['text' => 'text-amber-600', 'badge' => 'bg-amber-50 text-amber-600 border-amber-100', 'label' => 'At Risk'],
+        $myTaskScoreStatus === 'critical' => ['text' => 'text-red-600', 'badge' => 'bg-red-50 text-red-600 border-red-100', 'label' => 'Critical'],
+        default => ['text' => 'text-slate-300', 'badge' => 'bg-slate-50 text-slate-400 border-slate-100', 'label' => 'No data yet'],
+    };
+    $teamStatusCounts = collect($teamAttention ?? [])->countBy('status');
+@endphp
+<div class="bg-white rounded-2xl overflow-hidden soft-card border border-[#E5E7EB] border-t-[3px] border-t-[#6B9080]">
+    <div class="p-5 flex items-center justify-between border-b border-slate-100">
+        <div>
+            <p class="text-[9px] uppercase tracking-widest font-black text-slate-400 mb-1">Performix · This Week</p>
+            <h2 class="text-base font-black text-slate-800">Tasks</h2>
+        </div>
+        <a href="{{ route('mini-app') }}" class="text-[11px] font-black text-[#6B3F2A] bg-[#F5EAE0] px-3 py-1.5 rounded-full">Open Task Manager →</a>
+    </div>
+
+    <div class="p-5">
+        <div class="grid grid-cols-3 gap-3">
+            <div class="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                <p class="text-3xl font-black {{ $taskScoreBand['text'] }}">{{ $myTaskScore !== null ? number_format($myTaskScore, 0) : '—' }}</p>
+                <p class="text-[9px] text-slate-400 uppercase tracking-wide mt-1.5">Task Score</p>
+            </div>
+            <div class="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+                <p class="text-3xl font-black text-slate-900">{{ count($todayTasks ?? []) }}</p>
+                <p class="text-[9px] text-slate-400 uppercase tracking-wide mt-1.5">Due Today</p>
+            </div>
+            <div class="bg-{{ $overdueTaskCount > 0 ? 'red' : 'slate' }}-50 rounded-2xl p-4 text-center border border-{{ $overdueTaskCount > 0 ? 'red' : 'slate' }}-100">
+                <p class="text-3xl font-black {{ $overdueTaskCount > 0 ? 'text-red-600' : 'text-slate-300' }}">{{ $overdueTaskCount }}</p>
+                <p class="text-[9px] {{ $overdueTaskCount > 0 ? 'text-red-400' : 'text-slate-400' }} uppercase tracking-wide mt-1.5">Overdue</p>
+            </div>
+        </div>
+        <span class="inline-block mt-3 px-2.5 py-0.5 rounded-full text-[9px] font-black border {{ $taskScoreBand['badge'] }}">{{ $taskScoreBand['label'] }}</span>
+
+        @if(count($todayTasks ?? []) > 0)
+        <div class="mt-4 space-y-1.5">
+            @foreach($todayTasks as $task)
+            <div class="flex items-center justify-between gap-2 bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
+                <p class="text-[12px] font-bold text-slate-700 truncate">{{ $task['title'] }}</p>
+                <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 {{ match($task['priority'] ?? 'medium') { 'critical' => 'bg-red-100 text-red-700', 'high' => 'bg-amber-100 text-amber-700', 'low' => 'bg-slate-100 text-slate-500', default => 'bg-[#F5EAE0] text-[#6B3F2A]' } }}">{{ ucfirst($task['priority'] ?? 'medium') }}</span>
+            </div>
+            @endforeach
+        </div>
+        @endif
+    </div>
+
+    @if($hasTeam)
+    <div class="p-5 border-t border-slate-100">
+        <div class="flex items-center justify-between mb-3">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Team Attention</p>
+            @if($user['role'] === 'SLT' && $teamStatusCounts->sum() > 0)
+            <p class="text-[10px] text-slate-400 font-bold">
+                {{ $teamStatusCounts->get('on_track', 0) }} On Track · {{ $teamStatusCounts->get('at_risk', 0) }} At Risk · {{ $teamStatusCounts->get('critical', 0) }} Critical
+            </p>
+            @endif
+        </div>
+
+        @if(empty($teamAttention))
+        <p class="text-[12px] text-slate-400 text-center py-3">No team members found.</p>
+        @else
+        <div class="space-y-1.5">
+            @foreach(array_slice($teamAttention, 0, 6) as $member)
+            @php
+                $memberBadge = match($member['status']) {
+                    'on_track' => 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                    'at_risk' => 'bg-amber-50 text-amber-600 border-amber-100',
+                    'critical' => 'bg-red-50 text-red-600 border-red-100',
+                    default => 'bg-slate-50 text-slate-400 border-slate-100',
+                };
+            @endphp
+            <div class="flex items-center justify-between gap-2 bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
+                <p class="text-[12px] font-bold text-slate-700 truncate">{{ $member['name'] }}</p>
+                <div class="flex items-center gap-2 shrink-0">
+                    <span class="text-[12px] font-black text-slate-700">{{ $member['score'] !== null ? number_format($member['score'], 0) : '—' }}</span>
+                    <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full border {{ $memberBadge }}">{{ str_replace('_', ' ', $member['status']) }}</span>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @if(count($teamAttention) > 6)
+        <a href="{{ route('mini-app') }}" class="block text-center text-[10px] font-black text-[#6B3F2A] mt-2">+{{ count($teamAttention) - 6 }} more — open Task Manager →</a>
+        @endif
+        @endif
+    </div>
+    @endif
+</div>
+
 {{-- ═══════ COMPANY OVERVIEW TOGGLE ════════════════════════════════════════ --}}
 @php $rankingCount = count($companyDeptRanking ?? []); @endphp
 @if($rankingCount > 0 || $deptRows->count() > 0)

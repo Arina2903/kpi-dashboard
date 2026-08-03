@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\KpiQuarterUpdateService;
 use App\Services\SupabaseService;
+use App\Services\TaskAccessPolicy;
 use Illuminate\Http\Request;
 
 /**
@@ -26,7 +27,7 @@ class MiniAppController extends Controller
         return now('Asia/Kuala_Lumpur')->toDateString();
     }
 
-    public function index(SupabaseService $supabase)
+    public function index(SupabaseService $supabase, TaskAccessPolicy $policy)
     {
         $user = $supabase->first('users', [
             'id' => 'eq.' . session('user_uuid'),
@@ -35,6 +36,7 @@ class MiniAppController extends Controller
 
         return view('mini-app.index', [
             'telegramLinked' => !empty($user['telegram_linked_at']),
+            'hasTeam' => $policy->hasTeam(session('employee') ?? []),
         ]);
     }
 
@@ -67,18 +69,24 @@ class MiniAppController extends Controller
 
         $kpiIds = array_column($kpis, 'id');
 
-        $quarters = $supabase->get('kpi_quarters', [
-            'kpi_id' => 'in.(' . implode(',', $kpiIds) . ')',
-            'select' => '*',
-        ]) ?? [];
+        // quarters and existingTasks don't depend on each other — sent
+        // concurrently instead of one after another.
+        $batch = $supabase->getMany([
+            'quarters' => ['table' => 'kpi_quarters', 'query' => [
+                'kpi_id' => 'in.(' . implode(',', $kpiIds) . ')',
+                'select' => '*',
+            ]],
+            'existingTasks' => ['table' => 'telegram_daily_tasks', 'query' => [
+                'employee_id' => 'eq.' . $employeeId,
+                'task_date' => 'eq.' . $today,
+                'select' => '*',
+            ]],
+        ]);
 
+        $quarters = $batch['quarters'] ?? [];
         $quartersByKpi = collect($quarters)->groupBy('kpi_id');
 
-        $existingTasks = $supabase->get('telegram_daily_tasks', [
-            'employee_id' => 'eq.' . $employeeId,
-            'task_date' => 'eq.' . $today,
-            'select' => '*',
-        ]) ?? [];
+        $existingTasks = $batch['existingTasks'] ?? [];
 
         $taskByQuarter = collect($existingTasks)->keyBy('kpi_quarter_id');
 

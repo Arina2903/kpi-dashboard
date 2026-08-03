@@ -653,7 +653,7 @@
                         'icon' => 'dashboard',
                     ],
                     [
-                        'label' => 'Mini App',
+                        'label' => 'Performix',
                         'href'  => route('mini-app'),
                         'match' => 'mini-app*',
                         'icon'  => 'task',

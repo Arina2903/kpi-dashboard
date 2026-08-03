@@ -557,4 +557,169 @@ PROMPT;
 
         return json_decode(trim($text), true) ?? [];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUGGEST TASK -> KPI ALIGNMENT (Performix)
+    |--------------------------------------------------------------------------
+    | Per docs/performix-design.md §3.6 — the AI may suggest a link but must
+    | never invent one: if nothing in $employeeKpis is a genuine fit, it must
+    | say so rather than force a match. The returned kpi_id is also verified
+    | against $employeeKpis before being trusted, so a hallucinated id can
+    | never make it back to the caller as a suggestion.
+    */
+
+    public function suggestTaskKpiLink(
+        string $taskTitle,
+        ?string $taskDescription,
+        array $employeeKpis
+    ): ?array {
+        if (empty($employeeKpis)) {
+            return null;
+        }
+
+        $systemPrompt = 'You are an assistant that aligns daily work tasks to the KPI they most genuinely support. '
+            . 'Only suggest a link when the task clearly and specifically advances one of the listed KPIs — when '
+            . 'none of them fit, say so rather than forcing a weak match. Respond ONLY with valid JSON — no markdown, no explanation.';
+
+        $kpiLines = implode("\n", array_map(
+            fn ($k) => "- id=\"{$k['kpi_id']}\": \"{$k['kpi_title']}\"" . (!empty($k['category']) ? " (category: {$k['category']})" : ''),
+            $employeeKpis
+        ));
+
+        $userPrompt = "Task title: \"{$taskTitle}\"\n"
+            . ($taskDescription ? "Task description: \"{$taskDescription}\"\n" : '')
+            . "\nEmployee's KPIs eligible to link:\n{$kpiLines}\n\n"
+            . "Pick the single best-fitting KPI id from the list above, or null if none genuinely fit. "
+            . "Respond with JSON only: {\"kpi_id\": \"exact id from the list, or null\", \"confidence\": number (0-100), \"reason\": \"one short sentence\"}";
+
+        $response = $this->request()->post('https://api.openai.com/v1/chat/completions', [
+            'model' => $this->model,
+            'max_completion_tokens' => 150,
+            'temperature' => 0.2,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt],
+            ],
+        ]);
+
+        if (!$response->successful()) {
+            throw new \RuntimeException('OpenAI request failed: ' . $response->body());
+        }
+
+        $text = trim($response->json('choices.0.message.content', '{}'));
+        $text = preg_replace('/^```(?:json)?\s*/i', '', $text);
+        $text = preg_replace('/\s*```$/', '', $text);
+
+        $result = json_decode(trim($text), true);
+
+        $kpiId = $result['kpi_id'] ?? null;
+
+        if (!$kpiId) {
+            return null;
+        }
+
+        $validIds = array_column($employeeKpis, 'kpi_id');
+
+        // A suggested id that isn't one of the KPIs we actually offered is
+        // treated as no suggestion at all — never trust an unverified link.
+        if (!in_array($kpiId, $validIds, true)) {
+            return null;
+        }
+
+        return [
+            'kpi_id' => $kpiId,
+            'confidence' => max(0, min(100, (float) ($result['confidence'] ?? 0))),
+            'reason' => $result['reason'] ?? '',
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GENERATE TASK SUMMARY (daily / weekly / monthly, any scope)
+    |--------------------------------------------------------------------------
+    | Per docs/performix-design.md AI REQUIREMENTS — the caller is
+    | responsible for pre-filtering $facts to only what the viewer is
+    | authorized to see (via TaskAccessPolicy) before this is ever called;
+    | this method only ever narrates the numbers it's given. It never
+    | receives raw employee lists to query itself, so it cannot leak beyond
+    | what the caller already decided to include.
+    */
+
+    public function generateTaskSummary(
+        string $subjectName,
+        string $scope,
+        string $periodType,
+        string $periodLabel,
+        array $facts
+    ): array {
+        $systemPrompt = 'You are an execution-analytics assistant for an internal task management system. '
+            . 'You narrate ONLY the data you are given — never invent numbers, tasks, names, or progress that were not provided. '
+            . 'Every claim must be traceable to a figure in the input. When explaining an at-risk or critical status, '
+            . 'name the specific overdue/blocked counts or consistency gap that caused it — not generic language. '
+            . 'Respond ONLY with valid JSON — no markdown, no explanation.';
+
+        $score = $facts['score'] ?? null;
+        $status = $facts['status'] ?? 'insufficient_data';
+
+        $lines = [
+            'Task Score: ' . ($score !== null ? "{$score}/100" : 'not available (insufficient data)'),
+            'Status: ' . $status,
+            'Scored tasks: ' . ($facts['scored_task_count'] ?? 0),
+            'Completed: ' . ($facts['completed_count'] ?? 0),
+            'Overdue: ' . ($facts['overdue_count'] ?? 0),
+            'Blocked: ' . ($facts['blocked_count'] ?? 0),
+            'On-time completion: ' . (isset($facts['on_time_pct']) ? "{$facts['on_time_pct']}%" : 'no data'),
+            'Update consistency: ' . (isset($facts['update_consistency_pct']) ? "{$facts['update_consistency_pct']}%" : 'no data'),
+        ];
+
+        if (!empty($facts['members'])) {
+            $lines[] = "\nTeam members this period:";
+            foreach ($facts['members'] as $member) {
+                $lines[] = "- {$member['name']}: " . ($member['score'] !== null ? "{$member['score']}/100 ({$member['status']})" : 'insufficient data');
+            }
+        }
+
+        $factsText = implode("\n", $lines);
+        $scopeLabel = match ($scope) {
+            'team' => "{$subjectName}'s team",
+            'department' => "the {$subjectName} department",
+            'company' => "{$subjectName} company-wide",
+            default => $subjectName,
+        };
+
+        $userPrompt = "Summarize {$scopeLabel}'s task execution for this {$periodType} period ({$periodLabel}).\n\n"
+            . "DATA:\n{$factsText}\n\n"
+            . "Write:\n"
+            . "1. A narrative (2-4 sentences) describing performance using ONLY the numbers above. If status is at_risk or critical, "
+            . "explain specifically why using the overdue/blocked/consistency figures given. If status is insufficient_data, say so plainly and do not fabricate a performance story.\n"
+            . "2. Up to 3 short, concrete recommendations (max ~15 words each) grounded in the specific gaps shown above.\n\n"
+            . "Respond with JSON only: {\"narrative\": \"...\", \"recommendations\": [\"...\"]}";
+
+        $response = $this->request()->post('https://api.openai.com/v1/chat/completions', [
+            'model' => $this->model,
+            'max_completion_tokens' => 350,
+            'temperature' => 0.3,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt],
+            ],
+        ]);
+
+        if (!$response->successful()) {
+            throw new \RuntimeException('OpenAI request failed: ' . $response->body());
+        }
+
+        $text = trim($response->json('choices.0.message.content', '{}'));
+        $text = preg_replace('/^```(?:json)?\s*/i', '', $text);
+        $text = preg_replace('/\s*```$/', '', $text);
+
+        $result = json_decode(trim($text), true) ?? ['narrative' => '', 'recommendations' => []];
+
+        return [
+            'narrative' => $result['narrative'] ?? '',
+            'recommendations' => $result['recommendations'] ?? [],
+            'model_version' => $this->model,
+        ];
+    }
 }

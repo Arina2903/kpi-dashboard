@@ -6,6 +6,7 @@ use App\Http\Controllers\Telegram\TelegramMiniAppController;
 use App\Http\Controllers\Telegram\TelegramLinkController;
 use App\Http\Controllers\Telegram\TelegramCronController;
 use App\Http\Controllers\Telegram\TelegramProjectTaskController;
+use App\Http\Controllers\Telegram\TelegramPerformixController;
 
 Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])
     ->middleware('telegram.webhook.secret');
@@ -14,6 +15,10 @@ Route::middleware('telegram.cron.secret')->prefix('telegram/cron')->group(functi
     Route::post('/morning', [TelegramCronController::class, 'morning']);
     Route::post('/evening', [TelegramCronController::class, 'evening']);
     Route::post('/review/{period}', [TelegramCronController::class, 'review']);
+    Route::post('/tasks-morning', [TelegramCronController::class, 'tasksMorning']);
+    Route::post('/tasks-evening', [TelegramCronController::class, 'tasksEvening']);
+    Route::post('/tasks-weekly', [TelegramCronController::class, 'tasksWeekly']);
+    Route::post('/tasks-monthly', [TelegramCronController::class, 'tasksMonthly']);
 });
 
 Route::middleware('telegram.webapp.auth')->prefix('telegram')->group(function () {
@@ -32,9 +37,16 @@ Route::middleware('telegram.webapp.auth')->prefix('telegram')->group(function ()
     Route::get('/project-tasks', [TelegramProjectTaskController::class, 'listTasks']);
     Route::post('/project-tasks', [TelegramProjectTaskController::class, 'createTask']);
     Route::get('/project-tasks/kpi-options', [TelegramProjectTaskController::class, 'kpiOptions']);
+    Route::get('/project-tasks/{id}', [TelegramProjectTaskController::class, 'show']);
     Route::post('/project-tasks/{id}/link-kpis', [TelegramProjectTaskController::class, 'linkKpis']);
+    Route::post('/project-tasks/{id}/kpi-suggestion', [TelegramProjectTaskController::class, 'kpiSuggestion']);
     Route::post('/project-tasks/{id}/progress', [TelegramProjectTaskController::class, 'updateProgress']);
+    Route::post('/project-tasks/{id}/daily-update', [TelegramProjectTaskController::class, 'dailyUpdate']);
     Route::get('/kpis/{kpiId}/task-history', [TelegramProjectTaskController::class, 'kpiTaskHistory']);
 
     Route::get('/reviews', [TelegramMiniAppController::class, 'reviews']);
+
+    Route::get('/tasks/score', [TelegramPerformixController::class, 'myScore']);
+    Route::get('/summaries', [TelegramPerformixController::class, 'summaries']);
+    Route::post('/summaries/regenerate', [TelegramPerformixController::class, 'regenerate']);
 });

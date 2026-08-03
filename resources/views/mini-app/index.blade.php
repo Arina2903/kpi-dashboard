@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini App</title>
+    <title>Performix</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -15,38 +15,34 @@
         }
         .soft-card-sm { box-shadow: 0 6px 14px -6px rgba(107,63,42,.22), inset 0 1px 0 rgba(255,255,255,.6); }
         .tap-card { transition: border-color .15s, background .15s; }
-        .nav-btn { transition: all .15s; }
-        .nav-btn.active { background: #fff; color: #6B3F2A; }
-        .nav-btn:not(.active) { background: rgba(255,255,255,.14); color: rgba(255,255,255,.85); }
+        .nav-btn { transition: all .15s; color: #64748b; }
+        .nav-btn.active { background: #F5EAE0; color: #6B3F2A; }
+        .nav-btn:not(.active):hover { background: #F8FAFC; color: #334155; }
     </style>
 </head>
 <body class="bg-[#F5F5F3] min-h-screen">
 
 @include('partials.sidebar')
 
-<main id="mainContent" class="ml-[230px] min-h-screen flex justify-center py-4 px-4">
+<main id="mainContent" class="ml-[230px] min-h-screen">
+<div class="max-w-4xl mx-auto p-6 space-y-4">
 
 @if(!$telegramLinked)
 
 {{-- CONNECT GATE — Mini App reminders/adjustments only make sense once we    --}}
 {{-- can reach the employee on Telegram, so the app itself is withheld until --}}
 {{-- they link it (same connect/status endpoints as Account Settings).       --}}
-<div class="w-full max-w-md bg-[#F5EEDC] rounded-[26px] overflow-hidden shadow-2xl flex flex-col" style="min-height: calc(100vh - 32px);">
-    <div id="topbar" class="bg-[#6B3F2A] text-white px-4 py-3.5 shrink-0">
-        <h1 class="text-[15px] font-black">Mini App</h1>
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 flex flex-col items-center text-center gap-4">
+    <div class="w-14 h-14 rounded-full bg-[#229ED9]/10 flex items-center justify-center">
+        <svg viewBox="0 0 24 24" class="w-7 h-7" fill="#229ED9"><path d="M21.94 4.53a1.6 1.6 0 0 0-1.63-.27L2.98 10.98a1.53 1.53 0 0 0 .1 2.88l4.54 1.42 1.76 5.5c.14.44.5.72.94.72.03 0 .06 0 .1-.01.34-.03.63-.24.77-.55l2.15-3.9 4.5 3.3c.24.18.53.27.82.27.14 0 .29-.02.43-.07a1.5 1.5 0 0 0 1-1.1l3.03-13.7a1.6 1.6 0 0 0-.62-1.74Zm-3.35 2.68-8.03 7.28-.31 3.35-1.35-4.22 8.6-6.9c.2-.16.42.1.24.28l-6.9 6.24a.5.5 0 0 0-.15.3l-.2 2.13 8.6-9.7c.2-.23.5.03.33.24Z"/></svg>
     </div>
-    <div class="flex-1 p-6 flex flex-col items-center justify-center text-center gap-4">
-        <div class="w-14 h-14 rounded-full bg-[#229ED9]/10 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" class="w-7 h-7" fill="#229ED9"><path d="M21.94 4.53a1.6 1.6 0 0 0-1.63-.27L2.98 10.98a1.53 1.53 0 0 0 .1 2.88l4.54 1.42 1.76 5.5c.14.44.5.72.94.72.03 0 .06 0 .1-.01.34-.03.63-.24.77-.55l2.15-3.9 4.5 3.3c.24.18.53.27.82.27.14 0 .29-.02.43-.07a1.5 1.5 0 0 0 1-1.1l3.03-13.7a1.6 1.6 0 0 0-.62-1.74Zm-3.35 2.68-8.03 7.28-.31 3.35-1.35-4.22 8.6-6.9c.2-.16.42.1.24.28l-6.9 6.24a.5.5 0 0 0-.15.3l-.2 2.13 8.6-9.7c.2-.23.5.03.33.24Z"/></svg>
-        </div>
-        <div>
-            <p class="text-[14px] font-black text-slate-900">Connect Telegram to continue</p>
-            <p id="tg-gate-text" class="text-[12px] text-slate-500 mt-1.5 leading-relaxed">The Mini App needs your Telegram account linked so we can send you reminders and updates.</p>
-        </div>
-        <button id="tg-gate-btn" type="button" onclick="connectTelegramGate()" class="w-full text-[12px] font-black px-4 py-3 rounded-xl bg-[#6B9080] text-white hover:bg-[#5a7a6d] transition">
-            Connect Telegram
-        </button>
+    <div>
+        <p class="text-[14px] font-black text-slate-900">Connect Telegram to continue</p>
+        <p id="tg-gate-text" class="text-[12px] text-slate-500 mt-1.5 leading-relaxed max-w-sm">Performix needs your Telegram account linked so we can send you reminders and updates.</p>
     </div>
+    <button id="tg-gate-btn" type="button" onclick="connectTelegramGate()" class="text-[12px] font-black px-6 py-3 rounded-xl bg-[#6B9080] text-white hover:bg-[#5a7a6d] transition">
+        Connect Telegram
+    </button>
 </div>
 
 <script>
@@ -60,7 +56,7 @@
         const data = await res.json();
         if (data.linked) {
             if (tgGatePollTimer) { clearInterval(tgGatePollTimer); tgGatePollTimer = null; }
-            document.getElementById('tg-gate-text').textContent = 'Connected! Loading your Mini App…';
+            document.getElementById('tg-gate-text').textContent = 'Connected! Loading your Performix…';
             window.location.reload();
         }
     }
@@ -88,29 +84,27 @@
 
 @else
 
-<div class="w-full max-w-md bg-[#F5EEDC] rounded-[26px] overflow-hidden shadow-2xl flex flex-col" style="min-height: calc(100vh - 32px);">
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-1.5 flex items-center gap-1.5">
+    <button id="tab-kpis" onclick="switchTab('kpis')" class="nav-btn active flex-1 py-2.5 rounded-xl text-[11px] font-black relative">
+        My KPIs
+        <span id="kpi-alert-badge" class="hidden absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center px-1 shadow-lg shadow-red-500/30"></span>
+    </button>
+    <button id="tab-todo" onclick="switchTab('todo')" class="nav-btn flex-1 py-2.5 rounded-xl text-[11px] font-black">To-Do</button>
+    <button id="tab-score" onclick="switchTab('score')" class="nav-btn flex-1 py-2.5 rounded-xl text-[11px] font-black">Score</button>
+    @if($hasTeam)
+    <button id="tab-team" onclick="switchTab('team')" class="nav-btn flex-1 py-2.5 rounded-xl text-[11px] font-black">Team</button>
+    @endif
+</div>
 
-    <div id="topbar" class="bg-[#6B3F2A] text-white px-4 py-3.5 shrink-0">
-        <h1 class="text-[15px] font-black mb-2.5">Mini App</h1>
-        <div class="flex items-center gap-1.5">
-            <button id="tab-kpis" onclick="switchTab('kpis')" class="nav-btn active flex-1 py-2 rounded-xl text-[11px] font-black relative">
-                My KPIs
-                <span id="kpi-alert-badge" class="hidden absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center px-1 shadow-lg shadow-red-500/30"></span>
-            </button>
-            <button id="tab-todo" onclick="switchTab('todo')" class="nav-btn flex-1 py-2 rounded-xl text-[11px] font-black">To-Do</button>
-            <button id="tab-score" onclick="switchTab('score')" class="nav-btn flex-1 py-2 rounded-xl text-[11px] font-black">Score</button>
-        </div>
-    </div>
+<div id="toast" class="hidden px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-semibold"></div>
 
-    <div id="toast" class="hidden mx-4 mt-3 px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-semibold"></div>
-
-    <div id="app" class="flex-1 p-4 space-y-3">
-        <p class="text-center text-slate-400 text-[12px] mt-10">Loading…</p>
-    </div>
+<div id="app" class="space-y-3">
+    <p class="text-center text-slate-400 text-[12px] mt-10">Loading…</p>
 </div>
 
 @endif
 
+</div>
 </main>
 
 <script>
@@ -222,10 +216,14 @@ function updateKpiAlertBadge(count) {
 let currentTab = 'kpis';
 function switchTab(tab) {
     currentTab = tab;
-    ['kpis', 'todo', 'score'].forEach(t => document.getElementById('tab-' + t).classList.toggle('active', t === tab));
+    ['kpis', 'todo', 'score', 'team'].forEach(t => {
+        const el = document.getElementById('tab-' + t);
+        if (el) el.classList.toggle('active', t === tab);
+    });
     if (tab === 'kpis') renderMyKpis();
     if (tab === 'todo') renderTodo();
     if (tab === 'score') renderScore('monthly');
+    if (tab === 'team') renderTeam();
 }
 
 /* ---------------------------------------------------------------- */
@@ -425,23 +423,123 @@ async function renderTodo() {
     window.__myTasks = data.tasks || [];
 
     const header = `
-        <button onclick="renderNewTaskForm()" class="w-full py-3 rounded-2xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black shadow-[0_6px_16px_rgba(22,163,74,.35)]">
-            ➕ New Task
-        </button>
+        <div class="flex items-center gap-2">
+            <button onclick="renderNewTaskForm()" class="flex-1 py-3 rounded-2xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black shadow-[0_6px_16px_rgba(22,163,74,.35)]">➕ New Task</button>
+            <button onclick="renderCalendar()" class="px-4 py-3 rounded-2xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[12px] font-black" title="Calendar">📅</button>
+        </div>
+        <div id="taskScoreCard" class="mt-3"></div>
     `;
 
-    if (!window.__myTasks.length) {
-        app.innerHTML = header + `<div class="mt-3">${card(`<p class="text-[13px] text-slate-600 text-center py-6">No to-dos yet — tap "New Task" to start your list.</p>`)}</div>`;
+    const emptyState = !window.__myTasks.length
+        ? `<div class="mt-3">${card(`<p class="text-[13px] text-slate-600 text-center py-6">No to-dos yet — tap "New Task" to start your list.</p>`)}</div>`
+        : `<div class="mt-3">${window.__myTasks.map(t => taskCard(t)).join('<div class="h-2"></div>')}</div>`;
+
+    app.innerHTML = header + emptyState;
+    loadTaskScoreCard();
+}
+
+/* ---------------------------------------------------------------- */
+/* TASK SCORE — this week's precomputed-on-demand score, with an AI   */
+/* summary the user can generate/refresh. Sits above the task list    */
+/* rather than as its own tab, so it's visible right where it matters.*/
+/* ---------------------------------------------------------------- */
+
+function scoreStatusBand(status) {
+    if (status === 'on_track') return { label: 'On Track', color: 'bg-emerald-100 text-emerald-700' };
+    if (status === 'at_risk') return { label: 'At Risk', color: 'bg-amber-100 text-amber-700' };
+    if (status === 'critical') return { label: 'Critical', color: 'bg-red-100 text-red-700' };
+    return { label: 'Not enough data yet', color: 'bg-slate-100 text-slate-500' };
+}
+
+async function loadTaskScoreCard() {
+    const el = document.getElementById('taskScoreCard');
+    if (!el) return;
+
+    let score;
+    try {
+        score = await api('/tasks/score?period=weekly');
+    } catch (e) {
         return;
     }
 
-    const rows = window.__myTasks.map(t => taskCard(t)).join('<div class="h-2"></div>');
-    app.innerHTML = header + `<div class="mt-3">${rows}</div>`;
+    const band = scoreStatusBand(score.status);
+
+    el.innerHTML = card(`
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">This Week's Task Score</p>
+                <p class="text-[24px] font-black text-slate-900 leading-none mt-1">${score.score !== null ? Math.round(score.score) : '—'}<span class="text-[12px] font-bold text-slate-400">/100</span></p>
+                <span class="inline-block mt-1.5 px-2 py-0.5 rounded-full ${band.color} text-[9px] font-black">${band.label}</span>
+            </div>
+            <button onclick="toggleTaskSummary()" class="text-[10px] font-black text-[#6B3F2A] bg-[#F5EAE0] px-3 py-1.5 rounded-full shrink-0">✨ AI Summary</button>
+        </div>
+        <div id="taskSummaryBox" class="hidden mt-3 pt-3 border-t border-slate-200"></div>
+    `, 'bg-gradient-to-br from-[#FFFCF4] to-[#FBF0E0]');
+}
+
+let __summaryLoaded = false;
+async function toggleTaskSummary() {
+    const box = document.getElementById('taskSummaryBox');
+    box.classList.toggle('hidden');
+    if (box.classList.contains('hidden') || __summaryLoaded) return;
+
+    box.innerHTML = `<p class="text-[11px] text-slate-400">Loading…</p>`;
+
+    try {
+        const data = await api('/summaries?scope=employee&period=weekly');
+        if (data.summary) {
+            box.innerHTML = summaryBlock(data.summary);
+        } else {
+            box.innerHTML = `
+                <p class="text-[11px] text-slate-500">No summary generated yet for this week.</p>
+                <button onclick="generateTaskSummary()" class="mt-2 px-3 py-1.5 rounded-lg bg-[#6B3F2A] hover:bg-[#5a341f] text-white text-[10px] font-black">Generate now</button>
+            `;
+        }
+        __summaryLoaded = true;
+    } catch (e) {
+        box.innerHTML = `<p class="text-[11px] text-red-500">Could not load a summary right now.</p>`;
+    }
+}
+
+function summaryBlock(summary) {
+    const recs = (summary.facts?.recommendations || []).map(r => `<li class="text-[10px] text-slate-600 mt-1">• ${r}</li>`).join('');
+    return `
+        <p class="text-[11px] text-slate-700 leading-relaxed">${summary.narrative}</p>
+        ${recs ? `<ul class="mt-2">${recs}</ul>` : ''}
+        <button onclick="generateTaskSummary()" class="mt-2 text-[10px] font-bold text-[#6B3F2A]">↻ Regenerate</button>
+    `;
+}
+
+async function generateTaskSummary() {
+    const box = document.getElementById('taskSummaryBox');
+    box.innerHTML = `<p class="text-[11px] text-slate-400">Generating…</p>`;
+    try {
+        const data = await api('/summaries/regenerate', { method: 'POST', body: JSON.stringify({ scope: 'employee', period: 'weekly' }) });
+        box.innerHTML = summaryBlock(data.summary);
+    } catch (e) {
+        box.innerHTML = `<p class="text-[11px] text-red-500">${e.data?.message || "Couldn't generate a summary right now."}</p>`;
+    }
+}
+
+const STATUS_PILL = {
+    not_started: { label: 'Not Started', color: 'bg-slate-100 text-slate-500' },
+    in_progress: { label: 'In Progress', color: 'bg-amber-100 text-amber-700' },
+    done: { label: 'Done', color: 'bg-emerald-100 text-emerald-700' },
+    blocked: { label: 'Blocked', color: 'bg-red-100 text-red-700' },
+    cancelled: { label: 'Cancelled', color: 'bg-slate-100 text-slate-400' },
+};
+
+function dueDateBadge(dueDate) {
+    if (!dueDate) return '';
+    const isOverdue = dueDate < new Date().toISOString().slice(0, 10);
+    return `<span class="text-[8px] font-black px-1.5 py-0.5 rounded-full ${isOverdue ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500'}">${isOverdue ? '⚠ ' : ''}Due ${dueDate}</span>`;
 }
 
 function taskCard(t) {
     const pct = t.target > 0 ? Math.max(0, Math.min(100, (t.actual / t.target) * 100)) : 0;
     const badge = achvBadge(pct);
+    const statusPill = STATUS_PILL[t.status] || STATUS_PILL.not_started;
+    const priorityPill = PRIORITY_LABELS[t.priority] || PRIORITY_LABELS.medium;
     const kpiChips = (t.linked_kpis || []).length
         ? `<div class="flex flex-wrap gap-1.5 mt-2">${t.linked_kpis.map(k => `<span class="px-2 py-0.5 rounded-full bg-[#CCE3DE] text-[#1a3d34] text-[8px] font-black">${k.kpi_title}</span>`).join('')}</div>`
         : '';
@@ -449,9 +547,11 @@ function taskCard(t) {
     return card(`
         <div class="flex items-center justify-between gap-2">
             <p class="text-[13px] font-black text-slate-900 leading-snug min-w-0">${t.title}</p>
-            <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${t.status === 'done' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                ${t.status === 'done' ? 'Done' : 'In Progress'}
-            </span>
+            <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${statusPill.color}">${statusPill.label}</span>
+        </div>
+        <div class="flex flex-wrap gap-1.5 mt-2">
+            <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full ${priorityPill.color}">${priorityPill.label}</span>
+            ${dueDateBadge(t.due_date)}
         </div>
         <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-2 overflow-hidden">
             <div class="h-full rounded-full bg-gradient-to-r ${badge.bar}" style="width:${pct}%"></div>
@@ -463,18 +563,42 @@ function taskCard(t) {
         </div>
         ${kpiChips}
         <div class="flex items-center gap-2 mt-3">
-            <button onclick="renderTaskProgress('${t.id}')" class="flex-1 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[11px] font-black">Update</button>
-            <button onclick="renderEditTask('${t.id}')" class="flex-1 py-2 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[11px] font-black">✏️ Edit</button>
+            <button onclick="renderTaskDetail('${t.id}')" class="flex-1 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[11px] font-black">Details</button>
             <button onclick="confirmDeleteTask('${t.id}')" class="px-3 py-2 rounded-xl bg-white border-2 border-red-300 text-red-600 text-[11px] font-black">🗑️</button>
         </div>
     `);
 }
+
+const PRIORITY_LABELS = {
+    low: { label: 'Low', color: 'bg-slate-100 text-slate-600' },
+    medium: { label: 'Medium', color: 'bg-[#F5EAE0] text-[#6B3F2A]' },
+    high: { label: 'High', color: 'bg-amber-100 text-amber-700' },
+    critical: { label: 'Critical', color: 'bg-red-100 text-red-700' },
+};
 
 function taskFormFields(t) {
     return `
         <p class="text-[10px] font-bold text-slate-600 mb-1">Task title</p>
         <input type="text" id="taskTitleInput" value="${t?.title || ''}" placeholder="e.g. Follow up with client"
             class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+
+        <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Description <span class="text-slate-400 font-normal">(optional)</span></p>
+        <textarea id="taskDescriptionInput" rows="2" placeholder="Any extra context…"
+            class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500 resize-none">${t?.description || ''}</textarea>
+
+        <div class="grid grid-cols-2 gap-2 mt-3">
+            <div>
+                <p class="text-[10px] font-bold text-slate-600 mb-1">Priority</p>
+                <select id="taskPriorityInput" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+                    ${Object.entries(PRIORITY_LABELS).map(([key, p]) => `<option value="${key}" ${(t?.priority || 'medium') === key ? 'selected' : ''}>${p.label}</option>`).join('')}
+                </select>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-slate-600 mb-1">Due date <span class="text-slate-400 font-normal">(optional)</span></p>
+                <input type="date" id="taskDueDateInput" value="${t?.due_date || ''}"
+                    class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+            </div>
+        </div>
 
         <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Unit</p>
         <select id="taskUnitInput" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
@@ -487,6 +611,17 @@ function taskFormFields(t) {
         <input type="number" step="any" min="0" id="taskTargetInput" value="${t?.target ?? ''}" placeholder="e.g. 10"
             class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
     `;
+}
+
+function taskFormValues() {
+    return {
+        title: document.getElementById('taskTitleInput').value.trim(),
+        description: document.getElementById('taskDescriptionInput').value.trim() || null,
+        priority: document.getElementById('taskPriorityInput').value,
+        due_date: document.getElementById('taskDueDateInput').value || null,
+        unit: document.getElementById('taskUnitInput').value,
+        target: document.getElementById('taskTargetInput').value,
+    };
 }
 
 function renderNewTaskForm() {
@@ -504,18 +639,16 @@ function renderNewTaskForm() {
 
 async function saveNewTask() {
     const feedback = document.getElementById('taskFormFeedback');
-    const title = document.getElementById('taskTitleInput').value.trim();
-    const unit = document.getElementById('taskUnitInput').value;
-    const target = document.getElementById('taskTargetInput').value;
+    const v = taskFormValues();
 
-    if (!title || target === '' || isNaN(Number(target)) || Number(target) < 0) {
+    if (!v.title || v.target === '' || isNaN(Number(v.target)) || Number(v.target) < 0) {
         feedback.textContent = 'Enter a task title and a valid target.';
         feedback.classList.remove('hidden');
         return;
     }
 
     try {
-        await api('/tasks', { method: 'POST', body: JSON.stringify({ title, unit, target: Number(target) }) });
+        await api('/tasks', { method: 'POST', body: JSON.stringify({ ...v, target: Number(v.target) }) });
         showToast('Task saved!');
         renderTodo();
     } catch (e) {
@@ -525,14 +658,14 @@ async function saveNewTask() {
 }
 
 function renderEditTask(taskId) {
-    const t = (window.__myTasks || []).find(x => x.id === taskId);
+    const t = (window.__taskDetail && window.__taskDetail.id === taskId) ? window.__taskDetail : (window.__myTasks || []).find(x => x.id === taskId);
     if (!t) { renderTodo(); return; }
 
     document.getElementById('app').innerHTML = card(`
         <p class="text-[14px] font-black text-slate-900 mb-3">Edit Task</p>
         ${taskFormFields(t)}
         <div class="flex items-center gap-2 mt-4">
-            <button onclick="renderTodo()" class="flex-1 py-2.5 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[12px] font-black">Cancel</button>
+            <button onclick="renderTaskDetail('${taskId}')" class="flex-1 py-2.5 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[12px] font-black">Cancel</button>
             <button onclick="saveEditTask('${taskId}')" class="flex-1 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black">Save Changes</button>
         </div>
         <p id="taskFormFeedback" class="hidden text-[10px] font-bold text-red-600 mt-2 text-center"></p>
@@ -541,57 +674,172 @@ function renderEditTask(taskId) {
 
 async function saveEditTask(taskId) {
     const feedback = document.getElementById('taskFormFeedback');
-    const title = document.getElementById('taskTitleInput').value.trim();
-    const unit = document.getElementById('taskUnitInput').value;
-    const target = document.getElementById('taskTargetInput').value;
+    const v = taskFormValues();
 
-    if (!title || target === '' || isNaN(Number(target)) || Number(target) < 0) {
+    if (!v.title || v.target === '' || isNaN(Number(v.target)) || Number(v.target) < 0) {
         feedback.textContent = 'Enter a task title and a valid target.';
         feedback.classList.remove('hidden');
         return;
     }
 
     try {
-        await api(`/tasks/${taskId}`, { method: 'PATCH', body: JSON.stringify({ title, unit, target: Number(target) }) });
+        await api(`/tasks/${taskId}`, { method: 'PATCH', body: JSON.stringify({ ...v, target: Number(v.target) }) });
         showToast('Task updated!');
-        renderTodo();
+        renderTaskDetail(taskId);
     } catch (e) {
         feedback.textContent = e.data?.message || "Couldn't save — please try again.";
         feedback.classList.remove('hidden');
     }
 }
 
-function renderTaskProgress(taskId) {
-    const t = (window.__myTasks || []).find(x => x.id === taskId);
-    if (!t) { renderTodo(); return; }
+/* ---------------------------------------------------------------- */
+/* TASK DETAILS — quick numeric update, the evening-style daily       */
+/* update (status/progress/blocked-note/reschedule), KPI alignment    */
+/* with an optional AI suggestion, and the full update history.       */
+/* ---------------------------------------------------------------- */
 
+function updateHistoryRow(u) {
+    const when = (u.created_at || '').replace('T', ' ').slice(0, 16);
+    const parts = [];
+    if (u.status_at_update) parts.push(`marked <b>${(STATUS_PILL[u.status_at_update] || {}).label || u.status_at_update}</b>`);
+    if (u.progress_at_update !== null && u.progress_at_update !== undefined) parts.push(`${u.progress_at_update}% progress`);
+    if (Number(u.delta) !== 0) parts.push(`${u.delta >= 0 ? '+' : ''}${u.delta} added (now ${u.new_actual})`);
+    if (u.note) parts.push(`note: "${u.note}"`);
+    if (u.reschedule_reason) parts.push(`rescheduled: "${u.reschedule_reason}"`);
+
+    return `
+        <div class="py-2 border-b border-slate-100 last:border-0">
+            <p class="text-[11px] text-slate-600 leading-relaxed">${parts.join(' · ') || 'Logged an update'}</p>
+            <p class="text-[9px] text-slate-400 mt-0.5">${when}</p>
+        </div>
+    `;
+}
+
+async function renderTaskDetail(taskId) {
+    const app = document.getElementById('app');
+    app.innerHTML = `<p class="text-center text-slate-400 text-[12px] mt-10">Loading…</p>`;
+
+    let data;
+    try {
+        data = await api(`/tasks/${taskId}`);
+    } catch (e) {
+        app.innerHTML = card(`<p class="text-[13px] text-slate-600 text-center py-6">Could not load this task.</p>`) + `<button onclick="renderTodo()" class="w-full mt-3 py-2 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[12px] font-black">← Back</button>`;
+        return;
+    }
+
+    window.__taskDetail = data.task;
+    window.__taskUpdates = data.updates || [];
+
+    const t = data.task;
     const pct = t.target > 0 ? Math.max(0, Math.min(100, (t.actual / t.target) * 100)) : 0;
     const badge = achvBadge(pct);
+    const statusPill = STATUS_PILL[t.status] || STATUS_PILL.not_started;
+    const priorityPill = PRIORITY_LABELS[t.priority] || PRIORITY_LABELS.medium;
 
-    document.getElementById('app').innerHTML = card(`
-        <p class="text-[14px] font-black text-slate-900">${t.title}</p>
-        <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-3 overflow-hidden">
-            <div class="h-full rounded-full bg-gradient-to-r ${badge.bar}" style="width:${pct}%"></div>
-        </div>
-        <div class="flex items-center justify-between mt-1.5">
-            <p class="text-[10px] text-slate-500">Target: <span class="font-bold text-slate-700">${formatUnit(t.target, t.unit)}</span></p>
-            <p class="text-[10px] text-slate-500">Actual: <span class="font-bold text-slate-700">${formatUnit(t.actual, t.unit)}</span></p>
-            <p class="text-[10px] font-black text-slate-700">${pct.toFixed(0)}%</p>
-        </div>
-        <p class="text-[10px] font-bold text-slate-600 mt-4 mb-1">How much did today add?</p>
-        <div class="flex items-center gap-2">
-            <input type="number" step="any" placeholder="e.g. 5 or -1" id="taskDeltaInput"
-                class="flex-1 min-w-0 text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
-            <button onclick="submitTaskProgress('${t.id}')" class="px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black shrink-0 shadow-[0_4px_12px_rgba(22,163,74,.4)]">Update</button>
-        </div>
-        <p class="text-[9px] text-slate-400 mt-1">Use a minus sign to reduce. This updates the task only.</p>
-        <button onclick="renderTodo()" class="w-full mt-4 py-2 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[12px] font-black">← Back</button>
-        <p id="taskProgressFeedback" class="hidden text-[10px] font-bold mt-2 text-center"></p>
-    `);
+    const kpiChips = (t.linked_kpis || []).length
+        ? t.linked_kpis.map(k => `
+            <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-[#CCE3DE] mt-1.5">
+                <p class="text-[11px] font-black text-[#1a3d34] min-w-0">${k.kpi_title}${k.ai_suggested ? ' 🤖' : ''}</p>
+                <button onclick="removeKpiLink('${k.kpi_id}')" class="text-[10px] font-black text-[#1a3d34]/60 hover:text-[#1a3d34] shrink-0">✕</button>
+            </div>
+        `).join('')
+        : `<p class="text-[11px] text-slate-400 mt-1.5">Not linked to a KPI yet.</p>`;
+
+    app.innerHTML = `
+        <button onclick="renderTodo()" class="text-[11px] font-bold text-[#6B3F2A] mb-1">← Back to To-Do</button>
+
+        ${card(`
+            <div class="flex items-center justify-between gap-2">
+                <p class="text-[14px] font-black text-slate-900 leading-snug min-w-0">${t.title}</p>
+                <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${statusPill.color}">${statusPill.label}</span>
+            </div>
+            ${t.description ? `<p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">${t.description}</p>` : ''}
+            <div class="flex flex-wrap gap-1.5 mt-2">
+                <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full ${priorityPill.color}">${priorityPill.label} priority</span>
+                ${dueDateBadge(t.due_date)}
+            </div>
+            <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-3 overflow-hidden">
+                <div class="h-full rounded-full bg-gradient-to-r ${badge.bar}" style="width:${pct}%"></div>
+            </div>
+            <div class="flex items-center justify-between mt-1.5">
+                <p class="text-[10px] text-slate-500">Target: <span class="font-bold text-slate-700">${formatUnit(t.target, t.unit)}</span></p>
+                <p class="text-[10px] text-slate-500">Actual: <span class="font-bold text-slate-700">${formatUnit(t.actual, t.unit)}</span></p>
+                <p class="text-[10px] font-black text-slate-700">${pct.toFixed(0)}%</p>
+            </div>
+            <div class="flex items-center gap-2 mt-3">
+                <button onclick="renderEditTask('${t.id}')" class="flex-1 py-2 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[11px] font-black">✏️ Edit Details</button>
+            </div>
+        `)}
+
+        <div class="h-2"></div>
+        ${card(`
+            <p class="text-[12px] font-black text-slate-900 mb-2">Quick number update</p>
+            <div class="flex items-center gap-2">
+                <input type="number" step="any" placeholder="e.g. 5 or -1" id="taskDeltaInput"
+                    class="flex-1 min-w-0 text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+                <button onclick="submitTaskProgress('${t.id}')" class="px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black shrink-0">Add</button>
+            </div>
+            <p class="text-[9px] text-slate-400 mt-1">Use a minus sign to reduce. Adjusts the number only — not status.</p>
+            <p id="taskProgressFeedback" class="hidden text-[10px] font-bold mt-2 text-center"></p>
+        `)}
+
+        <div class="h-2"></div>
+        ${card(`
+            <p class="text-[12px] font-black text-slate-900 mb-2">Daily update</p>
+            <p class="text-[10px] font-bold text-slate-600 mb-1">Status</p>
+            <select id="dailyStatusInput" onchange="toggleBlockedNote()" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+                ${Object.entries(STATUS_PILL).map(([key, s]) => `<option value="${key}" ${t.status === key ? 'selected' : ''}>${s.label}</option>`).join('')}
+            </select>
+
+            <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Progress (%)</p>
+            <input type="number" min="0" max="100" id="dailyProgressInput" value="${t.progress_percentage ?? 0}"
+                class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+
+            <div id="blockedNoteWrap" class="${t.status === 'blocked' ? '' : 'hidden'} mt-3">
+                <p class="text-[10px] font-bold text-slate-600 mb-1">What's blocking it? <span class="text-red-500">*required</span></p>
+                <textarea id="dailyNoteInput" rows="2" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500 resize-none"></textarea>
+            </div>
+
+            <details class="mt-3">
+                <summary class="text-[11px] font-bold text-[#6B3F2A] cursor-pointer">Reschedule (optional)</summary>
+                <div class="mt-2">
+                    <input type="date" id="rescheduleToInput" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+                    <textarea id="rescheduleReasonInput" rows="2" placeholder="Why the new date?" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500 resize-none mt-2"></textarea>
+                </div>
+            </details>
+
+            <button onclick="submitDailyUpdate('${t.id}')" class="w-full mt-3 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black">Save Daily Update</button>
+            <p id="dailyUpdateFeedback" class="hidden text-[10px] font-bold mt-2 text-center"></p>
+        `)}
+
+        <div class="h-2"></div>
+        ${card(`
+            <div class="flex items-center justify-between">
+                <p class="text-[12px] font-black text-slate-900">KPI alignment</p>
+                <button onclick="requestKpiSuggestion('${t.id}')" class="text-[10px] font-black text-[#6B3F2A] bg-[#F5EAE0] px-2.5 py-1 rounded-full">🤖 Suggest with AI</button>
+            </div>
+            ${kpiChips}
+            <p id="kpiSuggestionBox" class="hidden mt-2"></p>
+        `)}
+
+        <div class="h-2"></div>
+        ${card(`
+            <p class="text-[12px] font-black text-slate-900 mb-1">History</p>
+            <div>${window.__taskUpdates.length ? window.__taskUpdates.map(updateHistoryRow).join('') : '<p class="text-[11px] text-slate-400 py-2">No updates logged yet.</p>'}</div>
+        `)}
+
+        <div class="h-2"></div>
+        <button onclick="confirmDeleteTask('${t.id}')" class="w-full py-2.5 rounded-xl bg-white border-2 border-red-300 text-red-600 text-[12px] font-black">🗑️ Delete Task</button>
+    `;
+}
+
+function toggleBlockedNote() {
+    const status = document.getElementById('dailyStatusInput').value;
+    document.getElementById('blockedNoteWrap').classList.toggle('hidden', status !== 'blocked');
 }
 
 async function submitTaskProgress(taskId) {
-    const t = (window.__myTasks || []).find(x => x.id === taskId);
+    const t = window.__taskDetail;
     const input = document.getElementById('taskDeltaInput');
     const feedback = document.getElementById('taskProgressFeedback');
     const raw = input.value.trim();
@@ -614,7 +862,7 @@ async function submitTaskProgress(taskId) {
     try {
         await api(`/tasks/${taskId}/progress`, { method: 'POST', body: JSON.stringify({ delta }) });
         showToast('Task updated!');
-        renderTodo();
+        renderTaskDetail(taskId);
     } catch (e) {
         feedback.textContent = e.data?.message || "Couldn't update — please try again.";
         feedback.className = 'text-[10px] font-bold mt-2 text-red-600';
@@ -622,8 +870,91 @@ async function submitTaskProgress(taskId) {
     }
 }
 
+async function submitDailyUpdate(taskId) {
+    const feedback = document.getElementById('dailyUpdateFeedback');
+    const status = document.getElementById('dailyStatusInput').value;
+    const progress = document.getElementById('dailyProgressInput').value;
+    const note = document.getElementById('dailyNoteInput')?.value.trim() || null;
+    const rescheduleTo = document.getElementById('rescheduleToInput').value || null;
+    const rescheduleReason = document.getElementById('rescheduleReasonInput').value.trim() || null;
+
+    if (status === 'blocked' && !note) {
+        feedback.textContent = 'Tell us what\'s blocking this task.';
+        feedback.classList.remove('hidden');
+        return;
+    }
+
+    feedback.classList.add('hidden');
+
+    try {
+        await api(`/tasks/${taskId}/daily-update`, {
+            method: 'POST',
+            body: JSON.stringify({ status, progress: progress === '' ? null : Number(progress), note, reschedule_to: rescheduleTo, reschedule_reason: rescheduleReason }),
+        });
+        showToast('Daily update saved!');
+        renderTaskDetail(taskId);
+    } catch (e) {
+        feedback.textContent = e.data?.message || "Couldn't save — please try again.";
+        feedback.classList.remove('hidden');
+    }
+}
+
+async function requestKpiSuggestion(taskId) {
+    const box = document.getElementById('kpiSuggestionBox');
+    box.classList.remove('hidden');
+    box.innerHTML = `<span class="text-[10px] text-slate-400">Thinking…</span>`;
+
+    try {
+        const data = await api(`/tasks/${taskId}/kpi-suggestion`, { method: 'POST' });
+        if (!data.suggestion) {
+            box.innerHTML = `<span class="text-[10px] text-slate-500">No confident match found among your KPIs — you can leave this unlinked.</span>`;
+            return;
+        }
+        const s = data.suggestion;
+        box.innerHTML = `
+            <div class="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200">
+                <p class="text-[11px] font-black text-amber-800">🤖 ${s.confidence}% confident</p>
+                <p class="text-[11px] text-amber-700 mt-0.5">${s.reason}</p>
+                <button onclick='applyKpiSuggestion(${JSON.stringify(taskId)}, ${JSON.stringify(s)})' class="mt-2 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-black">Link this KPI</button>
+            </div>
+        `;
+    } catch (e) {
+        box.innerHTML = `<span class="text-[10px] text-red-500">${e.data?.message || "Couldn't get a suggestion."}</span>`;
+    }
+}
+
+async function applyKpiSuggestion(taskId, suggestion) {
+    const existingIds = (window.__taskDetail.linked_kpis || []).map(k => k.kpi_id);
+    try {
+        await api(`/tasks/${taskId}/link-kpis`, {
+            method: 'POST',
+            body: JSON.stringify({
+                kpi_ids: [...existingIds, suggestion.kpi_id],
+                ai_suggested: true,
+                ai_confidence: suggestion.confidence,
+                ai_reason: suggestion.reason,
+            }),
+        });
+        showToast('KPI linked!');
+        renderTaskDetail(taskId);
+    } catch (e) {
+        showToast(e.data?.message || "Couldn't link — please try again.");
+    }
+}
+
+async function removeKpiLink(kpiId) {
+    const t = window.__taskDetail;
+    const remaining = (t.linked_kpis || []).map(k => k.kpi_id).filter(id => id !== kpiId);
+    try {
+        await api(`/tasks/${t.id}/link-kpis`, { method: 'POST', body: JSON.stringify({ kpi_ids: remaining }) });
+        renderTaskDetail(t.id);
+    } catch (e) {
+        showToast(e.data?.message || "Couldn't update KPI links.");
+    }
+}
+
 function confirmDeleteTask(taskId) {
-    const t = (window.__myTasks || []).find(x => x.id === taskId);
+    const t = (window.__taskDetail && window.__taskDetail.id === taskId) ? window.__taskDetail : (window.__myTasks || []).find(x => x.id === taskId);
     if (!t) return;
     if (!confirm(`Delete "${t.title}"? This can't be undone.`)) return;
 
@@ -719,6 +1050,127 @@ function renderReviewDetail(index) {
     const r = (window.__reviewHistory || [])[index];
     if (!r) { renderScore('monthly'); return; }
     document.getElementById('app').innerHTML = reviewCard(r);
+}
+
+/* ---------------------------------------------------------------- */
+/* CALENDAR — month view of To-Do due dates, built from the same       */
+/* task list already loaded on the To-Do tab (no extra API call).     */
+/* ---------------------------------------------------------------- */
+
+let __calendarCursor = new Date();
+__calendarCursor.setDate(1);
+
+function renderCalendar() {
+    const app = document.getElementById('app');
+    const tasks = window.__myTasks || [];
+
+    const year = __calendarCursor.getFullYear();
+    const month = __calendarCursor.getMonth();
+    const monthLabel = __calendarCursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    const firstDow = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const tasksByDate = {};
+    tasks.forEach(t => {
+        if (!t.due_date) return;
+        (tasksByDate[t.due_date] = tasksByDate[t.due_date] || []).push(t);
+    });
+
+    let cells = '';
+    for (let i = 0; i < firstDow; i++) cells += `<div></div>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dayTasks = tasksByDate[dateStr] || [];
+        const isToday = dateStr === new Date().toISOString().slice(0, 10);
+        cells += `
+            <button onclick="renderCalendarDay('${dateStr}')" class="aspect-square rounded-lg flex flex-col items-center justify-center relative ${isToday ? 'bg-[#F5EAE0] font-black' : 'hover:bg-slate-50'}">
+                <span class="text-[11px] ${isToday ? 'text-[#6B3F2A]' : 'text-slate-600'}">${d}</span>
+                ${dayTasks.length ? `<span class="w-1.5 h-1.5 rounded-full bg-[#6B9080] absolute bottom-1"></span>` : ''}
+            </button>
+        `;
+    }
+
+    const dow = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+    app.innerHTML = `
+        <button onclick="renderTodo()" class="text-[11px] font-bold text-[#6B3F2A] mb-1">← Back to To-Do</button>
+        ${card(`
+            <div class="flex items-center justify-between mb-3">
+                <button onclick="shiftCalendar(-1)" class="px-2 py-1 text-[13px] font-black text-slate-500">‹</button>
+                <p class="text-[13px] font-black text-slate-900">${monthLabel}</p>
+                <button onclick="shiftCalendar(1)" class="px-2 py-1 text-[13px] font-black text-slate-500">›</button>
+            </div>
+            <div class="grid grid-cols-7 gap-1 text-center mb-1">
+                ${dow.map(d => `<p class="text-[9px] font-black text-slate-400">${d}</p>`).join('')}
+            </div>
+            <div class="grid grid-cols-7 gap-1">${cells}</div>
+        `)}
+        <div id="calendarDayTasks" class="mt-3"></div>
+    `;
+}
+
+function shiftCalendar(delta) {
+    __calendarCursor.setMonth(__calendarCursor.getMonth() + delta);
+    renderCalendar();
+}
+
+function renderCalendarDay(dateStr) {
+    const dayTasks = (window.__myTasks || []).filter(t => t.due_date === dateStr);
+    const box = document.getElementById('calendarDayTasks');
+    if (!dayTasks.length) {
+        box.innerHTML = card(`<p class="text-[11px] text-slate-400 text-center py-3">No tasks due ${dateStr}.</p>`);
+        return;
+    }
+    box.innerHTML = `<p class="text-[10px] uppercase tracking-wide text-slate-400 font-black mb-1.5 px-1">Due ${dateStr}</p>` + dayTasks.map(t => taskCard(t)).join('<div class="h-2"></div>');
+}
+
+/* ---------------------------------------------------------------- */
+/* MY TEAM — Manager/VP/SLT only. Reads already-computed weekly       */
+/* task_score_snapshots for everyone TaskAccessPolicy allows this      */
+/* viewer to see (docs/performix-design.md §6-R5 — no live per-member  */
+/* recompute on page load), worst-first so who needs attention is      */
+/* obvious immediately.                                                */
+/* ---------------------------------------------------------------- */
+
+async function renderTeam() {
+    const app = document.getElementById('app');
+    app.innerHTML = `<p class="text-center text-slate-400 text-[12px] mt-10">Loading your team…</p>`;
+
+    let data;
+    try {
+        data = await api('/team/attention');
+    } catch (e) {
+        app.innerHTML = card(`<p class="text-[13px] text-slate-600 text-center py-6">Could not load your team.</p>`);
+        return;
+    }
+
+    const members = data.members || [];
+
+    if (!members.length) {
+        app.innerHTML = card(`<p class="text-[13px] text-slate-600 text-center py-6">No team members found.</p>`);
+        return;
+    }
+
+    const rows = members.map(m => {
+        const band = scoreStatusBand(m.status);
+        return card(`
+            <div class="flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <p class="text-[13px] font-black text-slate-900 truncate">${m.name}</p>
+                    ${m.department_code ? `<p class="text-[10px] text-slate-400">${m.department_code}</p>` : ''}
+                </div>
+                <div class="text-right shrink-0">
+                    <p class="text-[16px] font-black text-slate-900 leading-none">${m.score !== null ? Math.round(m.score) : '—'}</p>
+                    <span class="inline-block mt-1 px-2 py-0.5 rounded-full ${band.color} text-[8px] font-black">${band.label}</span>
+                </div>
+            </div>
+        `);
+    }).join('<div class="h-2"></div>');
+
+    app.innerHTML = `
+        <p class="text-[10px] uppercase tracking-wide text-slate-400 font-black mb-2 px-1">This week · sorted by who needs attention</p>
+        ${rows}
+    `;
 }
 
 if (document.getElementById('tab-kpis')) {

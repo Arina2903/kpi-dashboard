@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Telegram;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Telegram\Concerns\ResolvesTelegramEmployee;
+use App\Services\AiService;
 use App\Services\KpiQuarterUpdateService;
 use App\Services\SupabaseService;
+use App\Services\TaskAccessPolicy;
 use Illuminate\Http\Request;
 
 class TelegramProjectTaskController extends Controller
@@ -137,10 +139,22 @@ class TelegramProjectTaskController extends Controller
                 'project_id' => $task['project_id'],
                 'project_name' => $projectMap->get($task['project_id'])['name'] ?? 'Untitled Project',
                 'title' => $task['title'],
+                'description' => $task['description'] ?? null,
                 'unit' => $task['unit'],
                 'target' => (float) $task['target'],
                 'actual' => (float) $task['actual'],
+                'progress_percentage' => (float) ($task['progress_percentage'] ?? 0),
                 'status' => $task['status'],
+                'priority' => $task['priority'] ?? 'medium',
+                'task_type' => $task['task_type'] ?? null,
+                'estimated_effort_hours' => isset($task['estimated_effort_hours']) ? (float) $task['estimated_effort_hours'] : null,
+                'start_date' => $task['start_date'] ?? null,
+                'due_date' => $task['due_date'] ?? null,
+                'reminder_at' => $task['reminder_at'] ?? null,
+                'visibility' => $task['visibility'] ?? 'private',
+                'recurrence_rule' => $task['recurrence_rule'] ?? 'none',
+                'is_unplanned' => (bool) ($task['is_unplanned'] ?? false),
+                'assignee_employee_id' => $task['assignee_employee_id'] ?? $task['employee_id'],
                 'linked_kpis' => $linkedKpis,
             ];
         }, $tasks);
@@ -153,19 +167,30 @@ class TelegramProjectTaskController extends Controller
     | POST /api/telegram/project-tasks
     |--------------------------------------------------------------------------
     */
-    public function createTask(Request $request, SupabaseService $supabase)
+    public function createTask(Request $request, SupabaseService $supabase, TaskAccessPolicy $policy)
     {
         $validated = $request->validate([
             'employee_id' => 'required|string',
             'company_code' => 'required|string',
             'project_id' => 'required|string',
             'title' => 'required|string|max:200',
+            'description' => 'nullable|string|max:2000',
             'unit' => 'required|in:number,currency,percentage',
             'target' => 'required|numeric|min:0',
             // Every task must belong to at least one KPI — linking is the
             // last step of the create flow, not an optional afterthought.
             'kpi_ids' => 'required|array|min:1',
             'kpi_ids.*' => 'string',
+            'assignee_employee_id' => 'nullable|string',
+            'priority' => 'nullable|in:low,medium,high,critical',
+            'task_type' => 'nullable|string|max:50',
+            'estimated_effort_hours' => 'nullable|numeric|min:0',
+            'start_date' => 'nullable|date',
+            'due_date' => 'nullable|date',
+            'reminder_at' => 'nullable|date',
+            'visibility' => 'nullable|in:private,team,department',
+            'recurrence_rule' => 'nullable|in:none,daily,weekdays,weekly,monthly',
+            'is_unplanned' => 'nullable|boolean',
         ]);
 
         $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
@@ -178,6 +203,19 @@ class TelegramProjectTaskController extends Controller
 
         if (empty($project)) {
             return response()->json(['success' => false, 'message' => 'Project not found.'], 404);
+        }
+
+        $assigneeId = $validated['assignee_employee_id'] ?? $validated['employee_id'];
+
+        if ($assigneeId !== $validated['employee_id']) {
+            $actorEmployee = $supabase->first('employees', [
+                'id' => 'eq.' . $validated['employee_id'],
+                'select' => '*',
+            ]);
+
+            if (!$actorEmployee || !$policy->canAssign($actorEmployee, $assigneeId)) {
+                return response()->json(['success' => false, 'message' => "You're not allowed to assign tasks to this person."], 403);
+            }
         }
 
         $kpiIds = array_unique($validated['kpi_ids']);
@@ -201,10 +239,21 @@ class TelegramProjectTaskController extends Controller
         $inserted = $supabase->insert('telegram_project_tasks', [
             'project_id' => $validated['project_id'],
             'employee_id' => $validated['employee_id'],
+            'assignee_employee_id' => $assigneeId,
             'company_code' => $validated['company_code'],
             'title' => trim($validated['title']),
+            'description' => $validated['description'] ?? null,
             'unit' => $validated['unit'],
             'target' => (float) $validated['target'],
+            'priority' => $validated['priority'] ?? 'medium',
+            'task_type' => $validated['task_type'] ?? null,
+            'estimated_effort_hours' => $validated['estimated_effort_hours'] ?? null,
+            'start_date' => $validated['start_date'] ?? null,
+            'due_date' => $validated['due_date'] ?? null,
+            'reminder_at' => $validated['reminder_at'] ?? null,
+            'visibility' => $validated['visibility'] ?? 'private',
+            'recurrence_rule' => $validated['recurrence_rule'] ?? 'none',
+            'is_unplanned' => $validated['is_unplanned'] ?? false,
         ]);
 
         $task = $inserted[0] ?? null;
@@ -279,6 +328,9 @@ class TelegramProjectTaskController extends Controller
             'company_code' => 'required|string',
             'kpi_ids' => 'required|array|min:1',
             'kpi_ids.*' => 'string',
+            'ai_suggested' => 'nullable|boolean',
+            'ai_confidence' => 'nullable|numeric|min:0|max:100',
+            'ai_reason' => 'nullable|string|max:500',
         ]);
 
         $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
@@ -319,10 +371,141 @@ class TelegramProjectTaskController extends Controller
             $supabase->insert('telegram_project_task_kpi_links', [
                 'task_id' => $id,
                 'kpi_id' => $kpiId,
+                'ai_suggested' => $validated['ai_suggested'] ?? false,
+                'ai_confidence' => $validated['ai_confidence'] ?? null,
+                'ai_reason' => $validated['ai_reason'] ?? null,
+                'confirmed_by_user' => true,
             ]);
         }
 
         return response()->json(['success' => true, 'linked_count' => count($kpiIds)]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | POST /api/telegram/project-tasks/{id}/kpi-suggestion
+    |--------------------------------------------------------------------------
+    | AI-suggests the best-fitting KPI (docs/performix-design.md §3.6) but
+    | never writes the link itself — the user must confirm via linkKpis(),
+    | same contract as the web Mini App's kpiSuggestion().
+    */
+    public function kpiSuggestion(Request $request, SupabaseService $supabase, AiService $ai, string $id)
+    {
+        $validated = $request->validate([
+            'employee_id' => 'required|string',
+            'company_code' => 'required|string',
+        ]);
+
+        $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
+
+        $task = $supabase->first('telegram_project_tasks', [
+            'id' => 'eq.' . $id,
+            'employee_id' => 'eq.' . $validated['employee_id'],
+            'select' => 'id,title,description,unit',
+        ]);
+
+        if (empty($task)) {
+            return response()->json(['success' => false, 'message' => 'Task not found.'], 404);
+        }
+
+        $fy = 'FY' . now('Asia/Kuala_Lumpur')->year;
+        $kpis = $supabase->get('kpis', [
+            'employee_id' => 'eq.' . $validated['employee_id'],
+            'company_code' => 'eq.' . $validated['company_code'],
+            'financial_year' => 'eq.' . $fy,
+            'unit' => 'eq.' . $task['unit'],
+            'select' => 'id,kpi_title,category',
+        ]) ?? [];
+
+        $employeeKpis = array_map(fn ($k) => ['kpi_id' => $k['id'], 'kpi_title' => $k['kpi_title'], 'category' => $k['category'] ?? null], $kpis);
+
+        $suggestion = $ai->suggestTaskKpiLink($task['title'], $task['description'] ?? null, $employeeKpis);
+
+        return response()->json(['suggestion' => $suggestion]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET /api/telegram/project-tasks/{id}
+    |--------------------------------------------------------------------------
+    | Task Details screen: the task itself, its linked KPIs (with any AI
+    | suggestion metadata), and its full update history — same shape as the
+    | web Mini App's show().
+    */
+    public function show(Request $request, SupabaseService $supabase, string $id)
+    {
+        $validated = $request->validate([
+            'employee_id' => 'required|string',
+            'company_code' => 'required|string',
+        ]);
+
+        $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
+
+        $task = $supabase->first('telegram_project_tasks', [
+            'id' => 'eq.' . $id,
+            'employee_id' => 'eq.' . $validated['employee_id'],
+            'select' => '*',
+        ]);
+
+        if (empty($task)) {
+            return response()->json(['success' => false, 'message' => 'Task not found.'], 404);
+        }
+
+        $links = $supabase->get('telegram_project_task_kpi_links', [
+            'task_id' => 'eq.' . $id,
+            'select' => '*',
+        ]) ?? [];
+
+        $kpiIds = array_column($links, 'kpi_id');
+        $kpis = empty($kpiIds) ? [] : ($supabase->get('kpis', [
+            'id' => 'in.(' . implode(',', $kpiIds) . ')',
+            'select' => 'id,kpi_title,category',
+        ]) ?? []);
+        $kpiMap = collect($kpis)->keyBy('id');
+
+        $linkedKpis = collect($links)->map(function ($link) use ($kpiMap) {
+            $kpi = $kpiMap->get($link['kpi_id']);
+            return $kpi ? [
+                'kpi_id' => $kpi['id'],
+                'kpi_title' => $kpi['kpi_title'],
+                'category' => $kpi['category'] ?? null,
+                'ai_suggested' => (bool) ($link['ai_suggested'] ?? false),
+                'ai_confidence' => $link['ai_confidence'] ?? null,
+                'ai_reason' => $link['ai_reason'] ?? null,
+            ] : null;
+        })->filter()->values();
+
+        $updates = $supabase->get('telegram_project_task_updates', [
+            'task_id' => 'eq.' . $id,
+            'select' => '*',
+            'order' => 'created_at.desc',
+        ]) ?? [];
+
+        return response()->json([
+            'task' => [
+                'id' => $task['id'],
+                'title' => $task['title'],
+                'description' => $task['description'] ?? null,
+                'unit' => $task['unit'],
+                'target' => (float) $task['target'],
+                'actual' => (float) $task['actual'],
+                'progress_percentage' => (float) ($task['progress_percentage'] ?? 0),
+                'status' => $task['status'],
+                'priority' => $task['priority'] ?? 'medium',
+                'due_date' => $task['due_date'] ?? null,
+                'start_date' => $task['start_date'] ?? null,
+                'linked_kpis' => $linkedKpis,
+            ],
+            'updates' => array_map(fn ($u) => [
+                'delta' => (float) $u['delta'],
+                'new_actual' => (float) $u['new_actual'],
+                'status_at_update' => $u['status_at_update'] ?? null,
+                'progress_at_update' => isset($u['progress_at_update']) ? (float) $u['progress_at_update'] : null,
+                'note' => $u['note'] ?? null,
+                'reschedule_reason' => $u['reschedule_reason'] ?? null,
+                'created_at' => $u['created_at'],
+            ], $updates),
+        ]);
     }
 
     /*
@@ -386,6 +569,67 @@ class TelegramProjectTaskController extends Controller
             'success' => true,
             'task_actual' => $newActual,
         ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | POST /api/telegram/project-tasks/{id}/daily-update
+    |--------------------------------------------------------------------------
+    | The evening check-in flow (docs/performix-design.md §3.3): status +
+    | progress percentage, a required note when blocked, and an optional
+    | reschedule with reason. Deliberately separate from updateProgress() —
+    | this never touches actual/target, only the task's lifecycle state and
+    | the audit trail in telegram_project_task_updates.
+    */
+    public function dailyUpdate(Request $request, SupabaseService $supabase, string $id)
+    {
+        $validated = $request->validate([
+            'employee_id' => 'required|string',
+            'company_code' => 'required|string',
+            'status' => 'required|in:not_started,in_progress,done,blocked,cancelled',
+            'progress' => 'nullable|numeric|min:0|max:100',
+            'note' => 'required_if:status,blocked|nullable|string|max:1000',
+            'reschedule_to' => 'nullable|date',
+            'reschedule_reason' => 'required_with:reschedule_to|nullable|string|max:500',
+        ]);
+
+        $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
+
+        $task = $supabase->first('telegram_project_tasks', [
+            'id' => 'eq.' . $id,
+            'or' => '(employee_id.eq.' . $validated['employee_id'] . ',assignee_employee_id.eq.' . $validated['employee_id'] . ')',
+            'select' => '*',
+        ]);
+
+        if (empty($task)) {
+            return response()->json(['success' => false, 'message' => 'Task not found.'], 404);
+        }
+
+        $patch = [
+            'status' => $validated['status'],
+            'progress_percentage' => $validated['progress'] ?? $task['progress_percentage'] ?? 0,
+            'updated_at' => $this->nowMy(),
+        ];
+
+        if (!empty($validated['reschedule_to'])) {
+            $patch['due_date'] = $validated['reschedule_to'];
+        }
+
+        $supabase->safePatch('telegram_project_tasks', ['id' => 'eq.' . $id], $patch);
+
+        $supabase->safeInsert('telegram_project_task_updates', [
+            'task_id' => $id,
+            'delta' => 0,
+            'new_actual' => (float) ($task['actual'] ?? 0),
+            'updated_by_employee_id' => $validated['employee_id'],
+            'status_at_update' => $validated['status'],
+            'progress_at_update' => $validated['progress'] ?? null,
+            'note' => $validated['note'] ?? null,
+            'reschedule_reason' => $validated['reschedule_reason'] ?? null,
+            'channel' => 'telegram',
+        ]);
+
+        return response()->json(['success' => true]);
     }
 
     /*
