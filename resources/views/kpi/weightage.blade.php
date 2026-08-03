@@ -20,9 +20,9 @@
 
     <!-- HEADER -->
     <div class="rounded-3xl theme-header-banner theme-page-banner bg-gradient-to-r from-[#1A0A0A] to-[#7A0019] text-white p-6 shadow-xl">
-        <a href="/kpi" class="text-sm text-blue-100 hover:text-white">← Back to KPI List</a>
-        <h1 class="text-3xl font-bold mt-3">Manage Weightage</h1>
-        <p class="text-white/60 text-sm mt-1">{{ $fy ?? '' }} · {{ session('short_name') }}</p>
+        <div class="min-w-0">
+            <a href="{{ route('dashboard') }}" class="text-sm text-blue-100 hover:text-white">← Dashboard</a>
+        </div>
     </div>
 
     <!-- APPROVAL FLOW GUIDE -->

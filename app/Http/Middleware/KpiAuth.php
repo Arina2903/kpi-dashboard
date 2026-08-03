@@ -55,23 +55,27 @@ class KpiAuth
 
         /*
         |--------------------------------------------------------------------------
-        | APPEARANCE THEME (Account Settings > Appearance)
+        | APPEARANCE THEME + DISPLAY TITLE (Account Settings)
         |--------------------------------------------------------------------------
         | Fetched once per session and cached as flat session keys so every page
         | (via partials/sidebar.blade.php) can read it without its own query.
-        | ProfileController::updateTheme() overwrites these same keys immediately
-        | on save, so a change takes effect without needing to log out/in.
+        | ProfileController::updateTheme()/updateSalutation() overwrite these same
+        | keys immediately on save, so a change takes effect without needing to
+        | log out/in — but salutation set/cleared any OTHER way (direct DB edit,
+        | admin action) only reaches sessions created before that change once
+        | they refresh here, since login is the only other place it's loaded.
         */
 
         if (!session()->has('theme_loaded')) {
             try {
                 $employee = app(SupabaseService::class)->first('employees', [
                     'id'     => 'eq.' . session('employee_uuid'),
-                    'select' => 'theme_bg,theme_card,theme_accent,theme_accent2,theme_border,theme_text,theme_sidebar_bg,theme_sidebar_accent,theme_sidebar_text,theme_font_family,theme_font_size',
+                    'select' => 'salutation,theme_bg,theme_card,theme_accent,theme_accent2,theme_border,theme_text,theme_sidebar_bg,theme_sidebar_accent,theme_sidebar_text,theme_font_family,theme_font_size',
                 ]);
 
                 session([
                     'theme_loaded'          => true,
+                    'salutation'            => $employee['salutation']            ?? null,
                     'theme_bg'              => $employee['theme_bg']              ?? null,
                     'theme_card'            => $employee['theme_card']            ?? null,
                     'theme_accent'          => $employee['theme_accent']          ?? null,

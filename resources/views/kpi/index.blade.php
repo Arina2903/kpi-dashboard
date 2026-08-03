@@ -247,53 +247,6 @@
         </div>
     </div>
 
-    {{-- ── VP: COMPANY DEPARTMENTS OVERVIEW (read-only, no individual user detail) ── --}}
-    @if(strtoupper($user['role'] ?? '') === 'VP' && !empty($vpDeptSummaries ?? []))
-    <div class="bg-white rounded-[20px] border border-[#E5E7EB] border-t-[3px] border-t-[#D4AF37] shadow-sm p-5">
-        <div class="flex items-center gap-3 mb-4">
-            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-[#1A0A0A] to-[#7A0019] flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-            </div>
-            <div>
-                <h2 class="text-sm font-black text-slate-800 uppercase tracking-wide">Company Departments Overview</h2>
-                <p class="text-[10px] text-slate-400 font-medium mt-0.5">Department-level summary · Individual KPI details visible for your own department only</p>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-            @foreach($vpDeptSummaries as $ds)
-            @php
-                $dsPerf  = (float)($ds['performance'] ?? 0);
-                $dsColor = match(true) {
-                    $dsPerf >= 90 => ['bar' => 'from-emerald-400 to-green-500', 'text' => 'text-emerald-700', 'badge' => 'bg-emerald-50 text-emerald-700', 'label' => 'Excellent'],
-                    $dsPerf >= 75 => ['bar' => 'from-yellow-400 to-yellow-500', 'text' => 'text-yellow-700', 'badge' => 'bg-yellow-50 text-yellow-700', 'label' => 'Watch'],
-                    $dsPerf >= 50 => ['bar' => 'from-orange-400 to-orange-500', 'text' => 'text-orange-700', 'badge' => 'bg-orange-50 text-orange-700', 'label' => 'Risk'],
-                    default       => ['bar' => 'from-red-400 to-red-500',       'text' => 'text-red-700',    'badge' => 'bg-red-50 text-red-700',    'label' => 'Critical'],
-                };
-            @endphp
-            <div class="rounded-[16px] p-4 border {{ ($ds['is_own'] ?? false) ? 'bg-[#FBF5EF] border-[#D4AF37]/40 shadow-sm' : 'bg-white border-slate-100' }}">
-                <div class="flex items-start justify-between gap-2 mb-2">
-                    <div class="min-w-0">
-                        <p class="text-[11px] font-black text-slate-700 truncate">{{ $ds['dept_name'] }}</p>
-                        <p class="text-[9px] text-slate-400 font-semibold uppercase mt-0.5">{{ $ds['dept_code'] }}</p>
-                    </div>
-                    @if($ds['is_own'] ?? false)
-                    <span class="shrink-0 text-[8px] font-black bg-[#D4AF37] text-[#1a1a1a] px-1.5 py-0.5 rounded-full">MY DEPT</span>
-                    @endif
-                </div>
-                <h3 class="text-2xl font-black {{ $dsColor['text'] }} mt-1">{{ number_format($dsPerf, 1) }}%</h3>
-                <div class="mt-2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div class="h-1.5 rounded-full bg-gradient-to-r {{ $dsColor['bar'] }}" style="width: {{ max(3, min(100, $dsPerf)) }}%"></div>
-                </div>
-                <div class="flex items-center justify-between mt-2">
-                    <p class="text-[9px] text-slate-400">{{ $ds['kpi_count'] }} KPIs</p>
-                    <span class="text-[9px] font-black px-1.5 py-0.5 rounded-full {{ $dsColor['badge'] }}">{{ $dsColor['label'] }}</span>
-                </div>
-            </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
 
     <!-- FILTER -->
     <div class="bg-white rounded-[20px] shadow-sm border border-[#E5E7EB] border-l-[4px] border-l-[#D4AF37] p-5">

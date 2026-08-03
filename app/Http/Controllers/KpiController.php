@@ -185,44 +185,10 @@ class KpiController extends Controller
                     'is_active' => 'eq.true',
                     'select' => 'id,employee_id,short_name,role,department_code',
                 ]],
-                'allCompanyKpis' => ['table' => 'kpis', 'query' => [
-                    'company_code'   => 'eq.' . $user['company_code'],
-                    'financial_year' => 'eq.' . $fy,
-                    'select'         => 'department_code,base_target,actual_value',
-                ]],
             ]);
 
             $kpis      = $vpBatch['kpis'] ?? [];
             $employees = $vpBatch['employees'] ?? [];
-
-            /*
-            |------------------------------------------------------------------
-            | COMPANY-WIDE DEPT SUMMARY (lightweight, no quarters)
-            |------------------------------------------------------------------
-            */
-            $allCompanyKpis = $vpBatch['allCompanyKpis'] ?? [];
-
-            $deptNameMap = collect($supabase->get('departments', [
-                'company_code' => 'eq.' . $user['company_code'],
-                'select'       => 'code,name',
-            ]) ?? [])->keyBy('code')->map(fn($d) => $d['name'])->toArray();
-
-            $vpDeptSummaries = collect($allCompanyKpis)
-                ->groupBy('department_code')
-                ->map(function ($group, $code) use ($deptNameMap, $user) {
-                    $totalBase   = $group->sum(fn($k) => (float)($k['base_target'] ?? 0));
-                    $totalActual = $group->sum(fn($k) => (float)($k['actual_value'] ?? 0));
-                    return [
-                        'dept_code'   => $code,
-                        'dept_name'   => $deptNameMap[$code] ?? $code,
-                        'kpi_count'   => $group->count(),
-                        'performance' => $totalBase > 0 ? round(($totalActual / $totalBase) * 100, 1) : 0,
-                        'is_own'      => $code === ($user['department_code'] ?? ''),
-                    ];
-                })
-                ->sortByDesc(fn($d) => $d['is_own'] ? 9999 : $d['performance'])
-                ->values()
-                ->toArray();
 
         } elseif ($role === 'MANAGER') {
             // Independent reads — fetched concurrently, same as the VP branch above.
@@ -608,8 +574,6 @@ class KpiController extends Controller
             'kpis' => $kpis,
 
             'indexAssignedKpis' => $indexAssignedKpis,
-
-            'vpDeptSummaries' => $vpDeptSummaries ?? [],
 
             'linkageMap' => $idxLinkageMap,
 
