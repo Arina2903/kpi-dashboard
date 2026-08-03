@@ -87,18 +87,24 @@ class TelegramMiniAppController extends Controller
 
         $kpiIds = array_column($kpis, 'id');
 
-        $quarters = $supabase->get('kpi_quarters', [
-            'kpi_id' => 'in.(' . implode(',', $kpiIds) . ')',
-            'select' => '*',
-        ]) ?? [];
+        // quarters and existingTasks don't depend on each other — sent
+        // concurrently instead of one after another.
+        $batch = $supabase->getMany([
+            'quarters' => ['table' => 'kpi_quarters', 'query' => [
+                'kpi_id' => 'in.(' . implode(',', $kpiIds) . ')',
+                'select' => '*',
+            ]],
+            'existingTasks' => ['table' => 'telegram_daily_tasks', 'query' => [
+                'employee_id' => 'eq.' . $validated['employee_id'],
+                'task_date' => 'eq.' . $today,
+                'select' => '*',
+            ]],
+        ]);
 
+        $quarters = $batch['quarters'] ?? [];
         $quartersByKpi = collect($quarters)->groupBy('kpi_id');
 
-        $existingTasks = $supabase->get('telegram_daily_tasks', [
-            'employee_id' => 'eq.' . $validated['employee_id'],
-            'task_date' => 'eq.' . $today,
-            'select' => '*',
-        ]) ?? [];
+        $existingTasks = $batch['existingTasks'] ?? [];
 
         $taskByQuarter = collect($existingTasks)->keyBy('kpi_quarter_id');
 
