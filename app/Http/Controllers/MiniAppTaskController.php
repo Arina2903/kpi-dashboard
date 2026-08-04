@@ -95,7 +95,19 @@ class MiniAppTaskController extends Controller
 
         $linksByTask = collect($links)->groupBy('task_id');
 
-        $result = array_map(function ($task) use ($linksByTask, $kpiMap) {
+        // Tasks created via the Telegram bot carry a real project name (users
+        // pick/create projects there); web-created ones all sit under the
+        // single auto-created "My To-Do List" — surfacing the name either way
+        // so a unified task list reads correctly regardless of which channel
+        // created the task.
+        $projectIds = array_unique(array_filter(array_column($tasks, 'project_id')));
+        $projects = empty($projectIds) ? [] : ($supabase->get('telegram_projects', [
+            'id' => 'in.(' . implode(',', $projectIds) . ')',
+            'select' => 'id,name',
+        ]) ?? []);
+        $projectMap = collect($projects)->keyBy('id');
+
+        $result = array_map(function ($task) use ($linksByTask, $kpiMap, $projectMap) {
             $linkedKpis = $linksByTask->get($task['id'], collect())->map(function ($link) use ($kpiMap) {
                 $kpi = $kpiMap->get($link['kpi_id']);
                 return $kpi ? ['kpi_id' => $kpi['id'], 'kpi_title' => $kpi['kpi_title'], 'category' => $kpi['category'] ?? null] : null;
@@ -105,6 +117,7 @@ class MiniAppTaskController extends Controller
                 'id' => $task['id'],
                 'title' => $task['title'],
                 'description' => $task['description'] ?? null,
+                'project_name' => $projectMap->get($task['project_id'])['name'] ?? null,
                 'unit' => $task['unit'],
                 'target' => (float) $task['target'],
                 'actual' => (float) $task['actual'],

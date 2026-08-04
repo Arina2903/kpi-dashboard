@@ -34,9 +34,14 @@ class MiniAppController extends Controller
             'select' => 'telegram_username,telegram_linked_at',
         ]);
 
+        $greetHour = now('Asia/Kuala_Lumpur')->hour;
+
         return view('mini-app.index', [
             'telegramLinked' => !empty($user['telegram_linked_at']),
             'hasTeam' => $policy->hasTeam(session('employee') ?? []),
+            'employeeName' => session('employee.short_name') ?? 'there',
+            'todayLabel' => now('Asia/Kuala_Lumpur')->format('l, j F Y'),
+            'greeting' => $greetHour < 12 ? 'Good morning' : ($greetHour < 18 ? 'Good afternoon' : 'Good evening'),
         ]);
     }
 
