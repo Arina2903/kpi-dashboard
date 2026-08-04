@@ -86,23 +86,15 @@
 
 <div class="flex flex-col md:flex-row gap-4 items-start">
     <nav class="w-full md:w-44 md:shrink-0 bg-white rounded-2xl border border-slate-200 shadow-sm p-2 flex md:flex-col gap-1.5 overflow-x-auto md:overflow-visible">
-        <button id="tab-home" onclick="switchTab('home')" class="nav-btn active w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-black text-left whitespace-nowrap">
-            <span class="text-[15px]">🏠</span> Home
-        </button>
+        <button id="tab-home" onclick="switchTab('home')" class="nav-btn active w-full flex items-center px-3 py-2.5 rounded-xl text-[12px] font-black text-left whitespace-nowrap">Home</button>
         <button id="tab-kpis" onclick="switchTab('kpis')" class="nav-btn w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-[12px] font-black text-left whitespace-nowrap">
-            <span class="flex items-center gap-2"><span class="text-[15px]">🎯</span> My KPIs</span>
+            <span>My KPIs</span>
             <span id="kpi-alert-badge" class="hidden min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center px-1 shrink-0 shadow-lg shadow-red-500/30"></span>
         </button>
-        <button id="tab-todo" onclick="switchTab('todo')" class="nav-btn w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-black text-left whitespace-nowrap">
-            <span class="text-[15px]">📋</span> To-Do
-        </button>
-        <button id="tab-score" onclick="switchTab('score')" class="nav-btn w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-black text-left whitespace-nowrap">
-            <span class="text-[15px]">⭐</span> Score
-        </button>
+        <button id="tab-todo" onclick="switchTab('todo')" class="nav-btn w-full flex items-center px-3 py-2.5 rounded-xl text-[12px] font-black text-left whitespace-nowrap">To-Do</button>
+        <button id="tab-score" onclick="switchTab('score')" class="nav-btn w-full flex items-center px-3 py-2.5 rounded-xl text-[12px] font-black text-left whitespace-nowrap">Score</button>
         @if($hasTeam)
-        <button id="tab-team" onclick="switchTab('team')" class="nav-btn w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-black text-left whitespace-nowrap">
-            <span class="text-[15px]">👥</span> Team
-        </button>
+        <button id="tab-team" onclick="switchTab('team')" class="nav-btn w-full flex items-center px-3 py-2.5 rounded-xl text-[12px] font-black text-left whitespace-nowrap">Team</button>
         @endif
     </nav>
 
@@ -487,40 +479,16 @@ function homeHeader() {
     `;
 }
 
-const HOME_STAT_TINTS = {
-    emerald: { chip: 'bg-emerald-100 text-emerald-600', bar: 'bg-emerald-500' },
-    blue:    { chip: 'bg-blue-100 text-blue-600',        bar: 'bg-blue-500' },
-    amber:   { chip: 'bg-amber-100 text-amber-600',      bar: 'bg-amber-500' },
-    gold:    { chip: 'bg-[#F5EAE0] text-[#6B3F2A]',      bar: 'bg-[#D4AF37]' },
-    violet:  { chip: 'bg-violet-100 text-violet-600',    bar: 'bg-violet-500' },
-    rose:    { chip: 'bg-rose-100 text-rose-600',        bar: 'bg-rose-500' },
-};
-
-// Every section title pairs its emoji with a tint from the palette above —
-// so the page's color language reads consistently: each icon always means
-// the same hue wherever it shows up (Today's Tasks is always blue, AI
-// Daily Insight is always violet, etc.), rather than every card sharing
-// one uncolored heading.
-function sectionHeader(icon, label, tint, marginClass = 'mb-2') {
-    const t = HOME_STAT_TINTS[tint];
-    return `
-        <div class="flex items-center gap-2 ${marginClass}">
-            <div class="w-7 h-7 rounded-lg ${t.chip} flex items-center justify-center text-[13px] shrink-0">${icon}</div>
-            <p class="text-[13px] font-black text-slate-900">${label}</p>
-        </div>
-    `;
+// Plain, uniform title used by every Home section — no emoji, no per-section
+// color, so headings read consistently wherever they appear on the page.
+function sectionHeader(label, marginClass = 'mb-2') {
+    return `<p class="text-[13px] font-black text-slate-900 ${marginClass}">${label}</p>`;
 }
 
-function homeStatCard(icon, label, value, tint, extra = '') {
-    const t = HOME_STAT_TINTS[tint];
+function homeStatCard(label, value, extra = '') {
     return card(`
-        <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-wide truncate">${label}</p>
-                <p class="text-[26px] font-black text-slate-900 leading-none mt-1.5">${value}</p>
-            </div>
-            <div class="w-10 h-10 rounded-xl ${t.chip} flex items-center justify-center text-[17px] shrink-0">${icon}</div>
-        </div>
+        <p class="text-[9px] font-black text-slate-400 uppercase tracking-wide truncate">${label}</p>
+        <p class="text-[26px] font-black text-slate-900 leading-none mt-1.5">${value}</p>
         ${extra}
     `);
 }
@@ -538,14 +506,14 @@ function homeStatCards() {
 
     return `
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
-            ${homeStatCard('📈', 'Daily Progress', dueToday.length ? dailyProgressPct + '%' : '—', 'emerald', `
+            ${homeStatCard('Daily Progress', dueToday.length ? dailyProgressPct + '%' : '—', `
                 <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-3 overflow-hidden">
-                    <div class="h-full rounded-full ${HOME_STAT_TINTS.emerald.bar}" style="width:${dailyProgressPct}%"></div>
+                    <div class="h-full rounded-full bg-gradient-to-r ${achvBadge(dailyProgressPct).bar}" style="width:${dailyProgressPct}%"></div>
                 </div>
             `)}
-            ${homeStatCard('📋', 'Active Tasks', activeTasks.length, 'blue')}
-            ${homeStatCard('⏰', 'Due Today', dueTodayOpen.length, 'amber')}
-            ${homeStatCard('⭐', 'Task Score', weeklyScoreVal !== null ? Math.round(weeklyScoreVal) : '—', 'gold')}
+            ${homeStatCard('Active Tasks', activeTasks.length)}
+            ${homeStatCard('Due Today', dueTodayOpen.length)}
+            ${homeStatCard('Task Score', weeklyScoreVal !== null ? Math.round(weeklyScoreVal) : '—')}
         </div>
     `;
 }
@@ -566,7 +534,7 @@ const HOME_TASK_GRID_STYLE = 'grid-template-columns: 1.7fr 1fr 1fr 0.7fr 1.1fr 0
 function homeTasksSection() {
     const filtered = homeFilteredTasks();
     return card(`
-        ${sectionHeader('📋', "Today's Tasks", 'blue')}
+        ${sectionHeader("Today's Tasks")}
         <div class="flex items-center gap-1.5 flex-wrap mb-3">
             ${homeTaskFilterBtn('all', 'All')}
             ${homeTaskFilterBtn('in_progress', 'In Progress')}
@@ -673,7 +641,7 @@ function homeQuickUpdateCard() {
 
     if (!activeTasks.length) {
         return `<div id="qduCard">${card(`
-            ${sectionHeader('📝', 'Quick Daily Update', 'emerald')}
+            ${sectionHeader('Quick Daily Update')}
             <p class="text-[12px] text-slate-500 text-center py-4">No active tasks to update.</p>
             <button onclick="renderNewTaskForm(true)" class="w-full py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black">+ Add an unplanned task</button>
         `)}</div>`;
@@ -690,7 +658,7 @@ function homeQuickUpdateCard() {
     `;
 
     return `<div id="qduCard">${card(`
-        ${sectionHeader('📝', 'Quick Daily Update', 'emerald', 'mb-3')}
+        ${sectionHeader('Quick Daily Update', 'mb-3')}
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <div>
@@ -786,7 +754,7 @@ async function submitQuickDailyUpdate() {
 /* Upcoming Reminders (each task's own reminder_at, nothing fabricated).  */
 
 function homeAiInsightLoadingCard() {
-    return card(`${sectionHeader('✨', 'AI Daily Insight', 'violet')}<p class="text-[11px] text-slate-400">Loading…</p>`);
+    return card(`${sectionHeader('AI Daily Insight')}<p class="text-[11px] text-slate-400">Loading…</p>`);
 }
 
 async function loadHomeAiInsight() {
@@ -806,7 +774,7 @@ function homeAiInsightCard(summary) {
     const completed = facts.completed_count ?? 0;
     const attention = (facts.overdue_count ?? 0) + (facts.blocked_count ?? 0);
     return card(`
-        ${sectionHeader('✨', 'AI Daily Insight', 'violet')}
+        ${sectionHeader('AI Daily Insight')}
         <p class="text-[11px] text-slate-600 leading-relaxed">${summary.narrative}</p>
         <div class="mt-2.5 space-y-1">
             <p class="text-[10px] text-emerald-700 font-bold">✓ ${completed} of ${total} tasks updated</p>
@@ -818,7 +786,7 @@ function homeAiInsightCard(summary) {
 
 function homeAiInsightEmptyCard() {
     return card(`
-        ${sectionHeader('✨', 'AI Daily Insight', 'violet')}
+        ${sectionHeader('AI Daily Insight')}
         <p class="text-[11px] text-slate-500">No insight generated yet today.</p>
         <button onclick="generateHomeAiInsight()" class="mt-2 w-full py-2 rounded-xl bg-[#6B3F2A] hover:bg-[#5a341f] text-white text-[10px] font-black">Generate Insight</button>
     `);
@@ -827,19 +795,19 @@ function homeAiInsightEmptyCard() {
 async function generateHomeAiInsight() {
     const box = document.getElementById('homeAiInsight');
     if (!box) return;
-    box.innerHTML = card(`${sectionHeader('✨', 'AI Daily Insight', 'violet')}<p class="text-[11px] text-slate-400">Generating…</p>`);
+    box.innerHTML = card(`${sectionHeader('AI Daily Insight')}<p class="text-[11px] text-slate-400">Generating…</p>`);
     try {
         const data = await api('/summaries/regenerate', { method: 'POST', body: JSON.stringify({ scope: 'employee', period: 'daily' }) });
         box.innerHTML = homeAiInsightCard(data.summary);
     } catch (e) {
-        box.innerHTML = card(`${sectionHeader('✨', 'AI Daily Insight', 'violet')}<p class="text-[11px] text-red-500">${e.data?.message || "Couldn't generate right now."}</p>`);
+        box.innerHTML = card(`${sectionHeader('AI Daily Insight')}<p class="text-[11px] text-red-500">${e.data?.message || "Couldn't generate right now."}</p>`);
     }
 }
 
 function homeKpiAlignmentCard() {
     const kpis = __homeData.kpis;
     if (!kpis.length) {
-        return card(`${sectionHeader('🎯', 'KPI Alignment', 'gold')}<p class="text-[11px] text-slate-400">No KPIs set up for this financial year.</p>`);
+        return card(`${sectionHeader('KPI Alignment')}<p class="text-[11px] text-slate-400">No KPIs set up for this financial year.</p>`);
     }
     const rows = kpis.map(k => {
         const pct = Math.max(0, Math.min(100, k.achievement_percentage));
@@ -856,7 +824,7 @@ function homeKpiAlignmentCard() {
         `;
     }).join('');
     return card(`
-        ${sectionHeader('🎯', 'KPI Alignment', 'gold')}
+        ${sectionHeader('KPI Alignment')}
         ${rows}
         <p class="text-[9px] text-slate-400 mt-3 leading-relaxed">Task activity supports KPI tracking but does not update KPI Actual automatically.</p>
     `);
@@ -870,23 +838,20 @@ function homeRemindersCard() {
         .slice(0, 5);
 
     if (!upcoming.length) {
-        return card(`${sectionHeader('🔔', 'Upcoming Reminders', 'rose')}<p class="text-[11px] text-slate-400">No reminders scheduled.</p>`);
+        return card(`${sectionHeader('Upcoming Reminders')}<p class="text-[11px] text-slate-400">No reminders scheduled.</p>`);
     }
 
     const rows = upcoming.map(t => {
         const when = new Date(t.reminder_at).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
         return `
-            <div class="flex items-center gap-2 mt-2">
-                <span class="text-[13px] shrink-0">⏰</span>
-                <div class="min-w-0">
-                    <p class="text-[11px] font-bold text-slate-700 truncate">${t.title}</p>
-                    <p class="text-[9px] text-slate-400">${when}</p>
-                </div>
+            <div class="mt-2">
+                <p class="text-[11px] font-bold text-slate-700 truncate">${t.title}</p>
+                <p class="text-[9px] text-slate-400">${when}</p>
             </div>
         `;
     }).join('');
 
-    return card(`${sectionHeader('🔔', 'Upcoming Reminders', 'rose')}${rows}`);
+    return card(`${sectionHeader('Upcoming Reminders')}${rows}`);
 }
 
 /* ---------------------------------------------------------------- */
