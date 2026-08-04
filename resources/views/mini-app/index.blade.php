@@ -25,7 +25,7 @@
 @include('partials.sidebar')
 
 <main id="mainContent" class="ml-[230px] min-h-screen">
-<div class="max-w-4xl mx-auto p-6 space-y-4">
+<div class="max-w-5xl mx-auto p-6 space-y-4">
 
 @if(!$telegramLinked)
 
@@ -84,23 +84,35 @@
 
 @else
 
-<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-1.5 flex items-center gap-1.5">
-    <button id="tab-home" onclick="switchTab('home')" class="nav-btn active flex-1 py-2.5 rounded-xl text-[11px] font-black">Home</button>
-    <button id="tab-kpis" onclick="switchTab('kpis')" class="nav-btn flex-1 py-2.5 rounded-xl text-[11px] font-black relative">
-        My KPIs
-        <span id="kpi-alert-badge" class="hidden absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center px-1 shadow-lg shadow-red-500/30"></span>
-    </button>
-    <button id="tab-todo" onclick="switchTab('todo')" class="nav-btn flex-1 py-2.5 rounded-xl text-[11px] font-black">To-Do</button>
-    <button id="tab-score" onclick="switchTab('score')" class="nav-btn flex-1 py-2.5 rounded-xl text-[11px] font-black">Score</button>
-    @if($hasTeam)
-    <button id="tab-team" onclick="switchTab('team')" class="nav-btn flex-1 py-2.5 rounded-xl text-[11px] font-black">Team</button>
-    @endif
-</div>
+<div class="flex flex-col md:flex-row gap-4 items-start">
+    <nav class="w-full md:w-44 md:shrink-0 bg-white rounded-2xl border border-slate-200 shadow-sm p-2 flex md:flex-col gap-1.5 overflow-x-auto md:overflow-visible">
+        <button id="tab-home" onclick="switchTab('home')" class="nav-btn active w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-black text-left whitespace-nowrap">
+            <span class="text-[15px]">🏠</span> Home
+        </button>
+        <button id="tab-kpis" onclick="switchTab('kpis')" class="nav-btn w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-[12px] font-black text-left whitespace-nowrap">
+            <span class="flex items-center gap-2"><span class="text-[15px]">🎯</span> My KPIs</span>
+            <span id="kpi-alert-badge" class="hidden min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center px-1 shrink-0 shadow-lg shadow-red-500/30"></span>
+        </button>
+        <button id="tab-todo" onclick="switchTab('todo')" class="nav-btn w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-black text-left whitespace-nowrap">
+            <span class="text-[15px]">📋</span> To-Do
+        </button>
+        <button id="tab-score" onclick="switchTab('score')" class="nav-btn w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-black text-left whitespace-nowrap">
+            <span class="text-[15px]">⭐</span> Score
+        </button>
+        @if($hasTeam)
+        <button id="tab-team" onclick="switchTab('team')" class="nav-btn w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-black text-left whitespace-nowrap">
+            <span class="text-[15px]">👥</span> Team
+        </button>
+        @endif
+    </nav>
 
-<div id="toast" class="hidden px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-semibold"></div>
+    <div class="flex-1 min-w-0 space-y-3">
+        <div id="toast" class="hidden px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-semibold"></div>
 
-<div id="app" class="space-y-3">
-    <p class="text-center text-slate-400 text-[12px] mt-10">Loading…</p>
+        <div id="app" class="space-y-3">
+            <p class="text-center text-slate-400 text-[12px] mt-10">Loading…</p>
+        </div>
+    </div>
 </div>
 
 @endif
