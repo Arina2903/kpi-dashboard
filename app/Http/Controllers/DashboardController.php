@@ -3,16 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Services\SupabaseService;
-use App\Services\TaskAccessPolicy;
-use App\Services\TaskScoreCalculator;
-use App\Services\TaskScoreService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
     private string $currentFinancialYear = 'FY2026';
 
-    public function index(SupabaseService $supabase, TaskAccessPolicy $policy, TaskScoreService $scoreService)
+    public function index(SupabaseService $supabase)
     {
         if (!session()->has('employee_uuid') || !session()->has('company_code')) {
             return redirect()->route('login')->with('error', 'Sila login terlebih dahulu.');
@@ -129,15 +126,6 @@ class DashboardController extends Controller
         $userId   = $user['id'];
         $userRole = strtoupper(trim($user['role'] ?? ''));
 
-        // ── PERFORMIX TASK WIDGETS ───────────────────────────────────────────
-        // Additive, read-only — never touches KPI data. Team scores are read
-        // from the already-computed task_score_snapshots table (see
-        // docs/performix-design.md §6-R5), not recalculated live per member.
-        $today = now('Asia/Kuala_Lumpur')->toDateString();
-        [$weekStart] = $scoreService->currentPeriodBounds('weekly');
-        $hasTeam = $policy->hasTeam($user);
-        $teamEmployeeIds = $hasTeam ? array_values(array_diff($policy->visibleEmployeeIds($user), [$userId])) : [];
-
         $batch = [
             'incoming' => ['table' => 'kpi_linkages', 'query' => [
                 'assignee_id'    => 'eq.' . $userId,
@@ -151,38 +139,7 @@ class DashboardController extends Controller
                 'company_code'   => 'eq.' . $companyCode,
                 'select'         => '*',
             ]],
-            'myTaskScore' => ['table' => 'task_score_snapshots', 'query' => [
-                'employee_id'  => 'eq.' . $userId,
-                'period_type'  => 'eq.weekly',
-                'period_start' => 'eq.' . $weekStart,
-                'select'       => 'score,breakdown',
-            ]],
-            'todayTasks' => ['table' => 'telegram_project_tasks', 'query' => [
-                'assignee_employee_id' => 'eq.' . $userId,
-                'status'                => 'in.(not_started,in_progress,blocked)',
-                'or'                    => '(due_date.eq.' . $today . ',start_date.eq.' . $today . ')',
-                'select'                => 'id,title,status,priority,due_date',
-            ]],
-            'overdueTasks' => ['table' => 'telegram_project_tasks', 'query' => [
-                'assignee_employee_id' => 'eq.' . $userId,
-                'status'                => 'in.(not_started,in_progress,blocked)',
-                'due_date'              => 'lt.' . $today,
-                'select'                => 'id',
-            ]],
         ];
-
-        if ($hasTeam && !empty($teamEmployeeIds)) {
-            $batch['teamTaskScores'] = ['table' => 'task_score_snapshots', 'query' => [
-                'employee_id'  => 'in.(' . implode(',', $teamEmployeeIds) . ')',
-                'period_type'  => 'eq.weekly',
-                'period_start' => 'eq.' . $weekStart,
-                'select'       => 'employee_id,score',
-            ]];
-            $batch['teamEmployees'] = ['table' => 'employees', 'query' => [
-                'id'     => 'in.(' . implode(',', $teamEmployeeIds) . ')',
-                'select' => 'id,short_name,department_code',
-            ]];
-        }
 
         if ($userRole === 'SLT') {
             $batch['directReports'] = ['table' => 'employees', 'query' => [
@@ -218,30 +175,6 @@ class DashboardController extends Controller
         $batchResults     = $supabase->getMany($batch);
         $incomingLinkages = $batchResults['incoming'] ?? [];
         $outgoingLinkages = $batchResults['outgoing'] ?? [];
-
-        $scoreCalculator = new TaskScoreCalculator();
-
-        $myTaskScoreSnapshot = $batchResults['myTaskScore'][0] ?? null;
-        $myTaskScore = $myTaskScoreSnapshot['score'] ?? null;
-        $myTaskScoreStatus = $scoreCalculator->statusForScore($myTaskScore !== null ? (float) $myTaskScore : null);
-        $todayTasks = $batchResults['todayTasks'] ?? [];
-        $overdueTaskCount = count($batchResults['overdueTasks'] ?? []);
-
-        $teamAttention = [];
-        if ($hasTeam && !empty($teamEmployeeIds)) {
-            $teamScoreByEmployee = collect($batchResults['teamTaskScores'] ?? [])->keyBy('employee_id');
-            $teamAttention = collect($batchResults['teamEmployees'] ?? [])->map(function ($employee) use ($teamScoreByEmployee, $scoreCalculator) {
-                $score = $teamScoreByEmployee->get($employee['id'])['score'] ?? null;
-                return [
-                    'name' => $employee['short_name'],
-                    'department_code' => $employee['department_code'] ?? null,
-                    'score' => $score !== null ? (float) $score : null,
-                    'status' => $scoreCalculator->statusForScore($score !== null ? (float) $score : null),
-                ];
-            })->sortBy(fn ($m) => ['critical' => 0, 'at_risk' => 1, 'insufficient_data' => 2, 'on_track' => 3][$m['status']] ?? 9)
-              ->values()
-              ->all();
-        }
 
         $directReports = [];
         if ($userRole === 'SLT' || $userRole === 'MANAGER') {
@@ -300,13 +233,6 @@ class DashboardController extends Controller
             'incomingLinkages' => $incomingLinkages,
             'outgoingLinkages' => $outgoingLinkages,
             'directReports'    => $directReports,
-
-            'myTaskScore' => $myTaskScore,
-            'myTaskScoreStatus' => $myTaskScoreStatus,
-            'todayTasks' => $todayTasks,
-            'overdueTaskCount' => $overdueTaskCount,
-            'hasTeam' => $hasTeam,
-            'teamAttention' => $teamAttention,
         ]);
     }
 
