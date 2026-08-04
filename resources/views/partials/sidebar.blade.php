@@ -288,7 +288,9 @@
 
     /* Neutral card border -> Border */
     [class*="border-[#E5E7EB]"],
-    [class*="border-[#6B9080]"] { border-color: var(--user-theme-border) !important; }
+    [class*="border-[#6B9080]"],
+    [class*="border-[#D9C4A0]"],
+    [class*="border-[#E3D2B0]"] { border-color: var(--user-theme-border) !important; }
     [class*="bg-[#6B9080]"]     { background-color: var(--user-theme-border) !important; }
     [class*="focus:border-[#6B9080]"]:focus { border-color: var(--user-theme-border) !important; }
 
@@ -296,7 +298,8 @@
     [class*="text-[#D4AF37]"],
     [class*="text-[#1a3d34]"]  { color: var(--user-theme-accent) !important; }
     [class*="bg-[#D4AF37]"],
-    [class*="bg-[#1a3d34]"]    { background-color: var(--user-theme-accent) !important; }
+    [class*="bg-[#1a3d34]"],
+    [class*="bg-[#6B3F2A]"]    { background-color: var(--user-theme-accent) !important; }
     /* Light-tint icon chips/badges (bg-[#D4AF37]/5, /10) — declared after the
        solid-fill rule above so these win the tie. Without this, the /5 and /10
        opacity suffixes were ignored and these went fully solid, and since the
@@ -367,6 +370,11 @@
     /* Light tint highlight boxes -> tinted Accent */
     [class*="bg-[#CCE3DE]"] { background-color: color-mix(in srgb, var(--user-theme-accent) 18%, white) !important; }
     [class*="bg-[#FBF5EF]"] { background-color: color-mix(in srgb, var(--user-theme-accent) 8%, white) !important; }
+    [class*="bg-[#F5EAE0]"] { background-color: color-mix(in srgb, var(--user-theme-accent) 15%, white) !important; }
+
+    /* Progress-track backgrounds (Performix stat cards/task rows) -> tinted
+       Accent 2, matching that swatch's existing "charts" role elsewhere. */
+    [class*="bg-[#EFE3C7]"] { background-color: color-mix(in srgb, var(--user-theme-accent2) 35%, white) !important; }
 
     /* Every text/select/textarea field box, site-wide */
     input:focus, textarea:focus, select:focus {
@@ -378,7 +386,8 @@
        give feedback on hover instead of going flat. */
     [class*="hover:bg-[#c19c2f]"]:hover,
     [class*="hover:bg-[#2d5548]"]:hover,
-    [class*="hover:bg-[#5a7a6d]"]:hover { background-color: color-mix(in srgb, var(--user-theme-accent) 85%, black) !important; }
+    [class*="hover:bg-[#5a7a6d]"]:hover,
+    [class*="hover:bg-[#5a341f]"]:hover { background-color: color-mix(in srgb, var(--user-theme-accent) 85%, black) !important; }
     [class*="hover:text-[#2d5548]"]:hover,
     [class*="hover:text-[#1a3d34]"]:hover,
     [class*="hover:text-[#6B9080]"]:hover,
