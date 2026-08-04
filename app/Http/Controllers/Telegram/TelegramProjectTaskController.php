@@ -177,9 +177,11 @@ class TelegramProjectTaskController extends Controller
             'description' => 'nullable|string|max:2000',
             'unit' => 'required|in:number,currency,percentage',
             'target' => 'required|numeric|min:0',
-            // Every task must belong to at least one KPI — linking is the
-            // last step of the create flow, not an optional afterthought.
-            'kpi_ids' => 'required|array|min:1',
+            // KPI linking is optional here (docs/performix-design.md's
+            // "Allow 'Not linked to KPI'"), matching the web Mini App's
+            // MiniAppTaskController::store() — the original mandatory rule
+            // was specific to the old multi-step creation wizard.
+            'kpi_ids' => 'nullable|array',
             'kpi_ids.*' => 'string',
             'assignee_employee_id' => 'nullable|string',
             'priority' => 'nullable|in:low,medium,high,critical',
@@ -218,22 +220,24 @@ class TelegramProjectTaskController extends Controller
             }
         }
 
-        $kpiIds = array_unique($validated['kpi_ids']);
+        $kpiIds = array_unique($validated['kpi_ids'] ?? []);
 
-        $kpis = $supabase->get('kpis', [
-            'id' => 'in.(' . implode(',', $kpiIds) . ')',
-            'employee_id' => 'eq.' . $validated['employee_id'],
-            'company_code' => 'eq.' . $validated['company_code'],
-            'select' => 'id,unit',
-        ]) ?? [];
+        if (!empty($kpiIds)) {
+            $kpis = $supabase->get('kpis', [
+                'id' => 'in.(' . implode(',', $kpiIds) . ')',
+                'employee_id' => 'eq.' . $validated['employee_id'],
+                'company_code' => 'eq.' . $validated['company_code'],
+                'select' => 'id,unit',
+            ]) ?? [];
 
-        if (count($kpis) !== count($kpiIds)) {
-            return response()->json(['success' => false, 'message' => 'One or more KPIs were not found.'], 404);
-        }
+            if (count($kpis) !== count($kpiIds)) {
+                return response()->json(['success' => false, 'message' => 'One or more KPIs were not found.'], 404);
+            }
 
-        $mismatched = collect($kpis)->first(fn($k) => $k['unit'] !== $validated['unit']);
-        if ($mismatched) {
-            return response()->json(['success' => false, 'message' => "Unit mismatch — this task is in \"{$validated['unit']}\", but a selected KPI isn't."], 422);
+            $mismatched = collect($kpis)->first(fn($k) => $k['unit'] !== $validated['unit']);
+            if ($mismatched) {
+                return response()->json(['success' => false, 'message' => "Unit mismatch — this task is in \"{$validated['unit']}\", but a selected KPI isn't."], 422);
+            }
         }
 
         $inserted = $supabase->insert('telegram_project_tasks', [
@@ -283,21 +287,45 @@ class TelegramProjectTaskController extends Controller
         $validated = $request->validate([
             'employee_id' => 'required|string',
             'company_code' => 'required|string',
-            'unit' => 'required|in:number,currency,percentage',
+            // Optional: when omitted, every open KPI is returned regardless
+            // of unit — the simplified task-creation flow no longer asks
+            // for a unit/target up front, so there's nothing to match
+            // against (docs/performix-design.md's "Not linked to KPI" is
+            // the categorical-alignment case; this is the same idea for
+            // the eligible-KPI list itself).
+            'unit' => 'nullable|in:number,currency,percentage',
         ]);
 
         $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
 
+        $options = $this->openKpiOptions($supabase, $quarterService, $validated['employee_id'], $validated['company_code'], $validated['unit'] ?? null);
+
+        return response()->json(['kpis' => $options]);
+    }
+
+    /**
+     * Every one of this employee's KPIs that currently has an open quarter
+     * — optionally filtered to a specific unit. Shared by kpiOptions() (the
+     * task-edit KPI picker) and suggestKpiForDraft() (the AI suggestion on
+     * the create-task screen, before the task exists).
+     */
+    private function openKpiOptions(SupabaseService $supabase, KpiQuarterUpdateService $quarterService, string $employeeId, string $companyCode, ?string $unit = null): array
+    {
         $fy = 'FY' . now('Asia/Kuala_Lumpur')->year;
         $today = $this->todayMy();
 
-        $kpis = $supabase->get('kpis', [
-            'employee_id' => 'eq.' . $validated['employee_id'],
-            'company_code' => 'eq.' . $validated['company_code'],
+        $filters = [
+            'employee_id' => 'eq.' . $employeeId,
+            'company_code' => 'eq.' . $companyCode,
             'financial_year' => 'eq.' . $fy,
-            'unit' => 'eq.' . $validated['unit'],
             'select' => '*',
-        ]) ?? [];
+        ];
+
+        if ($unit) {
+            $filters['unit'] = 'eq.' . $unit;
+        }
+
+        $kpis = $supabase->get('kpis', $filters) ?? [];
 
         $options = [];
         foreach ($kpis as $kpi) {
@@ -310,7 +338,33 @@ class TelegramProjectTaskController extends Controller
             }
         }
 
-        return response()->json(['kpis' => $options]);
+        return $options;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | POST /api/telegram/project-tasks/kpi-suggestion-draft
+    |--------------------------------------------------------------------------
+    | Same AI suggestion as kpiSuggestion(), but for a task that doesn't
+    | exist yet — the create-task screen calls this as the user types,
+    | before there's a task id to attach the link to.
+    */
+    public function suggestKpiForDraft(Request $request, SupabaseService $supabase, KpiQuarterUpdateService $quarterService, AiService $ai)
+    {
+        $validated = $request->validate([
+            'employee_id' => 'required|string',
+            'company_code' => 'required|string',
+            'title' => 'required|string|max:200',
+            'description' => 'nullable|string|max:2000',
+        ]);
+
+        $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
+
+        $employeeKpis = $this->openKpiOptions($supabase, $quarterService, $validated['employee_id'], $validated['company_code']);
+
+        $suggestion = $ai->suggestTaskKpiLink($validated['title'], $validated['description'] ?? null, $employeeKpis);
+
+        return response()->json(['suggestion' => $suggestion]);
     }
 
     /*
@@ -318,15 +372,15 @@ class TelegramProjectTaskController extends Controller
     | POST /api/telegram/project-tasks/{id}/link-kpis
     |--------------------------------------------------------------------------
     | Replaces the set of KPIs this task feeds into. Every kpi_id must belong
-    | to the same employee/company and share the task's unit. At least one
-    | KPI must remain linked — a task can never end up orphaned.
+    | to the same employee/company and share the task's unit. An empty
+    | array is allowed — "Not linked to KPI" per docs/performix-design.md.
     */
     public function linkKpis(Request $request, SupabaseService $supabase, string $id)
     {
         $validated = $request->validate([
             'employee_id' => 'required|string',
             'company_code' => 'required|string',
-            'kpi_ids' => 'required|array|min:1',
+            'kpi_ids' => 'nullable|array',
             'kpi_ids.*' => 'string',
             'ai_suggested' => 'nullable|boolean',
             'ai_confidence' => 'nullable|numeric|min:0|max:100',

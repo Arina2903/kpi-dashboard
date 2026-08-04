@@ -45,6 +45,40 @@ class TaskScoreService
     }
 
     /**
+     * Mon-Sun update-count series for the week containing $weekStart — the
+     * data behind the Weekly Summary bar chart. Counts distinct task
+     * updates per day (any task, any channel), not a score — a simple,
+     * honest "how much did you log each day" activity signal.
+     */
+    public function weeklyActivitySeries(string $employeeId, string $weekStart): array
+    {
+        $start = Carbon::parse($weekStart);
+        $end = $start->copy()->addDays(6);
+
+        $updates = $this->supabase->get('telegram_project_task_updates', [
+            'updated_by_employee_id' => 'eq.' . $employeeId,
+            'created_at' => 'gte.' . $start->toDateString() . ' 00:00:00',
+            'select' => 'created_at',
+        ]) ?? [];
+
+        $countsByDate = collect($updates)
+            ->map(fn ($u) => substr($u['created_at'], 0, 10))
+            ->filter(fn ($ds) => $ds >= $start->toDateString() && $ds <= $end->toDateString())
+            ->countBy();
+
+        $series = [];
+        for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+            $series[] = [
+                'date' => $d->toDateString(),
+                'label' => $d->format('D'),
+                'count' => $countsByDate->get($d->toDateString(), 0),
+            ];
+        }
+
+        return $series;
+    }
+
+    /**
      * Computes and upserts the task_score_snapshots row for one employee's
      * period. Idempotent on (employee_id, period_type, period_start) — safe
      * to re-run for the same period (e.g. a scheduler retry, or an explicit

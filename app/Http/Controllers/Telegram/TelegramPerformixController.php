@@ -57,6 +57,77 @@ class TelegramPerformixController extends Controller
             'score' => $result['score'],
             'status' => $result['status'],
             'breakdown' => $result['breakdown'],
+            'daily_activity' => $periodType === 'weekly' ? $scoreService->weeklyActivitySeries($validated['employee_id'], $start) : [],
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET /api/telegram/team/attention
+    |--------------------------------------------------------------------------
+    | Manager/VP/SLT only. Reads the current week's already-computed
+    | task_score_snapshots for everyone TaskAccessPolicy says this actor can
+    | see — same contract as the web Mini App's teamAttention().
+    */
+    public function teamAttention(Request $request, SupabaseService $supabase, TaskAccessPolicy $policy, TaskScoreService $scoreService)
+    {
+        $validated = $request->validate([
+            'employee_id' => 'required|string',
+            'company_code' => 'required|string',
+        ]);
+
+        $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
+
+        $actor = $this->actorEmployee($supabase, $validated['employee_id']);
+
+        if (!$actor || !$policy->hasTeam($actor)) {
+            return response()->json(['success' => false, 'message' => 'No team to show.'], 403);
+        }
+
+        $employeeIds = array_values(array_diff($policy->visibleEmployeeIds($actor), [$actor['id']]));
+
+        if (empty($employeeIds)) {
+            return response()->json(['members' => []]);
+        }
+
+        [$periodStart, $periodEnd] = $scoreService->currentPeriodBounds('weekly');
+
+        $employees = $supabase->get('employees', [
+            'id' => 'in.(' . implode(',', $employeeIds) . ')',
+            'select' => 'id,short_name,department_code',
+        ]) ?? [];
+
+        $snapshots = $supabase->get('task_score_snapshots', [
+            'employee_id' => 'in.(' . implode(',', $employeeIds) . ')',
+            'period_type' => 'eq.weekly',
+            'period_start' => 'eq.' . $periodStart,
+            'select' => 'employee_id,score,breakdown',
+        ]) ?? [];
+        $snapshotByEmployee = collect($snapshots)->keyBy('employee_id');
+
+        $calculator = new TaskScoreCalculator();
+
+        $members = array_map(function ($employee) use ($snapshotByEmployee, $calculator) {
+            $snapshot = $snapshotByEmployee->get($employee['id']);
+            $score = $snapshot['score'] ?? null;
+
+            return [
+                'employee_id' => $employee['id'],
+                'name' => $employee['short_name'],
+                'department_code' => $employee['department_code'] ?? null,
+                'score' => $score !== null ? (float) $score : null,
+                'status' => $calculator->statusForScore($score !== null ? (float) $score : null),
+                'overdue_count' => $snapshot['breakdown']['overdue_count'] ?? 0,
+            ];
+        }, $employees);
+
+        $statusRank = ['critical' => 0, 'at_risk' => 1, 'insufficient_data' => 2, 'on_track' => 3];
+        usort($members, fn ($a, $b) => ($statusRank[$a['status']] ?? 9) <=> ($statusRank[$b['status']] ?? 9));
+
+        return response()->json([
+            'period_start' => $periodStart,
+            'period_end' => $periodEnd,
+            'members' => $members,
         ]);
     }
 

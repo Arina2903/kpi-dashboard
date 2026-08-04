@@ -37,6 +37,7 @@ Route::middleware('telegram.webapp.auth')->prefix('telegram')->group(function ()
     Route::get('/project-tasks', [TelegramProjectTaskController::class, 'listTasks']);
     Route::post('/project-tasks', [TelegramProjectTaskController::class, 'createTask']);
     Route::get('/project-tasks/kpi-options', [TelegramProjectTaskController::class, 'kpiOptions']);
+    Route::post('/project-tasks/kpi-suggestion-draft', [TelegramProjectTaskController::class, 'suggestKpiForDraft']);
     Route::get('/project-tasks/{id}', [TelegramProjectTaskController::class, 'show']);
     Route::post('/project-tasks/{id}/link-kpis', [TelegramProjectTaskController::class, 'linkKpis']);
     Route::post('/project-tasks/{id}/kpi-suggestion', [TelegramProjectTaskController::class, 'kpiSuggestion']);
@@ -49,4 +50,5 @@ Route::middleware('telegram.webapp.auth')->prefix('telegram')->group(function ()
     Route::get('/tasks/score', [TelegramPerformixController::class, 'myScore']);
     Route::get('/summaries', [TelegramPerformixController::class, 'summaries']);
     Route::post('/summaries/regenerate', [TelegramPerformixController::class, 'regenerate']);
+    Route::get('/team/attention', [TelegramPerformixController::class, 'teamAttention']);
 });
