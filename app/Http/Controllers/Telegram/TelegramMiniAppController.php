@@ -43,13 +43,14 @@ class TelegramMiniAppController extends Controller
 
         $employee = $supabase->first('employees', [
             'id' => 'eq.' . $validated['employee_id'],
-            'select' => 'theme_bg,theme_card,theme_accent,theme_border,theme_text,theme_font_family,theme_font_size',
+            'select' => 'theme_bg,theme_card,theme_accent,theme_accent2,theme_border,theme_text,theme_font_family,theme_font_size',
         ]) ?? [];
 
         return response()->json([
             'theme_bg'          => $employee['theme_bg']          ?? null,
             'theme_card'        => $employee['theme_card']        ?? null,
             'theme_accent'      => $employee['theme_accent']      ?? null,
+            'theme_accent2'     => $employee['theme_accent2']     ?? null,
             'theme_border'      => $employee['theme_border']      ?? null,
             'theme_text'        => $employee['theme_text']        ?? null,
             'theme_font_family' => $employee['theme_font_family'] ?? null,

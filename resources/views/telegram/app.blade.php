@@ -15,6 +15,7 @@
         :root {
             --navy: #0B1F3A;
             --accent: #2563EB;
+            --accent2: #6B9080;
             --bg: #F8FAFC;
         }
         body { font-family: 'Inter', sans-serif; }
@@ -27,7 +28,7 @@
 <body class="bg-[var(--bg)] min-h-screen text-slate-900">
 
 <div class="max-w-md mx-auto min-h-screen flex flex-col">
-    <div id="topbar" class="hidden bg-[var(--navy)] text-white px-4 py-3.5 flex items-center gap-3 shrink-0">
+    <div id="topbar" class="hidden bg-[var(--accent2)] text-white px-4 py-3.5 flex items-center gap-3 shrink-0">
         <button id="backBtn" onclick="goBack()" class="hidden text-white/80 text-lg leading-none">←</button>
         <h1 id="topbarTitle" class="text-[15px] font-black">Performix</h1>
     </div>
@@ -358,6 +359,7 @@
         try {
             const t = await api('/theme?employee_id=' + encodeURIComponent(state.employeeId) + '&company_code=' + encodeURIComponent(state.companyCode));
             if (t.theme_accent) document.documentElement.style.setProperty('--accent', t.theme_accent);
+            if (t.theme_accent2) document.documentElement.style.setProperty('--accent2', t.theme_accent2);
             if (t.theme_bg) document.documentElement.style.setProperty('--bg', t.theme_bg);
         } catch (e) {
             // Not linked in this context, or a transient error — keep defaults.
