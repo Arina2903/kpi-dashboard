@@ -25,14 +25,14 @@
 @include('partials.sidebar')
 
 <main id="mainContent" class="ml-[230px] min-h-screen">
-<div class="max-w-5xl mx-auto p-6 space-y-4">
+<div class="p-6 space-y-4">
 
 @if(!$telegramLinked)
 
 {{-- CONNECT GATE — Mini App reminders/adjustments only make sense once we    --}}
 {{-- can reach the employee on Telegram, so the app itself is withheld until --}}
 {{-- they link it (same connect/status endpoints as Account Settings).       --}}
-<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 flex flex-col items-center text-center gap-4">
+<div class="max-w-md mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm p-8 flex flex-col items-center text-center gap-4">
     <div class="w-14 h-14 rounded-full bg-[#229ED9]/10 flex items-center justify-center">
         <svg viewBox="0 0 24 24" class="w-7 h-7" fill="#229ED9"><path d="M21.94 4.53a1.6 1.6 0 0 0-1.63-.27L2.98 10.98a1.53 1.53 0 0 0 .1 2.88l4.54 1.42 1.76 5.5c.14.44.5.72.94.72.03 0 .06 0 .1-.01.34-.03.63-.24.77-.55l2.15-3.9 4.5 3.3c.24.18.53.27.82.27.14 0 .29-.02.43-.07a1.5 1.5 0 0 0 1-1.1l3.03-13.7a1.6 1.6 0 0 0-.62-1.74Zm-3.35 2.68-8.03 7.28-.31 3.35-1.35-4.22 8.6-6.9c.2-.16.42.1.24.28l-6.9 6.24a.5.5 0 0 0-.15.3l-.2 2.13 8.6-9.7c.2-.23.5.03.33.24Z"/></svg>
     </div>
@@ -106,7 +106,7 @@
         @endif
     </nav>
 
-    <div class="flex-1 min-w-0 space-y-3">
+    <div id="contentCol" class="flex-1 min-w-0 space-y-3">
         <div id="toast" class="hidden px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-semibold"></div>
 
         <div id="app" class="space-y-3">
@@ -233,6 +233,10 @@ function switchTab(tab) {
         const el = document.getElementById('tab-' + t);
         if (el) el.classList.toggle('active', t === tab);
     });
+    // Home's stat-card/sidebar grid is designed to use the full width next
+    // to the nav; the other tabs are simple card lists that read better at
+    // a capped width instead of stretching edge-to-edge on wide monitors.
+    document.getElementById('contentCol')?.classList.toggle('max-w-2xl', tab !== 'home');
     if (tab === 'home') renderHome();
     if (tab === 'kpis') renderMyKpis();
     if (tab === 'todo') renderTodo();
