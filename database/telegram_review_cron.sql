@@ -9,11 +9,11 @@
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
--- Weekly review — every Sunday 18:00 Asia/Kuala_Lumpur (UTC+8) = 10:00 UTC.
--- Covers the 7 days ending that Sunday.
+-- Weekly review — every Friday 17:30 Asia/Kuala_Lumpur (UTC+8) = 09:30 UTC.
+-- Covers the 7 days ending that Friday.
 SELECT cron.schedule(
     'telegram-weekly-review',
-    '0 10 * * 0',
+    '30 9 * * 5',
     $$
     SELECT net.http_post(
         url := '<APP_URL>/api/telegram/cron/review/weekly',

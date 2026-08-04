@@ -313,6 +313,7 @@
         }
 
         const dashboards = status.dashboards || [];
+        window.__dashboards = dashboards;
 
         if (dashboards.length === 0) {
             renderError('No active dashboard found for your account. Please contact your admin.');
@@ -342,6 +343,7 @@
         applyTheme();
         if (deepLinkScreen === 'tasks-today') { renderCreateTask(); return; }
         if (deepLinkScreen === 'tasks-update') { switchRootTab('tasks'); return; }
+        if (deepLinkScreen === 'review') { switchRootTab('profile'); renderPerformanceReview('weekly'); return; }
         switchRootTab('home');
     }
 
@@ -411,6 +413,63 @@
 
     function pickDashboard(d) {
         selectDashboard(d, true);
+    }
+
+    /**
+     * Re-lets someone with more than one company/employee dashboard (e.g.
+     * they work at two companies under this same Telegram account) jump
+     * between them after the initial boot-time pick, from Profile — same
+     * dashboards list renderChooseDashboard() uses, refetched so a role
+     * change since boot is picked up too.
+     */
+    async function renderSwitchCompany() {
+        showSubScreenChrome('Switch Company');
+        const app = document.getElementById('app');
+        app.innerHTML = `<p class="text-center text-slate-400 text-[12px] mt-10">Loading…</p>`;
+
+        let status;
+        try {
+            status = await api('/link/status');
+        } catch (e) {
+            app.innerHTML = card(`<p class="text-[13px] text-slate-600 text-center py-6">Could not load your companies.</p>`);
+            return;
+        }
+
+        const dashboards = status.dashboards || [];
+        window.__dashboards = dashboards;
+
+        if (dashboards.length <= 1) {
+            app.innerHTML = card(`<p class="text-[13px] text-slate-600 text-center py-6">You only have one company linked.</p>`);
+            return;
+        }
+
+        app.innerHTML = `<div class="space-y-2">${dashboards.map(d => {
+            const isCurrent = d.employee_id === state.employeeId && d.company_code === state.companyCode;
+            return `
+                <button onclick='pickSwitchedDashboard(${JSON.stringify(d)})' class="w-full text-left tap-card">
+                    ${card(`
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <p class="text-[13px] font-black text-slate-900">${d.company_display_name}</p>
+                                <p class="text-[11px] text-slate-500 mt-0.5">${d.short_name} · <span class="uppercase font-semibold">${d.role || ''}</span></p>
+                            </div>
+                            ${isCurrent ? '<span class="text-[9px] font-black text-emerald-700 px-2 py-0.5 rounded-full bg-emerald-50 shrink-0">Current</span>' : ''}
+                        </div>
+                    `, isCurrent ? 'border-emerald-300' : 'hover:border-[var(--accent)]')}
+                </button>
+            `;
+        }).join('')}</div>`;
+    }
+
+    function pickSwitchedDashboard(d) {
+        if (d.employee_id === state.employeeId && d.company_code === state.companyCode) {
+            switchRootTab('home');
+            return;
+        }
+        selectDashboard(d, false);
+        _themeApplied = false;
+        switchRootTab('home');
+        applyTheme();
     }
 
     async function confirmDisconnect() {
@@ -1704,6 +1763,7 @@
 
     function renderProfile() {
         showRootChrome('profile');
+        const canSwitchCompany = (window.__dashboards || []).length > 1;
         document.getElementById('app').innerHTML = `
             ${card(`
                 <div class="flex items-center gap-3">
@@ -1724,6 +1784,12 @@
             <button onclick="renderPerformanceReview('weekly')" class="w-full text-left tap-card">
                 ${card(`<p class="text-[13px] font-bold text-slate-700">📊 KPI Performance Review</p>`, 'hover:border-slate-300')}
             </button>
+
+            ${canSwitchCompany ? `
+            <div class="h-2"></div>
+            <button onclick="renderSwitchCompany()" class="w-full text-left tap-card">
+                ${card(`<p class="text-[13px] font-bold text-slate-700">🔄 Switch Company</p>`, 'hover:border-slate-300')}
+            </button>` : ''}
 
             <div class="h-2"></div>
             <button onclick="confirmDisconnect()" class="w-full text-left tap-card">
