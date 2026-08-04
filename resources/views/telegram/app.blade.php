@@ -431,7 +431,10 @@
         try {
             status = await api('/link/status');
         } catch (e) {
-            app.innerHTML = card(`<p class="text-[13px] text-slate-600 text-center py-6">Could not load your companies.</p>`);
+            app.innerHTML = card(`
+                <p class="text-[13px] text-slate-600 text-center py-4">Could not load your companies.${e.status ? ` (${e.status})` : ''}</p>
+                <button onclick="renderSwitchCompany()" class="w-full text-center text-[12px] font-bold text-[var(--accent)] py-2">Try again</button>
+            `);
             return;
         }
 
