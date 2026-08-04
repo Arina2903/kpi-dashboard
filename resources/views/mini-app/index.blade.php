@@ -492,7 +492,24 @@ const HOME_STAT_TINTS = {
     blue:    { chip: 'bg-blue-100 text-blue-600',        bar: 'bg-blue-500' },
     amber:   { chip: 'bg-amber-100 text-amber-600',      bar: 'bg-amber-500' },
     gold:    { chip: 'bg-[#F5EAE0] text-[#6B3F2A]',      bar: 'bg-[#D4AF37]' },
+    violet:  { chip: 'bg-violet-100 text-violet-600',    bar: 'bg-violet-500' },
+    rose:    { chip: 'bg-rose-100 text-rose-600',        bar: 'bg-rose-500' },
 };
+
+// Every section title pairs its emoji with a tint from the palette above —
+// so the page's color language reads consistently: each icon always means
+// the same hue wherever it shows up (Today's Tasks is always blue, AI
+// Daily Insight is always violet, etc.), rather than every card sharing
+// one uncolored heading.
+function sectionHeader(icon, label, tint, marginClass = 'mb-2') {
+    const t = HOME_STAT_TINTS[tint];
+    return `
+        <div class="flex items-center gap-2 ${marginClass}">
+            <div class="w-7 h-7 rounded-lg ${t.chip} flex items-center justify-center text-[13px] shrink-0">${icon}</div>
+            <p class="text-[13px] font-black text-slate-900">${label}</p>
+        </div>
+    `;
+}
 
 function homeStatCard(icon, label, value, tint, extra = '') {
     const t = HOME_STAT_TINTS[tint];
@@ -549,7 +566,7 @@ const HOME_TASK_GRID_STYLE = 'grid-template-columns: 1.7fr 1fr 1fr 0.7fr 1.1fr 0
 function homeTasksSection() {
     const filtered = homeFilteredTasks();
     return card(`
-        <p class="text-[13px] font-black text-slate-900 mb-2">📋 Today's Tasks</p>
+        ${sectionHeader('📋', "Today's Tasks", 'blue')}
         <div class="flex items-center gap-1.5 flex-wrap mb-3">
             ${homeTaskFilterBtn('all', 'All')}
             ${homeTaskFilterBtn('in_progress', 'In Progress')}
@@ -656,7 +673,7 @@ function homeQuickUpdateCard() {
 
     if (!activeTasks.length) {
         return `<div id="qduCard">${card(`
-            <p class="text-[13px] font-black text-slate-900 mb-2">📝 Quick Daily Update</p>
+            ${sectionHeader('📝', 'Quick Daily Update', 'emerald')}
             <p class="text-[12px] text-slate-500 text-center py-4">No active tasks to update.</p>
             <button onclick="renderNewTaskForm(true)" class="w-full py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black">+ Add an unplanned task</button>
         `)}</div>`;
@@ -673,7 +690,7 @@ function homeQuickUpdateCard() {
     `;
 
     return `<div id="qduCard">${card(`
-        <p class="text-[13px] font-black text-slate-900 mb-3">📝 Quick Daily Update</p>
+        ${sectionHeader('📝', 'Quick Daily Update', 'emerald', 'mb-3')}
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <div>
@@ -769,7 +786,7 @@ async function submitQuickDailyUpdate() {
 /* Upcoming Reminders (each task's own reminder_at, nothing fabricated).  */
 
 function homeAiInsightLoadingCard() {
-    return card(`<p class="text-[12px] font-black text-slate-900 mb-1">✨ AI Daily Insight</p><p class="text-[11px] text-slate-400">Loading…</p>`);
+    return card(`${sectionHeader('✨', 'AI Daily Insight', 'violet')}<p class="text-[11px] text-slate-400">Loading…</p>`);
 }
 
 async function loadHomeAiInsight() {
@@ -789,7 +806,7 @@ function homeAiInsightCard(summary) {
     const completed = facts.completed_count ?? 0;
     const attention = (facts.overdue_count ?? 0) + (facts.blocked_count ?? 0);
     return card(`
-        <p class="text-[12px] font-black text-slate-900 mb-1.5">✨ AI Daily Insight</p>
+        ${sectionHeader('✨', 'AI Daily Insight', 'violet')}
         <p class="text-[11px] text-slate-600 leading-relaxed">${summary.narrative}</p>
         <div class="mt-2.5 space-y-1">
             <p class="text-[10px] text-emerald-700 font-bold">✓ ${completed} of ${total} tasks updated</p>
@@ -801,7 +818,7 @@ function homeAiInsightCard(summary) {
 
 function homeAiInsightEmptyCard() {
     return card(`
-        <p class="text-[12px] font-black text-slate-900 mb-1.5">✨ AI Daily Insight</p>
+        ${sectionHeader('✨', 'AI Daily Insight', 'violet')}
         <p class="text-[11px] text-slate-500">No insight generated yet today.</p>
         <button onclick="generateHomeAiInsight()" class="mt-2 w-full py-2 rounded-xl bg-[#6B3F2A] hover:bg-[#5a341f] text-white text-[10px] font-black">Generate Insight</button>
     `);
@@ -810,19 +827,19 @@ function homeAiInsightEmptyCard() {
 async function generateHomeAiInsight() {
     const box = document.getElementById('homeAiInsight');
     if (!box) return;
-    box.innerHTML = card(`<p class="text-[12px] font-black text-slate-900 mb-1">✨ AI Daily Insight</p><p class="text-[11px] text-slate-400">Generating…</p>`);
+    box.innerHTML = card(`${sectionHeader('✨', 'AI Daily Insight', 'violet')}<p class="text-[11px] text-slate-400">Generating…</p>`);
     try {
         const data = await api('/summaries/regenerate', { method: 'POST', body: JSON.stringify({ scope: 'employee', period: 'daily' }) });
         box.innerHTML = homeAiInsightCard(data.summary);
     } catch (e) {
-        box.innerHTML = card(`<p class="text-[12px] font-black text-slate-900 mb-1">✨ AI Daily Insight</p><p class="text-[11px] text-red-500">${e.data?.message || "Couldn't generate right now."}</p>`);
+        box.innerHTML = card(`${sectionHeader('✨', 'AI Daily Insight', 'violet')}<p class="text-[11px] text-red-500">${e.data?.message || "Couldn't generate right now."}</p>`);
     }
 }
 
 function homeKpiAlignmentCard() {
     const kpis = __homeData.kpis;
     if (!kpis.length) {
-        return card(`<p class="text-[12px] font-black text-slate-900 mb-1">🎯 KPI Alignment</p><p class="text-[11px] text-slate-400">No KPIs set up for this financial year.</p>`);
+        return card(`${sectionHeader('🎯', 'KPI Alignment', 'gold')}<p class="text-[11px] text-slate-400">No KPIs set up for this financial year.</p>`);
     }
     const rows = kpis.map(k => {
         const pct = Math.max(0, Math.min(100, k.achievement_percentage));
@@ -839,7 +856,7 @@ function homeKpiAlignmentCard() {
         `;
     }).join('');
     return card(`
-        <p class="text-[12px] font-black text-slate-900 mb-1">🎯 KPI Alignment</p>
+        ${sectionHeader('🎯', 'KPI Alignment', 'gold')}
         ${rows}
         <p class="text-[9px] text-slate-400 mt-3 leading-relaxed">Task activity supports KPI tracking but does not update KPI Actual automatically.</p>
     `);
@@ -853,7 +870,7 @@ function homeRemindersCard() {
         .slice(0, 5);
 
     if (!upcoming.length) {
-        return card(`<p class="text-[12px] font-black text-slate-900 mb-1">🔔 Upcoming Reminders</p><p class="text-[11px] text-slate-400">No reminders scheduled.</p>`);
+        return card(`${sectionHeader('🔔', 'Upcoming Reminders', 'rose')}<p class="text-[11px] text-slate-400">No reminders scheduled.</p>`);
     }
 
     const rows = upcoming.map(t => {
@@ -869,7 +886,7 @@ function homeRemindersCard() {
         `;
     }).join('');
 
-    return card(`<p class="text-[12px] font-black text-slate-900 mb-1">🔔 Upcoming Reminders</p>${rows}`);
+    return card(`${sectionHeader('🔔', 'Upcoming Reminders', 'rose')}${rows}`);
 }
 
 /* ---------------------------------------------------------------- */
