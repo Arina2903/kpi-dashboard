@@ -487,14 +487,22 @@ function homeHeader() {
     `;
 }
 
-function homeStatCard(icon, label, value, extra = '') {
+const HOME_STAT_TINTS = {
+    emerald: { chip: 'bg-emerald-100 text-emerald-600', bar: 'bg-emerald-500' },
+    blue:    { chip: 'bg-blue-100 text-blue-600',        bar: 'bg-blue-500' },
+    amber:   { chip: 'bg-amber-100 text-amber-600',      bar: 'bg-amber-500' },
+    gold:    { chip: 'bg-[#F5EAE0] text-[#6B3F2A]',      bar: 'bg-[#D4AF37]' },
+};
+
+function homeStatCard(icon, label, value, tint, extra = '') {
+    const t = HOME_STAT_TINTS[tint];
     return card(`
-        <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-[#F5EAE0] flex items-center justify-center text-[15px] shrink-0">${icon}</div>
+        <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide truncate">${label}</p>
-                <p class="text-[18px] font-black text-slate-900 leading-none mt-0.5">${value}</p>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-wide truncate">${label}</p>
+                <p class="text-[26px] font-black text-slate-900 leading-none mt-1.5">${value}</p>
             </div>
+            <div class="w-10 h-10 rounded-xl ${t.chip} flex items-center justify-center text-[17px] shrink-0">${icon}</div>
         </div>
         ${extra}
     `);
@@ -512,15 +520,15 @@ function homeStatCards() {
     const weeklyScoreVal = __homeData.weeklyScore.score;
 
     return `
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mt-3">
-            ${homeStatCard('📈', 'Daily Progress', dueToday.length ? dailyProgressPct + '%' : '—', `
-                <div class="w-full h-1 bg-[#EFE3C7] rounded-full mt-2 overflow-hidden">
-                    <div class="h-full rounded-full bg-emerald-500" style="width:${dailyProgressPct}%"></div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
+            ${homeStatCard('📈', 'Daily Progress', dueToday.length ? dailyProgressPct + '%' : '—', 'emerald', `
+                <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-3 overflow-hidden">
+                    <div class="h-full rounded-full ${HOME_STAT_TINTS.emerald.bar}" style="width:${dailyProgressPct}%"></div>
                 </div>
             `)}
-            ${homeStatCard('📋', 'Active Tasks', activeTasks.length)}
-            ${homeStatCard('⏰', 'Due Today', dueTodayOpen.length)}
-            ${homeStatCard('⭐', 'Task Score', weeklyScoreVal !== null ? Math.round(weeklyScoreVal) : '—')}
+            ${homeStatCard('📋', 'Active Tasks', activeTasks.length, 'blue')}
+            ${homeStatCard('⏰', 'Due Today', dueTodayOpen.length, 'amber')}
+            ${homeStatCard('⭐', 'Task Score', weeklyScoreVal !== null ? Math.round(weeklyScoreVal) : '—', 'gold')}
         </div>
     `;
 }
@@ -534,7 +542,12 @@ function homeTaskFilterBtn(key, label) {
     return `<button type="button" onclick="setHomeFilter('${key}')" data-filter="${key}" class="home-filter-btn px-3 py-1.5 rounded-full text-[10px] font-black ${active ? 'bg-[#6B3F2A] text-white' : 'bg-[#F5EAE0] text-[#6B3F2A]'}">${label}</button>`;
 }
 
+// Shared by the desktop header row and every desktop task row so the
+// columns can never drift out of alignment with each other.
+const HOME_TASK_GRID_STYLE = 'grid-template-columns: 1.7fr 1fr 1fr 0.7fr 1.1fr 0.8fr 0.8fr 0.6fr';
+
 function homeTasksSection() {
+    const filtered = homeFilteredTasks();
     return card(`
         <p class="text-[13px] font-black text-slate-900 mb-2">📋 Today's Tasks</p>
         <div class="flex items-center gap-1.5 flex-wrap mb-3">
@@ -543,6 +556,10 @@ function homeTasksSection() {
             ${homeTaskFilterBtn('due_today', 'Due Today')}
             ${homeTaskFilterBtn('completed', 'Completed')}
         </div>
+        ${filtered.length ? `
+        <div class="hidden md:grid items-center gap-3 px-4 pb-2 text-[9px] font-black uppercase tracking-wide text-slate-400" style="${HOME_TASK_GRID_STYLE}">
+            <p>Task</p><p>Project</p><p>KPI Alignment</p><p>Priority</p><p>Progress</p><p>Due</p><p>Status</p><p class="text-right">Action</p>
+        </div>` : ''}
         <div id="homeTaskList" class="space-y-2">${homeTaskListHtml()}</div>
     `);
 }
@@ -582,9 +599,21 @@ function homeTaskRow(t) {
     const action = t.status === 'done'
         ? `<button onclick="window.__taskDetailBackTo='home'; renderTaskDetail('${t.id}')" class="text-[11px] font-black text-[#6B3F2A] shrink-0">View</button>`
         : `<button onclick="selectQuickUpdateTask('${t.id}')" class="text-[11px] font-black text-[#16A34A] shrink-0">Update</button>`;
+    const progressBar = `
+        <div class="flex items-center gap-2">
+            <div class="flex-1 h-1.5 bg-[#EFE3C7] rounded-full overflow-hidden min-w-[32px]">
+                <div class="h-full rounded-full bg-gradient-to-r ${achvBadge(pct).bar}" style="width:${pct}%"></div>
+            </div>
+            <p class="text-[10px] font-black text-slate-600 w-9 text-right shrink-0">${pct.toFixed(0)}%</p>
+        </div>
+    `;
 
+    // Mobile stays a stacked card (badges wrap naturally at narrow widths).
+    // Desktop (md+) becomes an aligned row matching the header's column
+    // widths — the wrapped-badge layout looked sparse once Home started
+    // using the page's full width.
     return `
-        <div class="rounded-xl border-2 border-[#E3D2B0] bg-[#FFFCF4] px-3 py-2.5">
+        <div class="md:hidden rounded-xl border-2 border-[#E3D2B0] bg-[#FFFCF4] px-3 py-2.5">
             <div class="flex items-center justify-between gap-2">
                 <p class="text-[12px] font-black text-slate-900 leading-snug min-w-0 truncate">${t.title}</p>
                 <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${statusPill.color}">${statusPill.label}</span>
@@ -595,13 +624,19 @@ function homeTaskRow(t) {
                 <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full ${priorityPill.color}">${priorityPill.label}</span>
                 ${dueDateBadge(t.due_date)}
             </div>
-            <div class="flex items-center gap-2 mt-2">
-                <div class="flex-1 h-1.5 bg-[#EFE3C7] rounded-full overflow-hidden">
-                    <div class="h-full rounded-full bg-gradient-to-r ${achvBadge(pct).bar}" style="width:${pct}%"></div>
-                </div>
-                <p class="text-[10px] font-black text-slate-600 w-9 text-right shrink-0">${pct.toFixed(0)}%</p>
-                ${action}
-            </div>
+            <div class="mt-2">${progressBar}</div>
+            <div class="flex justify-end mt-1.5">${action}</div>
+        </div>
+
+        <div class="hidden md:grid items-center gap-3 rounded-xl border-2 border-[#E3D2B0] bg-[#FFFCF4] px-4 py-3" style="${HOME_TASK_GRID_STYLE}">
+            <p class="text-[12px] font-black text-slate-900 truncate min-w-0">${t.title}</p>
+            <p class="text-[10px] font-bold text-slate-500 truncate">${t.project_name || 'My To-Do List'}</p>
+            <span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-[#CCE3DE] text-[#1a3d34] truncate w-fit max-w-full">${kpiLabel}</span>
+            <span class="text-[9px] font-black px-1.5 py-0.5 rounded-full ${priorityPill.color} w-fit">${priorityPill.label}</span>
+            ${progressBar}
+            <p class="text-[10px] text-slate-500 truncate">${t.due_date || '—'}</p>
+            <span class="text-[9px] font-black px-1.5 py-0.5 rounded-full ${statusPill.color} w-fit">${statusPill.label}</span>
+            <div class="text-right">${action}</div>
         </div>
     `;
 }
@@ -640,29 +675,35 @@ function homeQuickUpdateCard() {
     return `<div id="qduCard">${card(`
         <p class="text-[13px] font-black text-slate-900 mb-3">📝 Quick Daily Update</p>
 
-        <p class="text-[10px] font-bold text-slate-600 mb-1">Selected task</p>
-        <select id="qduTaskSelect" onchange="onQduTaskChange()" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
-            ${activeTasks.map(t => `<option value="${t.id}">${t.title}</option>`).join('')}
-        </select>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div>
+                <p class="text-[10px] font-bold text-slate-600 mb-1">Selected task</p>
+                <select id="qduTaskSelect" onchange="onQduTaskChange()" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+                    ${activeTasks.map(t => `<option value="${t.id}">${t.title}</option>`).join('')}
+                </select>
 
-        <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Status</p>
-        <div class="grid grid-cols-3 gap-2">
-            ${statusBtn('not_started')}${statusBtn('in_progress')}${statusBtn('done')}
+                <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Status</p>
+                <div class="grid grid-cols-3 gap-2">
+                    ${statusBtn('not_started')}${statusBtn('in_progress')}${statusBtn('done')}
+                </div>
+
+                <div class="flex items-center justify-between mt-3">
+                    <p class="text-[10px] font-bold text-slate-600">Progress</p>
+                    <p class="text-[11px] font-black text-[#6B3F2A]"><span id="qduProgressValue">${first.progress_percentage || 0}</span>%</p>
+                </div>
+                <input type="range" id="qduProgressInput" min="0" max="100" value="${first.progress_percentage || 0}"
+                    oninput="document.getElementById('qduProgressValue').textContent = this.value" class="w-full accent-[#6B3F2A]">
+            </div>
+
+            <div class="flex flex-col">
+                <p class="text-[10px] font-bold text-slate-600 mb-1">What did you complete today?</p>
+                <textarea id="qduNoteInput" rows="4" maxlength="500" oninput="document.getElementById('qduNoteCount').textContent = this.value.length"
+                    placeholder="Share a brief update…" class="w-full flex-1 text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500 resize-none"></textarea>
+                <p class="text-[9px] text-slate-400 text-right mt-0.5"><span id="qduNoteCount">0</span> / 500</p>
+            </div>
         </div>
 
-        <div class="flex items-center justify-between mt-3">
-            <p class="text-[10px] font-bold text-slate-600">Progress</p>
-            <p class="text-[11px] font-black text-[#6B3F2A]"><span id="qduProgressValue">${first.progress_percentage || 0}</span>%</p>
-        </div>
-        <input type="range" id="qduProgressInput" min="0" max="100" value="${first.progress_percentage || 0}"
-            oninput="document.getElementById('qduProgressValue').textContent = this.value" class="w-full accent-[#6B3F2A]">
-
-        <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">What did you complete today?</p>
-        <textarea id="qduNoteInput" rows="2" maxlength="500" oninput="document.getElementById('qduNoteCount').textContent = this.value.length"
-            placeholder="Share a brief update…" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500 resize-none"></textarea>
-        <p class="text-[9px] text-slate-400 text-right mt-0.5"><span id="qduNoteCount">0</span> / 500</p>
-
-        <div class="flex items-center justify-between gap-2 mt-3">
+        <div class="flex items-center justify-between gap-2 mt-4">
             <button onclick="renderNewTaskForm(true)" class="text-[11px] font-bold text-[#6B3F2A] shrink-0">+ Add an unplanned task</button>
             <button onclick="submitQuickDailyUpdate()" class="px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black shrink-0">Submit Update</button>
         </div>
