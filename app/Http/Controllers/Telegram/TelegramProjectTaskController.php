@@ -480,6 +480,101 @@ class TelegramProjectTaskController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | PATCH /api/telegram/project-tasks/{id}
+    |--------------------------------------------------------------------------
+    | Full task-details edit — same fields and scoping as the web Mini App's
+    | MiniAppTaskController::update().
+    */
+    public function update(Request $request, SupabaseService $supabase, string $id)
+    {
+        $validated = $request->validate([
+            'employee_id' => 'required|string',
+            'company_code' => 'required|string',
+            'title' => 'required|string|max:200',
+            'description' => 'nullable|string|max:2000',
+            'unit' => 'required|in:number,currency,percentage',
+            'target' => 'required|numeric|min:0',
+            'priority' => 'nullable|in:low,medium,high,critical',
+            'task_type' => 'nullable|string|max:50',
+            'estimated_effort_hours' => 'nullable|numeric|min:0',
+            'start_date' => 'nullable|date',
+            'due_date' => 'nullable|date',
+            'reminder_at' => 'nullable|date',
+            'visibility' => 'nullable|in:private,team,department',
+            'recurrence_rule' => 'nullable|in:none,daily,weekdays,weekly,monthly',
+        ]);
+
+        $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
+
+        $task = $supabase->first('telegram_project_tasks', [
+            'id' => 'eq.' . $id,
+            'employee_id' => 'eq.' . $validated['employee_id'],
+            'select' => '*',
+        ]);
+
+        if (empty($task)) {
+            return response()->json(['success' => false, 'message' => 'Task not found.'], 404);
+        }
+
+        $supabase->safePatch('telegram_project_tasks', ['id' => 'eq.' . $id], [
+            'title' => trim($validated['title']),
+            'description' => $validated['description'] ?? $task['description'] ?? null,
+            'unit' => $validated['unit'],
+            'target' => (float) $validated['target'],
+            'priority' => $validated['priority'] ?? $task['priority'] ?? 'medium',
+            'task_type' => $validated['task_type'] ?? $task['task_type'] ?? null,
+            'estimated_effort_hours' => $validated['estimated_effort_hours'] ?? $task['estimated_effort_hours'] ?? null,
+            'start_date' => $validated['start_date'] ?? $task['start_date'] ?? null,
+            'due_date' => $validated['due_date'] ?? $task['due_date'] ?? null,
+            'reminder_at' => $validated['reminder_at'] ?? $task['reminder_at'] ?? null,
+            'visibility' => $validated['visibility'] ?? $task['visibility'] ?? 'private',
+            'recurrence_rule' => $validated['recurrence_rule'] ?? $task['recurrence_rule'] ?? 'none',
+            'status' => (float) $task['actual'] >= (float) $validated['target'] && (float) $validated['target'] > 0 ? 'done' : $task['status'],
+            'updated_at' => $this->nowMy(),
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE /api/telegram/project-tasks/{id}
+    |--------------------------------------------------------------------------
+    | Hard delete — telegram_project_task_kpi_links and
+    | telegram_project_task_updates both cascade on task_id, so this is the
+    | only row that needs deleting directly. Same contract as the web Mini
+    | App's MiniAppTaskController::destroy().
+    */
+    public function destroy(Request $request, SupabaseService $supabase, string $id)
+    {
+        $validated = $request->validate([
+            'employee_id' => 'required|string',
+            'company_code' => 'required|string',
+        ]);
+
+        $this->resolveContext($request, $supabase, $validated['employee_id'], $validated['company_code']);
+
+        $task = $supabase->first('telegram_project_tasks', [
+            'id' => 'eq.' . $id,
+            'employee_id' => 'eq.' . $validated['employee_id'],
+            'select' => 'id',
+        ]);
+
+        if (empty($task)) {
+            return response()->json(['success' => false, 'message' => 'Task not found.'], 404);
+        }
+
+        $deleted = $supabase->safeDelete('telegram_project_tasks', ['id' => 'eq.' . $id]);
+
+        if (!$deleted) {
+            return response()->json(['success' => false, 'message' => 'Could not delete task.'], 500);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | GET /api/telegram/project-tasks/{id}
     |--------------------------------------------------------------------------
     | Task Details screen: the task itself, its linked KPIs (with any AI

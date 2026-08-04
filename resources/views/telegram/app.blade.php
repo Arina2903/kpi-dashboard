@@ -70,6 +70,10 @@
     const tg = window.Telegram?.WebApp;
     tg?.ready();
     tg?.expand();
+    // Telegram's own hardware/native back gesture is otherwise unwired and
+    // would just close the whole Mini App from any screen — route it through
+    // the same goBack() our in-app arrow uses instead.
+    tg?.BackButton?.onClick(() => goBack());
 
     const BOT_USERNAME = '{{ $botUsername }}';
     const initData = tg?.initData || '';
@@ -211,29 +215,59 @@
     /* ---------------------------------------------------------------- */
 
     let currentRootTab = 'home';
+    // Whether the screen on screen right now is one of the 4 bottom-nav
+    // roots (true) or something drilled into from one of them (false) —
+    // goBack() uses this to decide whether "back" means "go to Home" or
+    // "go to whichever root tab I drilled in from".
+    let isRootScreen = true;
+
+    const ROOT_TAB_TITLES = { tasks: 'Tasks', kpi: 'My KPIs', profile: 'Profile' };
+
+    // Toggles both the in-app "←" arrow and Telegram's own native/hardware
+    // back button together, so neither one is ever left out of sync with
+    // the other and the native back gesture never silently closes the app.
+    function setBackVisible(visible) {
+        document.getElementById('backBtn').classList.toggle('hidden', !visible);
+        if (visible) {
+            tg?.BackButton?.show();
+        } else {
+            tg?.BackButton?.hide();
+        }
+    }
 
     function showRootChrome(tab) {
         currentRootTab = tab;
-        document.getElementById('topbar').classList.add('hidden');
+        isRootScreen = true;
         document.getElementById('bottomNav').classList.remove('hidden');
         document.querySelectorAll('.nav-tab').forEach(btn => {
             const active = btn.dataset.tab === tab;
             btn.classList.toggle('text-[var(--accent)]', active);
             btn.classList.toggle('text-slate-400', !active);
         });
+
+        if (tab === 'home') {
+            document.getElementById('topbar').classList.add('hidden');
+            setBackVisible(false);
+        } else {
+            document.getElementById('topbar').classList.remove('hidden');
+            document.getElementById('topbarTitle').textContent = ROOT_TAB_TITLES[tab] || 'Performix';
+            setBackVisible(true);
+        }
     }
 
     function showSubScreenChrome(title) {
+        isRootScreen = false;
         document.getElementById('bottomNav').classList.add('hidden');
         document.getElementById('topbar').classList.remove('hidden');
-        document.getElementById('backBtn').classList.remove('hidden');
+        setBackVisible(true);
         document.getElementById('topbarTitle').textContent = title;
     }
 
     function showBootChrome(title) {
+        isRootScreen = false;
         document.getElementById('bottomNav').classList.add('hidden');
         document.getElementById('topbar').classList.remove('hidden');
-        document.getElementById('backBtn').classList.add('hidden');
+        setBackVisible(false);
         document.getElementById('topbarTitle').textContent = title;
     }
 
@@ -245,7 +279,11 @@
     }
 
     function goBack() {
-        switchRootTab(currentRootTab);
+        if (isRootScreen && currentRootTab !== 'home') {
+            switchRootTab('home');
+        } else {
+            switchRootTab(currentRootTab);
+        }
     }
 
     function card(inner, extraClasses = '') {
@@ -714,6 +752,92 @@
     }
 
     /* ================================================================ */
+    /* EDIT / DELETE — same simplified field set as Create Task (title,   */
+    /* due date, priority); KPI links stay a separate step via the        */
+    /* existing "Edit KPI Links" screen, same as on Task Details.         */
+    /* ================================================================ */
+
+    async function renderEditTask(taskId) {
+        showSubScreenChrome('Edit Task');
+        const app = document.getElementById('app');
+        const t = window.__taskDetail?.id === taskId ? window.__taskDetail : null;
+
+        if (!t) {
+            renderError('Could not load this task.');
+            return;
+        }
+
+        app.innerHTML = card(`
+            <p class="text-[10px] font-bold text-slate-600 mb-1">Task Name</p>
+            <input type="text" id="etTitle" value="${(t.title || '').replace(/"/g, '&quot;')}"
+                class="w-full text-[13px] px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-[var(--accent)] focus:bg-white">
+
+            <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Due Date</p>
+            <input type="date" id="etDueDate" value="${t.due_date || ''}" class="w-full text-[13px] px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-[var(--accent)] focus:bg-white">
+
+            <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Priority</p>
+            <select id="etPriority" class="w-full text-[13px] px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-[var(--accent)] focus:bg-white">
+                ${Object.entries(PRIORITY_LABELS).map(([key, p]) => `<option value="${key}" ${key === t.priority ? 'selected' : ''}>${p.label}</option>`).join('')}
+            </select>
+
+            <button onclick="saveEditTask('${taskId}')" class="w-full mt-4 py-3 rounded-2xl bg-[var(--accent)] hover:opacity-90 text-white text-[13px] font-black">Save Changes</button>
+            <p id="etFeedback" class="hidden text-[10px] font-bold text-red-600 mt-2 text-center"></p>
+        `);
+    }
+
+    async function saveEditTask(taskId) {
+        const t = window.__taskDetail;
+        const feedback = document.getElementById('etFeedback');
+        const title = document.getElementById('etTitle').value.trim();
+        const dueDate = document.getElementById('etDueDate').value || null;
+        const priority = document.getElementById('etPriority').value;
+
+        if (!title) {
+            feedback.textContent = 'Enter a task name.';
+            feedback.classList.remove('hidden');
+            return;
+        }
+        feedback.classList.add('hidden');
+
+        try {
+            await api(`/project-tasks/${taskId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    employee_id: state.employeeId, company_code: state.companyCode,
+                    title, unit: t.unit, target: t.target,
+                    due_date: dueDate, priority,
+                }),
+            });
+            if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            if (tg?.showPopup) tg.showPopup({ message: 'Task updated!' });
+            renderTaskDetail(taskId);
+        } catch (e) {
+            feedback.textContent = e.data?.message || "Couldn't save — please try again.";
+            feedback.classList.remove('hidden');
+        }
+    }
+
+    function confirmDeleteTask(taskId) {
+        const doDelete = async () => {
+            try {
+                await api(`/project-tasks/${taskId}`, {
+                    method: 'DELETE',
+                    body: JSON.stringify({ employee_id: state.employeeId, company_code: state.companyCode }),
+                });
+                if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                switchRootTab('tasks');
+            } catch (e) {
+                showToast(e.data?.message || "Couldn't delete — please try again.");
+            }
+        };
+        if (tg?.showConfirm) {
+            tg.showConfirm('Delete this task? This cannot be undone.', (ok) => { if (ok) doDelete(); });
+        } else if (confirm('Delete this task? This cannot be undone.')) {
+            doDelete();
+        }
+    }
+
+    /* ================================================================ */
     /* DAILY UPDATE — status (radio-style), progress slider, a note, and  */
     /* a quick path to log an unplanned task. Never touches any linked    */
     /* KPI's actual (that stays the KPI tab's job).                       */
@@ -907,6 +1031,8 @@
                 </div>
                 <div class="flex items-center gap-2 mt-3">
                     <button onclick="renderDailyUpdate('${t.id}')" class="flex-1 py-2 rounded-xl bg-[var(--accent)] hover:opacity-90 text-white text-[11px] font-black">Daily Update</button>
+                    <button onclick="renderEditTask('${t.id}')" class="px-3 py-2 rounded-xl bg-white border-2 border-slate-200 text-slate-600 text-[11px] font-black">✎ Edit</button>
+                    <button onclick="confirmDeleteTask('${t.id}')" class="px-3 py-2 rounded-xl bg-white border-2 border-red-200 text-red-600 text-[11px] font-black">🗑</button>
                 </div>
             `)}
 
