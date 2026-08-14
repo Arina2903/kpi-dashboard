@@ -19,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'telegram.cron.secret' => \App\Http\Middleware\TelegramCronSecret::class,
             'no-cache' => \App\Http\Middleware\NoCacheHeaders::class,
             'telegram.linked' => \App\Http\Middleware\EnsureTelegramLinked::class,
+            'platform.auth' => \App\Http\Middleware\PlatformAuth::class,
+        ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

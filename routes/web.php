@@ -17,7 +17,7 @@ use App\Http\Controllers\AiController;
 */
 
 Route::get('/', function () {
-    return redirect()->route('login');
+    return redirect()->route('platform.login');
 });
 
 // Telegram Mini App shell — opened inside Telegram's WebView, no Laravel session
@@ -27,11 +27,86 @@ Route::view('/telegram/app', 'telegram.app', [
     'botUsername' => env('TELEGRAM_BOT_USERNAME', ''),
 ])->name('telegram.app');
 
-Route::get('/login', [AuthController::class, 'showLogin'])
-    ->name('login');
+// The legacy employee-based login below assumes a `users` table with
+// `password_hash`/`is_active` columns and an `employees` table for session
+// setup afterward -- neither exists on this company's database (confirmed
+// live: the Platform's `users` table is Supabase-Auth-linked instead, and
+// `employees` doesn't exist at all). GET redirects to the working Platform
+// login so nobody lands on a form that can only fail; POST is left in place
+// only so a stale bookmark POSTing directly here still gets a clean 4xx/5xx
+// from Supabase rather than this route not existing at all.
+Route::get('/login', function () {
+    return redirect()->route('platform.login');
+})->name('login');
 
 Route::post('/login', [AuthController::class, 'submitLogin'])
     ->name('login.submit');
+
+/*
+|--------------------------------------------------------------------------
+| MULTI-COMPANY PLATFORM (Supabase Auth + RLS — separate from the legacy
+| employee/company session-based auth above)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/platform/login', [\App\Http\Controllers\Platform\AuthController::class, 'showLogin'])
+    ->name('platform.login');
+
+Route::post('/platform/login', [\App\Http\Controllers\Platform\AuthController::class, 'submitLogin'])
+    ->name('platform.login.submit');
+
+Route::post('/platform/logout', [\App\Http\Controllers\Platform\AuthController::class, 'logout'])
+    ->name('platform.logout');
+
+Route::get('/platform/invite/accept', [\App\Http\Controllers\Platform\InviteController::class, 'accept'])
+    ->name('platform.invite.accept');
+
+Route::post('/platform/invite/set-password', [\App\Http\Controllers\Platform\InviteController::class, 'setPassword'])
+    ->name('platform.invite.set-password');
+
+Route::middleware(['platform.auth'])->prefix('platform')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\Platform\DashboardController::class, 'index'])
+        ->name('platform.dashboard');
+
+    Route::get('/companies', [\App\Http\Controllers\Platform\CompanyController::class, 'index'])
+        ->name('platform.companies.index');
+
+    Route::post('/companies', [\App\Http\Controllers\Platform\CompanyController::class, 'store'])
+        ->name('platform.companies.store');
+
+    Route::post('/companies/{company}/admins', [\App\Http\Controllers\Platform\CompanyController::class, 'storeAdmin'])
+        ->name('platform.companies.admins.store');
+
+    Route::get('/companies/{company}/departments', [\App\Http\Controllers\Platform\DepartmentController::class, 'index'])
+        ->name('platform.departments.index');
+
+    Route::post('/companies/{company}/departments', [\App\Http\Controllers\Platform\DepartmentController::class, 'store'])
+        ->name('platform.departments.store');
+
+    Route::post('/companies/{company}/departments/{department}/users', [\App\Http\Controllers\Platform\DepartmentController::class, 'storeUser'])
+        ->name('platform.departments.users.store');
+
+    Route::post('/companies/{company}/departments/{department}/roles', [\App\Http\Controllers\Platform\RoleController::class, 'store'])
+        ->name('platform.roles.store');
+
+    Route::delete('/companies/{company}/departments/{department}/roles/{role}', [\App\Http\Controllers\Platform\RoleController::class, 'destroy'])
+        ->name('platform.roles.destroy');
+
+    Route::get('/companies/{company}/kpis', [\App\Http\Controllers\Platform\KpiController::class, 'index'])
+        ->name('platform.kpis.index');
+
+    Route::post('/companies/{company}/kpi-categories', [\App\Http\Controllers\Platform\KpiController::class, 'storeCategory'])
+        ->name('platform.kpi-categories.store');
+
+    Route::post('/companies/{company}/kpis', [\App\Http\Controllers\Platform\KpiController::class, 'store'])
+        ->name('platform.kpis.store');
+
+    Route::get('/companies/{company}/departments/{department}/submissions', [\App\Http\Controllers\Platform\KpiSubmissionController::class, 'index'])
+        ->name('platform.submissions.index');
+
+    Route::post('/companies/{company}/departments/{department}/submissions', [\App\Http\Controllers\Platform\KpiSubmissionController::class, 'store'])
+        ->name('platform.submissions.store');
+});
 
 /*
 |--------------------------------------------------------------------------
