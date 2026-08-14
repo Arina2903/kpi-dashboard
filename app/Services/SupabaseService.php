@@ -183,6 +183,26 @@ class SupabaseService
         return $result[0] ?? null;
     }
 
+    /**
+     * Same as `first()`, but retries briefly — for rows written by an async
+     * trigger (e.g. the `auth.users` -> `public.users` sync) that may not be
+     * visible yet the instant the triggering call returns.
+     */
+    public function firstEventually(string $table, array $query = [], int $attempts = 10, int $delayMicroseconds = 300_000)
+    {
+        for ($i = 0; $i < $attempts; $i++) {
+            $row = $this->first($table, $query);
+
+            if ($row) {
+                return $row;
+            }
+
+            usleep($delayMicroseconds);
+        }
+
+        return null;
+    }
+
     /*
     |--------------------------------------------------------------------------
     | FIND BY ID
