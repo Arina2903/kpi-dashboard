@@ -8,12 +8,13 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use App\Mail\PasswordResetMail;
 use App\Services\SupabaseService;
+use Inertia\Inertia;
 
 class AuthController extends Controller
 {
     public function showLogin()
     {
-        return view('auth.login');
+        return Inertia::render('Auth/Login');
     }
 
     public function submitLogin(Request $request, SupabaseService $supabase)
@@ -111,7 +112,10 @@ class AuthController extends Controller
                 ->with('error', 'Tiada dashboard tersedia untuk akaun ini.');
         }
 
-        return view('auth.choose-dashboard', compact('dashboards'));
+        return Inertia::render('Auth/ChooseDashboard', [
+            'dashboards' => $dashboards,
+            'userName' => session('user_name'),
+        ]);
     }
 
     public function selectDashboard(Request $request, SupabaseService $supabase)
@@ -161,7 +165,7 @@ class AuthController extends Controller
 
     public function showForgotPassword()
     {
-        return view('auth.forgot-password');
+        return Inertia::render('Auth/ForgotPassword');
     }
 
     public function sendResetLink(Request $request, SupabaseService $supabase)
@@ -198,7 +202,7 @@ class AuthController extends Controller
 
     public function showResetPassword(string $token, Request $request)
     {
-        return view('auth.reset-password', [
+        return Inertia::render('Auth/ResetPassword', [
             'token' => $token,
             'email' => $request->query('email', ''),
         ]);
@@ -295,7 +299,6 @@ class AuthController extends Controller
                 'company_name' => $company['name'] ?? $roleAccess['company_code'],
 
                 'company_display_name' => $company['display_name'] ?? ($company['name'] ?? $roleAccess['company_code']),
-                'company_logo' => $company['logo_path'] ?? '/images/default-logo.png',
 
                 'manager_code' => $employee['manager_code'] ?? null,
                 'vp_code' => $employee['vp_code'] ?? null,
@@ -324,7 +327,6 @@ class AuthController extends Controller
             'company_code'         => $dashboard['company_code'],
             'company_name'         => $dashboard['company_name'],
             'company_display_name' => $dashboard['company_display_name'],
-            'company_logo'         => $dashboard['company_logo'],
         ]);
     }
 

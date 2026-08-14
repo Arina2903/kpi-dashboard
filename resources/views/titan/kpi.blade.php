@@ -3,6 +3,7 @@
 <head>
     <title>Titan KPI Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
     <style>
         #sidebar, #sidebar * { font-family: 'Inter', sans-serif; }
         .month-row:nth-child(even) { background: rgba(248,250,252,.7); }

@@ -3,6 +3,7 @@
 <head>
     <title>My Department KPI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
     <style>
         .glass { background: rgba(255,255,255,.92); backdrop-filter: blur(14px); }
         .card-hover { transition: .2s ease; }

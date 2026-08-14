@@ -1,17 +1,7 @@
 <!-- AI CHAT WIDGET -->
 <style>
     #aiChatPanel {
-        transition: opacity .2s ease, transform .2s ease, width .25s ease, height .25s ease, bottom .25s ease, right .25s ease;
-    }
-    #aiChatPanel.hidden {
-        opacity: 0;
-        transform: translateY(12px) scale(.97);
-        pointer-events: none;
-    }
-    #aiChatPanel.open {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-        pointer-events: all;
+        transition: width .25s ease, height .25s ease, bottom .25s ease, right .25s ease;
     }
     #aiChatPanel.maximized {
         width: min(680px, 96vw) !important;
@@ -43,25 +33,34 @@
 </style>
 
 <!-- Floating bubble -->
+<div x-data>
 <button
     id="aiChatBubble"
-    onclick="toggleAiChat()"
+    @click="toggleAiChat()"
     class="no-print fixed bottom-6 right-6 z-[9999] w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 shadow-xl flex items-center justify-center transition"
     title="ANIRA - KPI AI Assistant"
 >
-    <svg id="aiChatIconOpen" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <svg x-show="!$store.aniraChat.open" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"/>
     </svg>
-    <svg id="aiChatIconClose" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <svg x-show="$store.aniraChat.open" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
     </svg>
-    <span id="aiUnreadDot" class="hidden absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+    <span x-show="$store.aniraChat.unread" class="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
 </button>
 
 <!-- Chat panel -->
 <div
     id="aiChatPanel"
-    class="no-print fixed bottom-24 right-6 z-[9998] w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col hidden"
+    x-show="$store.aniraChat.open"
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0 -translate-y-3 scale-[.97]"
+    x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+    x-transition:leave-end="opacity-0 -translate-y-3 scale-[.97]"
+    :class="{ 'maximized': $store.aniraChat.maximized }"
+    class="no-print fixed bottom-24 right-6 z-[9998] w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col"
     style="height: 480px;"
 >
     <!-- Header -->
@@ -83,13 +82,16 @@
                 </svg>
             </button>
             <!-- Maximize toggle -->
-            <button id="aiMaximizeBtn" onclick="toggleAiMaximize()" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition" title="Expand">
-                <svg id="aiMaximizeIcon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <button id="aiMaximizeBtn" @click="toggleAiMaximize()" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition" title="Expand">
+                <svg x-show="!$store.aniraChat.maximized" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                </svg>
+                <svg x-show="$store.aniraChat.maximized" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"/>
                 </svg>
             </button>
             <!-- Close -->
-            <button onclick="toggleAiChat()" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
+            <button @click="toggleAiChat()" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
@@ -138,8 +140,13 @@
         </div>
     </div>
 </div>
+</div>
 
 <script>
+document.addEventListener('alpine:init', () => {
+    Alpine.store('aniraChat', { open: false, maximized: false, unread: false });
+});
+
 (function () {
     const CSRF        = '{{ csrf_token() }}';
     const chatUrl     = '{{ route("ai.chat") }}';
@@ -156,8 +163,6 @@
     // State
     let history          = [];  // API message array
     let uiMessages       = [];  // {type:'user'|'bot'|'kpi_card', text?, kpi?}
-    let isOpen           = false;
-    let isMaximized      = false;
     let isWaiting        = false;
     let kpiReadyToFill   = false;  // true only after ANIRA signals "Your KPI is finalised."
 
@@ -227,24 +232,12 @@
      | OPEN / CLOSE
      ----------------------------------------------------------------------- */
     window.toggleAiChat = function () {
-        isOpen = !isOpen;
-        const panel     = document.getElementById('aiChatPanel');
-        const iconOpen  = document.getElementById('aiChatIconOpen');
-        const iconClose = document.getElementById('aiChatIconClose');
-        const dot       = document.getElementById('aiUnreadDot');
+        const store = Alpine.store('aniraChat');
+        store.open = !store.open;
 
-        if (isOpen) {
-            panel.classList.remove('hidden');
-            setTimeout(() => panel.classList.add('open'), 10);
-            iconOpen.classList.add('hidden');
-            iconClose.classList.remove('hidden');
-            dot.classList.add('hidden');
-            document.getElementById('aiChatInput').focus();
-        } else {
-            panel.classList.remove('open');
-            setTimeout(() => panel.classList.add('hidden'), 200);
-            iconOpen.classList.remove('hidden');
-            iconClose.classList.add('hidden');
+        if (store.open) {
+            store.unread = false;
+            setTimeout(() => document.getElementById('aiChatInput')?.focus(), 50);
         }
     };
 
@@ -252,17 +245,8 @@
      | MAXIMIZE / RESTORE
      ----------------------------------------------------------------------- */
     window.toggleAiMaximize = function () {
-        isMaximized = !isMaximized;
-        const panel = document.getElementById('aiChatPanel');
-        const icon  = document.getElementById('aiMaximizeIcon');
-
-        if (isMaximized) {
-            panel.classList.add('maximized');
-            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"/>';
-        } else {
-            panel.classList.remove('maximized');
-            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>';
-        }
+        const store = Alpine.store('aniraChat');
+        store.maximized = !store.maximized;
     };
 
     /* -----------------------------------------------------------------------
@@ -344,7 +328,7 @@
 
             saveSession();
 
-            if (!isOpen) document.getElementById('aiUnreadDot').classList.remove('hidden');
+            if (!Alpine.store('aniraChat').open) Alpine.store('aniraChat').unread = true;
 
         } catch (e) {
             document.querySelectorAll('#aiChatMessages .ai-msg-bot:last-child')

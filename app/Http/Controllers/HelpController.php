@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\SupabaseService;
+use Inertia\Inertia;
 
 class HelpController extends Controller
 {
@@ -19,6 +20,6 @@ class HelpController extends Controller
             abort(403, 'Employee not found.');
         }
 
-        return view('help', ['user' => $employees[0]]);
+        return Inertia::render('Help', ['user' => $employees[0]]);
     }
 }

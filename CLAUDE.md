@@ -26,7 +26,7 @@ php artisan tinker --execute="(new App\Services\AiService())->chat([['role'=>'us
 
 PHP must be on PATH. On macOS with Homebrew: `eval "$(/usr/local/bin/brew shellenv)"` before running `php`.
 
-**Production (Railway):** `php artisan config:clear && php artisan cache:clear && php artisan view:clear && php artisan serve --host=0.0.0.0 --port=$PORT`
+**Production:** `php artisan config:clear && php artisan cache:clear && php artisan view:clear && php artisan serve --host=0.0.0.0 --port=$PORT`
 
 ## Environment Variables
 

@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .brand-panel { background: radial-gradient(circle at top left, rgba(196,184,150,.4), transparent 32%), radial-gradient(circle at bottom right, rgba(166,147,116,.3), transparent 38%), linear-gradient(135deg, #F1EBE0 0%, #E9E0D1 50%, #DED2BC 130%); }
@@ -23,14 +24,9 @@
         <div class="brand-panel relative overflow-hidden rounded-[20px] text-[#3A3128] px-6 py-6 shadow-[0_15px_45px_rgba(0,0,0,0.12)] mb-4">
             <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#C9B896] via-[#C9B896] to-[#C9B896]/10"></div>
             <div class="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#C9B896]/25 blur-3xl"></div>
-            <div class="relative flex items-center gap-3 mb-1">
-                <div class="w-11 h-11 rounded-xl overflow-hidden ring-2 ring-[#C9B896] shrink-0">
-                    <img src="{{ asset('images/AI-RCG.png') }}" alt="RCG" class="w-full h-full object-cover">
-                </div>
-                <div>
-                    <h1 class="text-base font-black">Select Company</h1>
-                    <p class="text-[11px] text-[#8B7355] font-semibold">Choose which company dashboard to access</p>
-                </div>
+            <div class="relative mb-1">
+                <h1 class="text-base font-black">Select Company</h1>
+                <p class="text-[11px] text-[#8B7355] font-semibold">Choose which company dashboard to access</p>
             </div>
             @if(session('user_name'))
             <p class="relative text-[10px] text-[#6B5D4F] mt-3">Logged in as <span class="text-[#3A3128] font-bold">{{ session('user_name') }}</span></p>
@@ -64,18 +60,9 @@
                     <button type="submit" class="w-full text-left bg-white rounded-2xl border border-[#E5E7EB] border-t-[3px] border-t-[#C9B896] shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all group">
                         <div class="p-4 flex items-center gap-4">
 
-                            {{-- Company logo / initials --}}
-                            @php
-                                $cardLogo = $dashboard['company_code'] === 'RCG'
-                                    ? asset('images/RCG-Logo-black.png')
-                                    : ($dashboard['company_logo'] ?? null);
-                            @endphp
+                            {{-- Company initials --}}
                             <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden border border-[#E5E7EB]">
-                                @if(!empty($cardLogo) && $cardLogo !== '/images/default-logo.png')
-                                    <img src="{{ $cardLogo }}" class="w-full h-full object-contain p-1">
-                                @else
-                                    <span class="text-sm font-black text-[#6B5D4F]">{{ strtoupper(substr($dashboard['company_code'],0,2)) }}</span>
-                                @endif
+                                <span class="text-sm font-black text-[#6B5D4F]">{{ strtoupper(substr($dashboard['company_code'],0,2)) }}</span>
                             </div>
 
                             {{-- Info --}}

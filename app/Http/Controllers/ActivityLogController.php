@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\SupabaseService;
+use Inertia\Inertia;
 
 class ActivityLogController extends Controller
 {
@@ -343,11 +344,11 @@ class ActivityLogController extends Controller
             $logs = $logs->filter(fn($l) => $l['type'] === $typeFilter)->values();
         }
 
-        return view('kpi.activity-log', array_merge([
+        return Inertia::render('ActivityLog', [
             'user'       => $user,
-            'logs'       => $logs,
+            'logs'       => $logs->values()->all(),
             'typeFilter' => $typeFilter,
             'fy'         => $fy,
-        ], $this->sidebarData($supabase, $user)));
+        ]);
     }
 }

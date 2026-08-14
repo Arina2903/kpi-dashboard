@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
     <script src="https://cdn.ckeditor.com/ckeditor5/19.0.0/classic/ckeditor.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -65,16 +66,6 @@
     @endif
 
     @php
-        if (session('company_code') === 'RCG') {
-            $jdLogo = 'images/RCG-Logo-black.png';
-        } else {
-            $jdLogo = session('company_logo');
-            if (!$jdLogo) {
-                $logoMap = ['RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png'];
-                $jdLogo = $logoMap[session('company_code')] ?? null;
-            }
-        }
-
         $position     = $jobDescription['job_title'] ?? $user['position'] ?? '-';
         $departmentNm = $department['name'] ?? $user['department_code'] ?? '-';
         $reportingTo  = $jobDescription['reporting_line'] ?? null;
@@ -114,23 +105,9 @@
             <tbody>
                 <tr>
                     <td rowspan="2" class="w-40 border-r-2 border-b border-black p-2 align-middle text-center">
-                        @if($jdLogo)
-                        <div class="h-28 flex items-center justify-center mx-auto">
-                            <img
-                                src="{{ asset(ltrim($jdLogo, '/')) }}"
-                                alt="{{ session('company_display_name') ?: 'Company' }}"
-                                class="max-w-full max-h-full object-contain"
-                                onerror="this.parentElement.style.display='none';this.closest('td').querySelector('.jd-logo-fallback').classList.remove('hidden');"
-                            />
-                        </div>
-                        <span class="jd-logo-fallback hidden text-[13px] font-black text-slate-800">
-                            {{ session('company_display_name') ?: session('company_code') ?: 'Company' }}
-                        </span>
-                        @else
                         <span class="text-[13px] font-black text-slate-800">
                             {{ session('company_display_name') ?: session('company_code') ?: 'Company' }}
                         </span>
-                        @endif
                     </td>
                     <td class="border-r border-b border-black p-3 w-1/3">
                         <p class="text-[10px] font-black text-black">Position</p>

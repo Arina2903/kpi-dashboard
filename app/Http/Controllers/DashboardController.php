@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\SupabaseService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -24,7 +25,6 @@ class DashboardController extends Controller
 
         if ($company) {
             session([
-                'company_logo' => $company['logo_path'] ?: null,
                 'company_display_name' => $company['display_name'] ?: $company['name'],
             ]);
         }
@@ -57,60 +57,6 @@ class DashboardController extends Controller
         $kpis = $this->attachQuartersToKpis($supabase, $kpis);
         $kpis = $this->attachEmployeeDataToKpis($supabase, $kpis, $user, $companyCode);
         $kpis = $this->attachHistoryToKpis($supabase, $kpis);
-
-        $showOwnerColumn = $this->shouldShowOwnerColumn($kpis);
-
-        $subCategoryByCompany = collect($kpis)
-            ->groupBy(fn ($kpi) => $kpi['sub_category'] ?: 'Uncategorized')
-            ->map(fn ($items) => $items->count())
-            ->sortDesc();
-
-        $subCategoryByDepartment = collect($kpis)
-            ->groupBy(fn ($kpi) => $kpi['department_code'] ?? 'Unknown Department')
-            ->map(function ($departmentItems) {
-                return $departmentItems
-                    ->groupBy(fn ($kpi) => $kpi['sub_category'] ?: 'Uncategorized')
-                    ->map(fn ($items) => $items->count())
-                    ->sortDesc();
-            });
-
-        $subCategoryByUser = collect($kpis)
-            ->groupBy(fn ($kpi) => $kpi['owner_display_name'] ?? 'Unknown User')
-            ->map(function ($userItems) {
-                return $userItems
-                    ->groupBy(fn ($kpi) => $kpi['sub_category'] ?: 'Uncategorized')
-                    ->map(fn ($items) => $items->count())
-                    ->sortDesc();
-            });
-
-        $kpiCountByUser = collect($kpis)
-            ->groupBy(fn ($kpi) => $kpi['owner_display_name'] ?? 'Unknown User')
-            ->map(function ($items) {
-                return [
-                    'total' => $items->count(),
-                    'department' => $items->first()['owner_department_code']
-                        ?? $items->first()['department_code']
-                        ?? '-',
-                    'completed' => $items->where('status', 'completed')->count(),
-                    'at_risk' => $items->whereIn('status', ['at_risk', 'in_trouble'])->count(),
-                ];
-            })
-            ->sortByDesc('total');
-
-        $kpiCountByDepartment = collect($kpis)
-            ->groupBy(fn ($kpi) => $kpi['department_code'] ?? 'Unknown Department')
-            ->map(function ($items) {
-                return [
-                    'total' => $items->count(),
-                    'staff_count' => $items->pluck('owner_display_name')->unique()->count(),
-                    'completed' => $items->where('status', 'completed')->count(),
-                    'at_risk' => $items->whereIn('status', ['at_risk', 'in_trouble'])->count(),
-                ];
-            })
-            ->sortByDesc('total');
-
-        $summary = $this->calculateSummary($kpis);
-        $weightageSummary = $this->calculateWeightageSummary($kpis);
 
         $rankingResult       = $this->getCompanyDeptPerformance($supabase, $companyCode);
         $companyDeptRanking  = $rankingResult['depts'] ?? [];
@@ -189,50 +135,346 @@ class DashboardController extends Controller
             $directReports = $byVpId;
         }
 
-        return view('dashboard', [
+        $allEmployees = $allCompanyEmployees;
+        $currentFinancialYear = $this->currentFinancialYear;
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Ported verbatim from dashboard.blade.php's former @php block (Phase 4
+        // Step 7a) — this is a pure relocation, not a rewrite. Every variable
+        // below is passed to the view unchanged via compact() so the rendered
+        // page's output stays byte-for-byte identical to before the move.
+        // ─────────────────────────────────────────────────────────────────────
+
+        // ── CORE ────────────────────────────────────────────────────────────────
+        $role              = strtoupper(trim($user['role'] ?? ''));
+        $currentUserId     = (string)($user['id'] ?? $user['employee_id'] ?? '');
+        $currentUserName   = ($user['salutation'] ? $user['salutation'] . ' ' : '') . ($user['short_name'] ?? $user['full_name'] ?? $user['name'] ?? 'User');
+        $currentDepartment = $user['department_code'] ?? '-';
+        $currentFinancialYear = $currentFinancialYear ?? ('FY'.now()->year);
+        $userPosition      = $user['position'] ?? $user['role'] ?? '-';
+
+        $greetHour = now()->timezone('Asia/Kuala_Lumpur')->hour;
+        $greeting  = $greetHour < 12 ? 'Good Morning' : ($greetHour < 18 ? 'Good Afternoon' : 'Good Evening');
+
+        $isManager = in_array($role, ['SLT','VP','MANAGER']);
+        $isSltOffice = in_array(strtoupper(trim($currentDepartment)), ['SLT OFFICE', 'BTS']);
+
+        $kpiCollection = collect($kpis ?? []);
+
+        // ── KPI SCORE ───────────────────────────────────────────────────────────
+        $calculateKpiScore = function($kpi) {
+            $quarters = collect($kpi['quarters'] ?? []);
+            $qBase = 0; $qActual = 0;
+            foreach (['Q1','Q2','Q3','Q4'] as $q) {
+                $row = $quarters->firstWhere('quarter',$q) ?? [];
+                $qBase   += max(0,(float)($row['quarter_target'] ?? 0));
+                $qActual += max(0,(float)($row['quarter_actual'] ?? 0));
+            }
+            if ($qBase > 0) return round(($qActual/$qBase)*100,2);
+            $base   = max(0,(float)($kpi['base_target'] ?? 0));
+            $actual = max(0,(float)($kpi['actual_value'] ?? 0));
+            return $base > 0 ? round(($actual/$base)*100,2) : 0;
+        };
+
+        $calculateWeightedScore = function($kpi) use($calculateKpiScore) {
+            return round(((float)$calculateKpiScore($kpi) * max(0,(float)($kpi['weightage']??0)))/100,2);
+        };
+
+        // ── KPI ROWS ────────────────────────────────────────────────────────────
+        $riskStatuses = ['at_risk','risk','in_trouble','critical'];
+        $kpiRows = $kpiCollection->map(function($kpi) use($calculateKpiScore,$calculateWeightedScore,$riskStatuses) {
+            $score     = $calculateKpiScore($kpi);
+            $weightage = max(0,(float)($kpi['weightage'] ?? 0));
+            $status    = strtolower($kpi['status'] ?? 'not_started');
+            return array_merge($kpi,[
+                '_score'           => $score,
+                '_weightage'       => $weightage,
+                '_weighted_score'  => $calculateWeightedScore($kpi),
+                '_is_risk'         => in_array($status,$riskStatuses),
+                '_employee_key'    => (string)($kpi['employee_id'] ?? 'unassigned'),
+                '_employee_name'   => $kpi['owner_display_name'] ?? $kpi['employee_name'] ?? $kpi['owner_name'] ?? 'Unassigned',
+                '_department_code' => $kpi['owner_department_code'] ?? $kpi['department_code'] ?? '-',
+            ]);
+        });
+
+        // ── MY KPIs ─────────────────────────────────────────────────────────────
+        $individualKpis = $kpiRows->filter(fn($k) => (string)($k['employee_id']??'') === $currentUserId);
+        $individualPerformance = round($individualKpis->sum('_weighted_score'),2);
+        $individualWeightage   = round($individualKpis->sum('_weightage'),2);
+        $individualKpiCount    = $individualKpis->count();
+        $myOnTrack    = $individualKpis->whereIn('status',['on_track','monitoring'])->count();
+        $myAtRisk     = $individualKpis->whereIn('status',['at_risk','risk','in_trouble','critical'])->count();
+        $myCompletedByQ = ['Q1'=>0,'Q2'=>0,'Q3'=>0,'Q4'=>0];
+        $myTotalByQ     = ['Q1'=>0,'Q2'=>0,'Q3'=>0,'Q4'=>0];
+        // Weighted progress (actual/target, scaled by each KPI's weightage) — distinct
+        // from completion above, which only tracks whether a quarter was formally
+        // signed off. A KPI can show real progress here while still 0% "completed".
+        $myProgressByQ  = ['Q1'=>0,'Q2'=>0,'Q3'=>0,'Q4'=>0];
+        foreach ($individualKpis as $kpi) {
+            $weight = (float)($kpi['_weightage'] ?? 0);
+            foreach (['Q1','Q2','Q3','Q4'] as $q) {
+                $qr = collect($kpi['quarters'] ?? [])->firstWhere('quarter', $q);
+                if ($qr) {
+                    $myTotalByQ[$q]++;
+                    if (($qr['status'] ?? '') === 'completed' && !empty($qr['completion_submitted_at'])) $myCompletedByQ[$q]++;
+
+                    $qTarget = max(0,(float)($qr['quarter_target'] ?? 0));
+                    $qActual = max(0,(float)($qr['quarter_actual'] ?? 0));
+                    $qPct    = $qTarget > 0 ? ($qActual/$qTarget)*100 : 0;
+                    $myProgressByQ[$q] += $qPct * $weight / 100;
+                }
+            }
+        }
+        $myProgressByQ = array_map(fn($v) => round(min($v,100),1), $myProgressByQ);
+
+        // Up to 3 at-risk KPI titles for the "Needs Attention" callout.
+        $myAtRiskKpis = $individualKpis
+            ->whereIn('status', ['at_risk','risk','in_trouble','critical'])
+            ->take(3)
+            ->map(fn($k) => $k['kpi_title'] ?? $k['title'] ?? 'Untitled KPI')
+            ->values();
+        $myCompletedAnnual = $individualKpis->filter(function($kpi) {
+            $qs = collect($kpi['quarters'] ?? []);
+            return collect(['Q1','Q2','Q3','Q4'])->every(fn($q) => ($qs->firstWhere('quarter',$q)['status'] ?? '') === 'completed' && !empty($qs->firstWhere('quarter',$q)['completion_submitted_at'] ?? ''));
+        })->count();
+        $myCompleted  = array_sum($myCompletedByQ);
+        $myTotalQuarters = array_sum($myTotalByQ);
+
+        // ── CATEGORY GROUPS ─────────────────────────────────────────────────────
+        $categoryOrder  = ['Financial','Growth & Customer','Initiatives','People'];
+        $myKpisByCategory = $individualKpis->groupBy('category');
+        $orderedCategoryGroups = collect();
+        foreach ($categoryOrder as $cat) { if ($myKpisByCategory->has($cat)) $orderedCategoryGroups[$cat] = $myKpisByCategory->get($cat); }
+        foreach ($myKpisByCategory as $cat => $items) { if (!in_array($cat,$categoryOrder)) $orderedCategoryGroups[$cat] = $items; }
+        $myCategoryCounts = $orderedCategoryGroups->map(fn($items, $cat) => ['category' => $cat, 'count' => $items->count()])->values()->all();
+
+        // ── STAFF BASE ROWS ──────────────────────────────────────────────────────
+        // Use name as fallback key so people with null employee_id don't merge
+        $kpiRowsKeyed = $kpiRows->map(function($kpi) {
+            $empId   = (string)($kpi['employee_id'] ?? '');
+            $empName = $kpi['_employee_name'] ?? '';
+            $safeKey = $empId ?: ($empName ?: 'unassigned');
+            return array_merge($kpi, ['_safe_key' => $safeKey]);
+        });
+
+        $staffBaseRows = $kpiRowsKeyed->groupBy('_safe_key')->map(function($items) {
+            $first = $items->first();
+            return [
+                'employee_id'     => $first['employee_id'] ?? '',
+                'name'            => $first['_employee_name'] ?? 'Unknown',
+                'department_code' => $first['_department_code'] ?? '-',
+                'role'            => $first['owner_role'] ?? $first['employee_role'] ?? $first['position'] ?? '-',
+                'kpi_count'       => $items->count(),
+                'weightage_total' => round($items->sum('_weightage'),2),
+                'performance'     => round($items->sum('_weighted_score'),2),
+                'risk_count'      => $items->where('_is_risk',true)->count(),
+                'completed_count' => $items->sum(fn($k) => collect($k['quarters'] ?? [])->filter(fn($q) => ($q['status'] ?? '') === 'completed' && !empty($q['completion_submitted_at']))->count()),
+                'on_track_count'  => $items->whereIn('status',['on_track','monitoring'])->count(),
+            ];
+        })->values();
+
+        // ── PER-EMPLOYEE QUARTERLY SCORES ────────────────────────────────────────
+        $empQuarterMap = [];
+        foreach ($kpiRows as $kpi) {
+            $empKey = $kpi['_employee_key'];
+            $quarters = collect($kpi['quarters'] ?? []);
+            $weight   = (float)($kpi['_weightage'] ?? 0);
+            foreach (['Q1','Q2','Q3','Q4'] as $q) {
+                $qRow    = $quarters->firstWhere('quarter',$q);
+                if (!$qRow) continue;
+                $qTarget = max(0,(float)($qRow['quarter_target'] ?? 0));
+                $qActual = max(0,(float)($qRow['quarter_actual'] ?? 0));
+                $qPct    = $qTarget > 0 ? ($qActual/$qTarget)*100 : 0;
+                $empQuarterMap[$empKey][$q] = ($empQuarterMap[$empKey][$q] ?? 0) + round($qPct * $weight / 100, 3);
+            }
+        }
+
+        // ── STAFF WITH QUARTERLY DATA ────────────────────────────────────────────
+        $staffPerformanceRows = $staffBaseRows->map(function($staff) use($empQuarterMap) {
+            $key = (string)($staff['employee_id'] ?? '');
+            $q = $empQuarterMap[$key] ?? [];
+            return array_merge($staff,[
+                'q1' => round($q['Q1'] ?? 0,2),
+                'q2' => round($q['Q2'] ?? 0,2),
+                'q3' => round($q['Q3'] ?? 0,2),
+                'q4' => round($q['Q4'] ?? 0,2),
+            ]);
+        })->values()->sortByDesc('performance');
+
+        // ── ROLE HIERARCHY SORT ──────────────────────────────────────────────────
+        $rolePriority = function($role) {
+            return match(strtoupper(trim($role ?? ''))) {
+                'SLT'       => 1,
+                'VP'        => 2,
+                'MANAGER'   => 3,
+                'EXECUTIVE' => 4,
+                default     => 5,
+            };
+        };
+
+        // ── DEPARTMENT ROWS — all employees, KPI data merged in where available ──
+        $kpiByEmpId = $kpiRows->groupBy(fn($k) => (string)($k['employee_id'] ?? ''));
+
+        $deptRows = collect($allEmployees ?? [])->map(function($emp) use($kpiByEmpId, $empQuarterMap) {
+            $empId   = (string)($emp['id'] ?? '');
+            $empKpis = $kpiByEmpId->get($empId, collect());
+            $q       = $empQuarterMap[$empId] ?? [];
+            return [
+                'employee_id'     => $empId,
+                'name'            => $emp['short_name'] ?? $emp['full_name'] ?? 'Unknown',
+                'department_code' => $emp['department_code'] ?? '-',
+                'role'            => $emp['role'] ?? '-',
+                'kpi_count'       => $empKpis->count(),
+                'performance'     => round($empKpis->sum('_weighted_score'), 2),
+                'risk_count'      => $empKpis->where('_is_risk', true)->count(),
+                'q1'              => round($q['Q1'] ?? 0, 2),
+                'q2'              => round($q['Q2'] ?? 0, 2),
+                'q3'              => round($q['Q3'] ?? 0, 2),
+                'q4'              => round($q['Q4'] ?? 0, 2),
+            ];
+        })->groupBy('department_code')->map(function($staff, $deptCode) use($rolePriority) {
+            $cnt   = $staff->count();
+            $bands = [0,0,0,0];
+            foreach ($staff as $s) {
+                $p = (float)$s['performance'];
+                if ($p >= 90) $bands[0]++;
+                elseif ($p >= 75) $bands[1]++;
+                elseif ($p >= 50) $bands[2]++;
+                else $bands[3]++;
+            }
+            $sortedStaff = $staff->sortBy(
+                fn($s) => sprintf('%d_%s', $rolePriority($s['role']), strtolower($s['name'] ?? ''))
+            )->values();
+            return [
+                'department_code' => $deptCode ?: '-',
+                'staff_count'     => $cnt,
+                'kpi_count'       => $staff->sum('kpi_count'),
+                'performance'     => round($cnt > 0 ? $staff->avg('performance') : 0, 2),
+                'risk_count'      => $staff->sum('risk_count'),
+                'q1'              => round($cnt > 0 ? $staff->avg('q1') : 0, 2),
+                'q2'              => round($cnt > 0 ? $staff->avg('q2') : 0, 2),
+                'q3'              => round($cnt > 0 ? $staff->avg('q3') : 0, 2),
+                'q4'              => round($cnt > 0 ? $staff->avg('q4') : 0, 2),
+                'band_counts'     => $bands,
+                'staff_list'      => $sortedStaff->toArray(),
+            ];
+        })->values()->sortByDesc('performance');
+
+        // ── COMPANY TOTALS ───────────────────────────────────────────────────────
+        $totalStaffCount    = $staffPerformanceRows->count();
+        $totalKpisVisible   = $kpiCollection->count();
+        $totalCompletedByQ = ['Q1'=>0,'Q2'=>0,'Q3'=>0,'Q4'=>0];
+        $totalByQ          = ['Q1'=>0,'Q2'=>0,'Q3'=>0,'Q4'=>0];
+        foreach ($kpiRows as $kpi) {
+            foreach (['Q1','Q2','Q3','Q4'] as $q) {
+                $qr = collect($kpi['quarters'] ?? [])->firstWhere('quarter', $q);
+                if ($qr) {
+                    $totalByQ[$q]++;
+                    if (($qr['status'] ?? '') === 'completed' && !empty($qr['completion_submitted_at'])) $totalCompletedByQ[$q]++;
+                }
+            }
+        }
+        $totalCompletedAnnual = $kpiRows->filter(function($kpi) {
+            $qs = collect($kpi['quarters'] ?? []);
+            return collect(['Q1','Q2','Q3','Q4'])->every(fn($q) => ($qs->firstWhere('quarter',$q)['status'] ?? '') === 'completed' && !empty($qs->firstWhere('quarter',$q)['completion_submitted_at'] ?? ''));
+        })->count();
+        $companyDeptCount = $companyTotalDepts ?? count($companyDeptRanking ?? []);
+
+        // ── MY DEPARTMENT SCORE (for the donut panel) ───────────────────────────
+        $myDeptRow        = $deptRows->firstWhere('department_code', $currentDepartment);
+        $myDeptPerformance = $myDeptRow ? (float)$myDeptRow['performance'] : 0;
+        $myDeptBands      = $myDeptRow ? ($myDeptRow['band_counts'] ?? [0,0,0,0]) : [0,0,0,0];
+
+        // ── DATA FOR JS CHARTS ───────────────────────────────────────────────────
+        $deptChartData = $deptRows->map(fn($d) => [
+            'code'    => $d['department_code'],
+            'annual'  => $d['performance'],
+            'q1'      => $d['q1'],
+            'q2'      => $d['q2'],
+            'q3'      => $d['q3'],
+            'q4'      => $d['q4'],
+            'bands'   => $d['band_counts'],
+            'staff'   => $d['staff_count'],
+            'at_risk' => $d['risk_count'],
+        ])->values()->all();
+
+        // ── LINKAGE DATA ─────────────────────────────────────────────────────────
+        $incomingLinkages = collect($incomingLinkages ?? []);
+        $outgoingLinkages = collect($outgoingLinkages ?? []);
+        $directReports    = collect($directReports ?? []);
+
+        // Key: "sub_category|unit" so RM totals never mix with % or number totals
+        $mySubCatSums = $individualKpis
+            ->groupBy(fn($k) => ($k['sub_category'] ?? '') . '|' . ($k['unit'] ?? 'number'))
+            ->map(fn($g) => $g->sum(fn($k) => (float)($k['base_target'] ?? 0)));
+
+        $myLinkageMap = $incomingLinkages->map(function($lnk) use($mySubCatSums) {
+            $target  = (float)($lnk['assigned_target'] ?? 0);
+            $key     = ($lnk['sub_category'] ?? '') . '|' . ($lnk['unit'] ?? 'number');
+            $covered = (float)($mySubCatSums->get($key, 0));
+            $gap     = max(0, $target - $covered);
+            $pct     = $target > 0 ? min(100, round($covered / $target * 100)) : 100;
+            return array_merge($lnk, ['covered'=>$covered,'gap'=>$gap,'pct'=>$pct,'met'=>$covered>=$target]);
+        });
+
+        $allKpisByEmployee = $kpiRows->groupBy('employee_id');
+        $outgoingWithCoverage = $outgoingLinkages->map(function($lnk) use($allKpisByEmployee) {
+            $assigneeKpis = $allKpisByEmployee->get($lnk['assignee_id'], collect());
+            $lnkUnit = $lnk['unit'] ?? 'number';
+            $target  = (float)($lnk['assigned_target'] ?? 0);
+            $covered = $assigneeKpis
+                ->where('sub_category', $lnk['sub_category'])
+                ->filter(fn($k) => ($k['unit'] ?? 'number') === $lnkUnit)
+                ->sum(fn($k) => (float)($k['base_target'] ?? 0));
+            $gap  = max(0, $target - $covered);
+            $pct  = $target > 0 ? min(100, round($covered / $target * 100)) : 100;
+            return array_merge($lnk, ['covered'=>$covered,'gap'=>$gap,'pct'=>$pct,'met'=>$covered>=$target]);
+        });
+
+        $hasAnyLinkage   = $myLinkageMap->isNotEmpty() || $outgoingWithCoverage->isNotEmpty();
+        $canAssignTarget = $role !== 'EXECUTIVE' && $directReports->isNotEmpty();
+        $linkageTotalCount = $myLinkageMap->count() + $outgoingWithCoverage->count();
+        $linkageGapCount   = $myLinkageMap->where('met', false)->count() + $outgoingWithCoverage->where('met', false)->count();
+
+        return Inertia::render('Dashboard', [
             'user' => $user,
-            'department' => $department,
-            'departments' => $departments,
-            'canSwitchDepartment' => $canSwitchDepartment,
-            'selectedDepartmentCode' => $selectedDepartmentCode,
-            'currentFinancialYear' => $this->currentFinancialYear,
-            'showOwnerColumn' => $showOwnerColumn,
-            'kpis' => $kpis,
+            'greeting' => $greeting,
+            'currentFinancialYear' => $currentFinancialYear,
+            'currentUserName' => $currentUserName,
+            'userPosition' => $userPosition,
+            'currentDepartment' => $currentDepartment,
+            'isManager' => $isManager,
+            'isSltOffice' => $isSltOffice,
 
-            'overallScore' => $summary['overallScore'],
-            'totalKpis' => $summary['totalKpis'],
-            'completed' => $summary['completed'],
-            'monitoring' => $summary['onTrack'],
-            'risk' => $summary['atRisk'],
-            'critical' => $summary['inTrouble'],
+            'individualKpiCount' => $individualKpiCount,
+            'individualWeightage' => $individualWeightage,
+            'individualPerformance' => $individualPerformance,
+            'myOnTrack' => $myOnTrack,
+            'myAtRisk' => $myAtRisk,
+            'myAtRiskKpis' => $myAtRiskKpis->values()->all(),
+            'myCompletedByQ' => $myCompletedByQ,
+            'myTotalByQ' => $myTotalByQ,
+            'myProgressByQ' => $myProgressByQ,
+            'myCategoryCounts' => $myCategoryCounts,
 
-            'onTrack' => $summary['onTrack'],
-            'atRisk' => $summary['atRisk'],
-            'offTrack' => $summary['inTrouble'],
-            'overdue' => $summary['inTrouble'],
+            'companyDeptRanking' => $companyDeptRanking,
+            'companyTotalStaff' => $companyTotalStaff,
+            'companyDeptCount' => $companyDeptCount,
+            'totalStaffCount' => $totalStaffCount,
+            'totalCompletedByQ' => $totalCompletedByQ,
+            'totalByQ' => $totalByQ,
+            'totalCompletedAnnual' => $totalCompletedAnnual,
+            'totalKpisVisible' => $totalKpisVisible,
 
-            'totalWeightage' => $weightageSummary['totalWeightage'],
-            'isWeightageExceeded' => $weightageSummary['isWeightageExceeded'],
-            'isWeightageComplete' => $weightageSummary['isWeightageComplete'],
+            'deptRows' => $deptRows->values()->all(),
+            'myDeptPerformance' => $myDeptPerformance,
+            'myDeptBands' => $myDeptBands,
+            'deptChartData' => $deptChartData,
 
-            'companyCode' => $companyCode,
-            'companyName' => session('company_name'),
-
-            'subCategoryByCompany' => $subCategoryByCompany,
-            'subCategoryByDepartment' => $subCategoryByDepartment,
-            'subCategoryByUser' => $subCategoryByUser,
-
-            'kpiCountByUser' => $kpiCountByUser,
-            'kpiCountByDepartment' => $kpiCountByDepartment,
-
-            'companyDeptRanking'  => $companyDeptRanking,
-            'companyTotalStaff'   => $companyTotalStaff,
-            'companyTotalDepts'   => $companyTotalDepts,
-            'allEmployees'        => $allCompanyEmployees,
-
-            'incomingLinkages' => $incomingLinkages,
-            'outgoingLinkages' => $outgoingLinkages,
-            'directReports'    => $directReports,
+            'hasAnyLinkage' => $hasAnyLinkage,
+            'canAssignTarget' => $canAssignTarget,
+            'linkageTotalCount' => $linkageTotalCount,
+            'linkageGapCount' => $linkageGapCount,
         ]);
     }
 
@@ -740,9 +982,8 @@ class DashboardController extends Controller
             ? ($k['progress_pct'] * (float) ($k['weightage'] ?? 0) / 100)
             : 0);
 
-        return view('dashboard.staff-kpis', [
+        return Inertia::render('Dashboard/StaffKpis', [
             'user'                 => $user,
-            'department'           => $this->getUserDepartment($supabase, $user),
             'staff'                => $staff,
             'kpis'                 => $kpis,
             'departmentName'       => $staffDepartment['name'] ?? $staff['department_code'] ?? '-',

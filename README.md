@@ -14,7 +14,7 @@ A full-featured KPI management system built for organisations to set, track, and
 | AI | OpenAI API (GPT) |
 | Messaging | Telegram Bot API |
 | Session | File-based (local) · Laravel default (production) |
-| Deployment | Railway |
+| Deployment | — |
 
 > No Eloquent ORM. All database access goes through `SupabaseService` using Laravel's `Http::` facade.
 
@@ -190,7 +190,7 @@ Threshold to finalise: **≥ 75 / 100**
 
 ---
 
-## Production (Railway)
+## Production
 
 ```bash
 php artisan config:clear && php artisan cache:clear && php artisan view:clear && php artisan serve --host=0.0.0.0 --port=$PORT

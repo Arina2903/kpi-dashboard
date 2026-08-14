@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\SupabaseService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class SltDashboardController extends Controller
 {
@@ -249,8 +250,8 @@ class SltDashboardController extends Controller
         $participationRate = $totalStaff > 0 ? round($submittedOrFurtherCount / $totalStaff * 100) : 0;
         $averageScore = $scoreCount > 0 ? round($scoreSum / $scoreCount, 1) : 0;
 
-        return view('slt-dashboard', [
-            'user'                 => $user,
+        return Inertia::render('SltDashboard', [
+            'today'                => now()->timezone('Asia/Kuala_Lumpur')->format('d M Y'),
             'currentFinancialYear' => $this->currentFinancialYear,
             'quarter'              => $quarter,
             'departments'          => $departments,
@@ -258,7 +259,6 @@ class SltDashboardController extends Controller
             'totalStaff'           => $totalStaff,
             'participationRate'    => $participationRate,
             'completedCount'       => $completedCount,
-            'notCompleteCount'     => $totalStaff - $completedCount,
             'notSubmittedCount'    => $notSubmittedCount,
             'pendingCount'         => $pendingCount,
             'awaitingSignoffCount' => $awaitingSignoffCount,

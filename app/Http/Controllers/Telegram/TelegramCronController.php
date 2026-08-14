@@ -3,22 +3,27 @@
 namespace App\Http\Controllers\Telegram;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendEveningTelegramDigest;
+use App\Jobs\SendMorningTelegramDigest;
 use App\Services\TaskReminderService;
 use App\Services\TaskScoreSchedulerService;
-use App\Services\TelegramDigestService;
 use App\Services\TelegramReviewService;
 use Illuminate\Http\Request;
 
 class TelegramCronController extends Controller
 {
-    public function morning(TelegramDigestService $digest)
+    public function morning()
     {
-        return response()->json(['ok' => true, 'sent' => $digest->sendMorning()]);
+        SendMorningTelegramDigest::dispatch();
+
+        return response()->json(['ok' => true, 'queued' => true]);
     }
 
-    public function evening(TelegramDigestService $digest)
+    public function evening()
     {
-        return response()->json(['ok' => true, 'sent' => $digest->sendEvening()]);
+        SendEveningTelegramDigest::dispatch();
+
+        return response()->json(['ok' => true, 'queued' => true]);
     }
 
     public function tasksMorning(TaskReminderService $reminders)

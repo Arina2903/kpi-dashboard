@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\SupabaseService;
+use Inertia\Inertia;
 
 class AdminController extends Controller
 {
@@ -40,7 +41,7 @@ class AdminController extends Controller
         $departments = $supabase->get('departments', ['select' => 'code,name']) ?? [];
         $deptNames   = collect($departments)->pluck('name', 'code');
 
-        return view('admin.view-as', [
+        return Inertia::render('Admin/ViewAs', [
             'employees' => $employees,
             'deptNames' => $deptNames,
             'search'    => $search,
@@ -84,7 +85,6 @@ class AdminController extends Controller
             'company_code'          => session('company_code'),
             'company_name'          => session('company_name'),
             'company_display_name'  => session('company_display_name'),
-            'company_logo'          => session('company_logo'),
         ]]);
 
         $log = $supabase->insert('admin_view_as_logs', [
@@ -110,7 +110,6 @@ class AdminController extends Controller
             'company_code'         => $target['company_code'],
             'company_name'         => $company['name'] ?? $target['company_code'],
             'company_display_name' => $company['display_name'] ?? ($company['name'] ?? $target['company_code']),
-            'company_logo'         => $company['logo_path'] ?? '/images/default-logo.png',
         ]);
 
         return redirect()->route('dashboard');

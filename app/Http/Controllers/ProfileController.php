@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\SupabaseService;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Inertia;
 
 class ProfileController extends Controller
 {
@@ -63,19 +64,25 @@ class ProfileController extends Controller
             $manager  = $res[0] ?? null;
         }
 
-        return view('profile', array_merge([
-            'user'    => $user,
-            'manager' => $manager,
-        ], $this->sidebarData($supabase, $user)));
+        $departmentCode = session('selected_department_code') ?? $user['department_code'] ?? null;
+        $department = $departmentCode
+            ? ($supabase->get('departments', ['code' => 'eq.' . $departmentCode, 'select' => '*'])[0] ?? null)
+            : null;
+
+        return Inertia::render('Profile', [
+            'user'       => $user,
+            'manager'    => $manager,
+            'department' => $department,
+        ]);
     }
 
     public function settings(Request $request, SupabaseService $supabase)
     {
         $user = $this->currentUser($supabase);
 
-        return view('settings', array_merge([
+        return Inertia::render('Settings', [
             'user' => $user,
-        ], $this->sidebarData($supabase, $user)));
+        ]);
     }
 
     /*

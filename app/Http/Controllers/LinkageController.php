@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\SupabaseService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class LinkageController extends Controller
 {
@@ -35,47 +36,6 @@ class LinkageController extends Controller
     private function currentFY(): string
     {
         return 'FY' . now()->year;
-    }
-
-    private function sidebarData(array $user): array
-    {
-        $departmentFilters = [
-            'select' => '*',
-            'order' => 'name.asc',
-        ];
-
-        if (!empty($user['company_code'])) {
-            $departmentFilters['company_code'] = 'eq.' . $user['company_code'];
-        }
-
-        $departments = $this->supabase->get('departments', $departmentFilters) ?? [];
-
-        $role = strtoupper(trim($user['role'] ?? ''));
-
-        // BTS has cross-department admin/support access, same level as SLT.
-        $canSwitchDepartment = $role === 'SLT' || ($user['department_code'] ?? '') === 'BTS';
-
-        $selectedDepartmentCode = session('selected_department_code')
-            ?? $user['department_code']
-            ?? null;
-
-        $department = null;
-
-        if ($selectedDepartmentCode) {
-            $departmentResult = $this->supabase->get('departments', [
-                'code' => 'eq.' . $selectedDepartmentCode,
-                'select' => '*',
-            ]);
-
-            $department = $departmentResult[0] ?? null;
-        }
-
-        return [
-            'departments' => $departments,
-            'department' => $department,
-            'canSwitchDepartment' => $canSwitchDepartment,
-            'selectedDepartmentCode' => $selectedDepartmentCode,
-        ];
     }
 
     public function index()
@@ -171,13 +131,6 @@ class LinkageController extends Controller
         $kpiRows        = collect($kpis);
         $individualKpis = $kpiRows->filter(fn($k) => (string)($k['employee_id'] ?? '') === (string)$userId);
 
-        $fmtLinkageVal = function ($val, $unit) {
-            $n = (float)$val;
-            if ($unit === 'currency')   return 'RM ' . number_format($n, 0);
-            if ($unit === 'percentage') return number_format($n, 1) . '%';
-            return number_format($n, 0);
-        };
-
         // Key: "sub_category|unit" so RM totals never mix with % or number totals
         $mySubCatSums = $individualKpis
             ->groupBy(fn($k) => ($k['sub_category'] ?? '') . '|' . ($k['unit'] ?? 'number'))
@@ -209,16 +162,15 @@ class LinkageController extends Controller
         $hasAnyLinkage   = $myLinkageMap->isNotEmpty() || $outgoingWithCoverage->isNotEmpty();
         $canAssignTarget = $role !== 'EXECUTIVE' && !empty($directReports);
 
-        return view('kpi.linkages', array_merge([
+        return Inertia::render('Linkages', [
             'user'                 => $user,
             'fy'                   => $fy,
             'directReports'        => $directReports,
-            'myLinkageMap'         => $myLinkageMap,
-            'outgoingWithCoverage' => $outgoingWithCoverage,
+            'myLinkageMap'         => $myLinkageMap->values()->all(),
+            'outgoingWithCoverage' => $outgoingWithCoverage->values()->all(),
             'hasAnyLinkage'        => $hasAnyLinkage,
             'canAssignTarget'      => $canAssignTarget,
-            'fmtLinkageVal'        => $fmtLinkageVal,
-        ], $this->sidebarData($user)));
+        ]);
     }
 
     public function store(Request $request)

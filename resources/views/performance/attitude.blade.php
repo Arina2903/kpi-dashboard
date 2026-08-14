@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
     <style>
         *, body { font-family: 'Inter', sans-serif; }
         .doc-card  { box-shadow: 0 8px 40px rgba(15,23,42,.10); }
@@ -147,15 +148,13 @@
     </div>
 </div>
 
-{{-- Print table: thead = logo+Q2, repeats on every printed page via table-header-group --}}
-@php $phLogoMap=['RCG'=>'images/RCG-Logo.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $phLogo=$phLogoMap[session('company_code')]??null; @endphp
+{{-- Print table: thead repeats on every printed page via table-header-group --}}
 <table id="print-table">
 <thead id="print-thead">
 <tr><td>
     <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
-            @if($phLogo)<img src="{{ asset($phLogo) }}" alt="Logo" style="height:28px;object-fit:contain;display:block">
-            @else<span style="font-size:12px;font-weight:900;color:#1a3d34">{{ session('company_display_name') }}</span>@endif
+            <span style="font-size:12px;font-weight:900;color:#1a3d34">{{ session('company_display_name') }}</span>
             <p style="font-size:7px;color:#94a3b8;letter-spacing:.18em;text-transform:uppercase;margin-top:3px">Accelerating Your Business Success</p>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
@@ -181,12 +180,7 @@
         {{-- Doc header --}}
         <div id="doc-hdr" class="flex items-start justify-between mb-7 pb-6 border-b border-slate-100">
             <div>
-                @php $logoMap = ['RCG'=>'images/RCG-Logo.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $logo = $logoMap[session('company_code')] ?? null; @endphp
-                @if($logo)
-                <img src="{{ asset(ltrim($logo,'/')) }}" alt="Logo" class="h-10 object-contain mb-2">
-                @else
                 <p class="text-xl font-black text-[#1a3d34]">{{ session('company_display_name') }}</p>
-                @endif
                 <p class="text-[9px] text-slate-400 uppercase tracking-[.18em]">Accelerating Your Business Success</p>
             </div>
             <div class="flex flex-col items-end gap-1">

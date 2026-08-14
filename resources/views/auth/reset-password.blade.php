@@ -3,22 +3,20 @@
 <head>
     <title>Reset Password · RichWorks KPI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
 </head>
 
 <body class="min-h-screen bg-slate-100 flex items-center justify-center p-6">
 
     <div class="w-full max-w-sm bg-white rounded-2xl shadow-lg p-7">
 
-        <div class="flex items-center gap-3 mb-6">
-            <img src="/images/RCG-Logo.png" class="w-10 h-10 object-contain">
-            <div>
-                <h1 class="text-base font-bold text-slate-900">
-                    Reset Password
-                </h1>
-                <p class="text-xs text-slate-500">
-                    Choose a new password below
-                </p>
-            </div>
+        <div class="mb-6">
+            <h1 class="text-base font-bold text-slate-900">
+                Reset Password
+            </h1>
+            <p class="text-xs text-slate-500">
+                Choose a new password below
+            </p>
         </div>
 
         @if(session('error'))

@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\TelegramDigestService;
+use App\Jobs\SendEveningTelegramDigest as SendEveningTelegramDigestJob;
 use Illuminate\Console\Command;
 
 class TelegramSendEveningDigest extends Command
@@ -11,11 +11,11 @@ class TelegramSendEveningDigest extends Command
 
     protected $description = 'Sends the 5:30pm "update your progress" reminder to all linked Telegram users';
 
-    public function handle(TelegramDigestService $digest): int
+    public function handle(): int
     {
-        $this->info('Sending evening digest…');
-        $sent = $digest->sendEvening();
-        $this->info("Sent {$sent} messages.");
+        $this->info('Queuing evening digest…');
+        SendEveningTelegramDigestJob::dispatch();
+        $this->info('Queued.');
 
         return self::SUCCESS;
     }

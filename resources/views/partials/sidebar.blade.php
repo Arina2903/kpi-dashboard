@@ -523,10 +523,10 @@
             @endif
         </a>
 
-        <div class="relative">
+        <div class="relative" x-data="{ open: false }" @click.outside="open = false">
             <button
                 type="button"
-                onclick="event.stopPropagation(); toggleTopProfileMenu();"
+                @click.stop="open = !open"
                 class="flex items-center gap-2 bg-white border border-slate-200 rounded-full pl-1.5 pr-2.5 py-1 shadow-sm hover:shadow-md transition"
             >
                 <div class="w-7 h-7 rounded-full overflow-hidden shrink-0 ring-2 ring-[#D4AF37]/60">
@@ -544,12 +544,12 @@
                         {{ session('position') ?: 'My Profile' }}
                     </p>
                 </div>
-                <svg id="topProfileChevron" class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+                <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform" :class="{ 'rotate-180': open }" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                 </svg>
             </button>
 
-            <div id="topProfileMenu" class="hidden absolute right-0 mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden py-1">
+            <div x-show="open" x-transition class="absolute right-0 mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden py-1">
                 <a href="{{ route('profile') }}" class="flex items-center gap-2 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 transition">
                     My Profile
                 </a>
@@ -574,6 +574,8 @@
 
 <aside
     id="sidebar"
+    x-data
+    x-init="$watch('$store.sidebar.collapsed', v => setSidebarState(v)); setSidebarState($store.sidebar.collapsed)"
     class="fixed left-0 top-0 z-40 h-screen bg-[#111111] text-white
     border-r border-white/10 shadow-[4px_0_24px_rgba(0,0,0,0.30)]
     w-[230px] min-w-[230px] max-w-[230px]
@@ -585,7 +587,7 @@
     <button
         id="sidebarCloseBtn"
         type="button"
-        onclick="event.stopPropagation(); toggleSidebar();"
+        @click.stop="$store.sidebar.collapsed = !$store.sidebar.collapsed"
         class="absolute top-4 right-3 z-[9999] w-7 h-7 flex items-center justify-center
         text-[#A4C3B2] bg-white/10 border border-white/20 rounded-full
         hover:bg-white/20 hover:text-white transition text-sm"
@@ -597,34 +599,15 @@
     <!-- COMPANY AREA -->
     <button
         type="button"
-        onclick="handleSidebarHeaderClick()"
+        @click="if ($store.sidebar.collapsed) $store.sidebar.collapsed = false"
         class="group w-full flex items-center gap-2 mb-3 shrink-0 pr-8 text-left
         hover:bg-white/10 rounded-xl p-1.5 transition relative"
         aria-label="Open Sidebar"
     >
         <div class="sidebar-brand-tile w-10 h-10 rounded-xl bg-[#C8102E] border-2 border-[#D4AF37] flex items-center justify-center shrink-0 overflow-hidden p-1">
-            @php
-                $sidebarLogo = session('company_logo');
-                if (!$sidebarLogo) {
-                    $logoMap = ['RCG'=>'images/RCG-Logo.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png'];
-                    $sidebarLogo = $logoMap[session('company_code')] ?? null;
-                }
-            @endphp
-            @if($sidebarLogo)
-            <img
-                src="{{ asset(ltrim($sidebarLogo, '/')) }}"
-                alt="{{ session('company_display_name') ?: 'Company' }}"
-                class="w-full h-full object-contain sidebar-logo bg-transparent"
-                onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
-            />
-            <span class="sidebar-logo w-full h-full text-white font-bold text-base items-center justify-center" style="display:none">
-                {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
-            </span>
-            @else
             <span class="sidebar-logo w-full h-full text-white font-bold text-base flex items-center justify-center">
                 {{ strtoupper(substr(session('company_code') ?: 'R', 0, 1)) }}
             </span>
-            @endif
             <span class="sidebar-icon-only hidden text-white font-bold text-lg">
                 ☰
             </span>
@@ -971,6 +954,12 @@
 </aside>
 
 <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('sidebar', {
+            collapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+        });
+    });
+
     function setSidebarState(collapsed) {
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
@@ -1027,49 +1016,6 @@
 
         localStorage.setItem('sidebarCollapsed', collapsed ? 'true' : 'false');
     }
-
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        if (!sidebar) return;
-
-        const isCollapsed = sidebar.classList.contains('collapsed');
-        setSidebarState(!isCollapsed);
-    }
-
-    function handleSidebarHeaderClick() {
-        const sidebar = document.getElementById('sidebar');
-        if (!sidebar) return;
-
-        const isCollapsed = sidebar.classList.contains('collapsed');
-
-        if (isCollapsed) {
-            setSidebarState(false);
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        setSidebarState(isCollapsed);
-    });
-
-    function toggleTopProfileMenu() {
-        const menu = document.getElementById('topProfileMenu');
-        const chevron = document.getElementById('topProfileChevron');
-        if (!menu) return;
-
-        const isHidden = menu.classList.contains('hidden');
-        menu.classList.toggle('hidden', !isHidden);
-        if (chevron) chevron.classList.toggle('rotate-180', isHidden);
-    }
-
-    document.addEventListener('click', function () {
-        const menu = document.getElementById('topProfileMenu');
-        const chevron = document.getElementById('topProfileChevron');
-        if (menu && !menu.classList.contains('hidden')) {
-            menu.classList.add('hidden');
-            if (chevron) chevron.classList.remove('rotate-180');
-        }
-    });
 
     // #topBar's title mirrors the page's own <title> (already set per page),
     // trimmed to the first segment so "KPI List · FY2026" just reads "KPI List".

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\SupabaseService;
+use Inertia\Inertia;
 
 class NotificationController extends Controller
 {
@@ -66,10 +67,10 @@ class NotificationController extends Controller
             'limit'                 => 100,
         ]) ?? [];
 
-        return view('notifications', array_merge([
+        return Inertia::render('Notifications', [
             'user'          => $user,
             'notifications' => $notifications,
-        ], $this->sidebarData($supabase, $user)));
+        ]);
     }
 
     public function markRead(string $id, SupabaseService $supabase)

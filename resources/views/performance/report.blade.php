@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
     <style>
         *, body { font-family: 'Inter', sans-serif; }
 
@@ -436,10 +437,8 @@
     @endif
 </div>
 
-{{-- Print table: thead repeats logo+Q2 on every page --}}
+{{-- Print table: thead repeats company name+Q2 on every page --}}
 @php
-    $phLogoMap   = ['RCG'=>'images/RCG-Logo-black.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png'];
-    $phLogo      = $phLogoMap[session('company_code')] ?? null;
     // Lock form body server-side — appraiser view is unlocked here and handled by JS.
     // 'appraised' uses a soft JS-level lock (not `inert`) so the acknowledgment
     // panel can be selectively unlocked for the appraisee to sign.
@@ -452,8 +451,7 @@
 <thead id="print-thead">
 <tr><td>
     <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
-        @if($phLogo)<img src="{{ asset($phLogo) }}" alt="Logo" style="height:40px;object-fit:contain;display:block">
-        @else<span style="font-size:12px;font-weight:900;color:#1a3d34">{{ session('company_display_name') }}</span>@endif
+        <span style="font-size:12px;font-weight:900;color:#1a3d34">{{ session('company_display_name') }}</span>
         <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
             <div style="width:40px;height:40px;border-radius:9px;background:linear-gradient(135deg,#1a3d34,#6B9080);display:flex;align-items:center;justify-content:center">
                 <span style="font-size:14px;font-weight:900;color:white;line-height:1">{{ $qLabel }}</span>
@@ -477,9 +475,7 @@
 
         {{-- Doc header (hidden in print — replaced by print-thead) --}}
         <div id="doc-hdr" class="flex items-center justify-between mb-7 pb-6 border-b border-slate-100">
-            @php $logoMap=['RCG'=>'images/RCG-Logo-black.png','RGHB'=>'images/RGHB-Logo.png','RCT'=>'images/RCT-Logo.png']; $logo=$logoMap[session('company_code')]??null; @endphp
-            @if($logo)<img src="{{ asset(ltrim($logo,'/')) }}" alt="Logo" class="h-12 object-contain">
-            @else<p class="text-xl font-black text-[#1a3d34]">{{ session('company_display_name') }}</p>@endif
+            <p class="text-xl font-black text-[#1a3d34]">{{ session('company_display_name') }}</p>
             <div class="flex flex-col items-center gap-0.5">
                 <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1A0A0A] to-[#7A0019] flex items-center justify-center shadow-lg">
                     <span class="text-xl font-black text-white">{{ $qLabel }}</span>
