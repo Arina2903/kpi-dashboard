@@ -84,19 +84,27 @@ return [
             ]) : [],
         ],
 
+        // Deliberately named SUPABASE_DB_* rather than Laravel's generic DB_*:
+        // the stock `sqlite` connection above also reads `DB_URL`/`DB_DATABASE`
+        // as an override (Laravel's ConfigurationUrlParser applies `url` to
+        // whichever connection has it set, regardless of that connection's
+        // own `driver`) — setting a Postgres DB_URL previously hijacked the
+        // default sqlite connection into running Postgres DDL statements
+        // against this database. Distinct names make that collision
+        // impossible rather than merely avoided.
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
+            'url' => env('SUPABASE_DB_URL'),
+            'host' => env('SUPABASE_DB_HOST', '127.0.0.1'),
+            'port' => env('SUPABASE_DB_PORT', '5432'),
+            'database' => env('SUPABASE_DB_DATABASE', 'postgres'),
+            'username' => env('SUPABASE_DB_USERNAME', 'postgres'),
+            'password' => env('SUPABASE_DB_PASSWORD', ''),
+            'charset' => env('SUPABASE_DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => env('DB_SSLMODE', 'prefer'),
+            'sslmode' => env('SUPABASE_DB_SSLMODE', 'prefer'),
         ],
 
         'sqlsrv' => [
