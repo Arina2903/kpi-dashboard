@@ -21,12 +21,18 @@ use Symfony\Component\Process\Process;
  *
  * Never targets `SUPABASE_DB_URL` or any DSN mentioning this project's
  * production ref — the script's own header already says never run it
- * against `eavmrurxxdxbufkkzlup` directly, and that's enforced here rather
+ * against the production ref directly, and that's enforced here rather
  * than left to whoever runs the command to remember.
+ *
+ * Production moved to project `mlggobjdsicuokblbsww` (2026-08-18) --
+ * previously `eavmrurxxdxbufkkzlup`. This constant must always name
+ * whichever project is live, since it's the one static guard that still
+ * refuses a matching DSN even if SUPABASE_DB_URL isn't set in the
+ * environment running this command.
  */
 class PlatformRlsTest extends Command
 {
-    private const PRODUCTION_REF = 'eavmrurxxdxbufkkzlup';
+    private const PRODUCTION_REF = 'mlggobjdsicuokblbsww';
 
     protected $signature = 'platform:rls-test {--dsn= : Postgres connection string for a DISPOSABLE target (a Supabase preview branch or throwaway Postgres instance) — never the production database.}';
 

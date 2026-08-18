@@ -52,10 +52,12 @@ For local dev: `SESSION_DRIVER=file`, `SESSION_DOMAIN=localhost`, `SESSION_SECUR
 
 **Stack:** Laravel 11 (PHP 8.2 in production/Railway via `nixpacks.toml`; `composer.json`'s own floor is `^8.2` — see the openspout correction under "Excel import (Phase 7)" below for how this was confirmed) · Blade templates (legacy) + Inertia/React (multi-company Platform, in progress) · Supabase (PostgreSQL via REST, plus a direct `pgsql` Postgres connection for Platform migrations/RLS) · OpenAI API · Telegram Bot API
 
-There are now two parallel systems in this codebase, both live in the same production Supabase project (`eavmrurxxdxbufkkzlup`):
+There are now two parallel systems in this codebase, both live in the same production Supabase project (`mlggobjdsicuokblbsww` as of 2026-08-18; previously `eavmrurxxdxbufkkzlup` — see "Production Supabase project switch" below):
 
 - **The legacy single-tenant app** (this whole file, historically) — Blade views, session-based auth against an `employees` table, `EXECUTIVE/MANAGER/VP/SLT` roles.
 - **The multi-company Platform** (see below) — Inertia+React, Supabase Auth, Postgres RLS. This is the active development target; the legacy app's `employees` table doesn't exist in production anymore (confirmed live), so its controllers/routes are effectively dead code until/unless a real migration path is built. `/` and `/login` already redirect to `/platform/login` for this reason.
+
+**Production Supabase project switch (2026-08-18).** Production moved from `eavmrurxxdxbufkkzlup` to `mlggobjdsicuokblbsww`. What's actually confirmed as of this note: the new project has the Platform schema live with real data (`companies`/`users` both return real rows via a read-only anon-key check), local `.env` points at it, and the two in-repo safety guards that hardcoded the old ref (`PlatformRlsTest::PRODUCTION_REF`, and `tenant_isolation.sql`'s own "never run against production" comment) have been updated to name the new one. **Not yet confirmed:** whether Railway's actual deployed environment variables (`SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY`) have been updated to match — that's a Railway dashboard change no code push can make, and is the most likely explanation if production login still fails after this commit lands. Also unverified: whether every migration this file documents as "applied to production" was actually re-applied against this new project, or whether its schema arrived some other way (e.g. a Supabase project-level copy) — nobody has walked `migrate:status` against it yet.
 
 ### Database — Supabase REST only, never Eloquent
 

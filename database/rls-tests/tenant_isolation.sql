@@ -15,7 +15,8 @@
 -- `php artisan test`, which is exactly the risk this file is designed to
 -- avoid. Run this script by hand instead, with `psql`, against a disposable
 -- target -- ideally a Supabase preview branch created off the same schema,
--- never eavmrurxxdxbufkkzlup directly.
+-- never the production project directly (mlggobjdsicuokblbsww as of
+-- 2026-08-18; previously eavmrurxxdxbufkkzlup).
 --
 -- HOW auth.uid() IS SIMULATED: Supabase's `auth.uid()` reads the caller's
 -- user id out of the `request.jwt.claims` session setting -- exactly what a
