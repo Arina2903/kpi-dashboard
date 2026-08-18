@@ -4,7 +4,7 @@ import PasswordInput from '@/Components/PasswordInput';
 import AuthCard from '@/Components/Platform/AuthCard';
 
 const PLATFORM_PASSWORD_INPUT_CLASS =
-    'w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none pr-10';
+    'w-full rounded-xl border border-slate-200 px-4 py-3 text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#C9B896] focus:border-[#C9B896] focus:outline-none transition pr-10';
 
 interface SetPasswordPageProps {
     email: string | null;
@@ -46,7 +46,7 @@ export default function SetPassword({ email }: SetPasswordPageProps) {
 
                 <form onSubmit={submit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">New password</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">New password</label>
                         <PasswordInput
                             name="password"
                             value={data.password}
@@ -54,26 +54,26 @@ export default function SetPassword({ email }: SetPasswordPageProps) {
                             minLength={8}
                             autoFocus
                             className={PLATFORM_PASSWORD_INPUT_CLASS}
-                            iconHoverClassName="hover:text-slate-700"
+                            iconHoverClassName="hover:text-[#A6906F]"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Confirm password</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Confirm password</label>
                         <PasswordInput
                             name="password_confirmation"
                             value={data.password_confirmation}
                             onChange={(v) => setData('password_confirmation', v)}
                             minLength={8}
                             className={PLATFORM_PASSWORD_INPUT_CLASS}
-                            iconHoverClassName="hover:text-slate-700"
+                            iconHoverClassName="hover:text-[#A6906F]"
                         />
                     </div>
 
                     <button
                         type="submit"
                         disabled={processing}
-                        className="w-full rounded-xl bg-brand-900 py-3 text-sm font-semibold text-white hover:bg-brand-800 transition disabled:opacity-60"
+                        className="w-full rounded-xl bg-[#C9B896] hover:bg-[#BBA57F] py-3 text-sm font-black text-[#3A3128] transition shadow-md hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
                     >
                         Set password &amp; continue
                     </button>
