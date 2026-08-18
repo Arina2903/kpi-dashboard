@@ -17,7 +17,7 @@ use App\Http\Controllers\AiController;
 */
 
 Route::get('/', function () {
-    return redirect()->route('platform.login');
+    return redirect()->route('login');
 });
 
 // Telegram Mini App shell — opened inside Telegram's WebView, no Laravel session
@@ -27,17 +27,16 @@ Route::view('/telegram/app', 'telegram.app', [
     'botUsername' => env('TELEGRAM_BOT_USERNAME', ''),
 ])->name('telegram.app');
 
-// The legacy employee-based login below assumes a `users` table with
-// `password_hash`/`is_active` columns and an `employees` table for session
-// setup afterward -- neither exists on this company's database (confirmed
-// live: the Platform's `users` table is Supabase-Auth-linked instead, and
-// `employees` doesn't exist at all). GET redirects to the working Platform
-// login so nobody lands on a form that can only fail; POST is left in place
-// only so a stale bookmark POSTing directly here still gets a clean 4xx/5xx
-// from Supabase rather than this route not existing at all.
-Route::get('/login', function () {
-    return redirect()->route('platform.login');
-})->name('login');
+// This IS the working login for this company's real production data
+// (confirmed live, 2026-08-18): `users` genuinely has `password_hash`/
+// `is_active`, `employees` genuinely exists, and Supabase Auth (auth.users)
+// has zero accounts in this project -- so /platform/login can never
+// succeed here. An earlier redirect to /platform/login, based on the
+// opposite (unverified) assumption, made this real, working form
+// unreachable. See CLAUDE.md's "Login system correction" for how this was
+// confirmed before re-enabling it.
+Route::get('/login', [AuthController::class, 'showLogin'])
+    ->name('login');
 
 Route::post('/login', [AuthController::class, 'submitLogin'])
     ->name('login.submit');
