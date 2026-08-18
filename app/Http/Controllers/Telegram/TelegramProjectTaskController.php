@@ -329,7 +329,7 @@ class TelegramProjectTaskController extends Controller
 
         $options = [];
         foreach ($kpis as $kpi) {
-            if ($quarterService->findOpenQuarter($kpi['id'], $today)) {
+            if ($quarterService->findOpenQuarter($kpi['id'], $today, $fy)) {
                 $options[] = [
                     'kpi_id' => $kpi['id'],
                     'kpi_title' => $kpi['kpi_title'],

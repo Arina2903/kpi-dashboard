@@ -81,6 +81,7 @@ export const navSections: NavSection[] = [
         btsOnly: true,
         items: [
             { label: 'View As (Employee KPI)', href: '/admin/view-as', match: 'admin/view-as*', icon: 'users' },
+            { label: 'Quarter Control', href: '/admin/quarter-control', match: 'admin/quarter-control*', icon: 'calendar', legacy: true },
         ],
     },
 ];

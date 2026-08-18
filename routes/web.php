@@ -705,4 +705,16 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::post('/admin/view-as/stop', [\App\Http\Controllers\AdminController::class, 'stop'])->name('admin.view-as.stop');
     Route::post('/admin/view-as/{employeeId}', [\App\Http\Controllers\AdminController::class, 'start'])->name('admin.view-as.start');
 
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN — QUARTER CONTROL (BTS department only)
+    |--------------------------------------------------------------------------
+    | Force a quarter open (KPI actuals + appraisal) until a chosen deadline,
+    | regardless of its normal dates -- see QuarterOverrideController.
+    */
+
+    Route::get('/admin/quarter-control', [\App\Http\Controllers\QuarterOverrideController::class, 'index'])->name('admin.quarter-control');
+    Route::post('/admin/quarter-control', [\App\Http\Controllers\QuarterOverrideController::class, 'store'])->name('admin.quarter-control.store');
+    Route::delete('/admin/quarter-control/{quarter}', [\App\Http\Controllers\QuarterOverrideController::class, 'destroy'])->name('admin.quarter-control.destroy');
+
 });

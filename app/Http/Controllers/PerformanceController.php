@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Services\SupabaseService;
+use App\Services\QuarterOverrideService;
 
 class PerformanceController extends Controller
 {
     private string $currentFinancialYear = 'FY2026';
 
-    public function kpiAppraisal(SupabaseService $supabase)
+    public function kpiAppraisal(SupabaseService $supabase, QuarterOverrideService $overrides)
     {
         if (!session()->has('employee_uuid') || !session()->has('company_code')) {
             return redirect()->route('login');
@@ -89,6 +90,20 @@ class PerformanceController extends Controller
             }
         }
 
+        // A BTS-issued override (QuarterOverrideController) force-opens a
+        // specific quarter's appraisal until a chosen deadline -- checked
+        // only once none of the normal hardcoded windows match today, so it
+        // never masks a genuinely-open window.
+        if (!$isWindowOpen) {
+            foreach ([1, 2, 3, 4] as $q) {
+                if ($overrides->isActive($this->currentFinancialYear, 'Q' . $q)) {
+                    $displayQuarter = $q;
+                    $isWindowOpen   = true;
+                    break;
+                }
+            }
+        }
+
         $window     = $windows[$displayQuarter];
         $windowStart = \Carbon\Carbon::parse($window['start'])->format('d M Y');
         $windowEnd   = \Carbon\Carbon::parse($window['end'])->format('d M Y');
@@ -131,7 +146,7 @@ class PerformanceController extends Controller
         ]);
     }
 
-    public function attitude(SupabaseService $supabase)
+    public function attitude(SupabaseService $supabase, QuarterOverrideService $overrides)
     {
         if (!session()->has('employee_uuid') || !session()->has('company_code')) {
             return redirect()->route('login');
@@ -192,6 +207,18 @@ class PerformanceController extends Controller
                 $displayQuarter = $q;
                 $isWindowOpen   = true;
                 break;
+            }
+        }
+
+        // See kpiAppraisal()'s identical block -- a BTS override force-opens
+        // a specific quarter once none of the normal windows match today.
+        if (!$isWindowOpen) {
+            foreach ([1, 2, 3, 4] as $q) {
+                if ($overrides->isActive($this->currentFinancialYear, 'Q' . $q)) {
+                    $displayQuarter = $q;
+                    $isWindowOpen   = true;
+                    break;
+                }
             }
         }
 
@@ -282,7 +309,7 @@ class PerformanceController extends Controller
         ]);
     }
 
-    public function reportQuarter(string $quarter, SupabaseService $supabase)
+    public function reportQuarter(string $quarter, SupabaseService $supabase, QuarterOverrideService $overrides)
     {
         if (!session()->has('employee_uuid') || !session()->has('company_code')) {
             return redirect()->route('login');
@@ -347,6 +374,18 @@ class PerformanceController extends Controller
         $isFuture     = $today < $window['start'];
         $windowStart  = \Carbon\Carbon::parse($window['start'])->format('d M Y');
         $windowEnd    = \Carbon\Carbon::parse($window['end'])->format('d M Y');
+
+        // A BTS-issued override (QuarterOverrideController) force-opens THIS
+        // specific quarter's self-review until a chosen deadline, regardless
+        // of its normal submission window -- e.g. reopening the quarter
+        // before the current one for a late correction.
+        $quarterOverride = $overrides->activeOverride($this->currentFinancialYear, $q);
+        if ($quarterOverride) {
+            $isWindowOpen = true;
+            $isFuture     = false;
+            $windowEnd    = \Carbon\Carbon::parse($quarterOverride['open_until'])
+                ->timezone('Asia/Kuala_Lumpur')->format('d M Y, g:i A');
+        }
 
         // KPIs
         $kpis = $supabase->get('kpis', [
@@ -483,6 +522,7 @@ class PerformanceController extends Controller
             'isFuture'             => $isFuture,
             'windowStart'          => $windowStart,
             'windowEnd'            => $windowEnd,
+            'quarterOverrideActive' => (bool) $quarterOverride,
             'kpis'                 => $kpis,
             'quarterScores'        => $quarterScores,
             'allQuarters'          => $allQuarters,

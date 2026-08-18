@@ -8,21 +8,25 @@ use Carbon\Carbon;
 use App\Services\SupabaseService;
 use App\Services\ApprovalHierarchyService;
 use App\Services\NotificationService;
+use App\Services\QuarterOverrideService;
 
 class KpiController extends Controller
 {
     protected $supabase;
     protected ApprovalHierarchyService $hierarchyService;
     protected NotificationService $notifications;
+    protected QuarterOverrideService $quarterOverrides;
 
     public function __construct(
         SupabaseService $supabase,
         ApprovalHierarchyService $hierarchyService,
-        NotificationService $notifications
+        NotificationService $notifications,
+        QuarterOverrideService $quarterOverrides
     ){
         $this->supabase = $supabase;
         $this->hierarchyService = $hierarchyService;
         $this->notifications = $notifications;
+        $this->quarterOverrides = $quarterOverrides;
     }
 
     // Every approval-request insert site notifies the approver the same way —
@@ -1461,6 +1465,14 @@ class KpiController extends Controller
             fn($q) => !empty($q['start_date']) && !empty($q['end_date'])
                 && $q['start_date'] <= $today && $q['end_date'] >= $today
         );
+        // Falls back to a BTS-issued override (QuarterOverrideController) when
+        // no quarter is open by its own dates -- so the UI labels the actually-
+        // editable quarter as "current", not whichever one the calendar says.
+        if (!$currentQuarter && !empty($kpi['financial_year'])) {
+            $currentQuarter = collect($quarters)->first(
+                fn($q) => $this->quarterOverrides->isActive($kpi['financial_year'], $q['quarter'] ?? '')
+            );
+        }
         $kpi['current_quarter']          = $currentQuarter['quarter'] ?? '-';
         $kpi['current_quarter_end_date'] = $currentQuarter['end_date'] ?? null;
 
@@ -2885,6 +2897,15 @@ class KpiController extends Controller
                 $quarter['end_date']
             )->startOfDay();
 
+        // A BTS-issued override (QuarterOverrideController) force-opens this
+        // exact quarter until a chosen deadline, bypassing both the "not
+        // started yet" and "already ended" checks below regardless of its
+        // own start/end dates.
+        $quarterOverrideActive = $this->quarterOverrides->isActive(
+            'FY' . $startDate->year,
+            $quarter['quarter'] ?? ''
+        );
+
         /*
         |--------------------------------------------------------------------------
         | BEFORE START DATE
@@ -2895,6 +2916,7 @@ class KpiController extends Controller
             $today->lt(
                 $startDate
             )
+            && !$quarterOverrideActive
         ){
 
             return response()->json([
@@ -2918,6 +2940,7 @@ class KpiController extends Controller
                 $endDate
             )
             && !$this->inQ1Q2GracePeriod($quarter)
+            && !$quarterOverrideActive
         ){
 
             return response()->json([

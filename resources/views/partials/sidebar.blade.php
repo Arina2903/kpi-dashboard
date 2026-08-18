@@ -760,6 +760,7 @@
                 'bts_only' => true,
                 'items'    => [
                     ['label' => 'View As (Employee KPI)', 'href' => route('admin.view-as'), 'match' => 'admin/view-as*', 'icon' => 'users'],
+                    ['label' => 'Quarter Control', 'href' => route('admin.quarter-control'), 'match' => 'admin/quarter-control*', 'icon' => 'calendar'],
                 ],
             ],
         ];

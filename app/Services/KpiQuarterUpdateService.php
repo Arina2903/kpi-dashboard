@@ -4,7 +4,7 @@ namespace App\Services;
 
 class KpiQuarterUpdateService
 {
-    public function __construct(private SupabaseService $supabase)
+    public function __construct(private SupabaseService $supabase, private QuarterOverrideService $overrides)
     {
     }
 
@@ -36,9 +36,10 @@ class KpiQuarterUpdateService
 
     /**
      * Finds a KPI's currently-open quarter (today falls between its start
-     * and end dates), or null if none is open right now.
+     * and end dates, or a BTS-issued override -- QuarterOverrideService --
+     * force-opens it until a chosen deadline), or null if none is open.
      */
-    public function findOpenQuarter(string $kpiId, string $today): ?array
+    public function findOpenQuarter(string $kpiId, string $today, ?string $financialYear = null): ?array
     {
         $quarters = $this->supabase->get('kpi_quarters', [
             'kpi_id' => 'eq.' . $kpiId,
@@ -48,6 +49,14 @@ class KpiQuarterUpdateService
         foreach ($quarters as $q) {
             if (!empty($q['start_date']) && !empty($q['end_date']) && $q['start_date'] <= $today && $q['end_date'] >= $today) {
                 return $q;
+            }
+        }
+
+        if ($financialYear) {
+            foreach ($quarters as $q) {
+                if ($this->overrides->isActive($financialYear, $q['quarter'] ?? '')) {
+                    return $q;
+                }
             }
         }
 
@@ -97,7 +106,7 @@ class KpiQuarterUpdateService
      */
     public function applyDeltaToOpenQuarter(array $kpi, float $delta, string $today): array
     {
-        $quarter = $this->findOpenQuarter($kpi['id'], $today);
+        $quarter = $this->findOpenQuarter($kpi['id'], $today, $kpi['financial_year'] ?? null);
 
         if (!$quarter) {
             return ['error' => 'No open quarter right now for "' . $kpi['kpi_title'] . '".'];
