@@ -227,6 +227,21 @@ Route::middleware(['platform.auth', 'platform.audit'])->prefix('platform')->grou
     Route::delete('/companies/{company}/kpis/{kpi}/grants/{grant}', [\App\Http\Controllers\Platform\KpiController::class, 'destroyGrant'])
         ->name('platform.kpis.grants.destroy');
 
+    Route::get('/companies/{company}/tasks', [\App\Http\Controllers\Platform\TaskController::class, 'index'])
+        ->name('platform.tasks.index');
+
+    Route::post('/companies/{company}/tasks', [\App\Http\Controllers\Platform\TaskController::class, 'store'])
+        ->name('platform.tasks.store');
+
+    Route::patch('/companies/{company}/tasks/{task}', [\App\Http\Controllers\Platform\TaskController::class, 'update'])
+        ->name('platform.tasks.update');
+
+    Route::delete('/companies/{company}/tasks/{task}', [\App\Http\Controllers\Platform\TaskController::class, 'destroy'])
+        ->name('platform.tasks.destroy');
+
+    Route::put('/companies/{company}/tasks/{task}/kpi-links', [\App\Http\Controllers\Platform\TaskController::class, 'updateKpiLinks'])
+        ->name('platform.tasks.kpi-links.update');
+
     Route::get('/kpi-templates', [\App\Http\Controllers\Platform\KpiTemplateController::class, 'index'])
         ->name('platform.kpi-templates.index');
 

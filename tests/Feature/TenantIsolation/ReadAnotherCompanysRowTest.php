@@ -20,6 +20,7 @@ class ReadAnotherCompanysRowTest extends TenantIsolationTestCase
         return [
             'departments index' => ['/platform/companies/company-b/departments', 'departments'],
             'kpis index' => ['/platform/companies/company-b/kpis', 'kpis'],
+            'tasks index' => ['/platform/companies/company-b/tasks', 'tasks'],
             'audit log' => ['/platform/companies/company-b/audit-log', 'admin_action_logs'],
         ];
     }

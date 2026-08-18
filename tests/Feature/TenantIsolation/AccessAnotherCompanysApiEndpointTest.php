@@ -45,6 +45,11 @@ class AccessAnotherCompanysApiEndpointTest extends TenantIsolationTestCase
             'GET company audit log' => ['GET', '/platform/companies/company-b/audit-log'],
             'GET company audit log export' => ['GET', '/platform/companies/company-b/audit-log/export'],
             'GET onboarding' => ['GET', '/platform/companies/company-b/onboarding'],
+            'GET tasks index' => ['GET', '/platform/companies/company-b/tasks'],
+            'POST tasks store' => ['POST', '/platform/companies/company-b/tasks'],
+            'PATCH task update' => ['PATCH', '/platform/companies/company-b/tasks/task-b'],
+            'DELETE task destroy' => ['DELETE', '/platform/companies/company-b/tasks/task-b'],
+            'PUT task kpi links update' => ['PUT', '/platform/companies/company-b/tasks/task-b/kpi-links'],
         ];
     }
 

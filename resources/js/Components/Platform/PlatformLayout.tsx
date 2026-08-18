@@ -3,6 +3,7 @@ import { ReactNode, useState } from 'react';
 import {
     AdjustmentsIcon,
     BuildingIcon,
+    ChecklistIcon,
     ClipboardCheckIcon,
     DocumentDuplicateIcon,
     HomeIcon,
@@ -166,6 +167,13 @@ function SidebarContent({ platformUser, company, currentUrl }: { platformUser: P
                             currentUrl={currentUrl}
                         >
                             KPIs
+                        </NavLink>
+                        <NavLink
+                            href={`/platform/companies/${contextCompany.id}/tasks`}
+                            icon={<ChecklistIcon className="w-[18px] h-[18px]" />}
+                            currentUrl={currentUrl}
+                        >
+                            Tasks
                         </NavLink>
                         {isAdminHere && (
                             <NavLink

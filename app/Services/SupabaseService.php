@@ -51,6 +51,7 @@ class SupabaseService
         'company_users', 'department_users', 'departments', 'kpi_categories',
         'kpis', 'kpi_submissions', 'roles', 'notifications', 'kpi_access_grants',
         'platform_admin_assignments', 'import_batches', 'audit_logs', 'reports',
+        'tasks', 'task_kpi_links',
     ];
 
     private function assertNotTenantOwned(string $table): void
