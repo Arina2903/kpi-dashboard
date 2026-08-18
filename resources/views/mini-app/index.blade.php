@@ -1056,7 +1056,7 @@ function taskFormFields(t) {
         </div>
 
         <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Unit</p>
-        <select id="taskUnitInput" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+        <select id="taskUnitInput" onchange="onTaskUnitChanged()" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
             <option value="number" ${t?.unit === 'number' ? 'selected' : ''}>Number</option>
             <option value="currency" ${t?.unit === 'currency' ? 'selected' : ''}>Currency (RM)</option>
             <option value="percentage" ${t?.unit === 'percentage' ? 'selected' : ''}>Percentage (%)</option>
@@ -1066,6 +1066,44 @@ function taskFormFields(t) {
         <input type="number" step="any" min="0" id="taskTargetInput" value="${t?.target ?? ''}" placeholder="e.g. 10"
             class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
     `;
+}
+
+/* Mirrors the Telegram Mini App's "Align to KPI (optional)" picker on its
+   own Create Task screen (renderCreateTask() in telegram/app.blade.php) --
+   same backend (/mini-app/api/tasks/kpi-options, telegram_project_tasks),
+   so a KPI linked here shows up there and vice versa. Kept out of
+   taskFormFields()/taskFormValues() deliberately: those are shared with
+   Edit Task, but the update() endpoint (PATCH /tasks/{id}) doesn't accept
+   kpi_ids -- only the dedicated /tasks/{id}/link-kpis endpoint does, which
+   the task-detail screen's own "Edit KPI Links" already covers. */
+function taskKpiField() {
+    return `
+        <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Align to KPI <span class="text-slate-400 font-normal">(optional)</span></p>
+        <select id="taskKpiInput" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+            <option value="">Not linked to a KPI</option>
+        </select>
+    `;
+}
+
+async function onTaskUnitChanged() {
+    const select = document.getElementById('taskKpiInput');
+    if (!select) return; // not on this form (e.g. Edit Task, which doesn't have this field)
+
+    const unit = document.getElementById('taskUnitInput').value;
+    const previousValue = select.value;
+    select.innerHTML = `<option value="">Loading KPIs…</option>`;
+
+    try {
+        const data = await api(`/tasks/kpi-options?unit=${unit}`);
+        const options = data.kpis || [];
+        select.innerHTML = `
+            <option value="">Not linked to a KPI</option>
+            ${options.map(k => `<option value="${k.kpi_id}">${k.kpi_title}</option>`).join('')}
+        `;
+        if (options.some(k => k.kpi_id === previousValue)) select.value = previousValue;
+    } catch (e) {
+        select.innerHTML = `<option value="">Not linked to a KPI</option>`;
+    }
 }
 
 function taskFormValues() {
@@ -1085,18 +1123,21 @@ function renderNewTaskForm(isUnplanned = false) {
     document.getElementById('app').innerHTML = card(`
         <p class="text-[14px] font-black text-slate-900 mb-3">${isUnplanned ? 'Add Unplanned Task' : 'New Task'}</p>
         ${taskFormFields(null)}
-        <p class="text-[10px] text-slate-400 mt-3">Personal to-do — doesn't affect any KPI unless you link one later from Edit.</p>
+        ${taskKpiField()}
+        <p class="text-[10px] text-slate-400 mt-3">Optionally align this task to a KPI above, or link one later from Edit.</p>
         <div class="flex items-center gap-2 mt-4">
             <button onclick="${cancelTo}" class="flex-1 py-2.5 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[12px] font-black">Cancel</button>
             <button onclick="saveNewTask()" class="flex-1 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black">Save Task</button>
         </div>
         <p id="taskFormFeedback" class="hidden text-[10px] font-bold text-red-600 mt-2 text-center"></p>
     `);
+    onTaskUnitChanged();
 }
 
 async function saveNewTask() {
     const feedback = document.getElementById('taskFormFeedback');
     const v = taskFormValues();
+    const kpiId = document.getElementById('taskKpiInput')?.value || '';
 
     if (!v.title || v.target === '' || isNaN(Number(v.target)) || Number(v.target) < 0) {
         feedback.textContent = 'Enter a task title and a valid target.';
@@ -1105,7 +1146,10 @@ async function saveNewTask() {
     }
 
     try {
-        await api('/tasks', { method: 'POST', body: JSON.stringify({ ...v, target: Number(v.target), is_unplanned: !!window.__newTaskIsUnplanned }) });
+        await api('/tasks', {
+            method: 'POST',
+            body: JSON.stringify({ ...v, target: Number(v.target), is_unplanned: !!window.__newTaskIsUnplanned, kpi_ids: kpiId ? [kpiId] : [] }),
+        });
         showToast('Task saved!');
         if (window.__newTaskIsUnplanned) renderHome(); else renderTodo();
     } catch (e) {
