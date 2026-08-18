@@ -30,7 +30,15 @@ export default function PlatformLogin() {
         <>
             <Head title="Sign in" />
 
-            <AuthCard title="Welcome back" description="Sign in to your KPI Platform">
+            <AuthCard
+                title="Welcome back"
+                description="Sign in to your KPI Platform"
+                footer={
+                    <a href="/login" className="font-bold text-[#A6906F] hover:text-[#8B7355] transition">
+                        Looking for the main KPI Dashboard login?
+                    </a>
+                }
+            >
                 {flash.error && (
                     <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
                         {flash.error}
