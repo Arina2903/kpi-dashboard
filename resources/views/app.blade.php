@@ -324,6 +324,17 @@
     </style>
     @endif
 
+    {{-- Unconditional base font for the Platform (multi-company) pages, which
+         had no explicit font at all before this — just whatever sans-serif
+         the visitor's browser/OS happened to default to. The legacy app's
+         own per-tenant font customization above (session('theme_font_family'))
+         still wins where it applies, via its own !important rules; this is
+         only the base everyone gets before any of that. --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.tsx'])
     @inertiaHead
 </head>

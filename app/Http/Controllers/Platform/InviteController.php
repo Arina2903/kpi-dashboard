@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Platform\Concerns\ResolvesLandingUrl;
 use App\Services\SupabaseAuthService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,12 +18,14 @@ use Inertia\Inertia;
  */
 class InviteController extends Controller
 {
+    use ResolvesLandingUrl;
+
     public function accept(Request $request, SupabaseAuthService $auth)
     {
         $request->validate(['token' => 'required|string']);
 
         try {
-            $session = $auth->verifyInviteToken($request->query('token'));
+            $session = $auth->verifyToken($request->query('token'), 'invite');
         } catch (\Throwable) {
             return redirect()
                 ->route('platform.login')
@@ -61,12 +64,21 @@ class InviteController extends Controller
 
         session()->forget('platform_invite_access_token');
 
+        // Same reasoning as AuthController::submitLogin() — regenerate
+        // before the account's real session data is trusted under this
+        // session id.
+        $request->session()->regenerate();
+
         // The token verified above is a real Supabase session — promoting it
         // straight to the ongoing platform session logs them in immediately
         // rather than sending them back to a login form they'd have to fill
-        // in again seconds after choosing a password.
+        // in again seconds after choosing a password. Same role-aware
+        // destination as an ordinary login (ResolvesLandingUrl) — this used
+        // to always land on the dashboard regardless of role, landing a
+        // Department Admin/User somewhere different than the exact same
+        // account would reach by just logging in normally afterward.
         session(['platform_access_token' => $accessToken]);
 
-        return redirect()->route('platform.dashboard')->with('success', 'Password set — welcome to Performix.');
+        return redirect()->to($this->landingUrlFor($accessToken))->with('success', 'Password set — welcome to Performix.');
     }
 }

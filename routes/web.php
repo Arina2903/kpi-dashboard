@@ -52,21 +52,78 @@ Route::post('/login', [AuthController::class, 'submitLogin'])
 Route::get('/platform/login', [\App\Http\Controllers\Platform\AuthController::class, 'showLogin'])
     ->name('platform.login');
 
-Route::post('/platform/login', [\App\Http\Controllers\Platform\AuthController::class, 'submitLogin'])
-    ->name('platform.login.submit');
-
 Route::post('/platform/logout', [\App\Http\Controllers\Platform\AuthController::class, 'logout'])
     ->name('platform.logout');
 
-Route::get('/platform/invite/accept', [\App\Http\Controllers\Platform\InviteController::class, 'accept'])
-    ->name('platform.invite.accept');
+Route::get('/platform/forgot-password', [\App\Http\Controllers\Platform\ForgotPasswordController::class, 'show'])
+    ->name('platform.forgot-password');
 
-Route::post('/platform/invite/set-password', [\App\Http\Controllers\Platform\InviteController::class, 'setPassword'])
-    ->name('platform.invite.set-password');
+// Throttled: none of these had any request limiting at all -- unmetered,
+// this is a credential-stuffing surface against /platform/login, a
+// mail-bombing/Supabase-admin-API-abuse surface against /platform/forgot-password,
+// and a token-guessing surface against the two token-redemption endpoints.
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/platform/login', [\App\Http\Controllers\Platform\AuthController::class, 'submitLogin'])
+        ->name('platform.login.submit');
 
-Route::middleware(['platform.auth'])->prefix('platform')->group(function () {
+    Route::get('/platform/invite/accept', [\App\Http\Controllers\Platform\InviteController::class, 'accept'])
+        ->name('platform.invite.accept');
+
+    Route::post('/platform/invite/set-password', [\App\Http\Controllers\Platform\InviteController::class, 'setPassword'])
+        ->name('platform.invite.set-password');
+
+    Route::post('/platform/forgot-password', [\App\Http\Controllers\Platform\ForgotPasswordController::class, 'sendResetLink'])
+        ->name('platform.forgot-password.send');
+
+    Route::get('/platform/reset-password/accept', [\App\Http\Controllers\Platform\ForgotPasswordController::class, 'accept'])
+        ->name('platform.reset-password.accept');
+});
+
+Route::middleware(['platform.auth', 'platform.audit'])->prefix('platform')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Platform\DashboardController::class, 'index'])
         ->name('platform.dashboard');
+
+    Route::get('/profile', [\App\Http\Controllers\Platform\ProfileController::class, 'index'])
+        ->name('platform.profile');
+
+    Route::post('/profile/password', [\App\Http\Controllers\Platform\ProfileController::class, 'updatePassword'])
+        ->name('platform.profile.password');
+
+    Route::post('/telegram/link-code', [\App\Http\Controllers\Platform\TelegramLinkController::class, 'generateCode'])
+        ->name('platform.telegram.link-code');
+
+    Route::post('/telegram/disconnect', [\App\Http\Controllers\Platform\TelegramLinkController::class, 'disconnect'])
+        ->name('platform.telegram.disconnect');
+
+    Route::get('/audit-log', [\App\Http\Controllers\Platform\AuditLogController::class, 'index'])
+        ->name('platform.audit-log.index');
+
+    Route::get('/audit-log/export', [\App\Http\Controllers\Platform\AuditLogController::class, 'export'])
+        ->name('platform.audit-log.export');
+
+    Route::get('/companies/{company}/audit-log', [\App\Http\Controllers\Platform\AuditLogController::class, 'companyIndex'])
+        ->name('platform.companies.audit-log.index');
+
+    Route::get('/companies/{company}/audit-log/export', [\App\Http\Controllers\Platform\AuditLogController::class, 'companyExport'])
+        ->name('platform.companies.audit-log.export');
+
+    Route::get('/anira', [\App\Http\Controllers\Platform\AniraController::class, 'index'])
+        ->name('platform.anira.index');
+
+    Route::post('/ai/chat', [\App\Http\Controllers\Platform\AniraController::class, 'chat'])
+        ->name('platform.ai.chat');
+
+    Route::get('/admins', [\App\Http\Controllers\Platform\PlatformAdminController::class, 'index'])
+        ->name('platform.admins.index');
+
+    Route::post('/admins', [\App\Http\Controllers\Platform\PlatformAdminController::class, 'store'])
+        ->name('platform.admins.store');
+
+    Route::delete('/admins/{assignment}', [\App\Http\Controllers\Platform\PlatformAdminController::class, 'destroy'])
+        ->name('platform.admins.destroy');
+
+    Route::post('/admins/{user}/demote', [\App\Http\Controllers\Platform\PlatformAdminController::class, 'demote'])
+        ->name('platform.admins.demote');
 
     Route::get('/companies', [\App\Http\Controllers\Platform\CompanyController::class, 'index'])
         ->name('platform.companies.index');
@@ -77,6 +134,54 @@ Route::middleware(['platform.auth'])->prefix('platform')->group(function () {
     Route::post('/companies/{company}/admins', [\App\Http\Controllers\Platform\CompanyController::class, 'storeAdmin'])
         ->name('platform.companies.admins.store');
 
+    Route::post('/companies/{company}/activate', [\App\Http\Controllers\Platform\CompanyController::class, 'activate'])
+        ->name('platform.companies.activate');
+
+    Route::post('/companies/{company}/suspend', [\App\Http\Controllers\Platform\CompanyController::class, 'suspend'])
+        ->name('platform.companies.suspend');
+
+    Route::post('/companies/{company}/reactivate', [\App\Http\Controllers\Platform\CompanyController::class, 'reactivate'])
+        ->name('platform.companies.reactivate');
+
+    Route::post('/companies/{company}/archive', [\App\Http\Controllers\Platform\CompanyController::class, 'archive'])
+        ->name('platform.companies.archive');
+
+    Route::post('/companies/{company}/unarchive', [\App\Http\Controllers\Platform\CompanyController::class, 'unarchive'])
+        ->name('platform.companies.unarchive');
+
+    Route::post('/companies/{company}/branding', [\App\Http\Controllers\Platform\CompanyController::class, 'updateBranding'])
+        ->name('platform.companies.branding');
+
+    Route::get('/companies/{company}/onboarding', [\App\Http\Controllers\Platform\OnboardingController::class, 'index'])
+        ->name('platform.onboarding.show');
+
+    Route::get('/companies/{company}/onboarding/assign-roles', [\App\Http\Controllers\Platform\OnboardingController::class, 'assignRoles'])
+        ->name('platform.onboarding.assign-roles');
+
+    Route::get('/companies/{company}/onboarding/reporting-hierarchy', [\App\Http\Controllers\Platform\OnboardingController::class, 'reportingHierarchy'])
+        ->name('platform.onboarding.reporting-hierarchy');
+
+    Route::get('/companies/{company}/onboarding/anira-config', [\App\Http\Controllers\Platform\OnboardingController::class, 'aniraConfig'])
+        ->name('platform.onboarding.anira-config');
+
+    Route::get('/companies/{company}/onboarding/telegram-config', [\App\Http\Controllers\Platform\OnboardingController::class, 'telegramConfig'])
+        ->name('platform.onboarding.telegram-config');
+
+    Route::get('/companies/{company}/import', [\App\Http\Controllers\Platform\ImportController::class, 'show'])
+        ->name('platform.import.show');
+
+    Route::post('/companies/{company}/import/preview', [\App\Http\Controllers\Platform\ImportController::class, 'preview'])
+        ->name('platform.import.preview');
+
+    Route::post('/companies/{company}/import/confirm', [\App\Http\Controllers\Platform\ImportController::class, 'confirm'])
+        ->name('platform.import.confirm');
+
+    Route::get('/companies/{company}/import/{batch}/users', [\App\Http\Controllers\Platform\UserCreationController::class, 'show'])
+        ->name('platform.import.users.show');
+
+    Route::post('/companies/{company}/import/{batch}/users', [\App\Http\Controllers\Platform\UserCreationController::class, 'store'])
+        ->name('platform.import.users.store');
+
     Route::get('/companies/{company}/departments', [\App\Http\Controllers\Platform\DepartmentController::class, 'index'])
         ->name('platform.departments.index');
 
@@ -85,6 +190,15 @@ Route::middleware(['platform.auth'])->prefix('platform')->group(function () {
 
     Route::post('/companies/{company}/departments/{department}/users', [\App\Http\Controllers\Platform\DepartmentController::class, 'storeUser'])
         ->name('platform.departments.users.store');
+
+    Route::patch('/companies/{company}/departments/{department}/users/{user}/role', [\App\Http\Controllers\Platform\DepartmentController::class, 'updateUserRole'])
+        ->name('platform.departments.users.role.update');
+
+    Route::post('/companies/{company}/users/{user}/suspend', [\App\Http\Controllers\Platform\DepartmentController::class, 'suspendUser'])
+        ->name('platform.companies.users.suspend');
+
+    Route::post('/companies/{company}/users/{user}/reactivate', [\App\Http\Controllers\Platform\DepartmentController::class, 'reactivateUser'])
+        ->name('platform.companies.users.reactivate');
 
     Route::post('/companies/{company}/departments/{department}/roles', [\App\Http\Controllers\Platform\RoleController::class, 'store'])
         ->name('platform.roles.store');
@@ -100,6 +214,33 @@ Route::middleware(['platform.auth'])->prefix('platform')->group(function () {
 
     Route::post('/companies/{company}/kpis', [\App\Http\Controllers\Platform\KpiController::class, 'store'])
         ->name('platform.kpis.store');
+
+    Route::patch('/companies/{company}/kpis/{kpi}', [\App\Http\Controllers\Platform\KpiController::class, 'update'])
+        ->name('platform.kpis.update');
+
+    Route::post('/companies/{company}/kpis/apply-template', [\App\Http\Controllers\Platform\KpiController::class, 'applyTemplate'])
+        ->name('platform.kpis.apply-template');
+
+    Route::post('/companies/{company}/kpis/{kpi}/grants', [\App\Http\Controllers\Platform\KpiController::class, 'storeGrant'])
+        ->name('platform.kpis.grants.store');
+
+    Route::delete('/companies/{company}/kpis/{kpi}/grants/{grant}', [\App\Http\Controllers\Platform\KpiController::class, 'destroyGrant'])
+        ->name('platform.kpis.grants.destroy');
+
+    Route::get('/kpi-templates', [\App\Http\Controllers\Platform\KpiTemplateController::class, 'index'])
+        ->name('platform.kpi-templates.index');
+
+    Route::post('/kpi-templates', [\App\Http\Controllers\Platform\KpiTemplateController::class, 'store'])
+        ->name('platform.kpi-templates.store');
+
+    Route::delete('/kpi-templates/{template}', [\App\Http\Controllers\Platform\KpiTemplateController::class, 'destroy'])
+        ->name('platform.kpi-templates.destroy');
+
+    Route::post('/kpi-templates/{template}/items', [\App\Http\Controllers\Platform\KpiTemplateController::class, 'storeItem'])
+        ->name('platform.kpi-templates.items.store');
+
+    Route::delete('/kpi-templates/{template}/items/{item}', [\App\Http\Controllers\Platform\KpiTemplateController::class, 'destroyItem'])
+        ->name('platform.kpi-templates.items.destroy');
 
     Route::get('/companies/{company}/departments/{department}/submissions', [\App\Http\Controllers\Platform\KpiSubmissionController::class, 'index'])
         ->name('platform.submissions.index');

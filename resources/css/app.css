@@ -6,6 +6,23 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Inter', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Performix Platform brand scale — the existing deep navy carried over
+       from every hand-written bg-[#06142f] across the Platform pages, now a
+       real named token so it reads as intentional design rather than a
+       copy-pasted hex code, and so it's changed in one place if it ever
+       needs to. --color-brand-* is usable as bg-brand-900, text-brand-700, etc. */
+    --color-brand-950: #050e21;
+    --color-brand-900: #06142f;
+    --color-brand-800: #0b1f49;
+    --color-brand-100: #e6eaf3;
+    --color-brand-50: #f4f6fb;
+}
+
+@layer base {
+    body {
+        font-family: var(--font-sans);
+    }
 }

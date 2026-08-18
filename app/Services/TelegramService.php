@@ -58,12 +58,22 @@ class TelegramService
         return $this->call('sendMessage', $payload);
     }
 
+    /**
+     * Telegram's `inline_keyboard` is an array of ROWS, each row an array of
+     * buttons — this used to return a bare one-element array (the button
+     * itself, unwrapped), one nesting level short, which every caller passed
+     * straight through to sendMessage()'s `$inlineKeyboard`. Telegram's own
+     * API rejected it outright ("expected an Array of InlineKeyboardButton"),
+     * confirmed by actually sending a message through the real Bot API — a
+     * bug that predates this session and was never caught because nothing
+     * had ever exercised a real send with a button until now.
+     */
     public function webAppButton(string $label, string $url): array
     {
-        return [[
+        return [[[
             'text' => $label,
             'web_app' => ['url' => $url],
-        ]];
+        ]]];
     }
 
     private function call(string $method, array $payload = []): array

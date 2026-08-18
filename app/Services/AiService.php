@@ -722,4 +722,100 @@ PROMPT;
             'model_version' => $this->model,
         ];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PLATFORM CHAT (ANIRA, multi-company)
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * The Platform's ANIRA endpoint. Unlike `chat()` above (built around the
+     * legacy single-tenant employee/session model), this method never fetches
+     * anything itself — `$context` must already be the output of
+     * `AuthorizedDataScope::assistantContext()`, i.e. already filtered by
+     * Postgres RLS to exactly what the asking user is entitled to see. That
+     * is the actual security boundary: unauthorized rows were never fetched,
+     * so they can't end up in this prompt no matter what it says.
+     *
+     * The "you may only discuss what's listed" instruction below is
+     * defense-in-depth against the model inventing or recalling something
+     * from general knowledge — a chatty-model problem, not a data-boundary
+     * one. Never treat it as the guarantee; the caller-side filtering is.
+     */
+    public function chatForPlatform(array $context, array $messages): string
+    {
+        $system = $this->buildPlatformSystemPrompt($context);
+
+        $response = $this->request()->post('https://api.openai.com/v1/chat/completions', [
+            'model' => $this->model,
+            'max_completion_tokens' => 800,
+            'messages' => array_merge(
+                [['role' => 'system', 'content' => $system]],
+                $messages
+            ),
+        ]);
+
+        if (!$response->successful()) {
+            throw new \RuntimeException('OpenAI request failed: ' . $response->body());
+        }
+
+        return trim($response->json('choices.0.message.content', ''));
+    }
+
+    private function buildPlatformSystemPrompt(array $context): string
+    {
+        $user = $context['user'] ?? null;
+
+        $companiesLines = collect($context['companies'] ?? [])
+            ->map(fn ($c) => "- {$c['name']} ({$c['code']}), status: {$c['status']}")
+            ->implode("\n") ?: '(none)';
+
+        $departmentsLines = collect($context['departments'] ?? [])
+            ->map(fn ($d) => "- {$d['name']} ({$d['code']})")
+            ->implode("\n") ?: '(none)';
+
+        $kpisLines = collect($context['kpis'] ?? [])
+            ->map(fn ($k) => '- ' . $k['name']
+                . ($k['target'] !== null ? " (target: {$k['target']}{$k['unit']})" : '')
+                . ", frequency: {$k['frequency']}, visibility: {$k['visibility']}")
+            ->implode("\n") ?: '(none)';
+
+        $submissionsLines = collect($context['submissions'] ?? [])
+            ->map(fn ($s) => "- {$s['submission_date']}: value {$s['value']}" . (!empty($s['notes']) ? " ({$s['notes']})" : ''))
+            ->implode("\n") ?: '(none)';
+
+        $userName = $user['name'] ?? 'the asking user';
+        $userEmail = $user['email'] ?? '';
+
+        return <<<PROMPT
+You are ANIRA, the Performix Platform's KPI assistant.
+
+CRITICAL RULE: you may ONLY discuss the data explicitly listed below. This list
+has already been filtered by the database's own row-level security to exactly
+what {$userName} is authorized to see for this conversation — it is not a
+suggestion, it is the complete set of information available to you. If asked
+about a company, department, KPI, or figure that is not listed below, say
+plainly that you don't have access to that information. Never guess, infer, or
+recall a value from general knowledge, and never speculate about what a KPI's
+actual or target value "probably" is.
+
+ASKING USER: {$userName} ({$userEmail})
+
+COMPANIES YOU MAY DISCUSS:
+{$companiesLines}
+
+DEPARTMENTS YOU MAY DISCUSS:
+{$departmentsLines}
+
+KPIS YOU MAY DISCUSS:
+{$kpisLines}
+
+RECENT SUBMISSIONS YOU MAY DISCUSS:
+{$submissionsLines}
+
+Be concise and specific. When asked for a KPI's value, cite the exact figure
+from the list above rather than describing it vaguely.
+PROMPT;
+    }
 }

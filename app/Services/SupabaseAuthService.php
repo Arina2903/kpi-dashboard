@@ -90,8 +90,8 @@ class SupabaseAuthService
      * response's `hashed_token` is what we email inside our own link — never
      * Supabase's own `action_link`, since that redirects with the session in
      * a URL fragment, which only client-side JS can read; we verify the
-     * token server-side instead (see `verifyInviteToken()`), matching how
-     * every other Supabase call in this app already works.
+     * token server-side instead (see `verifyToken()`), matching how every
+     * other Supabase call in this app already works.
      *
      * Also returns the created/existing user's `id` synchronously, in the
      * same response — unlike `createUser()`, callers don't need to poll for
@@ -118,33 +118,120 @@ class SupabaseAuthService
     }
 
     /**
-     * Exchanges an invite (or recovery) token hash for a real Supabase Auth
-     * session — the server-side equivalent of what clicking Supabase's own
-     * `action_link` would do client-side. Uses the anon key, same as
-     * `signIn()`, since this is exactly what an unauthenticated visitor
-     * clicking an emailed link is allowed to do.
+     * "Forgot password" — mints a recovery token for an *existing* user,
+     * same shape as generateInviteLink() but type=recovery. Unlike invite,
+     * this fails if the email has no account at all; callers should treat
+     * that failure identically to success (see
+     * ForgotPasswordController::sendResetLink()) so the response never
+     * reveals whether an email is registered.
      */
-    public function verifyInviteToken(string $tokenHash): array
+    public function generateRecoveryLink(string $email): array
     {
         $response = Http::timeout(15)->withHeaders([
-            'apikey' => $this->anonKey,
+            'apikey' => $this->serviceRoleKey,
+            'Authorization' => 'Bearer ' . $this->serviceRoleKey,
             'Content-Type' => 'application/json',
-        ])->post($this->url . '/auth/v1/verify', [
-            'type' => 'invite',
-            'token_hash' => $tokenHash,
+        ])->post($this->url . '/auth/v1/admin/generate_link', [
+            'type' => 'recovery',
+            'email' => $email,
         ]);
 
         if (!$response->successful()) {
-            throw new \RuntimeException('This invite link is invalid or has expired.');
+            throw new \RuntimeException('Failed to generate recovery link: ' . $response->body());
         }
 
         return $response->json();
     }
 
     /**
-     * Sets the password on the account behind the given access token — used
-     * once, right after `verifyInviteToken()`, to let someone accepting an
-     * invite choose their own password instead of us choosing one for them.
+     * Exchanges an invite/recovery token hash for a real Supabase Auth
+     * session — the server-side equivalent of what clicking Supabase's own
+     * `action_link` would do client-side. Uses the anon key, same as
+     * `signIn()`, since this is exactly what an unauthenticated visitor
+     * clicking an emailed link is allowed to do. `$type` must match what the
+     * link was generated with (`invite` or `recovery`) — Supabase rejects a
+     * mismatch.
+     */
+    public function verifyToken(string $tokenHash, string $type = 'invite'): array
+    {
+        $response = Http::timeout(15)->withHeaders([
+            'apikey' => $this->anonKey,
+            'Content-Type' => 'application/json',
+        ])->post($this->url . '/auth/v1/verify', [
+            'type' => $type,
+            'token_hash' => $tokenHash,
+        ]);
+
+        if (!$response->successful()) {
+            throw new \RuntimeException('This link is invalid or has expired.');
+        }
+
+        return $response->json();
+    }
+
+    /**
+     * Server-side mint of a genuine, short-lived Supabase Auth session for an
+     * EXISTING user, identified only by email — no password, no user
+     * interaction, no link ever emailed anywhere. This exists for backend
+     * contexts that have no HTTP request of their own to carry a session (a
+     * Telegram bot webhook, a scheduled digest job): the only way those
+     * contexts can read Platform data through RLS — instead of through
+     * service_role, which bypasses it — is to hold a real user access token.
+     * `TelegramAuthorizedScope` is the only caller.
+     *
+     * Uses the same magiclink generate-then-verify round trip as
+     * generateRecoveryLink()/verifyToken(), just chained together server-side
+     * so the caller gets back a ready-to-use access_token instead of a link
+     * meant for a browser. Returns null on any failure (unknown email,
+     * Supabase error) rather than throwing — callers treat "no token" and
+     * "not authorized" identically, same as AuthorizedDataScope's own
+     * empty-result convention.
+     */
+    public function mintSessionAccessToken(string $email): ?string
+    {
+        $linkResponse = Http::timeout(15)->withHeaders([
+            'apikey' => $this->serviceRoleKey,
+            'Authorization' => 'Bearer ' . $this->serviceRoleKey,
+            'Content-Type' => 'application/json',
+        ])->post($this->url . '/auth/v1/admin/generate_link', [
+            'type' => 'magiclink',
+            'email' => $email,
+        ]);
+
+        if (!$linkResponse->successful()) {
+            return null;
+        }
+
+        // Supabase has nested token fields under `properties` on some API
+        // versions and returned them top-level on others — check both rather
+        // than assuming one shape.
+        $hashedToken = $linkResponse->json('properties.hashed_token') ?? $linkResponse->json('hashed_token');
+
+        if (!$hashedToken) {
+            return null;
+        }
+
+        $verifyResponse = Http::timeout(15)->withHeaders([
+            'apikey' => $this->anonKey,
+            'Content-Type' => 'application/json',
+        ])->post($this->url . '/auth/v1/verify', [
+            'type' => 'magiclink',
+            'token_hash' => $hashedToken,
+        ]);
+
+        if (!$verifyResponse->successful()) {
+            return null;
+        }
+
+        return $verifyResponse->json('access_token');
+    }
+
+    /**
+     * Sets the password on the account behind the given access token. Used
+     * right after `verifyToken()`, to let someone accepting an invite or
+     * resetting a forgotten password choose their own password instead of us
+     * choosing one for them — and again from `ProfileController::updatePassword()`,
+     * where the token is simply the caller's own ongoing platform session.
      */
     public function setPassword(string $accessToken, string $password): void
     {

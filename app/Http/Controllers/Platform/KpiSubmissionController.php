@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Platform\Concerns\LogsAdminActions;
 use App\Services\SupabaseUserService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,6 +21,8 @@ use Inertia\Inertia;
  */
 class KpiSubmissionController extends Controller
 {
+    use LogsAdminActions;
+
     private function ensureDepartmentAccess(Request $request, string $company, string $department): array
     {
         $platformUser = $request->attributes->get('platformUser');
@@ -29,7 +32,7 @@ class KpiSubmissionController extends Controller
         }
 
         $isCompanyOrDeptAdmin = collect($platformUser['company_memberships'] ?? [])
-            ->contains(fn ($m) => $m['company_id'] === $company && in_array($m['role'], ['company_admin', 'department_admin'], true));
+            ->contains(fn ($m) => $m['company_id'] === $company && in_array($m['role'], ['company_admin', 'slt', 'executive'], true));
 
         /** @var SupabaseUserService $supabase */
         $supabase = $request->attributes->get('platformSupabase');
@@ -44,6 +47,8 @@ class KpiSubmissionController extends Controller
     public function index(Request $request, string $company, string $department)
     {
         $access = $this->ensureDepartmentAccess($request, $company, $department);
+
+        $this->logAdminAccessIfCrossCompany($request, 'view_submissions', $company, ['department_id' => $department]);
 
         /** @var SupabaseUserService $supabase */
         $supabase = $request->attributes->get('platformSupabase');
@@ -92,6 +97,17 @@ class KpiSubmissionController extends Controller
         $supabase = $request->attributes->get('platformSupabase');
 
         try {
+            // return=minimal (3rd arg false): `kpi_submissions_select` routes
+            // through `auth_can_view_kpi()` on the parent KPI, which queries
+            // back into `kpis` — requesting the row back via the default
+            // `return=representation` makes PostgREST evaluate that SELECT
+            // policy as part of this INSERT's RETURNING clause, which fails
+            // for non-Super-Admin callers even though the INSERT's own WITH
+            // CHECK independently evaluates true (same confirmed bug as
+            // KpiController::store()). This meant every KPI submission by
+            // anyone other than a Super Admin failed — the single most
+            // frequently used write in the whole Platform. Nothing here uses
+            // the returned row anyway.
             $supabase->insert('kpi_submissions', [
                 'company_id' => $company,
                 'department_id' => $department,
@@ -100,7 +116,7 @@ class KpiSubmissionController extends Controller
                 'submission_date' => $request->submission_date,
                 'submitted_by' => $platformUser['id'],
                 'notes' => $request->notes,
-            ]);
+            ], false);
         } catch (\Throwable $e) {
             return back()->withInput()->with('error', 'Could not save submission: ' . $e->getMessage());
         }

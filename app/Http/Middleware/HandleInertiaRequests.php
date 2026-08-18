@@ -47,6 +47,12 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 'success' => fn () => $request->session()->get('success'),
             ],
+            // Set by PlatformAuth on every /platform/* request, null
+            // everywhere else — shared globally so the Platform's nav shell
+            // (PlatformLayout) can render a consistent, role-aware sidebar
+            // on every page without each controller remembering to pass its
+            // own copy of "who is this and what can they do."
+            'platformUser' => fn () => $request->attributes->get('platformUser'),
             'layout' => fn () => [
                 'companyCode' => session('company_code'),
                 'companyDisplayName' => session('company_display_name'),

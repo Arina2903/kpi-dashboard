@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Platform\Concerns\LogsAdminActions;
+use App\Http\Controllers\Platform\Concerns\PlatformAuthorization;
 use App\Services\SupabaseUserService;
 use Illuminate\Http\Request;
 
@@ -11,30 +12,17 @@ use Illuminate\Http\Request;
  * Per-department, per-company job-level roles (e.g. "Staff", "Lead") — the
  * self-service piece the platform was missing: which of these exist, and
  * how many tiers, is entirely up to each company. As with
- * DepartmentController, `ensureCompanyAccess()` is a clean-redirect
+ * DepartmentController, `ensureCompanyAdmin()` is a clean-redirect
  * convenience; `roles_write`'s RLS policy is what actually enforces it.
  */
 class RoleController extends Controller
 {
     use LogsAdminActions;
-
-    private function ensureCompanyAccess(Request $request, string $company): void
-    {
-        $platformUser = $request->attributes->get('platformUser');
-
-        if ($platformUser['is_super_admin'] ?? false) {
-            return;
-        }
-
-        $isCompanyAdmin = collect($platformUser['company_memberships'] ?? [])
-            ->contains(fn ($m) => $m['company_id'] === $company && $m['role'] === 'company_admin');
-
-        abort_unless($isCompanyAdmin, 403, 'You are not an admin of this company.');
-    }
+    use PlatformAuthorization;
 
     public function store(Request $request, string $company, string $department)
     {
-        $this->ensureCompanyAccess($request, $company);
+        $this->ensureCompanyAdmin($request, $company);
 
         $request->validate([
             'label' => 'required|string|max:100',
@@ -56,11 +44,13 @@ class RoleController extends Controller
             return back()->withInput()->with('error', 'Could not create role: ' . $e->getMessage());
         }
 
-        if ($logFailure = $this->logIfSuperAdmin($request, 'create_role', $company, [
-            'department_id' => $department,
-            'label' => $request->label,
-        ])) {
-            return $logFailure;
+        try {
+            $this->logCompanyAction($request, 'create_role', $company, null, [
+                'department_id' => $department,
+                'label' => $request->label,
+            ], 'role');
+        } catch (\Throwable) {
+            return back()->with('error', 'Role was created, but the action could not be logged — contact support before continuing.');
         }
 
         return back()->with('success', 'Role "' . $request->label . '" created.');
@@ -76,7 +66,7 @@ class RoleController extends Controller
      */
     public function destroy(Request $request, string $company, string $department, string $role)
     {
-        $this->ensureCompanyAccess($request, $company);
+        $this->ensureCompanyAdmin($request, $company);
 
         /** @var SupabaseUserService $supabase */
         $supabase = $request->attributes->get('platformSupabase');
@@ -84,7 +74,7 @@ class RoleController extends Controller
         $roleBelongsToDepartment = $supabase->first('roles', [
             'id' => 'eq.' . $role,
             'department_id' => 'eq.' . $department,
-            'select' => 'id',
+            'select' => 'id,label',
         ]);
 
         if (!$roleBelongsToDepartment) {
@@ -97,11 +87,12 @@ class RoleController extends Controller
             return back()->with('error', 'Could not remove this role — it may still be assigned to someone, or be the department\'s last remaining role.');
         }
 
-        if ($logFailure = $this->logIfSuperAdmin($request, 'delete_role', $company, [
-            'department_id' => $department,
-            'role_id' => $role,
-        ])) {
-            return $logFailure;
+        try {
+            $this->logCompanyAction($request, 'delete_role', $company, null, [
+                'department_id' => $department,
+            ], 'role', $role, ['label' => $roleBelongsToDepartment['label']]);
+        } catch (\Throwable) {
+            return back()->with('error', 'Role was removed, but the action could not be logged — contact support before continuing.');
         }
 
         return back()->with('success', 'Role removed.');

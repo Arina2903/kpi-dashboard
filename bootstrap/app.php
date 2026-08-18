@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'no-cache' => \App\Http\Middleware\NoCacheHeaders::class,
             'telegram.linked' => \App\Http\Middleware\EnsureTelegramLinked::class,
             'platform.auth' => \App\Http\Middleware\PlatformAuth::class,
+            'platform.audit' => \App\Http\Middleware\LogPlatformAccessDenials::class,
         ]);
 
         $middleware->web(append: [

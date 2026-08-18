@@ -1,0 +1,137 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  test:
+    name: PHPUnit + frontend build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_sqlite, pdo_pgsql, zip, bcmath, gd
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare .env
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run PHPUnit suite
+        run: php artisan test
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Build frontend
+        run: npm run build
+
+  tenant-isolation:
+    name: Tenant isolation (real Postgres RLS)
+    runs-on: ubuntu-latest
+    # Requirement #10: don't just manually confirm "Andalusia can't see
+    # VFive" — prove it, on every push, against a REAL Postgres engine
+    # actually evaluating this project's own RLS policies. This is
+    # deliberately a separate job from the mocked PHPUnit suite above:
+    # Http::fake()-based tests (see the `real-walkthrough-over-mocks` lesson
+    # documented in CLAUDE.md) can prove the APPLICATION never attempts a
+    # cross-tenant operation, but only a real Postgres engine evaluating
+    # `USING`/`WITH CHECK` clauses can prove the database itself refuses one
+    # if the application ever got that wrong. Both layers are tested; this
+    # job is the one that can't be fooled by a mock.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # A disposable, ephemeral container that lives only for this job —
+      # never the real Supabase project. `SUPABASE_DB_URL` has to be set to
+      # this for `php artisan migrate` to target it (config/database.php's
+      # `pgsql` connection always reads that exact env var). `RLS_TEST_DSN`
+      # below is deliberately a DIFFERENT string pointing at the exact same
+      # database (`postgres://` vs `postgresql://` — both valid libpq/Laravel
+      # aliases for the same driver): `platform:rls-test` refuses to run
+      # against any DSN that's textually IDENTICAL to `SUPABASE_DB_URL`, as a
+      # guard against ever accidentally pointing it at the real production
+      # database. That guard doesn't know this container is disposable, so
+      # it has to be satisfied with a different-but-equivalent string rather
+      # than weakened — do not "simplify" these back to matching.
+      SUPABASE_DB_URL: 'postgresql://postgres:postgres@127.0.0.1:5432/postgres'
+      RLS_TEST_DSN: 'postgres://postgres:postgres@127.0.0.1:5432/postgres'
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      SESSION_DRIVER: array
+      CACHE_STORE: array
+      QUEUE_CONNECTION: sync
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_sqlite, pdo_pgsql, zip, bcmath
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare .env
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Wait for Postgres
+        run: |
+          until pg_isready -h 127.0.0.1 -p 5432 -U postgres; do sleep 1; done
+
+      - name: Bootstrap a minimal Supabase-compatible auth schema
+        run: psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f database/rls-tests/ci_auth_schema_bootstrap.sql
+
+      - name: Run platform migrations against the disposable Postgres instance
+        run: php artisan migrate --force
+
+      - name: Apply baseline Supabase-equivalent grants (anon/authenticated/service_role)
+        # A real Supabase project auto-grants baseline table privileges to
+        # anon/authenticated/service_role outside of any migration -- only
+        # 2026_08_17_150000_grant_authenticated_role_on_missing_tables grants
+        # it explicitly, and only for six tables that were *missing* it
+        # relative to what Supabase's own project template had already
+        # applied to everything else in production. A plain postgres:16
+        # container has none of that implicit history, so every
+        # `authenticated`-scoped query below would otherwise fail on a GRANT
+        # check before RLS is ever reached. Found by actually running this
+        # job's steps end to end for the first time, not by re-reading the
+        # migrations -- see ci_post_migration_grants.sql's own header.
+        run: psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f database/rls-tests/ci_post_migration_grants.sql
+
+      - name: Run the RLS tenant-isolation test suite
+        run: php artisan platform:rls-test --dsn="$RLS_TEST_DSN"

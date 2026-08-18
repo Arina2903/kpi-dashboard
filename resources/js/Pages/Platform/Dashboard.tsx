@@ -1,4 +1,7 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
+import PlatformLayout from '@/Components/Platform/PlatformLayout';
+import { BuildingIcon, ClipboardCheckIcon, RocketIcon, TargetIcon, UsersIcon } from '@/Components/Platform/Icons';
+import { Card, EmptyState, StatCard, StatusBadge } from '@/Components/Platform/ui';
 
 interface Company {
     id: string;
@@ -16,7 +19,8 @@ interface PlatformUser {
     id: string;
     name: string;
     email: string;
-    is_super_admin: boolean;
+    is_platform_admin: boolean;
+    assigned_company_ids: string[];
     company_memberships: Array<{
         company_id: string;
         role: string;
@@ -30,140 +34,78 @@ interface DashboardPageProps {
     [key: string]: unknown;
 }
 
-function StatTile({ label, value }: { label: string; value: string | number }) {
-    return (
-        <div className="rounded-xl bg-slate-50 px-4 py-3">
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">{label}</p>
-            <p className="text-xl font-bold text-slate-800 tabular-nums">{value}</p>
-        </div>
-    );
-}
-
 export default function PlatformDashboard({ me, visibleCompanies }: DashboardPageProps) {
-    const logout = () => router.post('/platform/logout');
-
-    const totals = visibleCompanies.reduce(
-        (acc, c) => ({
-            companies: acc.companies + 1,
-            departments: acc.departments + c.department_count,
-            users: acc.users + c.user_count,
-            kpis: acc.kpis + c.kpi_count,
-            submissions: acc.submissions + c.submission_count,
-        }),
-        { companies: 0, departments: 0, users: 0, kpis: 0, submissions: 0 },
-    );
-
     return (
-        <>
-            <Head title="Platform Dashboard" />
-
-            <div className="min-h-screen bg-slate-50 p-8">
-                <div className="max-w-3xl mx-auto">
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h1 className="text-lg font-bold text-slate-900">Multi-Company KPI Platform</h1>
-                            <p className="text-sm text-slate-500">
-                                Signed in as {me.name} ({me.email}) —{' '}
-                                {me.is_super_admin ? 'Richworks Super Admin' : 'Company user'}
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            {me.is_super_admin && (
-                                <Link
-                                    href="/platform/companies"
-                                    className="text-sm font-semibold text-[#06142f] hover:underline"
-                                >
-                                    Manage companies
-                                </Link>
-                            )}
-                            {me.company_memberships
-                                .filter((m) => m.role === 'company_admin')
-                                .map((m) => (
-                                    <Link
-                                        key={m.company_id}
-                                        href={`/platform/companies/${m.company_id}/departments`}
-                                        className="text-sm font-semibold text-[#06142f] hover:underline"
-                                    >
-                                        Manage {m.companies.name} departments
-                                    </Link>
-                                ))}
-                            {me.company_memberships.map((m) => (
-                                <Link
-                                    key={`kpis-${m.company_id}`}
-                                    href={`/platform/companies/${m.company_id}/kpis`}
-                                    className="text-sm font-semibold text-[#06142f] hover:underline"
-                                >
-                                    {m.companies.name} KPIs
-                                </Link>
-                            ))}
-                            <button
-                                onClick={logout}
-                                className="text-sm font-semibold text-red-600 hover:underline"
-                            >
-                                Logout
-                            </button>
-                        </div>
-                    </div>
-
-                    {me.is_super_admin && (
-                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
-                            <h2 className="text-sm font-bold text-slate-700 mb-3">Platform totals</h2>
-                            <div className="grid grid-cols-5 gap-3">
-                                <StatTile label="Companies" value={totals.companies} />
-                                <StatTile label="Departments" value={totals.departments} />
-                                <StatTile label="Users" value={totals.users} />
-                                <StatTile label="KPIs" value={totals.kpis} />
-                                <StatTile label="Submissions" value={totals.submissions} />
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                        <h2 className="text-sm font-bold text-slate-700 mb-3">
-                            Companies visible to you ({visibleCompanies.length})
-                        </h2>
-                        <p className="text-xs text-slate-400 mb-4">
-                            This list — and every number below — is not filtered by this page. Postgres RLS decided
-                            what came back, including inside the aggregation view. A Super Admin sees every company;
-                            anyone else sees only their own.
-                        </p>
-
-                        {visibleCompanies.length === 0 ? (
-                            <p className="text-sm text-slate-400">No companies visible.</p>
-                        ) : (
-                            <ul className="divide-y divide-slate-100">
-                                {visibleCompanies.map((company) => (
-                                    <li key={company.id} className="py-4">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div>
-                                                <p className="text-sm font-semibold text-slate-800">{company.name}</p>
-                                                <p className="text-xs text-slate-400">{company.code}</p>
-                                            </div>
-                                            <span className="text-xs font-semibold text-emerald-600 uppercase">
-                                                {company.status}
-                                            </span>
-                                        </div>
-                                        <div className="grid grid-cols-5 gap-2">
-                                            <StatTile label="Departments" value={company.department_count} />
-                                            <StatTile label="Users" value={company.user_count} />
-                                            <StatTile label="KPIs" value={company.kpi_count} />
-                                            <StatTile label="Submissions" value={company.submission_count} />
-                                            <StatTile
-                                                label="Avg. achievement"
-                                                value={
-                                                    company.avg_achievement_pct !== null
-                                                        ? `${company.avg_achievement_pct}%`
-                                                        : '—'
-                                                }
-                                            />
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </>
+        <PlatformLayout
+            title={`Welcome back, ${me.name.split(' ')[0]}`}
+            description={me.is_platform_admin ? 'Platform Admin' : 'Here are the companies you can access.'}
+        >
+            <Card
+                title={`Your companies (${visibleCompanies.length})`}
+                description="You only ever see companies you're actually part of — nothing here is hidden by this page, it simply isn't there for anyone else."
+            >
+                {visibleCompanies.length === 0 ? (
+                    <EmptyState
+                        icon={<BuildingIcon className="w-10 h-10" />}
+                        title="No companies yet"
+                        description="Once you're added to a company, it will show up here automatically."
+                    />
+                ) : (
+                    <ul className="divide-y divide-slate-100">
+                        {visibleCompanies.map((company) => (
+                            <li key={company.id} className="py-5 first:pt-0 last:pb-0">
+                                <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-800">{company.name}</p>
+                                        <p className="text-xs text-slate-400">{company.code}</p>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <Link
+                                            href={`/platform/companies/${company.id}/onboarding`}
+                                            className="text-xs font-semibold text-brand-800 hover:underline"
+                                        >
+                                            Onboarding
+                                        </Link>
+                                        <Link
+                                            href={`/platform/companies/${company.id}/departments`}
+                                            className="text-xs font-semibold text-brand-800 hover:underline"
+                                        >
+                                            Departments
+                                        </Link>
+                                        <Link
+                                            href={`/platform/companies/${company.id}/kpis`}
+                                            className="text-xs font-semibold text-brand-800 hover:underline"
+                                        >
+                                            KPIs
+                                        </Link>
+                                        <StatusBadge status={company.status} />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                                    <StatCard label="Departments" value={company.department_count} icon={<UsersIcon className="w-3.5 h-3.5" />} />
+                                    <StatCard label="People" value={company.user_count} icon={<UsersIcon className="w-3.5 h-3.5" />} />
+                                    <StatCard label="KPIs" value={company.kpi_count} icon={<TargetIcon className="w-3.5 h-3.5" />} />
+                                    <StatCard
+                                        label="Submissions"
+                                        value={company.submission_count}
+                                        icon={<ClipboardCheckIcon className="w-3.5 h-3.5" />}
+                                    />
+                                    <StatCard
+                                        label="Avg. achievement"
+                                        value={company.avg_achievement_pct !== null ? `${company.avg_achievement_pct}%` : '—'}
+                                        tone={
+                                            company.avg_achievement_pct !== null && company.avg_achievement_pct >= 100
+                                                ? 'success'
+                                                : 'default'
+                                        }
+                                        icon={<RocketIcon className="w-3.5 h-3.5" />}
+                                    />
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </Card>
+        </PlatformLayout>
     );
 }

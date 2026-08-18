@@ -7,9 +7,24 @@ interface PasswordInputProps {
     placeholder?: string;
     minLength?: number;
     required?: boolean;
+    /** Overrides the input's own styling — defaults to this component's original (legacy-app) look so existing callers are unaffected. */
+    className?: string;
+    /** Overrides the show/hide icon button's hover color to match the caller's own accent. */
+    iconHoverClassName?: string;
+    autoFocus?: boolean;
 }
 
-export default function PasswordInput({ name, value, onChange, placeholder, minLength, required = true }: PasswordInputProps) {
+export default function PasswordInput({
+    name,
+    value,
+    onChange,
+    placeholder,
+    minLength,
+    required = true,
+    className,
+    iconHoverClassName,
+    autoFocus,
+}: PasswordInputProps) {
     const [visible, setVisible] = useState(false);
 
     return (
@@ -22,12 +37,16 @@ export default function PasswordInput({ name, value, onChange, placeholder, minL
                 placeholder={placeholder ?? ''}
                 minLength={minLength}
                 required={required}
-                className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] focus:ring-2 focus:ring-[#6B9080]/40 focus:border-[#6B9080] focus:outline-none pr-10"
+                autoFocus={autoFocus}
+                className={
+                    className ??
+                    'w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] focus:ring-2 focus:ring-[#6B9080]/40 focus:border-[#6B9080] focus:outline-none pr-10'
+                }
             />
             <button
                 type="button"
                 onClick={() => setVisible((v) => !v)}
-                className="absolute right-0 top-0 h-full px-3 flex items-center text-slate-400 hover:text-[#1a3d34] transition"
+                className={`absolute right-0 top-0 h-full px-3 flex items-center text-slate-400 transition ${iconHoverClassName ?? 'hover:text-[#1a3d34]'}`}
                 aria-label="Show password"
                 tabIndex={-1}
             >

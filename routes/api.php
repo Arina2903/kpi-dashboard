@@ -21,6 +21,14 @@ Route::middleware('telegram.cron.secret')->prefix('telegram/cron')->group(functi
     Route::post('/tasks-monthly', [TelegramCronController::class, 'tasksMonthly']);
 });
 
+// The tenant-aware Platform digest — a distinct route tree from the legacy
+// one above, sharing only the secret-check middleware (which has no tenant
+// dimension of its own). See PlatformTelegramDigestService.
+Route::middleware('telegram.cron.secret')->prefix('platform/telegram/cron')->group(function () {
+    Route::post('/morning', [\App\Http\Controllers\Platform\TelegramCronController::class, 'morning']);
+    Route::post('/evening', [\App\Http\Controllers\Platform\TelegramCronController::class, 'evening']);
+});
+
 Route::middleware('telegram.webapp.auth')->prefix('telegram')->group(function () {
     Route::get('/theme', [TelegramMiniAppController::class, 'theme']);
     Route::get('/kpis/open', [TelegramMiniAppController::class, 'openKpis']);

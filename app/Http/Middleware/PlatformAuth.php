@@ -29,7 +29,14 @@ class PlatformAuth
         $supabase = new SupabaseUserService($accessToken);
 
         try {
+            // Filtered explicitly on the token's own `sub` claim — NOT left
+            // to RLS to narrow down on its own. RLS decides which rows are
+            // visible (for a Super Admin, every row in the table; for a
+            // Company Admin, every user in their own company), not which one
+            // is the caller. Without this filter, `first()` silently returns
+            // an arbitrary visible row instead of the caller's own.
             $me = $supabase->first('users', [
+                'auth_user_id' => 'eq.' . $supabase->currentAuthUserId(),
                 'select' => 'id,name,email,role,status',
             ]);
         } catch (\Throwable) {
@@ -48,7 +55,20 @@ class PlatformAuth
                 ->with('error', 'This account is disabled.');
         }
 
+        // Two independent axes — see the role model in CLAUDE.md. The platform
+        // tier says what someone is across companies; the company tier says
+        // what they are inside one. A Platform Admin has no reach except the
+        // companies explicitly assigned to them, which is why that list is
+        // resolved here rather than inferred from a boolean.
         $isSuperAdmin = $me['role'] === 'richworks_super_admin';
+        $isPlatformAdmin = $me['role'] === 'platform_admin';
+
+        $assignedCompanyIds = $isPlatformAdmin
+            ? collect($supabase->get('platform_admin_assignments', [
+                'user_id' => 'eq.' . $me['id'],
+                'select' => 'company_id',
+            ]) ?? [])->pluck('company_id')->all()
+            : [];
 
         $companyUsers = $isSuperAdmin
             ? []
@@ -62,7 +82,10 @@ class PlatformAuth
             'id' => $me['id'],
             'name' => $me['name'],
             'email' => $me['email'],
+            'platform_role' => $me['role'],
             'is_super_admin' => $isSuperAdmin,
+            'is_platform_admin' => $isPlatformAdmin,
+            'assigned_company_ids' => $assignedCompanyIds,
             'company_memberships' => $companyUsers,
         ]);
         $request->attributes->set('platformSupabase', $supabase);

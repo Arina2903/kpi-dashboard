@@ -1,5 +1,10 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
+import PasswordInput from '@/Components/PasswordInput';
+import AuthCard from '@/Components/Platform/AuthCard';
+
+const PLATFORM_PASSWORD_INPUT_CLASS =
+    'w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none pr-10';
 
 interface PlatformLoginPageProps {
     flash: {
@@ -23,65 +28,63 @@ export default function PlatformLogin() {
 
     return (
         <>
-            <Head title="Platform Login" />
+            <Head title="Sign in" />
 
-            <div className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
-                <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-7">
-                    <div className="mb-6">
-                        <h1 className="text-base font-bold text-slate-900">Multi-Company KPI Platform</h1>
-                        <p className="text-xs text-slate-500">Sign in to continue</p>
+            <AuthCard title="Welcome back" description="Sign in to your KPI Platform">
+                {flash.error && (
+                    <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                        {flash.error}
+                    </div>
+                )}
+                {flash.success && (
+                    <div className="mb-4 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+                        {flash.success}
+                    </div>
+                )}
+                {errors.email && (
+                    <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                        {errors.email}
+                    </div>
+                )}
+
+                <form onSubmit={submit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                        <input
+                            type="email"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none"
+                            required
+                            autoFocus
+                        />
                     </div>
 
-                    {flash.error && (
-                        <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                            {flash.error}
+                    <div>
+                        <div className="flex items-center justify-between mb-1">
+                            <label className="block text-sm font-medium text-slate-700">Password</label>
+                            <Link href="/platform/forgot-password" className="text-xs font-medium text-slate-500 hover:underline">
+                                Forgot password?
+                            </Link>
                         </div>
-                    )}
-                    {flash.success && (
-                        <div className="mb-4 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
-                            {flash.success}
-                        </div>
-                    )}
-                    {errors.email && (
-                        <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                            {errors.email}
-                        </div>
-                    )}
+                        <PasswordInput
+                            name="password"
+                            value={data.password}
+                            onChange={(v) => setData('password', v)}
+                            className={PLATFORM_PASSWORD_INPUT_CLASS}
+                            iconHoverClassName="hover:text-slate-700"
+                        />
+                    </div>
 
-                    <form onSubmit={submit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                            <input
-                                type="email"
-                                value={data.email}
-                                onChange={(e) => setData('email', e.target.value)}
-                                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none"
-                                required
-                                autoFocus
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                            <input
-                                type="password"
-                                value={data.password}
-                                onChange={(e) => setData('password', e.target.value)}
-                                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none"
-                                required
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="w-full rounded-xl bg-[#06142f] py-3 text-sm font-semibold text-white hover:bg-[#0b1f49] transition disabled:opacity-60"
-                        >
-                            Sign in
-                        </button>
-                    </form>
-                </div>
-            </div>
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        className="w-full rounded-xl bg-brand-900 py-3 text-sm font-semibold text-white hover:bg-brand-800 transition disabled:opacity-60"
+                    >
+                        Sign in
+                    </button>
+                </form>
+            </AuthCard>
         </>
     );
 }
