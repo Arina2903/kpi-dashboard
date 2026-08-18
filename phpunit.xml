@@ -29,6 +29,22 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <!-- Platform tests drive every Supabase call through Http::fake(),
+             matching patterns like "*/rest/v1/users*" against the full
+             request URL. That only works if SUPABASE_URL is a real absolute
+             URL: an empty value (as in .env.example, and any environment —
+             including CI — that copies it verbatim) makes SupabaseUserService
+             build a host-less string like "/rest/v1/users", which Http::fake()
+             doesn't recognize as a match. The request then falls through to a
+             REAL network call, fails with a cURL DNS error, gets swallowed by
+             PlatformAuth's catch-all, and turns an expected 403 into a 302 —
+             confirmed by reproducing this exact failure locally with a fresh
+             .env.example-derived .env. These must stay fixed, fake-looking
+             values so every Platform test behaves identically regardless of
+             what a developer's own .env happens to contain. -->
+        <env name="SUPABASE_URL" value="https://supabase.test"/>
+        <env name="SUPABASE_ANON_KEY" value="test-anon-key"/>
+        <env name="SUPABASE_SERVICE_ROLE_KEY" value="test-service-role-key"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
