@@ -27,9 +27,6 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
-      - name: Run PHPUnit suite
-        run: php artisan test
-
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -44,6 +41,14 @@ jobs:
 
       - name: Build frontend
         run: npm run build
+
+      # Must run AFTER the frontend build: some tests (e.g.
+      # PlatformOverviewDashboardTest) fully render an Inertia page through
+      # app.blade.php's @vite directive, which throws "Vite manifest not
+      # found" if public/build/manifest.json doesn't exist yet. Confirmed by
+      # reproducing locally with public/build removed before this reorder.
+      - name: Run PHPUnit suite
+        run: php artisan test
 
   tenant-isolation:
     name: Tenant isolation (real Postgres RLS)
