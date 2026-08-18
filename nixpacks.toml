@@ -1,2 +1,17 @@
+# resources/views/app.blade.php renders every page (Blade and Inertia alike)
+# through @vite(...), which requires a built public/build/manifest.json --
+# gitignored, so it only exists if `npm run build` actually runs during the
+# Railway build. Node/npm were never declared here, and composer.json's own
+# frontend-build step lives under a custom "setup" script (not a composer
+# hook Nixpacks would run), so nothing guaranteed this ran in production.
+# node-version 20 matches what .github/workflows/ci.yml already validates
+# against this same vite/laravel-vite-plugin combination.
+
 [phases.setup]
-nixPkgs = ['php82Extensions.zip', 'php82Extensions.pcntl', 'php82Extensions.posix']
+nixPkgs = ['php82Extensions.zip', 'php82Extensions.pcntl', 'php82Extensions.posix', 'nodejs_20']
+
+[phases.install]
+cmds = ['composer install --no-dev --optimize-autoloader', 'npm ci']
+
+[phases.build]
+cmds = ['npm run build']
