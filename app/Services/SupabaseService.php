@@ -21,49 +21,31 @@ class SupabaseService
     private const CACHE_TTL_SECONDS = 180;
 
     /**
-     * Every Platform table that carries `company_id` under the Core Platform
-     * Rule (CLAUDE.md) — i.e. every table where a service_role read/write
-     * bypasses Postgres RLS and can cross a tenant boundary. `companies`,
-     * `users`, `kpi_templates`, `kpi_template_items`, and `admin_action_logs`
-     * are deliberately absent: they're the rule's own documented exemptions,
-     * and the three legitimate service_role uses in this codebase
-     * (`CompanyController::storeAdmin`, `DepartmentController::storeUser`,
-     * `UserCreationController::store`) all read back a freshly-created
-     * `users` row the caller provably can't see yet under RLS — nothing
-     * legitimate needs this client for a tenant-owned table.
-     *
-     * This exists because that boundary used to be enforced only by accident:
-     * every current caller reaching one of these tables (legacy KPI/approval
-     * controllers, the Telegram bot) is dead code today, gated behind either
-     * `session('employee_uuid')` or a `telegram_user_id` column, and the
-     * `employees`/`user_company_roles` tables those paths depend on don't
-     * exist in production — so they error out before ever reaching Platform
-     * data. That's incidental: the moment anyone "fixes" a missing column to
-     * revive Telegram or ANIRA against real Platform data, this class would
-     * otherwise start serving it with RLS switched off, silently. Blocking it
-     * here makes "no service_role reads of tenant data" a property of the
-     * client, not a fact that happens to be true today. Use
-     * `SupabaseUserService` (the caller's own token) for Platform code, or
-     * `AuthorizedDataScope` for assistant/bot contexts with no HTTP request
-     * of their own to carry a token.
+     * REMOVED (2026-08-18) — this guard blocked `departments`/`kpis`/
+     * `notifications`/`tasks` (and others) on the theory that every caller
+     * reaching them was dead legacy code and the real, live tables lived in
+     * a separate, RLS-protected "Platform" project instead. Investigating a
+     * real production 500 (DashboardController::getUserDepartment(), the
+     * very first screen after login) disproved that directly against the
+     * actual live database (`mlggobjdsicuokblbsww`): `employees` and
+     * `user_company_roles` — the tables that guard's own docblock claimed
+     * "don't exist in production" — are real, active, and are what every
+     * real login on this project goes through (see "Login system
+     * correction" in CLAUDE.md). And there is no RLS to bypass here at
+     * all: every table in this project, checked directly in the Supabase
+     * table editor, shows RLS disabled / unrestricted. The guard was
+     * correctly designed for a genuine multi-tenant Platform deployment —
+     * it just isn't protecting one that exists on this Supabase project.
+     * `departments`, `kpis`, `notifications`, and `tasks` are this
+     * project's own real, single-tenant tables, actively read by
+     * `DashboardController`, `KpiController`, the sidebar's unread-count
+     * composer, and the Tasks feature — blocking them broke the app for
+     * every real user immediately after login. If a genuine multi-tenant
+     * Platform is ever deployed for real (its own project, real RLS,
+     * confirmed live — not assumed), this class is the right place to
+     * reintroduce a version of this guard scoped to that project's actual
+     * tenant-owned tables.
      */
-    private const TENANT_OWNED_TABLES = [
-        'company_users', 'department_users', 'departments', 'kpi_categories',
-        'kpis', 'kpi_submissions', 'roles', 'notifications', 'kpi_access_grants',
-        'platform_admin_assignments', 'import_batches', 'audit_logs', 'reports',
-        'tasks', 'task_kpi_links',
-    ];
-
-    private function assertNotTenantOwned(string $table): void
-    {
-        if (in_array($table, self::TENANT_OWNED_TABLES, true)) {
-            throw new \RuntimeException(
-                "SupabaseService (service_role) refused a query against '{$table}' — this is a tenant-owned "
-                . 'Platform table and a service_role read/write bypasses RLS entirely. Use SupabaseUserService '
-                . "(the caller's own token) for Platform code, or AuthorizedDataScope for assistant/bot contexts."
-            );
-        }
-    }
 
     public function __construct()
     {
@@ -140,8 +122,6 @@ class SupabaseService
         string $table,
         array $query
     ){
-        $this->assertNotTenantOwned($table);
-
         return $this->request()
 
             ->get(
@@ -175,10 +155,6 @@ class SupabaseService
     {
         if (empty($requests)) {
             return [];
-        }
-
-        foreach ($requests as $req) {
-            $this->assertNotTenantOwned($req['table']);
         }
 
         $headers = [
@@ -282,7 +258,6 @@ class SupabaseService
         string $table,
         array $data
     ){
-        $this->assertNotTenantOwned($table);
 
         return $this->request()
 
@@ -307,8 +282,6 @@ class SupabaseService
         array $filters,
         array $data
     ){
-        $this->assertNotTenantOwned($table);
-
         $query = http_build_query(
             $filters
         );
@@ -371,8 +344,6 @@ class SupabaseService
         string $table,
         array $filters = []
     ){
-        $this->assertNotTenantOwned($table);
-
         $url = $this->endpoint(
             $table
         );
@@ -483,8 +454,6 @@ class SupabaseService
 
     public function upsert(string $table, array $data, string $onConflict = 'id'): mixed
     {
-        $this->assertNotTenantOwned($table);
-
         return Http::timeout(15)->connectTimeout(5)->withHeaders([
             'apikey'        => $this->key,
             'Authorization' => 'Bearer ' . $this->key,
