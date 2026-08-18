@@ -26,6 +26,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
+
+        // Railway terminates TLS at its own edge and forwards plain HTTP to
+        // this container, setting X-Forwarded-Proto/For/Host itself — without
+        // trusting that proxy, Laravel thinks every request is insecure
+        // (wrong scheme in generated URLs, wrong client IP in audit logs).
+        // TRUSTED_PROXIES=* was already declared in .env.example with this
+        // exact intent but was never actually wired up here. Left unset
+        // (Laravel's own default: trust nothing) when the env var isn't
+        // configured at all, e.g. local dev and CI.
+        if ($proxies = env('TRUSTED_PROXIES')) {
+            $middleware->trustProxies(at: $proxies);
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
