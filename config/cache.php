@@ -13,9 +13,15 @@ return [
     | framework. This connection is utilized if another isn't explicitly
     | specified when running a cache operation inside the application.
     |
+    | Default is `file`, not Laravel's stock `database` -- this app was
+    | deliberately reverted off database/redis-backed cache in production
+    | (see .env.example), and the `database` fallback crashes deploy's
+    | `cache:clear` step outright if CACHE_STORE isn't set and the `cache`
+    | table was never migrated on Railway's ephemeral filesystem.
+    |
     */
 
-    'default' => env('CACHE_STORE', 'database'),
+    'default' => env('CACHE_STORE', 'file'),
 
     /*
     |--------------------------------------------------------------------------

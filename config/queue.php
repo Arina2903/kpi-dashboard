@@ -11,9 +11,14 @@ return [
     | API, giving you convenient access to each backend using identical
     | syntax for each. The default queue connection is defined below.
     |
+    | Default is `sync`, not Laravel's stock `database` -- matches this
+    | app's deliberate production choice (see .env.example) and avoids
+    | depending on a `jobs` table that was never migrated on Railway's
+    | ephemeral filesystem if QUEUE_CONNECTION isn't actually set there.
+    |
     */
 
-    'default' => env('QUEUE_CONNECTION', 'database'),
+    'default' => env('QUEUE_CONNECTION', 'sync'),
 
     /*
     |--------------------------------------------------------------------------
