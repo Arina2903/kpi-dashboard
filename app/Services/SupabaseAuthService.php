@@ -41,6 +41,17 @@ class SupabaseAuthService
         ]);
 
         if (!$response->successful()) {
+            // The user-facing message deliberately stays generic ("invalid
+            // email or password") so a failed attempt never reveals whether
+            // the email exists — but that same genericness previously made a
+            // misconfigured SUPABASE_ANON_KEY indistinguishable from an
+            // actually wrong password, from both the UI and the logs. Log
+            // the real Supabase response server-side only.
+            \Illuminate\Support\Facades\Log::warning('Supabase sign-in failed', [
+                'status' => $response->status(),
+                'body' => $response->json() ?? $response->body(),
+            ]);
+
             throw new \RuntimeException('Invalid email or password.');
         }
 
