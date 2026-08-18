@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import AppLayout from '../Layouts/AppLayout';
 
 export default function Help() {
@@ -19,9 +19,12 @@ export default function Help() {
                             </svg>
                         </div>
                         <div>
-                            <Link href="/kpi" className="text-[11px] text-[#D4AF37] hover:text-white transition">
+                            {/* /kpi is still a plain Blade view(), not an Inertia page --
+                                a real <a> tag, not Inertia's <Link>. See NavItem['legacy']
+                                in config/navigation.ts. */}
+                            <a href="/kpi" className="text-[11px] text-[#D4AF37] hover:text-white transition">
                                 ← KPI List
-                            </Link>
+                            </a>
                             <h1 className="text-2xl font-black tracking-tight mt-1">Help &amp; Guide</h1>
                             <p className="text-white/70 text-xs mt-1">Understand what every score, colour, and status means</p>
                         </div>

@@ -1,3 +1,4 @@
+import { ElementType } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import Icon from './Icon';
 import { useSidebar } from '../Layouts/SidebarContext';
@@ -98,8 +99,13 @@ export default function Sidebar() {
                                         const isActive = isNavItemActive(item, url);
                                         const badgeCount = item.badge === 'unreadNotifications' ? layout.unreadNotificationCount : 0;
 
+                                        // Items still served by a plain Blade view() (not
+                                        // Inertia::render()) must use a real <a> tag, not
+                                        // Inertia's <Link> -- see NavItem['legacy'] docblock.
+                                        const NavTag = (item.legacy ? 'a' : Link) as ElementType;
+
                                         return (
-                                            <Link
+                                            <NavTag
                                                 key={item.label}
                                                 href={item.href}
                                                 className={`group relative flex items-center gap-3 px-3 py-2 rounded-xl transition ${
@@ -125,7 +131,7 @@ export default function Sidebar() {
                                                 <div className="sidebar-tooltip hidden absolute left-[58px] top-1/2 -translate-y-1/2 bg-black text-white text-[10px] px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition duration-150 whitespace-nowrap z-[9999] shadow-lg">
                                                     {item.label}
                                                 </div>
-                                            </Link>
+                                            </NavTag>
                                         );
                                     })}
                                 </div>

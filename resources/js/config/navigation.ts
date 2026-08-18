@@ -6,6 +6,20 @@ export interface NavItem {
     badge?: 'unreadNotifications';
     sltOnly?: boolean;
     titanOnly?: boolean;
+    /**
+     * True when this route's controller still returns a plain Blade `view()`
+     * response rather than `Inertia::render()`. Inertia's own <Link> globally
+     * intercepts same-origin clicks (see @inertiajs/core's shouldIntercept);
+     * when the resulting response has no X-Inertia header, Inertia treats it
+     * as a "non-Inertia response" and renders it inside a sandboxed
+     * `<iframe sandbox="allow-scripts">` (no allow-same-origin) instead of
+     * navigating -- which breaks localStorage and same-origin fetch() inside
+     * that page entirely, and looks like the destination page rendering on
+     * top of the current one. Items flagged here must render as a plain
+     * `<a>` in Sidebar.tsx (and anywhere else they're linked to) so the
+     * browser does a real, full navigation instead.
+     */
+    legacy?: boolean;
 }
 
 export interface NavSection {
@@ -23,21 +37,21 @@ export const navSections: NavSection[] = [
         title: 'Overview',
         items: [
             { label: 'Main Dashboard', href: '/dashboard', match: 'dashboard*', icon: 'dashboard' },
-            { label: 'Performix', href: '/mini-app', match: 'mini-app*', icon: 'task' },
+            { label: 'Performix', href: '/mini-app', match: 'mini-app*', icon: 'task', legacy: true },
             { label: 'Notifications', href: '/notifications', match: 'notifications*', icon: 'bell', badge: 'unreadNotifications' },
-            { label: 'Job Description', href: '/job-description', match: 'job-description*', icon: 'jobdesc' },
+            { label: 'Job Description', href: '/job-description', match: 'job-description*', icon: 'jobdesc', legacy: true },
             { label: 'SLT Dashboard', href: '/slt-dashboard', match: 'slt-dashboard*', icon: 'analytics', sltOnly: true },
         ],
     },
     {
         title: 'KPI Work',
         items: [
-            { label: 'Create New KPI', href: '/kpi/create', match: ['kpi/create'], icon: 'plus' },
-            { label: 'View My KPI', href: '/kpi', match: ['kpi', 'kpi/*/edit'], icon: 'list' },
-            { label: 'Manage Weightage', href: '/weightage', match: ['weightage', 'weightage/*'], icon: 'weightage' },
-            { label: 'My Department KPI', href: '/my-department-kpi', match: 'my-department-kpi*', icon: 'department' },
+            { label: 'Create New KPI', href: '/kpi/create', match: ['kpi/create'], icon: 'plus', legacy: true },
+            { label: 'View My KPI', href: '/kpi', match: ['kpi', 'kpi/*/edit'], icon: 'list', legacy: true },
+            { label: 'Manage Weightage', href: '/weightage', match: ['weightage', 'weightage/*'], icon: 'weightage', legacy: true },
+            { label: 'My Department KPI', href: '/my-department-kpi', match: 'my-department-kpi*', icon: 'department', legacy: true },
             { label: 'Target Linkages', href: '/linkages', match: 'linkages*', icon: 'linkage' },
-            { label: 'Titan KPI', href: '/titan-kpi', match: 'titan-kpi*', icon: 'report', titanOnly: true },
+            { label: 'Titan KPI', href: '/titan-kpi', match: 'titan-kpi*', icon: 'report', titanOnly: true, legacy: true },
         ],
     },
     {
@@ -50,16 +64,16 @@ export const navSections: NavSection[] = [
         title: 'Attendance',
         hrOnly: true,
         items: [
-            { label: 'Import & Analysis', href: '/attendance', match: 'attendance*', icon: 'attendance' },
+            { label: 'Import & Analysis', href: '/attendance', match: 'attendance*', icon: 'attendance', legacy: true },
         ],
     },
     {
         title: 'Performance Evaluation',
         items: [
-            { label: 'Q1 Evaluation', href: '/performance/report/q1', match: 'performance/report/q1*', icon: 'report' },
-            { label: 'Q2 Evaluation', href: '/performance/report/q2', match: 'performance/report/q2*', icon: 'report' },
-            { label: 'Q3 Evaluation', href: '/performance/report/q3', match: 'performance/report/q3*', icon: 'report' },
-            { label: 'Q4 Evaluation', href: '/performance/report/q4', match: 'performance/report/q4*', icon: 'report' },
+            { label: 'Q1 Evaluation', href: '/performance/report/q1', match: 'performance/report/q1*', icon: 'report', legacy: true },
+            { label: 'Q2 Evaluation', href: '/performance/report/q2', match: 'performance/report/q2*', icon: 'report', legacy: true },
+            { label: 'Q3 Evaluation', href: '/performance/report/q3', match: 'performance/report/q3*', icon: 'report', legacy: true },
+            { label: 'Q4 Evaluation', href: '/performance/report/q4', match: 'performance/report/q4*', icon: 'report', legacy: true },
         ],
     },
     {

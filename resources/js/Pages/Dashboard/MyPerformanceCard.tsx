@@ -1,4 +1,3 @@
-import { Link } from '@inertiajs/react';
 import { scoreStyle } from '../../lib/scoreStyle';
 
 interface MyPerformanceCardProps {
@@ -54,13 +53,17 @@ export default function MyPerformanceCard({
                         <h2 className="text-base font-black text-slate-800">No KPIs set for {currentFinancialYear} yet</h2>
                         <p className="text-xs text-slate-500 mt-1">Your score, quarterly progress and at-risk alerts will appear here as soon as your KPIs are created.</p>
                     </div>
+                    {/* /kpi and /weightage are still plain Blade view() responses, not
+                        Inertia pages -- real <a> tags, not Inertia's <Link>, or Inertia's
+                        non-Inertia-response handling renders them inside a sandboxed
+                        iframe instead of navigating. See NavItem['legacy'] in config/navigation.ts. */}
                     <div className="flex gap-2 shrink-0">
-                        <Link href="/kpi" className="bg-[#D4AF37] hover:bg-[#c19c2f] text-[#1a1a1a] px-4 py-2.5 rounded-xl text-xs font-black transition">
+                        <a href="/kpi" className="bg-[#D4AF37] hover:bg-[#c19c2f] text-[#1a1a1a] px-4 py-2.5 rounded-xl text-xs font-black transition">
                             My KPIs
-                        </Link>
-                        <Link href="/weightage" className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-black transition">
+                        </a>
+                        <a href="/weightage" className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-black transition">
                             Weightage
-                        </Link>
+                        </a>
                     </div>
                 </div>
             ) : (
@@ -87,9 +90,9 @@ export default function MyPerformanceCard({
                                 <div className="bg-white rounded-xl p-3">
                                     <p className="text-3xl font-black text-slate-300 mb-1">—</p>
                                     <p className="text-xs text-slate-400">{individualKpiCount} KPIs · weightage not set</p>
-                                    <Link href="/weightage" className="theme-header-dark-text inline-block mt-2 text-xs font-black text-[#7A0019] underline">
+                                    <a href="/weightage" className="theme-header-dark-text inline-block mt-2 text-xs font-black text-[#7A0019] underline">
                                         Set weightage →
-                                    </Link>
+                                    </a>
                                 </div>
                             ) : (
                                 <div className="bg-white rounded-xl p-3">
@@ -146,9 +149,9 @@ export default function MyPerformanceCard({
                                     ))}
                                 </ul>
                                 {myAtRisk > myAtRiskKpis.length && (
-                                    <Link href="/kpi" className="text-[9px] text-red-500 underline font-bold">
+                                    <a href="/kpi" className="text-[9px] text-red-500 underline font-bold">
                                         +{myAtRisk - myAtRiskKpis.length} more →
-                                    </Link>
+                                    </a>
                                 )}
                             </div>
                         )}

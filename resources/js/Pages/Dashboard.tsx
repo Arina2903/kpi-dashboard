@@ -281,28 +281,32 @@ export default function Dashboard(props: DashboardPageProps) {
                                 </p>
                             )}
                         </div>
-                        <Link href="/kpi/create" className="px-3 py-1.5 theme-soft-btn rounded-xl text-xs font-black transition">
+                        {/* /kpi/create is still a plain Blade view(), not an Inertia page --
+                            a real <a> tag here, not Inertia's <Link>, or Inertia's
+                            non-Inertia-response handling renders it inside a sandboxed
+                            iframe instead of navigating. See NavItem['legacy'] in config/navigation.ts. */}
+                        <a href="/kpi/create" className="px-3 py-1.5 theme-soft-btn rounded-xl text-xs font-black transition">
                             + Add KPI
-                        </Link>
+                        </a>
                     </div>
 
                     {individualKpiCount === 0 ? (
                         <div className="bg-white rounded-2xl border border-dashed border-[#E5E7EB] p-10 shadow-sm text-center">
                             <p className="text-slate-400 text-sm font-bold">No KPIs yet for {currentFinancialYear}</p>
                             <p className="text-slate-300 text-xs mt-1">Create your first KPI to start tracking performance</p>
-                            <Link href="/kpi/create" className="inline-block mt-4 px-4 py-2 theme-soft-btn rounded-xl text-xs font-black transition">
+                            <a href="/kpi/create" className="inline-block mt-4 px-4 py-2 theme-soft-btn rounded-xl text-xs font-black transition">
                                 + Create KPI
-                            </Link>
+                            </a>
                         </div>
                     ) : (
-                        <Link href="/kpi" className="flex flex-wrap items-center gap-2 bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-4 hover:bg-slate-50/60 transition">
+                        <a href="/kpi" className="flex flex-wrap items-center gap-2 bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-4 hover:bg-slate-50/60 transition">
                             {myCategoryCounts.map(({ category, count }) => (
                                 <span key={category || 'General'} className={`px-2.5 py-1 rounded-lg text-xs font-black shadow-sm ${categoryStyleFor(category).bg}`}>
                                     {category || 'General'} · {count}
                                 </span>
                             ))}
                             <span className="ml-auto text-xs font-black text-[#B8860B] shrink-0">View All KPIs →</span>
-                        </Link>
+                        </a>
                     )}
                 </div>
             </div>
