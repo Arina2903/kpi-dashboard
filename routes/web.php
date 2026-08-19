@@ -41,6 +41,13 @@ Route::get('/login', [AuthController::class, 'showLogin'])
 Route::post('/login', [AuthController::class, 'submitLogin'])
     ->name('login.submit');
 
+// Lets the front-end recover from a stale CSRF token (see partials/sidebar.blade.php's
+// fetch patch) without a full page reload -- deliberately outside kpi.auth so it still
+// works even when the session itself, not just the token, has expired.
+Route::get('/csrf-token', function () {
+    return response()->json(['token' => csrf_token()]);
+})->name('csrf.refresh');
+
 /*
 |--------------------------------------------------------------------------
 | MULTI-COMPANY PLATFORM (Supabase Auth + RLS — separate from the legacy

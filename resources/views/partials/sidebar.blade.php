@@ -955,6 +955,69 @@
 </aside>
 
 <script>
+    // Every page's AJAX calls hardcode `{{ csrf_token() }}` at render time --
+    // if the page stays open long enough for the session's CSRF token to
+    // change server-side (idle timeout, session file recycled, etc.), every
+    // one of those baked-in tokens goes stale and the next POST/DELETE fails
+    // with a 419 "CSRF token mismatch", no matter which page or button.
+    // Patching fetch() once here (included on every authenticated page) means
+    // no individual call site needs to know about token refresh: on a 419
+    // that was actually carrying an X-CSRF-TOKEN header, fetch a live token
+    // from /csrf-token and silently retry the exact same request once. If
+    // that still fails because the session itself is gone (not just the
+    // token), the retry redirects through to /login and we follow it instead
+    // of leaving the caller to choke on an HTML body it expected to be JSON.
+    (function () {
+        if (window.__csrfSafeFetchInstalled) return;
+        window.__csrfSafeFetchInstalled = true;
+        const originalFetch = window.fetch.bind(window);
+
+        function hasCsrfHeader(init) {
+            const headers = init && init.headers;
+            if (!headers) return false;
+            if (headers instanceof Headers) return headers.has('X-CSRF-TOKEN');
+            return Object.keys(headers).some((key) => key.toLowerCase() === 'x-csrf-token');
+        }
+
+        function withToken(init, token) {
+            const next = Object.assign({}, init);
+            if (init.headers instanceof Headers) {
+                const headers = new Headers(init.headers);
+                headers.set('X-CSRF-TOKEN', token);
+                next.headers = headers;
+            } else {
+                next.headers = Object.assign({}, init.headers, { 'X-CSRF-TOKEN': token });
+            }
+            return next;
+        }
+
+        window.fetch = async function (input, init) {
+            let response = await originalFetch(input, init);
+
+            if (response.status === 419 && hasCsrfHeader(init)) {
+                try {
+                    const tokenResponse = await originalFetch('/csrf-token', { headers: { 'Accept': 'application/json' } });
+                    if (tokenResponse.ok) {
+                        const data = await tokenResponse.json();
+                        if (data && data.token) {
+                            response = await originalFetch(input, withToken(init, data.token));
+                        }
+                    }
+                } catch (e) {
+                    // Refresh failed -- fall through with the original 419 response
+                    // so the caller's own error handling still runs.
+                }
+            }
+
+            if (response.redirected && response.url.indexOf('/login') !== -1) {
+                window.location.href = '/login';
+                return new Promise(() => {});
+            }
+
+            return response;
+        };
+    })();
+
     document.addEventListener('alpine:init', () => {
         Alpine.store('sidebar', {
             collapsed: localStorage.getItem('sidebarCollapsed') === 'true',

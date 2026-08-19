@@ -351,38 +351,38 @@
             @if($isAppraiserView ?? false)
             {{-- ── Appraiser buttons ── --}}
             @if($myLevelLocked ?? false)
-            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-3 py-1.5 rounded-full">
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-white text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-full shadow-sm">
                 ✓ Your section is submitted
             </span>
             @else
-            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-blue-500/20 text-blue-200 border border-blue-400/30 px-3 py-1.5 rounded-full">
-                <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span> Appraiser View · {{ $currentUserName }}
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-white text-blue-700 border border-blue-200 px-3 py-1.5 rounded-full shadow-sm">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> Appraiser View · {{ $currentUserName }}
             </span>
             @endif
             @elseif(($status ?? 'draft') === 'submitted')
             {{-- ── Submitted — awaiting appraiser ── --}}
-            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-blue-500/20 text-blue-200 border border-blue-400/30 px-3 py-1.5 rounded-full">
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-white text-blue-700 border border-blue-200 px-3 py-1.5 rounded-full shadow-sm">
                 ✓ Submitted · Awaiting Appraiser
             </span>
             @elseif(($status ?? 'draft') === 'appraised')
-            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-amber-500/20 text-amber-200 border border-amber-400/30 px-3 py-1.5 rounded-full">
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-white text-amber-700 border border-amber-200 px-3 py-1.5 rounded-full shadow-sm">
                 ✍ Appraised · Your Signature Needed
             </span>
             @elseif(($status ?? 'draft') === 'completed')
-            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-3 py-1.5 rounded-full">
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-white text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-full shadow-sm">
                 ✓ Completed
             </span>
             @elseif($isWindowOpen)
             {{-- ── Appraisee — window badge only; buttons are at page bottom ── --}}
-            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-3 py-1.5 rounded-full">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ⚠️ Window Open · Until {{ $windowEnd }}
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-white text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-full shadow-sm">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> ⚠️ Window Open · Until {{ $windowEnd }}
             </span>
             @elseif($isFuture ?? false)
-            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-sky-500/20 text-sky-200 border border-sky-400/25 px-3 py-1.5 rounded-full">
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-white text-sky-700 border border-sky-200 px-3 py-1.5 rounded-full shadow-sm">
                 ⏳ Not Yet Open · Opens {{ $windowStart }}
             </span>
             @else
-            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-white/10 text-white/60 border border-white/15 px-3 py-1.5 rounded-full">
+            <span class="flex items-center gap-1.5 text-[10px] font-bold bg-white text-slate-500 border border-slate-200 px-3 py-1.5 rounded-full shadow-sm">
                 🔒 Window Closed · {{ $windowStart }} – {{ $windowEnd }}
             </span>
             @endif
