@@ -648,6 +648,20 @@
                     $sec2Colspan = ($isAppraiserView ?? false) ? 7 : 6;
                     $sec2StatusEchoes = ['not started', 'on track', 'at risk', 'in trouble', 'completed'];
                     $sec2IsRealRemark = fn ($text) => $text !== '' && !in_array(strtolower($text), $sec2StatusEchoes, true);
+                    // Actual/Target were rendered as bare numbers with no unit cue --
+                    // 1900000 reads identically whether it's a plain count, a currency
+                    // amount, or (if it happened to be small) a percentage. Formatting
+                    // per kpi.unit so each is unambiguous at a glance: "number" gets a
+                    // thousands separator only, "currency" gets an RM prefix + 2dp,
+                    // "percentage" gets 2dp + a % suffix. Mirrors the fmtLnkVal helper
+                    // already used for this on kpi/index.blade.php's linkage panel.
+                    $sec2FmtVal = function ($v, $u) {
+                        if ($v === null || $v === '') return '—';
+                        $n = (float) $v;
+                        if ($u === 'currency')   return 'RM ' . number_format($n, 2);
+                        if ($u === 'percentage') return number_format($n, 2) . '%';
+                        return number_format($n, 0);
+                    };
                     $categoryOrder = ['Financial', 'Growth & Customer', 'Initiatives', 'People'];
                     $sec2Raw = [];
                     foreach ($kpis as $kpi) {
@@ -710,6 +724,7 @@
                         'weight'   => $kpi['weightage'] ?? null,
                         'quarter'  => $qLabel,
                         'subtitle' => $qTitle,
+                        'unit'     => $kpi['unit'] ?? 'number',
                         'actual'   => $qAct !== '' ? $qAct : null,
                         'target'   => $qTgt !== '' ? $qTgt : null,
                         'progress' => $qProgressPct,
@@ -729,8 +744,8 @@
                             <input type="text" name="kpi_title_{{ $kpi['id'] }}" value="{{ $qTitle }}" placeholder="Describe initiative for {{ $qLabel }}…" class="t-input">
                         </div>
                     </td>
-                    <td class="text-center"><span class="sec2-actual font-bold text-sm text-slate-700" data-val="{{ $qAct !== '' ? $qAct : '' }}">{{ $qAct !== '' ? $qAct : '—' }}</span></td>
-                    <td class="text-center"><span class="sec2-target font-bold text-sm text-slate-500" data-val="{{ $qTgt !== '' ? $qTgt : '' }}">{{ $qTgt !== '' ? $qTgt : '—' }}</span></td>
+                    <td class="text-center"><span class="sec2-actual font-bold text-sm text-slate-700" data-val="{{ $qAct !== '' ? $qAct : '' }}">{{ $sec2FmtVal($qAct !== '' ? $qAct : null, $kpi['unit'] ?? 'number') }}</span></td>
+                    <td class="text-center"><span class="sec2-target font-bold text-sm text-slate-500" data-val="{{ $qTgt !== '' ? $qTgt : '' }}">{{ $sec2FmtVal($qTgt !== '' ? $qTgt : null, $kpi['unit'] ?? 'number') }}</span></td>
                     <td class="text-center">
                         <span class="sec2-score font-black text-sm sc-none">—</span>
                         <input type="hidden" name="kpi_self_{{ $kpi['id'] }}" data-wt="{{ $kpi['weightage'] ?? 0 }}" class="kpi-self-hidden">
@@ -1343,6 +1358,17 @@
 <script>
 var _aniraScoreCache = {};
 
+// Mirrors the PHP $sec2FmtVal helper above -- same rules, so the "View" modal
+// never shows a bare number that reads differently than the table row it came from.
+function fmtKpiVal(v, unit) {
+    if (v === null || v === undefined || v === '') return '—';
+    var n = parseFloat(v);
+    if (isNaN(n)) return '—';
+    if (unit === 'currency')   return 'RM ' + n.toLocaleString('en-MY', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    if (unit === 'percentage') return n.toLocaleString('en-MY', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '%';
+    return Math.round(n).toLocaleString('en-MY');
+}
+
 function openQuarterDetail(btn) {
     var detail;
     try { detail = JSON.parse(btn.dataset.detail); } catch (e) { console.error('openQuarterDetail: bad data', e); return; }
@@ -1359,8 +1385,8 @@ function openQuarterDetail(btn) {
     document.getElementById('qdTitle').textContent = detail.title || 'Untitled KPI';
     document.getElementById('qdSubtitle').textContent = detail.subtitle || '';
 
-    document.getElementById('qdActual').textContent = detail.actual !== null ? detail.actual : '—';
-    document.getElementById('qdTarget').textContent = detail.target !== null ? detail.target : '—';
+    document.getElementById('qdActual').textContent = fmtKpiVal(detail.actual, detail.unit);
+    document.getElementById('qdTarget').textContent = fmtKpiVal(detail.target, detail.unit);
 
     var pct = detail.progress || 0;
     var style = pct >= 90 ? {bg:'#ecfdf5', text:'#059669'}
