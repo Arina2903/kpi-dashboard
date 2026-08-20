@@ -609,28 +609,31 @@ Route::middleware(['kpi.auth'])->group(function () {
     */
     Route::get('/mini-app', [\App\Http\Controllers\MiniAppController::class, 'index'])->name('mini-app');
 
-    Route::middleware('telegram.linked')->group(function () {
-        Route::get('/mini-app/api/kpis/open', [\App\Http\Controllers\MiniAppController::class, 'openKpis'])->name('mini-app.kpis.open');
-        Route::get('/mini-app/api/kpis/summary', [\App\Http\Controllers\MiniAppController::class, 'summary'])->name('mini-app.kpis.summary');
-        Route::post('/mini-app/api/kpis/{kpiId}/quarters/{quarterId}/adjust', [\App\Http\Controllers\MiniAppController::class, 'adjustQuarter'])->name('mini-app.kpis.adjust');
-        Route::get('/mini-app/api/reviews', [\App\Http\Controllers\MiniAppController::class, 'reviews'])->name('mini-app.reviews');
+    // Deliberately NOT gated behind 'telegram.linked' -- task/KPI management
+    // in Performix shouldn't wait on a Telegram round trip just to be usable.
+    // Telegram is only needed for reminders/notifications, which is now an
+    // optional, dismissible prompt in mini-app/index.blade.php rather than a
+    // hard block on the whole app. See EnsureTelegramLinked's docblock.
+    Route::get('/mini-app/api/kpis/open', [\App\Http\Controllers\MiniAppController::class, 'openKpis'])->name('mini-app.kpis.open');
+    Route::get('/mini-app/api/kpis/summary', [\App\Http\Controllers\MiniAppController::class, 'summary'])->name('mini-app.kpis.summary');
+    Route::post('/mini-app/api/kpis/{kpiId}/quarters/{quarterId}/adjust', [\App\Http\Controllers\MiniAppController::class, 'adjustQuarter'])->name('mini-app.kpis.adjust');
+    Route::get('/mini-app/api/reviews', [\App\Http\Controllers\MiniAppController::class, 'reviews'])->name('mini-app.reviews');
 
-        Route::get('/mini-app/api/tasks', [\App\Http\Controllers\MiniAppTaskController::class, 'index'])->name('mini-app.tasks.index');
-        Route::get('/mini-app/api/tasks/kpi-options', [\App\Http\Controllers\MiniAppTaskController::class, 'kpiOptions'])->name('mini-app.tasks.kpi-options');
-        Route::get('/mini-app/api/tasks/score', [\App\Http\Controllers\PerformixInsightsController::class, 'myScore'])->name('mini-app.tasks.score');
-        Route::post('/mini-app/api/tasks', [\App\Http\Controllers\MiniAppTaskController::class, 'store'])->name('mini-app.tasks.store');
-        Route::get('/mini-app/api/tasks/{id}', [\App\Http\Controllers\MiniAppTaskController::class, 'show'])->name('mini-app.tasks.show');
-        Route::patch('/mini-app/api/tasks/{id}', [\App\Http\Controllers\MiniAppTaskController::class, 'update'])->name('mini-app.tasks.update');
-        Route::post('/mini-app/api/tasks/{id}/progress', [\App\Http\Controllers\MiniAppTaskController::class, 'progress'])->name('mini-app.tasks.progress');
-        Route::post('/mini-app/api/tasks/{id}/daily-update', [\App\Http\Controllers\MiniAppTaskController::class, 'dailyUpdate'])->name('mini-app.tasks.daily-update');
-        Route::post('/mini-app/api/tasks/{id}/kpi-suggestion', [\App\Http\Controllers\MiniAppTaskController::class, 'kpiSuggestion'])->name('mini-app.tasks.kpi-suggestion');
-        Route::post('/mini-app/api/tasks/{id}/link-kpis', [\App\Http\Controllers\MiniAppTaskController::class, 'linkKpis'])->name('mini-app.tasks.link-kpis');
-        Route::delete('/mini-app/api/tasks/{id}', [\App\Http\Controllers\MiniAppTaskController::class, 'destroy'])->name('mini-app.tasks.destroy');
+    Route::get('/mini-app/api/tasks', [\App\Http\Controllers\MiniAppTaskController::class, 'index'])->name('mini-app.tasks.index');
+    Route::get('/mini-app/api/tasks/kpi-options', [\App\Http\Controllers\MiniAppTaskController::class, 'kpiOptions'])->name('mini-app.tasks.kpi-options');
+    Route::get('/mini-app/api/tasks/score', [\App\Http\Controllers\PerformixInsightsController::class, 'myScore'])->name('mini-app.tasks.score');
+    Route::post('/mini-app/api/tasks', [\App\Http\Controllers\MiniAppTaskController::class, 'store'])->name('mini-app.tasks.store');
+    Route::get('/mini-app/api/tasks/{id}', [\App\Http\Controllers\MiniAppTaskController::class, 'show'])->name('mini-app.tasks.show');
+    Route::patch('/mini-app/api/tasks/{id}', [\App\Http\Controllers\MiniAppTaskController::class, 'update'])->name('mini-app.tasks.update');
+    Route::post('/mini-app/api/tasks/{id}/progress', [\App\Http\Controllers\MiniAppTaskController::class, 'progress'])->name('mini-app.tasks.progress');
+    Route::post('/mini-app/api/tasks/{id}/daily-update', [\App\Http\Controllers\MiniAppTaskController::class, 'dailyUpdate'])->name('mini-app.tasks.daily-update');
+    Route::post('/mini-app/api/tasks/{id}/kpi-suggestion', [\App\Http\Controllers\MiniAppTaskController::class, 'kpiSuggestion'])->name('mini-app.tasks.kpi-suggestion');
+    Route::post('/mini-app/api/tasks/{id}/link-kpis', [\App\Http\Controllers\MiniAppTaskController::class, 'linkKpis'])->name('mini-app.tasks.link-kpis');
+    Route::delete('/mini-app/api/tasks/{id}', [\App\Http\Controllers\MiniAppTaskController::class, 'destroy'])->name('mini-app.tasks.destroy');
 
-        Route::get('/mini-app/api/team/attention', [\App\Http\Controllers\PerformixInsightsController::class, 'teamAttention'])->name('mini-app.team.attention');
-        Route::get('/mini-app/api/summaries', [\App\Http\Controllers\PerformixInsightsController::class, 'summaries'])->name('mini-app.summaries.index');
-        Route::post('/mini-app/api/summaries/regenerate', [\App\Http\Controllers\PerformixInsightsController::class, 'regenerate'])->name('mini-app.summaries.regenerate');
-    });
+    Route::get('/mini-app/api/team/attention', [\App\Http\Controllers\PerformixInsightsController::class, 'teamAttention'])->name('mini-app.team.attention');
+    Route::get('/mini-app/api/summaries', [\App\Http\Controllers\PerformixInsightsController::class, 'summaries'])->name('mini-app.summaries.index');
+    Route::post('/mini-app/api/summaries/regenerate', [\App\Http\Controllers\PerformixInsightsController::class, 'regenerate'])->name('mini-app.summaries.regenerate');
 
     /*
     |--------------------------------------------------------------------------
