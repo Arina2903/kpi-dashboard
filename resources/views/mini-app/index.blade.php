@@ -1087,34 +1087,49 @@ function taskFormFields(t) {
    taskFormFields()/taskFormValues() deliberately: those are shared with
    Edit Task, but the update() endpoint (PATCH /tasks/{id}) doesn't accept
    kpi_ids -- only the dedicated /tasks/{id}/link-kpis endpoint does, which
-   the task-detail screen's own "Edit KPI Links" already covers. */
+   the task-detail screen's own "Edit KPI Links" already covers.
+
+   Checkboxes, not a <select>, so a task can be aligned to more than one
+   KPI at once -- a single task legitimately counts toward several KPIs
+   (e.g. a client call that's both a "Client Retention" and a "Revenue"
+   activity). The "+ Create a new KPI" link opens in a new tab specifically
+   so it never discards whatever's already been typed into this form --
+   without that, the only way to park a task under a KPI that doesn't exist
+   yet was to abandon the task draft, go create the KPI, then start over. */
 function taskKpiField() {
     return `
-        <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Align to KPI <span class="text-slate-400 font-normal">(optional)</span></p>
-        <select id="taskKpiInput" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
-            <option value="">Not linked to a KPI</option>
-        </select>
+        <div class="flex items-center justify-between mt-3 mb-1">
+            <p class="text-[10px] font-bold text-slate-600">Align to KPI <span class="text-slate-400 font-normal">(optional, pick any that apply)</span></p>
+            <button type="button" onclick="onTaskUnitChanged()" class="text-[9px] font-black text-[#6B3F2A] shrink-0">🔄 Refresh</button>
+        </div>
+        <div id="taskKpiOptions" class="space-y-1.5">
+            <p class="text-[11px] text-slate-400">Loading KPIs…</p>
+        </div>
+        <a href="/kpi/create" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-black text-[#6B3F2A] mt-1.5">+ Create a new KPI (opens in a new tab, won't lose this task)</a>
     `;
 }
 
 async function onTaskUnitChanged() {
-    const select = document.getElementById('taskKpiInput');
-    if (!select) return; // not on this form (e.g. Edit Task, which doesn't have this field)
+    const container = document.getElementById('taskKpiOptions');
+    if (!container) return; // not on this form (e.g. Edit Task, which doesn't have this field)
 
     const unit = document.getElementById('taskUnitInput').value;
-    const previousValue = select.value;
-    select.innerHTML = `<option value="">Loading KPIs…</option>`;
+    const previouslyChecked = new Set([...document.querySelectorAll('.task-kpi-checkbox:checked')].map(el => el.value));
+    container.innerHTML = `<p class="text-[11px] text-slate-400">Loading KPIs…</p>`;
 
     try {
         const data = await api(`/tasks/kpi-options?unit=${unit}`);
         const options = data.kpis || [];
-        select.innerHTML = `
-            <option value="">Not linked to a KPI</option>
-            ${options.map(k => `<option value="${k.kpi_id}">${k.kpi_title}</option>`).join('')}
-        `;
-        if (options.some(k => k.kpi_id === previousValue)) select.value = previousValue;
+        container.innerHTML = options.length
+            ? options.map(k => `
+                <label class="flex items-center gap-2 px-3 py-2 rounded-xl border-2 border-[#D9C4A0] bg-white cursor-pointer">
+                    <input type="checkbox" value="${k.kpi_id}" class="task-kpi-checkbox w-4 h-4 accent-[#16A34A] shrink-0" ${previouslyChecked.has(k.kpi_id) ? 'checked' : ''}>
+                    <span class="text-[12px] font-bold text-slate-700 min-w-0">${k.kpi_title}</span>
+                </label>
+            `).join('')
+            : `<p class="text-[11px] text-slate-400">No open KPIs with a matching "${unit}" unit right now. Create one, then tap Refresh.</p>`;
     } catch (e) {
-        select.innerHTML = `<option value="">Not linked to a KPI</option>`;
+        container.innerHTML = `<p class="text-[11px] text-red-500">Couldn't load KPIs — tap Refresh to try again.</p>`;
     }
 }
 
@@ -1149,7 +1164,7 @@ function renderNewTaskForm(isUnplanned = false) {
 async function saveNewTask() {
     const feedback = document.getElementById('taskFormFeedback');
     const v = taskFormValues();
-    const kpiId = document.getElementById('taskKpiInput')?.value || '';
+    const kpiIds = [...document.querySelectorAll('.task-kpi-checkbox:checked')].map(el => el.value);
 
     if (!v.title || v.target === '' || isNaN(Number(v.target)) || Number(v.target) < 0) {
         feedback.textContent = 'Enter a task title and a valid target.';
@@ -1160,7 +1175,7 @@ async function saveNewTask() {
     try {
         await api('/tasks', {
             method: 'POST',
-            body: JSON.stringify({ ...v, target: Number(v.target), is_unplanned: !!window.__newTaskIsUnplanned, kpi_ids: kpiId ? [kpiId] : [] }),
+            body: JSON.stringify({ ...v, target: Number(v.target), is_unplanned: !!window.__newTaskIsUnplanned, kpi_ids: kpiIds }),
         });
         showToast('Task saved!');
         if (window.__newTaskIsUnplanned) renderHome(); else renderTodo();
@@ -1335,6 +1350,7 @@ async function renderTaskDetail(taskId) {
             </div>
             ${kpiChips}
             <p id="kpiSuggestionBox" class="hidden mt-2"></p>
+            <button onclick="renderLinkTaskKpis('${t.id}')" class="w-full mt-2 py-2 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[11px] font-black">✏️ Edit KPI Links</button>
         `)}
 
         <div class="h-2"></div>
@@ -1465,6 +1481,76 @@ async function removeKpiLink(kpiId) {
         renderTaskDetail(t.id);
     } catch (e) {
         showToast(e.data?.message || "Couldn't update KPI links.");
+    }
+}
+
+/* Full add/remove/change picker for an EXISTING task's KPI links -- the ✕ on
+   each chip above only removes one at a time; this is the "actually change
+   which KPI(s) this is aligned to" screen, mirroring the Telegram Mini App's
+   own renderLinkTaskKpis()/saveLinkKpis() (telegram/app.blade.php) so both
+   surfaces offer the same capability. */
+async function renderLinkTaskKpis(taskId) {
+    const t = (window.__taskDetail && window.__taskDetail.id === taskId) ? window.__taskDetail : (window.__myTasks || []).find(x => x.id === taskId);
+    if (!t) { renderTodo(); return; }
+
+    const app = document.getElementById('app');
+    app.innerHTML = `<p class="text-center text-slate-400 text-[12px] mt-10">Loading KPIs…</p>`;
+
+    let data;
+    try {
+        data = await api(`/tasks/kpi-options?unit=${t.unit}`);
+    } catch (e) {
+        app.innerHTML = card(`<p class="text-[13px] text-slate-600 text-center py-6">Could not load your KPIs.</p>`) + `<button onclick="renderTaskDetail('${taskId}')" class="w-full mt-3 py-2 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[12px] font-black">← Back</button>`;
+        return;
+    }
+
+    const linkedIds = new Set((t.linked_kpis || []).map(k => k.kpi_id));
+    const sortedKpis = sortByCategoryAndSub(data.kpis || []);
+
+    const rows = sortedKpis.map(k => {
+        const cat = CATEGORY_COLORS[k.category] || DEFAULT_CATEGORY_COLOR;
+        const checked = linkedIds.has(k.kpi_id) ? 'checked' : '';
+        return `
+            <label class="block cursor-pointer">
+                <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white border-2 border-[#D9C4A0]">
+                    <input type="checkbox" value="${k.kpi_id}" class="kpi-link-checkbox w-5 h-5 accent-[#16A34A] shrink-0" ${checked}>
+                    <div class="min-w-0">
+                        <span class="px-2 py-0.5 rounded-full ${cat.catPill} text-[8px] font-black">${k.category || '-'}</span>
+                        <p class="text-[13px] font-black text-slate-900 mt-1">${k.kpi_title}</p>
+                    </div>
+                </div>
+            </label>
+        `;
+    }).join('<div class="h-1.5"></div>') || `<p class="text-[12px] text-slate-500 text-center py-6">No open KPIs with a matching "${t.unit}" unit right now.</p>`;
+
+    app.innerHTML = card(`
+        <div class="flex items-center justify-between mb-1">
+            <p class="text-[13px] font-black text-slate-900">Edit KPI Links</p>
+            <button onclick="renderLinkTaskKpis('${taskId}')" class="text-[9px] font-black text-[#6B3F2A] shrink-0">🔄 Refresh</button>
+        </div>
+        <p class="text-[11px] text-slate-500 mb-3">Task "<b>${t.title}</b>" — tick which KPI(s) to align this to, untick to remove. Doesn't change any KPI's actual — for visibility only.</p>
+        <a href="/kpi/create" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-black text-[#6B3F2A] mb-3">+ Create a new KPI (opens in a new tab)</a>
+        <div>${rows}</div>
+    `) + `
+        <div class="flex items-center gap-2 mt-4">
+            <button onclick="renderTaskDetail('${taskId}')" class="flex-1 py-2.5 rounded-xl bg-white border-2 border-[#D9C4A0] text-[#6B3F2A] text-[12px] font-black">Cancel</button>
+            <button onclick="saveLinkKpis('${taskId}')" class="flex-1 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black">Save Links</button>
+        </div>
+        <p id="linkKpisFeedback" class="hidden text-[10px] font-bold text-red-600 mt-2 text-center"></p>
+    `;
+}
+
+async function saveLinkKpis(taskId) {
+    const feedback = document.getElementById('linkKpisFeedback');
+    const kpiIds = [...document.querySelectorAll('.kpi-link-checkbox:checked')].map(el => el.value);
+
+    try {
+        await api(`/tasks/${taskId}/link-kpis`, { method: 'POST', body: JSON.stringify({ kpi_ids: kpiIds }) });
+        showToast('KPI links updated!');
+        renderTaskDetail(taskId);
+    } catch (e) {
+        feedback.textContent = e.data?.message || "Couldn't save — please try again.";
+        feedback.classList.remove('hidden');
     }
 }
 

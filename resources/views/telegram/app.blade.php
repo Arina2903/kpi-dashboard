@@ -723,11 +723,20 @@
                 ${Object.entries(PRIORITY_LABELS).map(([key, p]) => `<option value="${key}" ${key === 'medium' ? 'selected' : ''}>${p.label}</option>`).join('')}
             </select>
 
-            <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Align to KPI <span class="text-slate-400 font-normal">(optional)</span></p>
-            <select id="ctKpi" onchange="clearKpiSuggestionPill()" class="w-full text-[13px] px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-[var(--accent)] focus:bg-white">
-                <option value="">Not linked to a KPI</option>
-                ${kpiOptions.map(k => `<option value="${k.kpi_id}">${k.kpi_title}</option>`).join('')}
-            </select>
+            <div class="flex items-center justify-between mt-3 mb-1">
+                <p class="text-[10px] font-bold text-slate-600">Align to KPI <span class="text-slate-400 font-normal">(optional, pick any that apply)</span></p>
+                <button type="button" onclick="renderCreateTask(${isUnplanned ? 'true' : 'false'})" class="text-[9px] font-black text-[var(--accent)] shrink-0">🔄 Refresh</button>
+            </div>
+            <div id="ctKpiOptions" class="space-y-1.5">
+                ${kpiOptions.length
+                    ? kpiOptions.map(k => `
+                        <label class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+                            <input type="checkbox" value="${k.kpi_id}" onchange="clearKpiSuggestionPill()" class="ct-kpi-checkbox w-4 h-4 accent-[var(--accent)] shrink-0">
+                            <span class="text-[12px] font-bold text-slate-700 min-w-0">${k.kpi_title}</span>
+                        </label>
+                    `).join('')
+                    : `<p class="text-[11px] text-slate-400">No open KPIs right now.</p>`}
+            </div>
             <p id="ctKpiSuggestPill" class="hidden mt-1.5"></p>
 
             <div class="flex items-start gap-2 mt-3 px-1">
@@ -763,10 +772,8 @@
             });
             if (!data.suggestion) { pill.classList.add('hidden'); return; }
             const s = data.suggestion;
-            const select = document.getElementById('ctKpi');
-            if (select && [...select.options].some(o => o.value === s.kpi_id)) {
-                select.value = s.kpi_id;
-            }
+            const checkbox = document.querySelector(`.ct-kpi-checkbox[value="${s.kpi_id}"]`);
+            if (checkbox) checkbox.checked = true;
             pill.classList.remove('hidden');
             pill.innerHTML = `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black">✨ AI Suggested · ${s.confidence}% match</span>`;
         } catch (e) {
@@ -784,7 +791,7 @@
         const title = document.getElementById('ctTitle').value.trim();
         const dueDate = document.getElementById('ctDueDate').value || null;
         const priority = document.getElementById('ctPriority').value;
-        const kpiId = document.getElementById('ctKpi').value;
+        const kpiIds = [...document.querySelectorAll('.ct-kpi-checkbox:checked')].map(el => el.value);
 
         if (!title) {
             feedback.textContent = 'Enter a task name.';
@@ -800,7 +807,7 @@
                 body: JSON.stringify({
                     employee_id: state.employeeId, company_code: state.companyCode,
                     project_id: projectId, title, unit: 'number', target: 0,
-                    due_date: dueDate, priority, kpi_ids: kpiId ? [kpiId] : [],
+                    due_date: dueDate, priority, kpi_ids: kpiIds,
                 }),
             });
             if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
