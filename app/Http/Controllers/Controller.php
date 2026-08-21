@@ -24,4 +24,26 @@ abstract class Controller
 
         return strtoupper(trim(session('department_code') ?? '')) === 'BTS';
     }
+
+    /**
+     * Named-individual grant, not a role/department change: Suley (RCG COO /
+     * RGHB Group COO) was explicitly given standing access to the BTS-only
+     * Quarter Control page (both its quarter-override and appraiser-
+     * delegation actions), 2026-08-21, at the user's request. Deliberately
+     * NOT done by setting her department_code to BTS -- that would also
+     * hand her every OTHER isBtsSession()-gated feature (View As, Titan
+     * cross-company access, HR attendance, etc.), none of which were asked
+     * for. Both of her ids are listed since which one is active depends on
+     * which company she's logged into (RCG vs RGHB).
+     */
+    private const QUARTER_CONTROL_EXTRA_ACCESS_IDS = [
+        '8e322638-49a5-4560-b800-8d846c53e7c8', // Suley -- RCG
+        '700c2198-4871-45c6-a63f-e2e1ad80e657', // Suley -- RGHB
+    ];
+
+    protected function isQuarterControlAuthorized(): bool
+    {
+        return $this->isBtsSession()
+            || in_array(session('employee_uuid'), self::QUARTER_CONTROL_EXTRA_ACCESS_IDS, true);
+    }
 }

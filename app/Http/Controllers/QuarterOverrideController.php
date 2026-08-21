@@ -32,7 +32,7 @@ class QuarterOverrideController extends Controller
 
     private function ensureBts(): void
     {
-        abort_unless($this->isBtsSession(), 403, 'BTS access only.');
+        abort_unless($this->isQuarterControlAuthorized(), 403, 'Not authorized for Quarter Control.');
     }
 
     private function currentFY(): string

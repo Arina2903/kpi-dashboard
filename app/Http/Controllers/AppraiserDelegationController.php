@@ -27,7 +27,7 @@ class AppraiserDelegationController extends Controller
 
     private function ensureBts(): void
     {
-        abort_unless($this->isBtsSession(), 403, 'BTS access only.');
+        abort_unless($this->isQuarterControlAuthorized(), 403, 'Not authorized for Quarter Control.');
     }
 
     public function store(Request $request, SupabaseService $supabase, NotificationService $notifications)
@@ -173,7 +173,7 @@ class AppraiserDelegationController extends Controller
         try {
             $this->delegations->clearDelegate($managerId);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('AppraiserDelegationController::destroy failed', ['error' => $e->getMessage()]);
+            Log::error('AppraiserDelegationController::destroy failed', ['error' => $e->getMessage()]);
             return back()->with('error', 'Could not end the delegation.');
         }
 

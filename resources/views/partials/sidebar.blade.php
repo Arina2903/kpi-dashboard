@@ -771,10 +771,17 @@
                 ],
             ],
             [
-                'title'    => 'Admin Setup',
-                'bts_only' => true,
+                // 'View As' stays BTS-only via its own item-level flag below;
+                // 'Quarter Control' additionally opens for the named-individual
+                // grant in Controller::isQuarterControlAuthorized() (Suley, RCG
+                // COO / RGHB Group COO, 2026-08-21) -- letting the whole section
+                // through on quarter_control_only so she sees SOMETHING here,
+                // while the still-bts_only item inside stays hidden from her.
+                'title'                 => 'Admin Setup',
+                'bts_only'              => true,
+                'quarter_control_only'  => true,
                 'items'    => [
-                    ['label' => 'View As (Employee KPI)', 'href' => route('admin.view-as'), 'match' => 'admin/view-as*', 'icon' => 'users'],
+                    ['label' => 'View As (Employee KPI)', 'href' => route('admin.view-as'), 'match' => 'admin/view-as*', 'icon' => 'users', 'bts_only' => true],
                     ['label' => 'Quarter Control', 'href' => route('admin.quarter-control'), 'match' => 'admin/quarter-control*', 'icon' => 'calendar'],
                 ],
             ],
@@ -787,12 +794,16 @@
         @php
             $isBts = session('department_code') === 'BTS';
             $isSltDept = in_array(strtoupper(trim(session('department_code') ?? '')), ['SLT OFFICE', 'BTS']);
+            $isQuarterControlAuthorized = $isBts || in_array(session('employee_uuid'), [
+                '8e322638-49a5-4560-b800-8d846c53e7c8', // Suley -- RCG
+                '700c2198-4871-45c6-a63f-e2e1ad80e657', // Suley -- RGHB
+            ], true);
         @endphp
         @foreach($navSections as $section)
             @if(($section['hr_only'] ?? false) && !session('hr_access'))
                 @continue
             @endif
-            @if(($section['bts_only'] ?? false) && !$isBts)
+            @if(($section['bts_only'] ?? false) && !$isBts && !(($section['quarter_control_only'] ?? false) && $isQuarterControlAuthorized))
                 @continue
             @endif
             <div>
@@ -810,6 +821,9 @@
                                 || session('department_code') === 'BTS';
                         @endphp
                         @if(($item['slt_only'] ?? false) && !$isSltDept)
+                            @continue
+                        @endif
+                        @if(($item['bts_only'] ?? false) && !$isBts)
                             @continue
                         @endif
                         @if(($item['titan_only'] ?? false) && !$hasTitanAccess)
