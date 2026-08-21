@@ -291,15 +291,26 @@
     [class*="border-[#6B9080]"],
     [class*="border-[#D9C4A0]"],
     [class*="border-[#E3D2B0]"] { border-color: var(--user-theme-border) !important; }
-    [class*="bg-[#6B9080]"]     { background-color: var(--user-theme-border) !important; }
+    /* class~= (exact token), not class*= (substring) -- a substring match on
+       "bg-[#6B9080]" also matches "hover:bg-[#6B9080]/8" (e.g. performance/
+       kpi.blade.php's quarter-toggle label), forcing that hover-only fill
+       permanently onto the base state instead of just on :hover. */
+    [class~="bg-[#6B9080]"]     { background-color: var(--user-theme-border) !important; }
     [class*="focus:border-[#6B9080]"]:focus { border-color: var(--user-theme-border) !important; }
 
     /* Primary brand pop (gold family + teal's dark equivalent) -> Accent */
     [class*="text-[#D4AF37]"],
     [class*="text-[#1a3d34]"]  { color: var(--user-theme-accent) !important; }
-    [class*="bg-[#D4AF37]"],
-    [class*="bg-[#1a3d34]"],
-    [class*="bg-[#6B3F2A]"]    { background-color: var(--user-theme-accent) !important; }
+    /* Same class~= fix as above -- "bg-[#1a3d34]" as a substring also matched
+       "hover:bg-[#1a3d34]" (Titan KPI Dashboard's Collapse All/Expand All
+       buttons: border-2 border-[#1a3d34] text-[#1a3d34] hover:bg-[#1a3d34]
+       hover:text-white), permanently filling them solid accent-gold with
+       accent-gold text -- invisible text on a solid-colour button, even
+       when not hovered. Also matched "file:bg-[#6B3F2A]" (kpi/index.blade.php's
+       Proof Files upload button), overriding that input's own bg-white. */
+    [class~="bg-[#D4AF37]"],
+    [class~="bg-[#1a3d34]"],
+    [class~="bg-[#6B3F2A]"]    { background-color: var(--user-theme-accent) !important; }
     /* Light-tint icon chips/badges (bg-[#D4AF37]/5, /10) — declared after the
        solid-fill rule above so these win the tie. Without this, the /5 and /10
        opacity suffixes were ignored and these went fully solid, and since the
@@ -369,7 +380,11 @@
 
     /* Light tint highlight boxes -> tinted Accent */
     [class*="bg-[#CCE3DE]"] { background-color: color-mix(in srgb, var(--user-theme-accent) 18%, white) !important; }
-    [class*="bg-[#FBF5EF]"] { background-color: color-mix(in srgb, var(--user-theme-accent) 8%, white) !important; }
+    /* class~=, not class*= -- see the bg-[#1a3d34]/bg-[#6B9080] note above;
+       "hover:bg-[#FBF5EF]" (kpi/approval.blade.php, kpi/index.blade.php)
+       was matching this too, applying the hover-only tint permanently
+       instead of leaving it to the dedicated ":hover" rule below. */
+    [class~="bg-[#FBF5EF]"] { background-color: color-mix(in srgb, var(--user-theme-accent) 8%, white) !important; }
     [class*="bg-[#F5EAE0]"] { background-color: color-mix(in srgb, var(--user-theme-accent) 15%, white) !important; }
 
     /* Progress-track backgrounds (Performix stat cards/task rows) -> tinted
