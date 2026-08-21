@@ -927,7 +927,7 @@ function kanbanBoard(tasks) {
         const colTasks = byStatus[col.key];
         const pill = STATUS_PILL[col.key];
         return `
-            <div class="shrink-0 w-[250px]" style="scroll-snap-align:start;">
+            <div class="min-w-0">
                 <div class="flex items-center justify-between px-1 mb-2">
                     <span class="text-[10px] font-black px-2 py-0.5 rounded-full ${pill.color}">${col.label}</span>
                     <span class="text-[10px] font-bold text-slate-400">${colTasks.length}</span>
@@ -939,7 +939,7 @@ function kanbanBoard(tasks) {
         `;
     }).join('');
 
-    return `<div class="mt-3 flex gap-3 overflow-x-auto pb-2" style="scroll-snap-type:x proximity;">${columns}</div>`;
+    return `<div class="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">${columns}</div>`;
 }
 
 /* ---------------------------------------------------------------- */
