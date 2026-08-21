@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Services\AppraiserDelegationService;
+use App\Services\NotificationService;
 use App\Services\SupabaseService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * BTS-only: stand a Manager's own VP in as appraiser for that Manager's
@@ -28,7 +30,7 @@ class AppraiserDelegationController extends Controller
         abort_unless($this->isBtsSession(), 403, 'BTS access only.');
     }
 
-    public function store(Request $request, SupabaseService $supabase)
+    public function store(Request $request, SupabaseService $supabase, NotificationService $notifications)
     {
         $this->ensureBts();
 
@@ -82,11 +84,86 @@ class AppraiserDelegationController extends Controller
                 session('employee.short_name') ?? session('short_name')
             );
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('AppraiserDelegationController::store failed', ['error' => $e->getMessage()]);
+            Log::error('AppraiserDelegationController::store failed', ['error' => $e->getMessage()]);
             return back()->with('error', 'Could not save the delegation — the appraiser_delegations table may not exist yet. Run database/sql/create_appraiser_delegations.sql in Supabase first.');
         }
 
-        return back()->with('success', "{$delegate['short_name']} will now appraise {$manager['short_name']}'s Executives while {$manager['short_name']} is away.");
+        $transferredCount = $this->notifyDelegateOfAlreadyPendingAppraisals($manager, $delegate, $supabase, $notifications);
+
+        $message = "{$delegate['short_name']} will now appraise {$manager['short_name']}'s Executives while {$manager['short_name']} is away.";
+        if ($transferredCount > 0) {
+            $message .= " {$transferredCount} appraisal(s) already submitted and waiting for review were just re-notified to {$delegate['short_name']}.";
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Access control (resolveAppraiserLevel) is resolved live on every page
+     * load, so the delegate can already open/score any of the absent
+     * Manager's Executives' appraisals the moment this delegation is saved
+     * -- but there's no "my team's pending appraisals" listing page in this
+     * app (grep confirms performance.appraise.report is only ever linked
+     * from a notification), so an appraisal an Executive already submitted
+     * BEFORE this delegation existed already sent its "ready for your
+     * review" notification to the absent Manager, and the delegate has no
+     * way to discover it. This re-sends that notification to the delegate
+     * for every such still-pending (status = submitted) case, so nothing
+     * already waiting is silently stuck. Anything submitted AFTER this
+     * point already notifies the delegate correctly via
+     * NotificationService::appraiserChainFor()'s own delegation lookup.
+     */
+    private function notifyDelegateOfAlreadyPendingAppraisals(array $manager, array $delegate, SupabaseService $supabase, NotificationService $notifications): int
+    {
+        $financialYear = 'FY' . now()->year;
+
+        $executives = $supabase->get('employees', [
+            'manager_id' => 'eq.' . $manager['id'],
+            'is_active'  => 'eq.true',
+            'select'     => 'id,full_name,short_name',
+        ]) ?? [];
+
+        if (empty($executives)) {
+            return 0;
+        }
+
+        $execIds = collect($executives)->pluck('id')->all();
+        $execById = collect($executives)->keyBy('id');
+
+        try {
+            $pendingReports = $supabase->get('performance_reports', [
+                'employee_id'    => 'in.(' . implode(',', $execIds) . ')',
+                'financial_year' => 'eq.' . $financialYear,
+                'status'         => 'eq.submitted',
+                'select'         => 'employee_id,quarter',
+            ]) ?? [];
+        } catch (\Throwable $e) {
+            Log::error('AppraiserDelegationController::notifyDelegateOfAlreadyPendingAppraisals failed', ['error' => $e->getMessage()]);
+            return 0;
+        }
+
+        foreach ($pendingReports as $report) {
+            $employee = $execById->get($report['employee_id']);
+            if (!$employee) {
+                continue;
+            }
+
+            $employeeName = $employee['full_name'] ?? $employee['short_name'] ?? 'An employee';
+            $q = $report['quarter'];
+
+            $notifications->notify(
+                [$delegate['id']],
+                'appraisal_submitted',
+                ['id' => $employee['id'], 'name' => $employeeName],
+                "{$employeeName} submitted their {$q} appraisal",
+                "Ready for your review — reassigned to you while {$manager['short_name']} is away.",
+                route('performance.appraise.report', [$employee['id'], strtolower($q)]),
+                $q,
+                $financialYear
+            );
+        }
+
+        return count($pendingReports);
     }
 
     public function destroy(Request $request, string $managerId)
