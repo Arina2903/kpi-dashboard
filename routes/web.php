@@ -728,4 +728,17 @@ Route::middleware(['kpi.auth'])->group(function () {
     Route::post('/admin/quarter-control', [\App\Http\Controllers\QuarterOverrideController::class, 'store'])->name('admin.quarter-control.store');
     Route::delete('/admin/quarter-control/{quarter}', [\App\Http\Controllers\QuarterOverrideController::class, 'destroy'])->name('admin.quarter-control.destroy');
 
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN — APPRAISER DELEGATION (BTS department only)
+    |--------------------------------------------------------------------------
+    | Stand a Manager's own VP in as appraiser for that Manager's Executives
+    | while the Manager is on long leave -- see AppraiserDelegationController
+    | and AppraiserDelegationService. Rendered as a section on the same
+    | Quarter Control page.
+    */
+
+    Route::post('/admin/appraiser-delegation', [\App\Http\Controllers\AppraiserDelegationController::class, 'store'])->name('admin.appraiser-delegation.store');
+    Route::delete('/admin/appraiser-delegation/{managerId}', [\App\Http\Controllers\AppraiserDelegationController::class, 'destroy'])->name('admin.appraiser-delegation.destroy');
+
 });

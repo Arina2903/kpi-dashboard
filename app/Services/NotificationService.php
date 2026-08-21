@@ -15,13 +15,21 @@ class NotificationService
     public function __construct(
         private SupabaseService $supabase,
         private TelegramService $telegram,
+        private AppraiserDelegationService $delegations,
     ) {
     }
 
     /**
-     * Walks reports_to_id up to 3 hops from the given employee — matching the
-     * Manager / VP / SLT appraiser levels used in PerformanceController — and
-     * returns the employee IDs found. Stops early if the chain is shorter or
+     * Walks up to 3 hops from the given employee — Manager, then that
+     * Manager's own approver (VP), then that VP's own approver (SLT) —
+     * using the exact same per-role field priority (manager_id/vp_id, with
+     * reports_to_id as fallback) and BTS appraiser-delegation substitution
+     * as PerformanceController::resolveAppraiserLevel(), via the shared
+     * AppraiserDelegationService::nextParentId(). Both used to walk
+     * reports_to_id only, which disagreed with resolveAppraiserLevel
+     * whenever manager_id/vp_id was set but reports_to_id wasn't pointing
+     * at the same person — notifying one person while access control
+     * authorized a different one. Stops early if the chain is shorter or
      * loops back on itself.
      */
     public function appraiserChainFor(string $employeeId): array
@@ -32,10 +40,14 @@ class NotificationService
         for ($i = 0; $i < 3; $i++) {
             $current = $this->supabase->first('employees', [
                 'id'     => 'eq.' . $currentId,
-                'select' => 'reports_to_id',
+                'select' => 'role,manager_id,vp_id,reports_to_id',
             ]);
 
-            $parentId = $current['reports_to_id'] ?? null;
+            if (empty($current)) {
+                break;
+            }
+
+            $parentId = $this->delegations->nextParentId($current);
             if (empty($parentId) || in_array($parentId, $chain, true)) {
                 break;
             }

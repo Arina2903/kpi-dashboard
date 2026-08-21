@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\SupabaseService;
 use App\Services\QuarterOverrideService;
+use App\Services\AppraiserDelegationService;
 
 class PerformanceController extends Controller
 {
@@ -637,21 +638,19 @@ class PerformanceController extends Controller
      *
      * $getParent resolves an id into that employee's own record — either a
      * live Supabase lookup or a pre-fetched map, depending on caller.
+     *
+     * The per-role parent lookup (and any active BTS appraiser delegation --
+     * see AppraiserDelegationService) is resolved by $delegations->nextParentId()
+     * rather than inline, so this and NotificationService::appraiserChainFor()
+     * can never disagree about who's next up the chain.
      */
-    private function resolveAppraiserLevel(?array $employee, string $viewerId, callable $getParent): ?string
+    private function resolveAppraiserLevel(?array $employee, string $viewerId, callable $getParent, AppraiserDelegationService $delegations): ?string
     {
         $levels = ['manager', 'vp', 'slt'];
         $current = $employee;
 
         foreach ($levels as $level) {
-            $role = strtoupper(trim($current['role'] ?? ''));
-
-            $parentId = match ($role) {
-                'EXECUTIVE' => $current['manager_id'] ?? $current['vp_id'] ?? null,
-                'MANAGER'   => $current['vp_id'] ?? $current['reports_to_id'] ?? null,
-                'VP'        => $current['reports_to_id'] ?? null,
-                default     => null,
-            };
+            $parentId = $delegations->nextParentId($current ?? []);
 
             if (empty($parentId)) {
                 return null;
@@ -681,7 +680,7 @@ class PerformanceController extends Controller
      * just this content's markup to inject into its modal — same data,
      * same authorization, no separate endpoint to keep in sync.
      */
-    public function viewAppraiseeKpi(string $employeeId, string $kpiId, \Illuminate\Http\Request $request, SupabaseService $supabase)
+    public function viewAppraiseeKpi(string $employeeId, string $kpiId, \Illuminate\Http\Request $request, SupabaseService $supabase, AppraiserDelegationService $delegations)
     {
         if (!session()->has('employee_uuid')) {
             return $request->query('partial')
@@ -708,7 +707,8 @@ class PerformanceController extends Controller
         $appraiserLevel = $this->resolveAppraiserLevel(
             $staff,
             $viewerId,
-            fn ($id) => $supabase->first('employees', ['id' => 'eq.' . $id, 'select' => '*'])
+            fn ($id) => $supabase->first('employees', ['id' => 'eq.' . $id, 'select' => '*']),
+            $delegations
         );
         if (!$appraiserLevel && $this->isBtsSession()) {
             $appraiserLevel = 'manager';
@@ -782,7 +782,7 @@ class PerformanceController extends Controller
         ]);
     }
 
-    public function appraiserReport(string $employeeId, string $quarter, SupabaseService $supabase)
+    public function appraiserReport(string $employeeId, string $quarter, SupabaseService $supabase, AppraiserDelegationService $delegations)
     {
         if (!session()->has('employee_uuid')) {
             return redirect()->route('login');
@@ -805,7 +805,8 @@ class PerformanceController extends Controller
         $appraiserLevel = $this->resolveAppraiserLevel(
             $user,
             $viewerId,
-            fn($id) => $supabase->first('employees', ['id' => 'eq.' . $id, 'select' => '*'])
+            fn($id) => $supabase->first('employees', ['id' => 'eq.' . $id, 'select' => '*']),
+            $delegations
         );
         // BTS gets full support access regardless of the actual approver
         // chain — including while impersonating someone via View As, where
@@ -1053,7 +1054,7 @@ class PerformanceController extends Controller
         return $missing;
     }
 
-    public function appraiserSave(string $employeeId, string $quarter, \Illuminate\Http\Request $request, SupabaseService $supabase, \App\Services\NotificationService $notifications)
+    public function appraiserSave(string $employeeId, string $quarter, \Illuminate\Http\Request $request, SupabaseService $supabase, \App\Services\NotificationService $notifications, AppraiserDelegationService $delegations)
     {
         if (!session()->has('employee_uuid')) {
             return response()->json(['error' => 'Unauthenticated'], 401);
@@ -1079,7 +1080,8 @@ class PerformanceController extends Controller
         $appraiserLevel = $this->resolveAppraiserLevel(
             $employees[0],
             $viewerId,
-            fn($id) => $supabase->first('employees', ['id' => 'eq.' . $id, 'select' => '*'])
+            fn($id) => $supabase->first('employees', ['id' => 'eq.' . $id, 'select' => '*']),
+            $delegations
         );
         // BTS gets full support access regardless of the actual approver
         // chain — see the same bypass in appraiserReport() above.

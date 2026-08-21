@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AppraiserDelegationService;
 use App\Services\QuarterOverrideService;
+use App\Services\SupabaseService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -22,8 +24,10 @@ class QuarterOverrideController extends Controller
 {
     private const QUARTERS = ['Q1', 'Q2', 'Q3', 'Q4'];
 
-    public function __construct(private QuarterOverrideService $overrides)
-    {
+    public function __construct(
+        private QuarterOverrideService $overrides,
+        private AppraiserDelegationService $delegations,
+    ) {
     }
 
     private function ensureBts(): void
@@ -36,7 +40,7 @@ class QuarterOverrideController extends Controller
         return 'FY' . now()->year;
     }
 
-    public function index(Request $request)
+    public function index(Request $request, SupabaseService $supabase)
     {
         $this->ensureBts();
 
@@ -57,10 +61,58 @@ class QuarterOverrideController extends Controller
             ];
         })->all();
 
-        return view('admin.quarter-control', [
+        return view('admin.quarter-control', array_merge([
             'financialYear' => $financialYear,
             'quarters' => $quarters,
-        ]);
+        ], $this->appraiserDelegationData($supabase)));
+    }
+
+    /**
+     * Every active Manager (candidate to be absent) alongside their own
+     * resolved VP (the only person this feature will ever substitute in —
+     * see AppraiserDelegationController::store()) and whether a delegation
+     * is already active for them, plus the reverse lookup so an active
+     * delegation row can show real names instead of raw ids.
+     */
+    private function appraiserDelegationData(SupabaseService $supabase): array
+    {
+        $managers = $supabase->get('employees', [
+            'role'      => 'eq.MANAGER',
+            'is_active' => 'eq.true',
+            'select'    => 'id,short_name,department_code,vp_id,reports_to_id',
+            'order'     => 'short_name.asc',
+        ]) ?? [];
+
+        $activeRows = collect($this->delegations->all())->keyBy('manager_id');
+
+        $nameIds = collect($managers)->flatMap(fn ($m) => [$m['vp_id'] ?? null, $m['reports_to_id'] ?? null])
+            ->merge($activeRows->pluck('delegate_to_id'))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $names = $nameIds->isEmpty() ? collect() : collect($supabase->get('employees', [
+            'id'     => 'in.(' . $nameIds->implode(',') . ')',
+            'select' => 'id,short_name',
+        ]) ?? [])->keyBy('id');
+
+        $managerRows = collect($managers)->map(function (array $m) use ($activeRows, $names) {
+            $candidateVpId = $m['vp_id'] ?? $m['reports_to_id'] ?? null;
+            $active = $activeRows->get($m['id']);
+
+            return [
+                'id' => $m['id'],
+                'short_name' => $m['short_name'],
+                'department_code' => $m['department_code'] ?? null,
+                'candidate_vp_id' => $candidateVpId,
+                'candidate_vp_name' => $candidateVpId ? ($names->get($candidateVpId)['short_name'] ?? null) : null,
+                'is_delegated' => (bool) $active,
+                'delegate_name' => $active ? ($names->get($active['delegate_to_id'])['short_name'] ?? null) : null,
+                'reason' => $active['reason'] ?? null,
+            ];
+        })->all();
+
+        return ['appraiserManagers' => $managerRows];
     }
 
     public function store(Request $request)
