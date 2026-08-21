@@ -3406,8 +3406,14 @@ class KpiController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | DUPLICATE CHECK
+        | ALREADY-PENDING REQUEST -- UPDATE IT IN PLACE, DON'T BLOCK THE EDIT
         |--------------------------------------------------------------------------
+        | The requester is still allowed to change their mind before the
+        | approver acts. Rather than reject the edit (forcing them to wait
+        | for the stale request to be approved/rejected first), overwrite
+        | the existing pending row with the newly submitted actual/reason
+        | so whatever the approver reviews is always the requester's latest
+        | figure, not whatever was typed first.
         */
 
         $existing = $this->supabase->get(
@@ -3415,17 +3421,55 @@ class KpiController extends Controller
             [
                 'quarter_id' => 'eq.' . $quarterId,
                 'status' => 'eq.pending',
-                'select' => 'id',
+                'select' => '*',
                 'limit' => 1,
             ]
         ) ?? [];
 
         if (!empty($existing)) {
+
+            $existingApproval = $existing[0];
+
+            try {
+                $this->supabase->patch(
+                    'kpi_update_approvals',
+                    ['id' => 'eq.' . $existingApproval['id']],
+                    [
+                        'old_actual' => $currentActual,
+                        'quarter_target' => $quarter['quarter_target'] ?? 0,
+                        'requested_actual' => $validated['requested_actual'],
+                        'reason' => $validated['reason'],
+                        'variance' => round($variance, 2),
+                        'risk_level' => $riskLevel,
+                        'requested_by' => $user['id'],
+                        'requested_by_name' => $user['short_name'] ?? 'Unknown',
+                        'requested_by_role' => $user['role'] ?? null,
+                        'created_at' => $this->nowMy(),
+                    ]
+                );
+            } catch (\Throwable $e) {
+                Log::error('submitActualUpdateRequest: update-existing-pending failed', ['error' => $e->getMessage()]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update the pending request.'
+                ], 500);
+            }
+
+            if (!empty($existingApproval['approver_id'])) {
+                $this->notifyApprover(
+                    $existingApproval['approver_id'],
+                    'kpi_actual_approval',
+                    $user['short_name'] ?? 'Unknown',
+                    $kpi['kpi_title'] ?? 'a KPI',
+                    'Actual value update needs your approval (updated)',
+                    $existingApproval['id']
+                );
+            }
+
             return response()->json([
-                'success' => false,
-                'message'
-                    => 'Pending approval already exists.'
-            ], 409);
+                'success' => true,
+                'message' => 'Pending approval updated with your latest actual value.'
+            ]);
         }
 
         /*
