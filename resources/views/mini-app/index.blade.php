@@ -1303,43 +1303,28 @@ async function renderTaskDetail(taskId) {
 
         <div class="h-2"></div>
         ${card(`
-            <p class="text-[12px] font-black text-slate-900 mb-2">Quick number update</p>
-            <div class="flex items-center gap-2">
-                <input type="number" step="any" placeholder="e.g. 5 or -1" id="taskDeltaInput"
-                    class="flex-1 min-w-0 text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
-                <button onclick="submitTaskProgress('${t.id}')" class="px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black shrink-0">Add</button>
-            </div>
-            <p class="text-[9px] text-slate-400 mt-1">Use a minus sign to reduce. Adjusts the number only — not status.</p>
-            <p id="taskProgressFeedback" class="hidden text-[10px] font-bold mt-2 text-center"></p>
-        `)}
+            <p class="text-[12px] font-black text-slate-900 mb-2">Update Task</p>
 
-        <div class="h-2"></div>
-        ${card(`
-            <p class="text-[12px] font-black text-slate-900 mb-2">Daily update</p>
-            <p class="text-[10px] font-bold text-slate-600 mb-1">Status</p>
-            <select id="dailyStatusInput" onchange="toggleBlockedNote()" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+            <p class="text-[10px] font-bold text-slate-600 mb-1">Quick number update <span class="text-slate-400 font-normal">(optional)</span></p>
+            <input type="number" step="any" placeholder="e.g. 5 or -1" id="taskDeltaInput"
+                class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+            <p class="text-[9px] text-slate-400 mt-1">Use a minus sign to reduce, or leave blank to skip.</p>
+
+            <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Status</p>
+            <select id="dailyStatusInput" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
                 ${Object.entries(STATUS_PILL).map(([key, s]) => `<option value="${key}" ${t.status === key ? 'selected' : ''}>${s.label}</option>`).join('')}
             </select>
 
-            <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Progress (%)</p>
-            <input type="number" min="0" max="100" id="dailyProgressInput" value="${t.progress_percentage ?? 0}"
-                class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+            <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Remark <span class="text-slate-400 font-normal">(optional)</span></p>
+            <textarea id="dailyNoteInput" rows="2" placeholder="Any notes about this update…" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500 resize-none"></textarea>
 
-            <div id="blockedNoteWrap" class="${t.status === 'blocked' ? '' : 'hidden'} mt-3">
-                <p class="text-[10px] font-bold text-slate-600 mb-1">What's blocking it? <span class="text-red-500">*required</span></p>
-                <textarea id="dailyNoteInput" rows="2" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500 resize-none"></textarea>
-            </div>
+            <p class="text-[10px] font-bold text-slate-600 mt-3 mb-1">Assign To</p>
+            <select id="taskAssigneeInput" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
+                <option value="">Loading…</option>
+            </select>
 
-            <details class="mt-3">
-                <summary class="text-[11px] font-bold text-[#6B3F2A] cursor-pointer">Reschedule (optional)</summary>
-                <div class="mt-2">
-                    <input type="date" id="rescheduleToInput" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500">
-                    <textarea id="rescheduleReasonInput" rows="2" placeholder="Why the new date?" class="w-full text-[13px] px-3 py-2.5 rounded-xl border-2 border-[#D9C4A0] bg-white outline-none focus:border-red-500 resize-none mt-2"></textarea>
-                </div>
-            </details>
-
-            <button onclick="submitDailyUpdate('${t.id}')" class="w-full mt-3 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black">Save Daily Update</button>
-            <p id="dailyUpdateFeedback" class="hidden text-[10px] font-bold mt-2 text-center"></p>
+            <button onclick="submitTaskUpdate('${t.id}')" class="w-full mt-4 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12px] font-black">Save Update</button>
+            <p id="taskUpdateFeedback" class="hidden text-[10px] font-bold mt-2 text-center"></p>
         `)}
 
         <div class="h-2"></div>
@@ -1362,67 +1347,74 @@ async function renderTaskDetail(taskId) {
         <div class="h-2"></div>
         <button onclick="confirmDeleteTask('${t.id}')" class="w-full py-2.5 rounded-xl bg-white border-2 border-red-300 text-red-600 text-[12px] font-black">🗑️ Delete Task</button>
     `;
+
+    loadAssignableEmployees(t);
 }
 
-function toggleBlockedNote() {
-    const status = document.getElementById('dailyStatusInput').value;
-    document.getElementById('blockedNoteWrap').classList.toggle('hidden', status !== 'blocked');
-}
-
-async function submitTaskProgress(taskId) {
-    const t = window.__taskDetail;
-    const input = document.getElementById('taskDeltaInput');
-    const feedback = document.getElementById('taskProgressFeedback');
-    const raw = input.value.trim();
-
-    if (raw === '' || isNaN(Number(raw)) || Number(raw) === 0) {
-        showToast('Enter an amount first, e.g. 5 or -1.');
-        return;
-    }
-
-    const delta = Number(raw);
-    if (delta < 0 && (Number(t.actual) + delta) < 0) {
-        feedback.textContent = `Can't reduce — this task's actual is only ${t.actual}.`;
-        feedback.className = 'text-[10px] font-bold mt-2 text-red-600';
-        feedback.classList.remove('hidden');
-        return;
-    }
-
-    feedback.classList.add('hidden');
+async function loadAssignableEmployees(t) {
+    const select = document.getElementById('taskAssigneeInput');
+    if (!select) return;
 
     try {
-        await api(`/tasks/${taskId}/progress`, { method: 'POST', body: JSON.stringify({ delta }) });
-        showToast('Task updated!');
-        renderTaskDetail(taskId);
+        const data = await api('/tasks/assignable');
+        const employees = data.employees || [];
+        select.innerHTML = employees.length
+            ? employees.map(e => `<option value="${e.id}" ${e.id === t.assignee_employee_id ? 'selected' : ''}>${e.short_name}</option>`).join('')
+            : `<option value="">—</option>`;
     } catch (e) {
-        feedback.textContent = e.data?.message || "Couldn't update — please try again.";
-        feedback.className = 'text-[10px] font-bold mt-2 text-red-600';
-        feedback.classList.remove('hidden');
+        select.innerHTML = `<option value="">—</option>`;
     }
 }
 
-async function submitDailyUpdate(taskId) {
-    const feedback = document.getElementById('dailyUpdateFeedback');
+/* The single "Save Update" action -- replaces what used to be two separate
+   cards/buttons (a "Quick number update" Add button, and a "Daily update"
+   Save button), which was confusing since either one alone looked like a
+   complete save. Applies the delta (if any) first, then saves status/
+   remark/assignee in one call, computing "progress" from the resulting
+   actual/target ratio itself -- there's no manual Progress(%) input
+   anymore, since that duplicated the auto-calculated percentage already
+   shown at the top of this page. */
+async function submitTaskUpdate(taskId) {
+    const feedback = document.getElementById('taskUpdateFeedback');
+    const t = window.__taskDetail;
+    const deltaRaw = document.getElementById('taskDeltaInput').value.trim();
     const status = document.getElementById('dailyStatusInput').value;
-    const progress = document.getElementById('dailyProgressInput').value;
-    const note = document.getElementById('dailyNoteInput')?.value.trim() || null;
-    const rescheduleTo = document.getElementById('rescheduleToInput').value || null;
-    const rescheduleReason = document.getElementById('rescheduleReasonInput').value.trim() || null;
-
-    if (status === 'blocked' && !note) {
-        feedback.textContent = 'Tell us what\'s blocking this task.';
-        feedback.classList.remove('hidden');
-        return;
-    }
+    const note = document.getElementById('dailyNoteInput').value.trim() || null;
+    const assigneeId = document.getElementById('taskAssigneeInput')?.value || null;
 
     feedback.classList.add('hidden');
+
+    let newActual = Number(t.actual);
+    if (deltaRaw !== '') {
+        if (isNaN(Number(deltaRaw)) || Number(deltaRaw) === 0) {
+            feedback.textContent = 'Enter a non-zero amount for the quick number update, or leave it blank.';
+            feedback.classList.remove('hidden');
+            return;
+        }
+        const delta = Number(deltaRaw);
+        if (Number(t.actual) + delta < 0) {
+            feedback.textContent = `Can't reduce — this task's actual is only ${t.actual}.`;
+            feedback.classList.remove('hidden');
+            return;
+        }
+        try {
+            const res = await api(`/tasks/${taskId}/progress`, { method: 'POST', body: JSON.stringify({ delta }) });
+            newActual = res.task_actual;
+        } catch (e) {
+            feedback.textContent = e.data?.message || "Couldn't update — please try again.";
+            feedback.classList.remove('hidden');
+            return;
+        }
+    }
+
+    const progress = t.target > 0 ? Math.max(0, Math.min(100, (newActual / t.target) * 100)) : 0;
 
     try {
         await api(`/tasks/${taskId}/daily-update`, {
             method: 'POST',
-            body: JSON.stringify({ status, progress: progress === '' ? null : Number(progress), note, reschedule_to: rescheduleTo, reschedule_reason: rescheduleReason }),
+            body: JSON.stringify({ status, progress, note, assignee_employee_id: assigneeId }),
         });
-        showToast('Daily update saved!');
+        showToast('Task updated!');
         renderTaskDetail(taskId);
     } catch (e) {
         feedback.textContent = e.data?.message || "Couldn't save — please try again.";

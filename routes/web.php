@@ -621,6 +621,7 @@ Route::middleware(['kpi.auth'])->group(function () {
 
     Route::get('/mini-app/api/tasks', [\App\Http\Controllers\MiniAppTaskController::class, 'index'])->name('mini-app.tasks.index');
     Route::get('/mini-app/api/tasks/kpi-options', [\App\Http\Controllers\MiniAppTaskController::class, 'kpiOptions'])->name('mini-app.tasks.kpi-options');
+    Route::get('/mini-app/api/tasks/assignable', [\App\Http\Controllers\MiniAppTaskController::class, 'assignableEmployees'])->name('mini-app.tasks.assignable');
     Route::get('/mini-app/api/tasks/score', [\App\Http\Controllers\PerformixInsightsController::class, 'myScore'])->name('mini-app.tasks.score');
     Route::post('/mini-app/api/tasks', [\App\Http\Controllers\MiniAppTaskController::class, 'store'])->name('mini-app.tasks.store');
     Route::get('/mini-app/api/tasks/{id}', [\App\Http\Controllers\MiniAppTaskController::class, 'show'])->name('mini-app.tasks.show');

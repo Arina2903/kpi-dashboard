@@ -309,6 +309,7 @@ class MiniAppTaskController extends Controller
                 'priority' => $task['priority'] ?? 'medium',
                 'due_date' => $task['due_date'] ?? null,
                 'start_date' => $task['start_date'] ?? null,
+                'assignee_employee_id' => $task['assignee_employee_id'] ?? $task['employee_id'],
                 'linked_kpis' => $linkedKpis,
             ],
             'updates' => array_map(fn ($u) => [
@@ -321,6 +322,30 @@ class MiniAppTaskController extends Controller
                 'created_at' => $u['created_at'],
             ], $updates),
         ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET /mini-app/api/tasks/assignable
+    |--------------------------------------------------------------------------
+    | Employees the caller may assign a task to, for the "Assign To" field
+    | on the task detail update form. Just TaskAccessPolicy's own visibility
+    | set (an EXECUTIVE only ever sees themselves) -- no separate rule here.
+    */
+    public function assignableEmployees(Request $request, SupabaseService $supabase, TaskAccessPolicy $policy)
+    {
+        $employeeIds = $policy->visibleEmployeeIds(session('employee') ?? []);
+
+        if (empty($employeeIds)) {
+            return response()->json(['employees' => []]);
+        }
+
+        $employees = $supabase->get('employees', [
+            'id' => 'in.(' . implode(',', $employeeIds) . ')',
+            'select' => 'id,short_name',
+        ]) ?? [];
+
+        return response()->json(['employees' => $employees]);
     }
 
     /*
@@ -605,20 +630,22 @@ class MiniAppTaskController extends Controller
     |--------------------------------------------------------------------------
     | POST /mini-app/api/tasks/{id}/daily-update
     |--------------------------------------------------------------------------
-    | The evening check-in flow (docs/performix-design.md §3.3): status +
-    | progress percentage, a required note when blocked, and an optional
-    | reschedule with reason. Deliberately separate from progress() — this
-    | never touches actual/target, only the task's lifecycle state and the
-    | audit trail in telegram_project_task_updates.
+    | The single consolidated "Save Update" action on the task detail screen:
+    | status, a free-text remark, and (optionally) reassigning the task.
+    | `progress` is sent by the frontend already computed from actual/target
+    | -- there is no separate manual input for it anymore (it was a second,
+    | redundant source of truth alongside the auto-calculated percentage
+    | shown at the top of the page). Deliberately separate from progress()
+    | — this never touches actual/target itself, only lifecycle state, the
+    | assignee, and the audit trail in telegram_project_task_updates.
     */
-    public function dailyUpdate(Request $request, SupabaseService $supabase, NotificationService $notifications, string $id)
+    public function dailyUpdate(Request $request, SupabaseService $supabase, NotificationService $notifications, TaskAccessPolicy $policy, string $id)
     {
         $validated = $request->validate([
             'status' => 'required|in:not_started,in_progress,done,blocked,cancelled',
             'progress' => 'nullable|numeric|min:0|max:100',
-            'note' => 'required_if:status,blocked|nullable|string|max:1000',
-            'reschedule_to' => 'nullable|date',
-            'reschedule_reason' => 'required_with:reschedule_to|nullable|string|max:500',
+            'note' => 'nullable|string|max:1000',
+            'assignee_employee_id' => 'nullable|string',
         ]);
 
         $employeeId = session('employee.id');
@@ -639,8 +666,13 @@ class MiniAppTaskController extends Controller
             'updated_at' => $this->nowMy(),
         ];
 
-        if (!empty($validated['reschedule_to'])) {
-            $patch['due_date'] = $validated['reschedule_to'];
+        $newAssignee = $validated['assignee_employee_id'] ?? null;
+        $currentAssignee = $task['assignee_employee_id'] ?? $task['employee_id'];
+        if ($newAssignee && $newAssignee !== $currentAssignee) {
+            if (!$policy->canAssign(session('employee') ?? [], $newAssignee)) {
+                return response()->json(['success' => false, 'message' => 'You cannot assign this task to that employee.'], 403);
+            }
+            $patch['assignee_employee_id'] = $newAssignee;
         }
 
         $supabase->safePatch('telegram_project_tasks', ['id' => 'eq.' . $id], $patch);
@@ -653,12 +685,12 @@ class MiniAppTaskController extends Controller
             'status_at_update' => $validated['status'],
             'progress_at_update' => $validated['progress'] ?? null,
             'note' => $validated['note'] ?? null,
-            'reschedule_reason' => $validated['reschedule_reason'] ?? null,
             'channel' => 'web',
         ]);
 
+        $notifyIds = array_unique(array_filter([$employeeId, $patch['assignee_employee_id'] ?? null]));
         $notifications->notify(
-            [$employeeId],
+            $notifyIds,
             'ttd_task_daily_update',
             ['id' => $employeeId, 'name' => $this->employeeName()],
             'Daily update logged',
