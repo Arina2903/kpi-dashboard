@@ -897,12 +897,49 @@ async function renderTodo() {
         <div id="taskScoreCard" class="mt-3"></div>
     `;
 
-    const emptyState = !window.__myTasks.length
+    const board = !window.__myTasks.length
         ? `<div class="mt-3">${card(`<p class="text-[13px] text-slate-600 text-center py-6">No to-dos yet — tap "New Task" to start your list.</p>`)}</div>`
-        : `<div class="mt-3">${window.__myTasks.map(t => taskCard(t)).join('<div class="h-2"></div>')}</div>`;
+        : kanbanBoard(window.__myTasks);
 
-    app.innerHTML = header + emptyState;
+    app.innerHTML = header + board;
     loadTaskScoreCard();
+}
+
+/* Kanban board, grouped by status -- each column is just STATUS_PILL's own
+   set, so a column never drifts out of sync with what a task's status
+   dropdown actually offers. No drag-and-drop between columns (status still
+   changes via the Update Task form) -- this is a "see everything grouped,
+   drill into one" board, not a full trello-style rewrite. */
+const KANBAN_COLUMNS = [
+    { key: 'not_started', label: 'Not Started' },
+    { key: 'in_progress', label: 'In Progress' },
+    { key: 'blocked', label: 'Blocked' },
+    { key: 'done', label: 'Done' },
+    { key: 'cancelled', label: 'Cancelled' },
+];
+
+function kanbanBoard(tasks) {
+    const byStatus = {};
+    KANBAN_COLUMNS.forEach(col => { byStatus[col.key] = []; });
+    tasks.forEach(t => (byStatus[t.status] || byStatus.not_started).push(t));
+
+    const columns = KANBAN_COLUMNS.map(col => {
+        const colTasks = byStatus[col.key];
+        const pill = STATUS_PILL[col.key];
+        return `
+            <div class="shrink-0 w-[250px]" style="scroll-snap-align:start;">
+                <div class="flex items-center justify-between px-1 mb-2">
+                    <span class="text-[10px] font-black px-2 py-0.5 rounded-full ${pill.color}">${col.label}</span>
+                    <span class="text-[10px] font-bold text-slate-400">${colTasks.length}</span>
+                </div>
+                <div class="space-y-2">
+                    ${colTasks.length ? colTasks.map(t => taskCard(t)).join('') : `<p class="text-[10px] text-slate-400 text-center py-4">No tasks</p>`}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    return `<div class="mt-3 flex gap-3 overflow-x-auto pb-2" style="scroll-snap-type:x proximity;">${columns}</div>`;
 }
 
 /* ---------------------------------------------------------------- */
@@ -1002,38 +1039,57 @@ function dueDateBadge(dueDate) {
     return `<span class="text-[8px] font-black px-1.5 py-0.5 rounded-full ${isOverdue ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500'}">${isOverdue ? '⚠ ' : ''}Due ${dueDate}</span>`;
 }
 
+/* Collapsed by default -- just enough to scan a whole column at a glance
+   (title, priority, due date, progress bar). Tapping the card opens it in
+   place to show the numbers/KPI links/actions, instead of every card
+   eating that much vertical space all the time. */
 function taskCard(t) {
     const pct = t.target > 0 ? Math.max(0, Math.min(100, (t.actual / t.target) * 100)) : 0;
     const badge = achvBadge(pct);
-    const statusPill = STATUS_PILL[t.status] || STATUS_PILL.not_started;
     const priorityPill = PRIORITY_LABELS[t.priority] || PRIORITY_LABELS.medium;
     const kpiChips = (t.linked_kpis || []).length
         ? `<div class="flex flex-wrap gap-1.5 mt-2">${t.linked_kpis.map(k => `<span class="px-2 py-0.5 rounded-full bg-[#CCE3DE] text-[#1a3d34] text-[8px] font-black">${k.kpi_title}</span>`).join('')}</div>`
         : '';
+    const safeId = t.id.replace(/[^a-zA-Z0-9_-]/g, '');
 
-    return card(`
-        <div class="flex items-center justify-between gap-2">
-            <p class="text-[13px] font-black text-slate-900 leading-snug min-w-0">${t.title}</p>
-            <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${statusPill.color}">${statusPill.label}</span>
+    return `
+        <div class="bg-[#FFFCF4] rounded-2xl soft-card border-2 border-[#D9C4A0] overflow-hidden">
+            <button type="button" onclick="toggleTaskCard('${safeId}')" class="w-full text-left p-3">
+                <div class="flex items-start justify-between gap-2">
+                    <p class="text-[12px] font-black text-slate-900 leading-snug min-w-0">${t.title}</p>
+                    <span id="task-chevron-${safeId}" class="text-slate-400 text-[10px] shrink-0 mt-0.5">▸</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5 mt-1.5">
+                    <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full ${priorityPill.color}">${priorityPill.label}</span>
+                    ${dueDateBadge(t.due_date)}
+                </div>
+                <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-2 overflow-hidden">
+                    <div class="h-full rounded-full bg-gradient-to-r ${badge.bar}" style="width:${pct}%"></div>
+                </div>
+            </button>
+            <div id="task-body-${safeId}" class="hidden px-3 pb-3">
+                <div class="flex items-center justify-between pt-1 border-t border-[#EFE3C7]">
+                    <p class="text-[10px] text-slate-500 pt-1.5">Target: <span class="font-bold text-slate-700">${formatUnit(t.target, t.unit)}</span></p>
+                    <p class="text-[10px] text-slate-500 pt-1.5">Actual: <span class="font-bold text-slate-700">${formatUnit(t.actual, t.unit)}</span></p>
+                    <p class="text-[10px] font-black text-slate-700 pt-1.5">${pct.toFixed(0)}%</p>
+                </div>
+                ${kpiChips}
+                <div class="flex items-center gap-2 mt-3">
+                    <button onclick="window.__taskDetailBackTo='todo'; renderTaskDetail('${t.id}')" class="flex-1 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[11px] font-black">Details</button>
+                    <button onclick="confirmDeleteTask('${t.id}')" class="px-3 py-2 rounded-xl bg-white border-2 border-red-300 text-red-600 text-[11px] font-black">🗑️</button>
+                </div>
+            </div>
         </div>
-        <div class="flex flex-wrap gap-1.5 mt-2">
-            <span class="text-[8px] font-black px-1.5 py-0.5 rounded-full ${priorityPill.color}">${priorityPill.label}</span>
-            ${dueDateBadge(t.due_date)}
-        </div>
-        <div class="w-full h-1.5 bg-[#EFE3C7] rounded-full mt-2 overflow-hidden">
-            <div class="h-full rounded-full bg-gradient-to-r ${badge.bar}" style="width:${pct}%"></div>
-        </div>
-        <div class="flex items-center justify-between mt-1.5">
-            <p class="text-[10px] text-slate-500">Target: <span class="font-bold text-slate-700">${formatUnit(t.target, t.unit)}</span></p>
-            <p class="text-[10px] text-slate-500">Actual: <span class="font-bold text-slate-700">${formatUnit(t.actual, t.unit)}</span></p>
-            <p class="text-[10px] font-black text-slate-700">${pct.toFixed(0)}%</p>
-        </div>
-        ${kpiChips}
-        <div class="flex items-center gap-2 mt-3">
-            <button onclick="window.__taskDetailBackTo='todo'; renderTaskDetail('${t.id}')" class="flex-1 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[11px] font-black">Details</button>
-            <button onclick="confirmDeleteTask('${t.id}')" class="px-3 py-2 rounded-xl bg-white border-2 border-red-300 text-red-600 text-[11px] font-black">🗑️</button>
-        </div>
-    `);
+    `;
+}
+
+function toggleTaskCard(safeId) {
+    const body = document.getElementById(`task-body-${safeId}`);
+    const chevron = document.getElementById(`task-chevron-${safeId}`);
+    if (!body) return;
+    const opening = body.classList.contains('hidden');
+    body.classList.toggle('hidden');
+    if (chevron) chevron.textContent = opening ? '▾' : '▸';
 }
 
 const PRIORITY_LABELS = {
